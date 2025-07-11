@@ -258,6 +258,14 @@ export function OrdersTab() {
     });
   };
 
+  // Einzelne Ersatzteil-Status-Änderung
+  const handleSinglePartStatusUpdate = (partId: number, status: string) => {
+    bulkUpdateMutation.mutate({
+      partIds: [partId],
+      status,
+    });
+  };
+
   const handleBulkAccessoryUpdate = (status: string) => {
     if (selectedAccessories.size === 0) {
       toast({
@@ -282,9 +290,9 @@ export function OrdersTab() {
         description: "PDF wird vorbereitet...",
       });
 
-      const response = await apiRequest("POST", "/api/orders/export-pdf", {
+      const response = await apiRequest("POST", "/api/orders/export-orders-pdf", {
         spareParts: filteredSpareParts,
-        filters: { searchTerm, statusFilter, dateFilter }
+        accessories: accessories
       });
 
       if (!response.ok) {
@@ -491,19 +499,15 @@ export function OrdersTab() {
     },
   });
 
-  const handleAccessoryStatusChange = async (accessoryId: number, currentStatus: string) => {
-    const statusOrder = ["bestellen", "bestellt", "eingetroffen", "erledigt"];
-    const currentIndex = statusOrder.indexOf(currentStatus);
-    const nextStatus = statusOrder[(currentIndex + 1) % statusOrder.length];
-    
+  const handleAccessoryStatusChange = async (accessoryId: number, newStatus: string) => {
     try {
       await updateAccessoryStatusMutation.mutateAsync({
         id: accessoryId,
-        status: nextStatus
+        status: newStatus
       });
       toast({
         title: "Status aktualisiert",
-        description: `Zubehör-Status wurde auf "${getAccessoryStatusLabel(nextStatus)}" geändert.`,
+        description: `Zubehör-Status wurde auf "${getAccessoryStatusLabel(newStatus)}" geändert.`,
       });
     } catch (error) {
       toast({
@@ -826,18 +830,25 @@ export function OrdersTab() {
                             Bearbeiten
                           </DropdownMenuItem>
                           <DropdownMenuItem 
-                            onClick={() => handleBulkUpdate("bestellt")}
+                            onClick={() => handleSinglePartStatusUpdate(part.id, "bestellt")}
                             disabled={part.status === "bestellt"}
                           >
                             <CheckSquare className="h-4 w-4 mr-2" />
                             Als bestellt markieren
                           </DropdownMenuItem>
                           <DropdownMenuItem 
-                            onClick={() => handleBulkUpdate("eingetroffen")}
+                            onClick={() => handleSinglePartStatusUpdate(part.id, "eingetroffen")}
                             disabled={part.status === "eingetroffen"}
                           >
                             <Package className="h-4 w-4 mr-2" />
                             Als eingetroffen markieren
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleSinglePartStatusUpdate(part.id, "erledigt")}
+                            disabled={part.status === "erledigt"}
+                          >
+                            <CheckSquare className="h-4 w-4 mr-2" />
+                            Als erledigt markieren
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -955,8 +966,7 @@ export function OrdersTab() {
                       <TableCell>
                         <Badge 
                           variant={getAccessoryStatusBadgeVariant(accessory.status)} 
-                          className="text-xs cursor-pointer"
-                          onClick={() => handleAccessoryStatusChange(accessory.id, accessory.status)}
+                          className="text-xs"
                         >
                           {getAccessoryStatusLabel(accessory.status)}
                         </Badge>
@@ -976,9 +986,26 @@ export function OrdersTab() {
                               <Settings className="h-4 w-4 mr-2" />
                               Bearbeiten
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleAccessoryStatusChange(accessory.id, accessory.status)}>
+                            <DropdownMenuItem 
+                              onClick={() => handleAccessoryStatusChange(accessory.id, "bestellt")}
+                              disabled={accessory.status === "bestellt"}
+                            >
                               <CheckSquare className="h-4 w-4 mr-2" />
-                              Status ändern
+                              Als bestellt markieren
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleAccessoryStatusChange(accessory.id, "eingetroffen")}
+                              disabled={accessory.status === "eingetroffen"}
+                            >
+                              <Package className="h-4 w-4 mr-2" />
+                              Als eingetroffen markieren
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleAccessoryStatusChange(accessory.id, "erledigt")}
+                              disabled={accessory.status === "erledigt"}
+                            >
+                              <CheckSquare className="h-4 w-4 mr-2" />
+                              Als erledigt markieren
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
