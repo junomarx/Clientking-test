@@ -764,7 +764,7 @@ export type TempSignature = typeof tempSignatures.$inferSelect;
 export type InsertTempSignature = z.infer<typeof insertTempSignatureSchema>;
 
 // Ersatzteile für Reparaturen
-export const sparePartStatuses = z.enum(["bestellen", "bestellt", "eingetroffen"]);
+export const sparePartStatuses = z.enum(["bestellen", "bestellt", "eingetroffen", "erledigt"]);
 
 export const spareParts = pgTable("spare_parts", {
   id: serial("id").primaryKey(),

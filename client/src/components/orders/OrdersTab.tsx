@@ -54,7 +54,7 @@ interface SparePart {
   partName: string;
   supplier?: string;
   cost?: number;
-  status: "bestellen" | "bestellt" | "eingetroffen";
+  status: "bestellen" | "bestellt" | "eingetroffen" | "erledigt";
   orderDate?: Date;
   deliveryDate?: Date;
   notes?: string;
@@ -96,16 +96,16 @@ export function OrdersTab() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Alle Ersatzteile abrufen (nicht nur wartende Reparaturen)
+  // Alle Ersatzteile abrufen (ohne "erledigt" Status)
   const { data: allSpareParts = [], isLoading: isLoadingSpareParts, error: sparePartsError } = useQuery<SparePart[]>({
     queryKey: ['/api/orders/spare-parts'],
-    refetchInterval: 30000,
+    refetchInterval: 5000, // Reduziert von 30s auf 5s für bessere Performance
   });
 
   // Reparaturen mit Ersatzteilen abrufen
   const { data: repairsWithParts = [], isLoading: isLoadingRepairs, error: repairsError } = useQuery<RepairWithCustomer[]>({
     queryKey: ['/api/spare-parts/with-repairs'],
-    refetchInterval: 30000,
+    refetchInterval: 5000, // Reduziert von 30s auf 5s für bessere Performance
   });
 
   const isLoading = isLoadingSpareParts || isLoadingRepairs;
@@ -273,6 +273,8 @@ export function OrdersTab() {
         return 'secondary';
       case 'eingetroffen':
         return 'default';
+      case 'erledigt':
+        return 'outline';
       default:
         return 'outline';
     }
@@ -286,6 +288,8 @@ export function OrdersTab() {
         return 'Bestellt';
       case 'eingetroffen':
         return 'Eingetroffen';
+      case 'erledigt':
+        return 'Erledigt';
       default:
         return status;
     }
@@ -399,6 +403,7 @@ export function OrdersTab() {
                 <SelectItem value="bestellen">Bestellen</SelectItem>
                 <SelectItem value="bestellt">Bestellt</SelectItem>
                 <SelectItem value="eingetroffen">Eingetroffen</SelectItem>
+                <SelectItem value="erledigt">Erledigt</SelectItem>
               </SelectContent>
             </Select>
             
@@ -464,6 +469,15 @@ export function OrdersTab() {
                 >
                   <Package className="h-4 w-4 mr-2" />
                   Als eingetroffen markieren
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleBulkUpdate("erledigt")}
+                  disabled={bulkUpdateMutation.isPending}
+                >
+                  <CheckSquare className="h-4 w-4 mr-2" />
+                  Als erledigt markieren
                 </Button>
               </div>
             </div>

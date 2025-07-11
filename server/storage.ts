@@ -70,6 +70,7 @@ import {
   like,
   SQL,
   not,
+  inArray,
 } from "drizzle-orm";
 import { pool } from "./db";
 import session from "express-session";
@@ -4283,8 +4284,11 @@ export class DatabaseStorage implements IStorage {
       const parts = await db
         .select()
         .from(spareParts)
-        .where(eq(spareParts.shopId, shopId))
-        .orderBy(desc(spareParts.createdAt));
+        .where(and(
+          eq(spareParts.shopId, shopId),
+          not(eq(spareParts.status, 'erledigt'))
+        ))
+        .orderBy(desc(spareParts.repairId), desc(spareParts.createdAt));
       
       return parts;
     } catch (error) {
@@ -4516,7 +4520,7 @@ export class DatabaseStorage implements IStorage {
         .select({ repairId: spareParts.repairId })
         .from(spareParts)
         .where(and(
-          sql`${spareParts.id} = ANY(${partIds})`,
+          inArray(spareParts.id, partIds),
           eq(spareParts.shopId, shopId)
         ));
       
@@ -4532,7 +4536,7 @@ export class DatabaseStorage implements IStorage {
           ...(status === 'eingetroffen' ? { deliveryDate: new Date() } : {}),
         })
         .where(and(
-          sql`${spareParts.id} = ANY(${partIds})`,
+          inArray(spareParts.id, partIds),
           eq(spareParts.shopId, shopId)
         ));
       
