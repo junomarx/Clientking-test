@@ -1,0 +1,89 @@
+client:536 WebSocket connection to 'wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/?token=CV0ZRSxjbsTX' failed: 
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=CV0ZRSxjbsTX' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+chunk-RPCDYKBN.js?v=2e28e5a6:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+ClearCacheHelpers.ts:12 Alle gespeicherten Herstellern wurden gelöscht.
+ClearCacheHelpers.ts:22 Alle gespeicherten Modelle wurden gelöscht.
+ClearCacheHelpers.ts:32 Alle gespeicherten Gerätetypen wurden gelöscht.
+main.tsx:14 Cache für Gerätearten und Hersteller wurde beim Start gelöscht
+PrintOptionsDialog.tsx:64 PrintOptionsDialog gerendert mit open: false repairId: null canPrintLabels: true
+App.tsx:125 UserId bereits im localStorage: 3
+ClearCacheHelpers.ts:12 Alle gespeicherten Herstellern wurden gelöscht.
+ClearCacheHelpers.ts:22 Alle gespeicherten Modelle wurden gelöscht.
+App.tsx:144 Cache für Gerätearten und Hersteller wurde beim Start gelöscht
+main.tsx:25 Alter Service Worker entfernt
+main.tsx:31 Alle Caches gelöscht
+main.tsx:35 PWA Service Worker neu registriert: https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/
+NewOrderModal.tsx:191 MODAL CLOSED - Resetting state
+NewOrderModal.tsx:612 Keine Fehlereinträge für den ausgewählten Gerätetyp gefunden, verwende Standardliste
+use-online-status.tsx:50 Verbinde WebSocket für Online-Status: wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/ws/status
+Sidebar.tsx:51 
+ GET https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/api/can-view-detailed-stats 401 (Unauthorized)
+use-online-status.tsx:55 WebSocket-Verbindung für Online-Status hergestellt
+use-online-status.tsx:115 WebSocket-Authentifizierung erfolgreich
+use-online-status.tsx:84 WebSocket-Verbindung geschlossen: 1005 
+use-online-status.tsx:93 Versuche WebSocket-Wiederverbindung...
+use-online-status.tsx:50 Verbinde WebSocket für Online-Status: wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/ws/status
+use-online-status.tsx:55 WebSocket-Verbindung für Online-Status hergestellt
+use-online-status.tsx:115 WebSocket-Authentifizierung erfolgreich
+RepairDetailsDialog.tsx:79 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:166 🔍 DEBUG: useEffect für E-Mail-Historie ausgeführt. emailHistoryData: undefined
+RepairDetailsDialog.tsx:171 🔍 DEBUG: Keine emailHistoryData vorhanden, Historie wird geleert
+RepairDetailsDialog.tsx:79 RepairDetailsDialog geöffnet: false repairId: null
+use-online-status.tsx:84 WebSocket-Verbindung geschlossen: 1005 
+chunk-YUGUAPEY.js?v=2e28e5a6:325 `DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+chunk-YUGUAPEY.js?v=2e28e5a6:339 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+use-online-status.tsx:93 Versuche WebSocket-Wiederverbindung...
+use-online-status.tsx:50 Verbinde WebSocket für Online-Status: wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/ws/status
+use-online-status.tsx:55 WebSocket-Verbindung für Online-Status hergestellt
+use-online-status.tsx:115 WebSocket-Authentifizierung erfolgreich
+NewCostEstimateDialog.tsx:152 Setting preselected customer data: 
+{id: 523, firstName: 'Hasan', lastName: 'Bugi', phone: '014103511', email: 'bugi3000@gmail.com', …}
+NewCostEstimateDialog.tsx:182 Form values set: 
+{customerId: 523, title: 'Kostenvoranschlag', firstName: 'Hasan', lastName: 'Bugi', address: '', …}
+use-online-status.tsx:84 WebSocket-Verbindung geschlossen: 1005 
+CustomersTab.tsx:112 CustomersTab: handleNewRepairForCustomer aufgerufen mit customerId: 523
+Home.tsx:74 Home: handleNewOrder aufgerufen mit customerId: 523
+NewOrderModal.tsx:475 MODAL OPENING - customerId: 523
+NewOrderModal.tsx:534 CUSTOMER ID PROVIDED - Will load customer data via useQuery
+NewOrderModal.tsx:176 LOADING CUSTOMER DATA for ID: 523
+NewOrderModal.tsx:177 Customer data: 
+{id: 523, firstName: 'Hasan', lastName: 'Bugi', phone: '014103511', email: 'bugi3000@gmail.com', …}
+NewOrderModal.tsx:181 SET selectedCustomerId to: 523
+use-online-status.tsx:93 Versuche WebSocket-Wiederverbindung...
+use-online-status.tsx:50 Verbinde WebSocket für Online-Status: wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/ws/status
+Home.tsx:198 NewOrderModal wird geschlossen - selectedCustomerId wird zurückgesetzt
+NewOrderModal.tsx:191 MODAL CLOSED - Resetting state
+use-online-status.tsx:55 WebSocket-Verbindung für Online-Status hergestellt
+use-online-status.tsx:115 WebSocket-Authentifizierung erfolgreich
+use-online-status.tsx:84 WebSocket-Verbindung geschlossen: 1005 
+NewCostEstimateDialog.tsx:152 Setting preselected customer data: 
+{id: 523, firstName: 'Hasan', lastName: 'Bugi', phone: '014103511', email: 'bugi3000@gmail.com', …}
+NewCostEstimateDialog.tsx:182 Form values set: 
+{customerId: 523, title: 'Kostenvoranschlag', firstName: 'Hasan', lastName: 'Bugi', address: '', …}
+use-online-status.tsx:93 Versuche WebSocket-Wiederverbindung...
+use-online-status.tsx:50 Verbinde WebSocket für Online-Status: wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/ws/status
+use-online-status.tsx:55 WebSocket-Verbindung für Online-Status hergestellt
+use-online-status.tsx:115 WebSocket-Authentifizierung erfolgreich
+use-online-status.tsx:84 WebSocket-Verbindung geschlossen: 1005 
+NewCostEstimateDialog.tsx:152 Setting preselected customer data: 
+{id: 523, firstName: 'Hasan', lastName: 'Bugi', phone: '014103511', email: 'bugi3000@gmail.com', …}
+NewCostEstimateDialog.tsx:182 Form values set: 
+{customerId: 523, title: 'Kostenvoranschlag', firstName: 'Hasan', lastName: 'Bugi', address: '', …}
+use-online-status.tsx:93 Versuche WebSocket-Wiederverbindung...
+use-online-status.tsx:50 Verbinde WebSocket für Online-Status: wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/ws/status
+use-online-status.tsx:55 WebSocket-Verbindung für Online-Status hergestellt
+use-online-status.tsx:115 WebSocket-Authentifizierung erfolgreich
+use-online-status.tsx:84 WebSocket-Verbindung geschlossen: 1005 
+use-online-status.tsx:93 Versuche WebSocket-Wiederverbindung...
+use-online-status.tsx:50 Verbinde WebSocket für Online-Status: wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/ws/status
+use-online-status.tsx:55 WebSocket-Verbindung für Online-Status hergestellt
+use-online-status.tsx:115 WebSocket-Authentifizierung erfolgreich
+﻿
+
