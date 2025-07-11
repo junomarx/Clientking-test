@@ -65,11 +65,14 @@ export function AddSparePartDialog({
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Alle Reparaturen abrufen für die Auswahl
-  const { data: repairs = [] } = useQuery<Repair[]>({
+  // Nur Reparaturen mit Status "eingegangen" abrufen für die Auswahl
+  const { data: allRepairs = [] } = useQuery<Repair[]>({
     queryKey: ['/api/repairs'],
     enabled: open,
   });
+
+  // Filtern auf Status "eingegangen"
+  const repairs = allRepairs.filter(repair => repair.status === 'eingegangen');
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -148,7 +151,7 @@ export function AddSparePartDialog({
                 name="repairId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Reparatur auswählen *</FormLabel>
+                    <FormLabel>Reparatur auswählen * (nur Status "Eingegangen")</FormLabel>
                     <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
                       <FormControl>
                         <SelectTrigger>
@@ -156,11 +159,17 @@ export function AddSparePartDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {repairs.map((repair) => (
-                          <SelectItem key={repair.id} value={repair.id.toString()}>
-                            {repair.orderCode} - {repair.brand} {repair.model}
+                        {repairs.length > 0 ? (
+                          repairs.map((repair) => (
+                            <SelectItem key={repair.id} value={repair.id.toString()}>
+                              {repair.orderCode} - {repair.brand} {repair.model}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="" disabled>
+                            Keine Reparaturen mit Status "Eingegangen" verfügbar
                           </SelectItem>
-                        ))}
+                        )}
                       </SelectContent>
                     </Select>
                     <FormMessage />
