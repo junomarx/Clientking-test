@@ -586,9 +586,10 @@ export function OrdersTab() {
       
       // Auto-delete if status is "erledigt"
       if (status === "erledigt") {
-        console.log(`Auto-deleting ${accessoryIds.length} accessories with status "erledigt"`);
+        console.log(`🔄 Auto-deleting ${accessoryIds.length} accessories with status "erledigt"`);
         for (const accessoryId of accessoryIds) {
           try {
+            console.log(`🗑️ Attempting to delete accessory ${accessoryId}...`);
             const deleteResponse = await apiRequest("DELETE", `/api/orders/accessories/${accessoryId}`, null, {
               "X-User-ID": String(user?.id || 0),
             });
@@ -596,6 +597,8 @@ export function OrdersTab() {
               console.log(`✅ Auto-deleted accessory ${accessoryId} with status "erledigt"`);
             } else {
               console.error(`❌ Failed to delete accessory ${accessoryId}: ${deleteResponse.status}`);
+              const errorText = await deleteResponse.text();
+              console.error(`❌ Delete error details:`, errorText);
             }
           } catch (deleteError) {
             console.error(`❌ Failed to auto-delete accessory ${accessoryId}:`, deleteError);
