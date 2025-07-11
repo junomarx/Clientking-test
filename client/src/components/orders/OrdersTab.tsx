@@ -97,18 +97,19 @@ export function OrdersTab() {
   const queryClient = useQueryClient();
 
   // Alle Ersatzteile abrufen (nicht nur wartende Reparaturen)
-  const { data: allSpareParts = [], isLoading: isLoadingSpareParts } = useQuery<SparePart[]>({
+  const { data: allSpareParts = [], isLoading: isLoadingSpareParts, error: sparePartsError } = useQuery<SparePart[]>({
     queryKey: ['/api/orders/spare-parts'],
     refetchInterval: 30000,
   });
 
   // Reparaturen mit Ersatzteilen abrufen
-  const { data: repairsWithParts = [], isLoading: isLoadingRepairs } = useQuery<RepairWithCustomer[]>({
+  const { data: repairsWithParts = [], isLoading: isLoadingRepairs, error: repairsError } = useQuery<RepairWithCustomer[]>({
     queryKey: ['/api/spare-parts/with-repairs'],
     refetchInterval: 30000,
   });
 
   const isLoading = isLoadingSpareParts || isLoadingRepairs;
+  const error = sparePartsError || repairsError;
 
   const handleManageParts = (repairId: number) => {
     setSelectedRepairId(repairId);

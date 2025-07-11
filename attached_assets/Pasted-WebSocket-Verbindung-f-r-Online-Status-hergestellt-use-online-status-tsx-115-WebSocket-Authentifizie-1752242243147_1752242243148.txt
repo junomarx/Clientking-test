@@ -1,0 +1,80 @@
+WebSocket-Verbindung für Online-Status hergestellt
+use-online-status.tsx:115 WebSocket-Authentifizierung erfolgreich
+2OrdersTab.tsx:309 Uncaught ReferenceError: error is not defined
+    at OrdersTab (OrdersTab.tsx:309:3)
+    at renderWithHooks (chunk-RPCDYKBN.js?v=2e28e5a6:11548:26)
+    at updateFunctionComponent (chunk-RPCDYKBN.js?v=2e28e5a6:14582:28)
+    at beginWork (chunk-RPCDYKBN.js?v=2e28e5a6:15924:22)
+    at HTMLUnknownElement.callCallback2 (chunk-RPCDYKBN.js?v=2e28e5a6:3674:22)
+    at Object.invokeGuardedCallbackDev (chunk-RPCDYKBN.js?v=2e28e5a6:3699:24)
+    at invokeGuardedCallback (chunk-RPCDYKBN.js?v=2e28e5a6:3733:39)
+    at beginWork$1 (chunk-RPCDYKBN.js?v=2e28e5a6:19765:15)
+    at performUnitOfWork (chunk-RPCDYKBN.js?v=2e28e5a6:19198:20)
+    at workLoopSync (chunk-RPCDYKBN.js?v=2e28e5a6:19137:13)
+chunk-RPCDYKBN.js?v=2e28e5a6:14032 The above error occurred in the <OrdersTab> component:
+
+    at OrdersTab (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/components/orders/OrdersTab.tsx:55:51)
+    at div
+    at div
+    at div
+    at https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=2e28e5a6:42:13
+    at https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-scroll-area.js?v=2e28e5a6:114:13
+    at div
+    at https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=2e28e5a6:42:13
+    at Provider (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-E7IAXTU4.js?v=2e28e5a6:38:15)
+    at https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-scroll-area.js?v=2e28e5a6:52:7
+    at _c (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/components/ui/scroll-area.tsx:21:11)
+    at main
+    at div
+    at div
+    at Home (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/pages/Home.tsx:37:37)
+    at ProtectedRoute (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/lib/protected-route.tsx:21:34)
+    at Route (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=2e28e5a6:265:16)
+    at Switch (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=2e28e5a6:321:17)
+    at Router
+    at Provider (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-E7IAXTU4.js?v=2e28e5a6:38:15)
+    at TooltipProvider (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=2e28e5a6:64:5)
+    at PrintManagerProvider (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/components/repairs/PrintOptionsManager.tsx:33:40)
+    at ThemeProvider (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/hooks/use-theme.tsx:26:33)
+    at BusinessSettingsProvider (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/hooks/use-business-settings.tsx:22:44)
+    at KioskModeProvider (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/hooks/use-kiosk-mode.tsx:22:37)
+    at OnlineStatusProvider (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/hooks/use-online-status.tsx:21:40)
+    at AuthProvider (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/hooks/use-auth.tsx:35:32)
+    at QueryClientProvider (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=2e28e5a6:2805:3)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+logCapturedError @ chunk-RPCDYKBN.js?v=2e28e5a6:14032
+chunk-RPCDYKBN.js?v=2e28e5a6:9129 Uncaught ReferenceError: error is not defined
+    at OrdersTab (OrdersTab.tsx:309:3)
+    at renderWithHooks (chunk-RPCDYKBN.js?v=2e28e5a6:11548:26)
+    at updateFunctionComponent (chunk-RPCDYKBN.js?v=2e28e5a6:14582:28)
+    at beginWork (chunk-RPCDYKBN.js?v=2e28e5a6:15924:22)
+    at beginWork$1 (chunk-RPCDYKBN.js?v=2e28e5a6:19753:22)
+    at performUnitOfWork (chunk-RPCDYKBN.js?v=2e28e5a6:19198:20)
+    at workLoopSync (chunk-RPCDYKBN.js?v=2e28e5a6:19137:13)
+    at renderRootSync (chunk-RPCDYKBN.js?v=2e28e5a6:19116:15)
+    at recoverFromConcurrentError (chunk-RPCDYKBN.js?v=2e28e5a6:18736:28)
+    at performSyncWorkOnRoot (chunk-RPCDYKBN.js?v=2e28e5a6:18879:28)
+use-online-status.tsx:84 WebSocket-Verbindung geschlossen: 1005 
+use-online-status.tsx:93 Versuche WebSocket-Wiederverbindung...
+use-online-status.tsx:50 Verbinde WebSocket für Online-Status: wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/ws/status
+use-online-status.tsx:55 WebSocket-Verbindung für Online-Status hergestellt
+use-online-status.tsx:115 WebSocket-Authentifizierung erfolgreich
+use-online-status.tsx:84 WebSocket-Verbindung geschlossen: 1005 
+use-online-status.tsx:93 Versuche WebSocket-Wiederverbindung...
+use-online-status.tsx:50 Verbinde WebSocket für Online-Status: wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/ws/status
+use-online-status.tsx:55 WebSocket-Verbindung für Online-Status hergestellt
+use-online-status.tsx:115 WebSocket-Authentifizierung erfolgreich
+use-online-status.tsx:84 WebSocket-Verbindung geschlossen: 1005 
+use-online-status.tsx:93 Versuche WebSocket-Wiederverbindung...
+use-online-status.tsx:50 Verbinde WebSocket für Online-Status: wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/ws/status
+use-online-status.tsx:55 WebSocket-Verbindung für Online-Status hergestellt
+use-online-status.tsx:115 WebSocket-Authentifizierung erfolgreich
+use-online-status.tsx:84 WebSocket-Verbindung geschlossen: 1005 
+use-online-status.tsx:93 Versuche WebSocket-Wiederverbindung...
+use-online-status.tsx:50 Verbinde WebSocket für Online-Status: wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/ws/status
+use-online-status.tsx:55 WebSocket-Verbindung für Online-Status hergestellt
+use-online-status.tsx:115 WebSocket-Authentifizierung erfolgreich
+use-online-status.tsx:84 WebSocket-Verbindung geschlossen: 1005 
