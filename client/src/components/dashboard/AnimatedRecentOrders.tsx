@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Printer, Info, QrCode } from 'lucide-react';
+import { Printer, Info, QrCode, RotateCw } from 'lucide-react';
 import { getStatusBadge } from '@/lib/utils';
 
 interface RepairWithCustomer {
@@ -139,6 +139,20 @@ export function AnimatedRecentOrders({
                             <QrCode className="h-4 w-4" />
                           </motion.button>
                         )}
+                        {onStatusChange && (
+                          <motion.button 
+                            className="text-purple-600 hover:text-purple-800 p-1 rounded-full hover:bg-purple-50"
+                            title="Status ändern"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onStatusChange(repair.id, repair.status);
+                            }}
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                          >
+                            <RotateCw className="h-4 w-4" />
+                          </motion.button>
+                        )}
                         <motion.button 
                           className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-50"
                           title="Details anzeigen"
@@ -223,6 +237,19 @@ export function AnimatedRecentOrders({
                     }}
                   >
                     <QrCode className="h-5 w-5" />
+                  </motion.button>
+                )}
+                {onStatusChange && (
+                  <motion.button 
+                    className="text-purple-600 hover:text-purple-800 p-2 rounded-full hover:bg-purple-50"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onStatusChange(repair.id, repair.status);
+                    }}
+                  >
+                    <RotateCw className="h-5 w-5" />
                   </motion.button>
                 )}
                 <motion.button 

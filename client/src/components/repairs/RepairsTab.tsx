@@ -32,7 +32,8 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Info,
-  QrCode
+  QrCode,
+  RotateCw
 } from 'lucide-react';
 import { usePrintManager } from './PrintOptionsManager';
 import { QRSignatureDialog } from '../signature/QRSignatureDialog';
@@ -637,6 +638,19 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
                           <QrCode className="h-4 w-4" />
                         </button>
                         <button 
+                          className="text-purple-600 hover:text-purple-800 p-1 transform hover:scale-110 transition-all" 
+                          title="Status ändern"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedRepairId(repair.id);
+                            setNewStatus(repair.status);
+                            setSendEmail(false);
+                            setShowStatusDialog(true);
+                          }}
+                        >
+                          <RotateCw className="h-4 w-4" />
+                        </button>
+                        <button 
                           className="text-red-600 hover:text-red-800 p-1 transform hover:scale-110 transition-all" 
                           title="Auftrag löschen"
                           onClick={(e) => {
@@ -783,6 +797,18 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
                     }}
                   >
                     <QrCode className="h-5 w-5" />
+                  </button>
+                  <button 
+                    className="text-purple-600 hover:text-purple-800 p-2 rounded-full hover:bg-white transition-colors" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedRepairId(repair.id);
+                      setNewStatus(repair.status);
+                      setSendEmail(false);
+                      setShowStatusDialog(true);
+                    }}
+                  >
+                    <RotateCw className="h-5 w-5" />
                   </button>
                   {repair.status === 'abgeholt' ? (
                     <button 
