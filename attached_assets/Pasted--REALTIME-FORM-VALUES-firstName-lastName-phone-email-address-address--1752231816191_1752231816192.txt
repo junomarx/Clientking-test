@@ -1,0 +1,28 @@
+🔍 REALTIME FORM VALUES: {firstName: '', lastName: '', phone: '', email: '', address: '', …}address: ""city: ""email: ""firstName: ""lastName: ""phone: ""postalCode: ""[[Prototype]]: Object
+NewCostEstimateDialog.tsx:164 Setting preselected customer data: {id: 523, firstName: 'Hasan', lastName: 'Bugi', phone: '014103511', email: 'bugi3000@gmail.com', …}
+NewCostEstimateDialog.tsx:194 Form values set: {customerId: 523, title: 'Kostenvoranschlag', firstName: 'Hasan', lastName: 'Bugi', address: '', …}
+NewCostEstimateDialog.tsx:700 🔍 DEBUG firstName field:  form state: 
+NewCostEstimateDialog.tsx:722 🔍 DEBUG lastName field:  form state: 
+NewCostEstimateDialog.tsx:806 🔍 DEBUG phone field:  form state: 
+NewCostEstimateDialog.tsx:151 🔍 REALTIME FORM VALUES: {firstName: '', lastName: '', phone: '', email: '', address: '', …}
+NewCostEstimateDialog.tsx:700 🔍 DEBUG firstName field:  form state: 
+NewCostEstimateDialog.tsx:722 🔍 DEBUG lastName field:  form state: 
+NewCostEstimateDialog.tsx:806 🔍 DEBUG phone field:  form state: 
+use-online-status.tsx:93 Versuche WebSocket-Wiederverbindung...
+use-online-status.tsx:50 Verbinde WebSocket für Online-Status: wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/ws/status
+use-online-status.tsx:55 WebSocket-Verbindung für Online-Status hergestellt
+use-online-status.tsx:115 WebSocket-Authentifizierung erfolgreich
+use-online-status.tsx:84 WebSocket-Verbindung geschlossen: 1005 
+NewCostEstimateDialog.tsx:151 🔍 REALTIME FORM VALUES: {firstName: '', lastName: '', phone: '', email: '', address: '', …}
+NewCostEstimateDialog.tsx:700 🔍 DEBUG firstName field:  form state: 
+NewCostEstimateDialog.tsx:722 🔍 DEBUG lastName field:  form state: 
+NewCostEstimateDialog.tsx:806 🔍 DEBUG phone field:  form state: 
+use-online-status.tsx:93 Versuche WebSocket-Wiederverbindung...
+use-online-status.tsx:50 Verbinde WebSocket für Online-Status: wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/ws/status
+use-online-status.tsx:55 WebSocket-Verbindung für Online-Status hergestellt
+use-online-status.tsx:115 WebSocket-Authentifizierung erfolgreich
+use-online-status.tsx:84 WebSocket-Verbindung geschlossen: 1005 
+use-online-status.tsx:93 Versuche WebSocket-Wiederverbindung...
+use-online-status.tsx:50 Verbinde WebSocket für Online-Status: wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/ws/status
+use-online-status.tsx:55 WebSocket-Verbindung für Online-Status hergestellt
+use-online-status.tsx:115 WebSocket-Authentifizierung erfolgreich
