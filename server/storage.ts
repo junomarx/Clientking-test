@@ -515,6 +515,10 @@ export interface IStorage {
   updateSparePart(id: number, sparePart: Partial<SparePart>, userId: number): Promise<SparePart | undefined>;
   deleteSparePart(id: number, userId: number): Promise<boolean>;
   checkAndUpdateRepairStatus(repairId: number, userId: number): Promise<void>; // Automatische Status-Updates
+  
+  // Erweiterte Ersatzteil-Verwaltung für neue OrdersTab
+  bulkUpdateSparePartStatus(partIds: number[], status: string, userId: number): Promise<boolean>;
+  getRepairsWithSpareParts(userId: number): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -4489,6 +4493,117 @@ export class DatabaseStorage implements IStorage {
       }
     } catch (error) {
       console.error('Fehler beim Prüfen/Aktualisieren des Reparatur-Status:', error);
+    }
+  }
+
+  /**
+   * Bulk-Update für Ersatzteil-Status
+   */
+  async bulkUpdateSparePartStatus(partIds: number[], status: string, userId: number): Promise<boolean> {
+    try {
+      const user = await this.getUser(userId);
+      if (!user) return false;
+      
+      const shopId = user.shopId || 1;
+      
+      // Erst alle betroffenen Reparatur-IDs sammeln
+      const affectedParts = await db
+        .select({ repairId: spareParts.repairId })
+        .from(spareParts)
+        .where(and(
+          sql`${spareParts.id} = ANY(${partIds})`,
+          eq(spareParts.shopId, shopId)
+        ));
+      
+      const repairIds = [...new Set(affectedParts.map(p => p.repairId))];
+      
+      // Bulk-Update durchführen
+      const result = await db
+        .update(spareParts)
+        .set({
+          status,
+          updatedAt: new Date(),
+          ...(status === 'bestellt' ? { orderDate: new Date() } : {}),
+          ...(status === 'eingetroffen' ? { deliveryDate: new Date() } : {}),
+        })
+        .where(and(
+          sql`${spareParts.id} = ANY(${partIds})`,
+          eq(spareParts.shopId, shopId)
+        ));
+      
+      if (result.rowCount && result.rowCount > 0) {
+        // Status aller betroffenen Reparaturen aktualisieren
+        for (const repairId of repairIds) {
+          await this.checkAndUpdateRepairStatus(repairId, userId);
+        }
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Fehler beim Bulk-Update der Ersatzteile:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Holt alle Reparaturen mit ihren Ersatzteilen für den erweiterten OrdersTab
+   */
+  async getRepairsWithSpareParts(userId: number): Promise<any[]> {
+    try {
+      const user = await this.getUser(userId);
+      if (!user) return [];
+      
+      const shopId = user.shopId || 1;
+      
+      const repairsWithParts = await db
+        .select({
+          id: repairs.id,
+          orderCode: repairs.orderCode,
+          customerId: repairs.customerId,
+          deviceType: repairs.deviceType,
+          brand: repairs.brand,
+          model: repairs.model,
+          issue: repairs.issue,
+          status: repairs.status,
+          estimatedCost: repairs.estimatedCost,
+          depositAmount: repairs.depositAmount,
+          notes: repairs.notes,
+          createdAt: repairs.createdAt,
+          updatedAt: repairs.updatedAt,
+          shopId: repairs.shopId,
+          userId: repairs.userId,
+          customer: {
+            id: customers.id,
+            firstName: customers.firstName,
+            lastName: customers.lastName,
+            email: customers.email,
+            phone: customers.phone,
+            address: customers.address,
+            zipCode: customers.zipCode,
+            city: customers.city,
+            createdAt: customers.createdAt,
+            shopId: customers.shopId,
+            userId: customers.userId,
+          }
+        })
+        .from(repairs)
+        .leftJoin(customers, eq(repairs.customerId, customers.id))
+        .leftJoin(spareParts, eq(repairs.id, spareParts.repairId))
+        .where(and(
+          eq(repairs.shopId, shopId),
+          isNotNull(spareParts.id) // Nur Reparaturen mit Ersatzteilen
+        ))
+        .groupBy(
+          repairs.id,
+          customers.id
+        )
+        .orderBy(desc(repairs.createdAt));
+      
+      return repairsWithParts;
+    } catch (error) {
+      console.error('Fehler beim Abrufen der Reparaturen mit Ersatzteilen:', error);
+      return [];
     }
   }
 }

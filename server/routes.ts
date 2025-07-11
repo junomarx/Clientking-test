@@ -5396,6 +5396,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Alle Ersatzteile für erweiterte OrdersTab abrufen
+  app.get("/api/spare-parts/all", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      console.log(`Abrufen aller Ersatzteile für Benutzer ${userId}`);
+      
+      const spareParts = await storage.getAllSpareParts(userId);
+      console.log(`Gefunden: ${spareParts.length} Ersatzteile für Benutzer ${userId}`);
+      
+      res.json(spareParts);
+    } catch (error) {
+      console.error("Fehler beim Abrufen aller Ersatzteile:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Abrufen der Ersatzteile",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Alle Reparaturen mit Ersatzteilen abrufen
+  app.get("/api/repairs/with-spare-parts", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      console.log(`Abrufen aller Reparaturen mit Ersatzteilen für Benutzer ${userId}`);
+      
+      const repairs = await storage.getRepairsWithSpareParts(userId);
+      console.log(`Gefunden: ${repairs.length} Reparaturen mit Ersatzteilen für Benutzer ${userId}`);
+      
+      res.json(repairs);
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Reparaturen mit Ersatzteilen:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Abrufen der Reparaturen",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Bulk-Update für Ersatzteil-Status
+  app.patch("/api/spare-parts/bulk-update", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const { partIds, status } = req.body;
+      
+      if (!Array.isArray(partIds) || partIds.length === 0) {
+        return res.status(400).json({ message: "Keine Ersatzteil-IDs angegeben" });
+      }
+      
+      if (!status) {
+        return res.status(400).json({ message: "Kein Status angegeben" });
+      }
+      
+      console.log(`Bulk-Update für ${partIds.length} Ersatzteile auf Status "${status}" für Benutzer ${userId}`);
+      
+      const success = await storage.bulkUpdateSparePartStatus(partIds, status, userId);
+      
+      if (!success) {
+        return res.status(400).json({ message: "Fehler beim Aktualisieren der Ersatzteile" });
+      }
+      
+      console.log(`Bulk-Update erfolgreich für Benutzer ${userId}`);
+      res.json({ message: "Ersatzteile erfolgreich aktualisiert" });
+    } catch (error) {
+      console.error("Fehler beim Bulk-Update der Ersatzteile:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Aktualisieren der Ersatzteile",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   // Kiosk-spezifischer Endpunkt für Business-Settings (ohne Authentifizierung)
   app.get("/api/kiosk/business-settings", async (req: Request, res: Response) => {
     try {

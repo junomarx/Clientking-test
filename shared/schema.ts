@@ -770,7 +770,12 @@ export const spareParts = pgTable("spare_parts", {
   id: serial("id").primaryKey(),
   repairId: integer("repair_id").notNull().references(() => repairs.id, { onDelete: 'cascade' }),
   partName: text("part_name").notNull(),
+  supplier: text("supplier"), // Lieferant
+  cost: doublePrecision("cost"), // Kosten
   status: text("status").notNull().default("bestellen"), // bestellen, bestellt, eingetroffen
+  orderDate: timestamp("order_date"), // Bestelldatum
+  deliveryDate: timestamp("delivery_date"), // Lieferdatum
+  notes: text("notes"), // Notizen
   userId: integer("user_id").notNull().references(() => users.id),
   shopId: integer("shop_id").notNull().default(1),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -783,6 +788,9 @@ export const insertSparePartSchema = createInsertSchema(spareParts).omit({
   updatedAt: true,
 }).extend({
   status: sparePartStatuses.optional(),
+  cost: z.number().optional(),
+  orderDate: z.date().optional(),
+  deliveryDate: z.date().optional(),
 });
 
 export type SparePart = typeof spareParts.$inferSelect;
