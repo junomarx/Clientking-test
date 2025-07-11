@@ -46,11 +46,11 @@ const costEstimateSchema = z.object({
   // Kundendaten
   firstName: z.string().min(1, "Vorname ist erforderlich"),
   lastName: z.string().min(1, "Nachname ist erforderlich"),
-  address: z.string().min(1, "Adresse ist erforderlich"),
-  postalCode: z.string().min(1, "PLZ ist erforderlich"),
-  city: z.string().min(1, "Ort ist erforderlich"),
+  address: z.string().optional().or(z.literal('')),
+  postalCode: z.string().optional().or(z.literal('')),
+  city: z.string().optional().or(z.literal('')),
   phone: z.string().min(1, "Telefonnummer ist erforderlich"),
-  email: z.string().email("Gültige E-Mail-Adresse erforderlich"),
+  email: z.string().email("Gültige E-Mail-Adresse erforderlich").optional().or(z.literal('').transform(() => undefined)),
   
   // Gerätedaten
   deviceType: z.string().min(1, "Gerätetyp ist erforderlich"),

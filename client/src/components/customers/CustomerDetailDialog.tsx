@@ -141,75 +141,75 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
   
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-auto">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold flex items-center gap-2">
-            <User className="h-6 w-6" />
-            <span>{customer?.firstName} {customer?.lastName}</span>
+      <DialogContent className="w-full max-w-full sm:max-w-[900px] max-h-[90vh] overflow-auto p-4 md:p-6">
+        <DialogHeader className="space-y-2">
+          <DialogTitle className="text-lg md:text-xl font-bold flex items-center gap-2 break-words">
+            <User className="h-5 w-5 md:h-6 md:w-6 flex-shrink-0" />
+            <span className="truncate">{customer?.firstName} {customer?.lastName}</span>
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-sm md:text-base">
             Kundendetails und zugehörige Aufträge
           </DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
           {/* Kundendaten */}
-          <div className="bg-blue-50 rounded-lg p-4 shadow-sm border">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium flex items-center gap-2">
-                <User className="h-5 w-5" />
+          <div className="bg-blue-50 rounded-lg p-3 md:p-4 shadow-sm border">
+            <div className="flex items-center justify-between mb-3 md:mb-4">
+              <h3 className="text-base md:text-lg font-medium flex items-center gap-2">
+                <User className="h-4 w-4 md:h-5 md:w-5 flex-shrink-0" />
                 Kundendaten
               </h3>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleEditCustomer}
-                className="flex items-center gap-2"
+                className="flex items-center gap-1 md:gap-2 px-2 md:px-3"
               >
-                <Pencil className="h-4 w-4" />
-                Bearbeiten
+                <Pencil className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Bearbeiten</span>
               </Button>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+              <div className="space-y-2 md:space-y-3">
                 <div className="flex items-start gap-2">
                   <User className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
-                  <div>
-                    <div className="text-sm text-muted-foreground">Name</div>
-                    <div className="font-medium">{customer?.firstName} {customer?.lastName}</div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-xs md:text-sm text-muted-foreground">Name</div>
+                    <div className="font-medium text-sm md:text-base break-words">{customer?.firstName} {customer?.lastName}</div>
                   </div>
                 </div>
                 
                 <div className="flex items-start gap-2">
                   <Phone className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
-                  <div>
-                    <div className="text-sm text-muted-foreground">Telefon</div>
-                    <div>{customer?.phone}</div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-xs md:text-sm text-muted-foreground">Telefon</div>
+                    <div className="text-sm md:text-base break-words">{customer?.phone}</div>
                   </div>
                 </div>
                 
                 {customer?.email && (
                   <div className="flex items-start gap-2">
                     <Mail className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
-                    <div>
-                      <div className="text-sm text-muted-foreground">E-Mail</div>
-                      <div>{customer.email}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs md:text-sm text-muted-foreground">E-Mail</div>
+                      <div className="text-sm md:text-base break-words">{customer.email}</div>
                     </div>
                   </div>
                 )}
               </div>
               
-              <div className="space-y-3">
+              <div className="space-y-2 md:space-y-3">
                 {(customer?.address || customer?.zipCode || customer?.city) && (
                   <div className="flex items-start gap-2">
                     <MapPin className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
-                    <div>
-                      <div className="text-sm text-muted-foreground">Adresse</div>
-                      <div>
-                        {customer?.address && <div>{customer.address}</div>}
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs md:text-sm text-muted-foreground">Adresse</div>
+                      <div className="text-sm md:text-base">
+                        {customer?.address && <div className="break-words">{customer.address}</div>}
                         {(customer?.zipCode || customer?.city) && (
-                          <div>{customer?.zipCode} {customer?.city}</div>
+                          <div className="break-words">{customer?.zipCode} {customer?.city}</div>
                         )}
                       </div>
                     </div>
@@ -218,9 +218,9 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
                 
                 <div className="flex items-start gap-2">
                   <Calendar className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
-                  <div>
-                    <div className="text-sm text-muted-foreground">Kunde seit</div>
-                    <div>{formatDate(customer?.createdAt || '')}</div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-xs md:text-sm text-muted-foreground">Kunde seit</div>
+                    <div className="text-sm md:text-base break-words">{formatDate(customer?.createdAt || '')}</div>
                   </div>
                 </div>
               </div>
@@ -228,28 +228,29 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
           </div>
 
           {/* Reparaturen */}
-          <div className="bg-slate-50 rounded-lg p-4 shadow-sm border">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium flex items-center gap-2">
-                <Smartphone className="h-5 w-5" />
-                Reparaturen ({repairs?.length || 0})
+          <div className="bg-slate-50 rounded-lg p-3 md:p-4 shadow-sm border">
+            <div className="flex items-center justify-between mb-3 md:mb-4">
+              <h3 className="text-base md:text-lg font-medium flex items-center gap-2">
+                <Smartphone className="h-4 w-4 md:h-5 md:w-5 flex-shrink-0" />
+                <span className="truncate">Reparaturen ({repairs?.length || 0})</span>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowRepairs(!showRepairs)}
-                  className="h-6 px-2 ml-2"
+                  className="h-6 px-1 md:px-2 ml-1 md:ml-2"
                 >
-                  {showRepairs ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  {showRepairs ? <ChevronUp className="h-3 w-3 md:h-4 md:w-4" /> : <ChevronDown className="h-3 w-3 md:h-4 md:w-4" />}
                 </Button>
               </h3>
               <Button
                 variant="default"
                 size="sm"
                 onClick={handleNewRepair}
-                className="flex items-center gap-2"
+                className="flex items-center gap-1 md:gap-2 px-2 md:px-3"
               >
-                <Plus className="h-4 w-4" />
-                Neue Reparatur
+                <Plus className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Neue Reparatur</span>
+                <span className="sm:hidden">Neu</span>
               </Button>
             </div>
             
@@ -257,15 +258,13 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
               <div className="space-y-2 max-h-64 overflow-y-auto">
                 {repairs && repairs.length > 0 ? (
                   repairs.map((repair) => (
-                    <div key={repair.id} className="flex items-center justify-between p-3 bg-white rounded border">
-                      <div className="flex items-center gap-3">
-                        <div>
-                          <div className="font-medium">{repair.brand} {repair.model}</div>
-                          <div className="text-sm text-muted-foreground">{repair.issue}</div>
-                          <div className="text-xs text-muted-foreground">{formatDate(repair.createdAt)}</div>
-                        </div>
+                    <div key={repair.id} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 bg-white rounded border">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm md:text-base break-words">{repair.brand} {repair.model}</div>
+                        <div className="text-xs md:text-sm text-muted-foreground break-words">{repair.issue}</div>
+                        <div className="text-xs text-muted-foreground">{formatDate(repair.createdAt)}</div>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-shrink-0">
                         {getStatusBadge(repair.status)}
                         <div className="text-sm font-medium">{repair.estimatedCost} €</div>
                       </div>
@@ -281,28 +280,29 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
           </div>
 
           {/* Kostenvoranschläge */}
-          <div className="bg-green-50 rounded-lg p-4 shadow-sm border">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Kostenvoranschläge ({costEstimates?.length || 0})
+          <div className="bg-green-50 rounded-lg p-3 md:p-4 shadow-sm border">
+            <div className="flex items-center justify-between mb-3 md:mb-4">
+              <h3 className="text-base md:text-lg font-medium flex items-center gap-2">
+                <FileText className="h-4 w-4 md:h-5 md:w-5 flex-shrink-0" />
+                <span className="truncate">Kostenvoranschläge ({costEstimates?.length || 0})</span>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowCostEstimates(!showCostEstimates)}
-                  className="h-6 px-2 ml-2"
+                  className="h-6 px-1 md:px-2 ml-1 md:ml-2"
                 >
-                  {showCostEstimates ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  {showCostEstimates ? <ChevronUp className="h-3 w-3 md:h-4 md:w-4" /> : <ChevronDown className="h-3 w-3 md:h-4 md:w-4" />}
                 </Button>
               </h3>
               <Button
                 variant="default"
                 size="sm"
                 onClick={handleNewCostEstimate}
-                className="flex items-center gap-2"
+                className="flex items-center gap-1 md:gap-2 px-2 md:px-3"
               >
-                <Plus className="h-4 w-4" />
-                Neuer Kostenvoranschlag
+                <Plus className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Neuer Kostenvoranschlag</span>
+                <span className="sm:hidden">Neu</span>
               </Button>
             </div>
             
