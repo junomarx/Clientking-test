@@ -30,6 +30,7 @@ import { Package, Settings, Search, Filter, Download, Plus, MoreVertical, CheckS
 import { SparePartsManagementDialog } from "./SparePartsManagementDialog";
 import { AddSparePartDialog } from "./AddSparePartDialog";
 import { AddAccessoryDialog } from "./AddAccessoryDialog";
+import { RepairDetailsDialog } from "../repairs/RepairDetailsDialog";
 // Alle React-Dialog-Komponenten entfernt - verursachen weiterhin Crashes
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -107,6 +108,7 @@ export function OrdersTab() {
   const [isAddSparePartDialogOpen, setIsAddSparePartDialogOpen] = useState(false);
   const [isAddAccessoryDialogOpen, setIsAddAccessoryDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"spare-parts" | "accessories">("spare-parts");
+  const [isRepairDetailsOpen, setIsRepairDetailsOpen] = useState(false);
   
   // Native Browser-Modal State - ALLE React-Modals entfernt
   
@@ -153,9 +155,14 @@ export function OrdersTab() {
   };
 
   const handleOrderRowClick = async (order: any, type: "spare-part" | "accessory") => {
-    // downPayment Feld sollte jetzt verfügbar sein
+    // Für Ersatzteile: RepairDetailsDialog öffnen
+    if (type === "spare-part" && order.repairId) {
+      setSelectedRepairId(order.repairId);
+      setIsRepairDetailsOpen(true);
+      return;
+    }
     
-    // Native HTML-Modal erstellen ohne React
+    // Für Zubehör: Native HTML-Modal erstellen ohne React
     const isAccessory = type === "accessory";
     const orderName = isAccessory ? order.articleName : order.partName;
     
@@ -1550,6 +1557,18 @@ export function OrdersTab() {
         open={isAddAccessoryDialogOpen}
         onOpenChange={setIsAddAccessoryDialogOpen}
       />
+
+      {/* RepairDetailsDialog für Ersatzteil-Navigation */}
+      {selectedRepairId && (
+        <RepairDetailsDialog
+          open={isRepairDetailsOpen}
+          onClose={() => {
+            setIsRepairDetailsOpen(false);
+            setSelectedRepairId(null);
+          }}
+          repairId={selectedRepairId}
+        />
+      )}
 
       {/* Alle React-Modal-Komponenten permanent entfernt - verwenden native Browser-Dialoge */}
     </div>
