@@ -1246,10 +1246,7 @@ export function OrdersTab() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => relatedRepair && handleManageParts(relatedRepair.id)}>
-                              <Settings className="h-4 w-4 mr-2" />
-                              Bearbeiten
-                            </DropdownMenuItem>
+
                             <DropdownMenuItem 
                               onClick={() => handleSinglePartStatusUpdate(part.id, "bestellt")}
                               disabled={part.status === "bestellt"}
@@ -1422,22 +1419,6 @@ export function OrdersTab() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem 
-                              onClick={() => {
-                                // Hier würde normalerweise ein Bearbeitungsdialog geöffnet
-                                const newArticleName = prompt("Artikelname bearbeiten:", accessory.articleName);
-                                if (newArticleName && newArticleName.trim() !== accessory.articleName) {
-                                  // Temporäre Bearbeitung über Status-Update Mutation
-                                  toast({
-                                    title: "Bearbeitung",
-                                    description: "Vollständige Bearbeitung wird in der nächsten Version implementiert.",
-                                  });
-                                }
-                              }}
-                            >
-                              <Settings className="h-4 w-4 mr-2" />
-                              Bearbeiten
-                            </DropdownMenuItem>
                             <DropdownMenuItem 
                               onClick={() => handleAccessoryStatusChange(accessory.id, "bestellt")}
                               disabled={accessory.status === "bestellt"}
