@@ -55,20 +55,21 @@ export function OrderDetailsDialog({ order, open, onOpenChange, type }: OrderDet
   if (!order) return null;
 
   const isAccessory = type === 'accessory';
-  const title = isAccessory ? 'Zubehör Details' : 'Ersatzteil Details';
 
-  // Hilfsfunktionen
-  const formatDate = (dateString: string) => {
+  // Sichere Formatierungsfunktionen
+  const formatDate = (dateInput: string | Date) => {
     try {
-      return format(new Date(dateString), 'dd.MM.yyyy', { locale: de });
+      const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+      return format(date, 'dd.MM.yyyy', { locale: de });
     } catch {
       return 'Unbekannt';
     }
   };
 
-  const formatDateTime = (dateString: string) => {
+  const formatDateTime = (dateInput: string | Date) => {
     try {
-      return format(new Date(dateString), 'dd.MM.yyyy HH:mm', { locale: de });
+      const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+      return format(date, 'dd.MM.yyyy HH:mm', { locale: de });
     } catch {
       return 'Unbekannt';
     }
@@ -110,7 +111,9 @@ export function OrderDetailsDialog({ order, open, onOpenChange, type }: OrderDet
       }
     };
 
-    fetchCustomerData();
+    if (open) {
+      fetchCustomerData();
+    }
   }, [order.customerId, open]);
 
   // Status-Update-Mutation
@@ -158,19 +161,19 @@ export function OrderDetailsDialog({ order, open, onOpenChange, type }: OrderDet
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl mx-auto max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold flex items-center gap-2">
             <Package className="h-5 w-5" />
-            {title}
+            {isAccessory ? 'Zubehör Details' : 'Ersatzteil Details'}
           </DialogTitle>
           <DialogDescription>
-            Vollständige Informationen zur Bestellung und Kundendaten
+            Vollständige Informationen zur Bestellung
           </DialogDescription>
         </DialogHeader>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
-          {/* Kundendaten */}
+          {/* Kundendaten Sektion */}
           <div className="bg-slate-50 rounded-lg p-4 shadow-sm border">
             <h3 className="text-lg font-medium flex items-center gap-2 mb-3">
               <User className="h-5 w-5" />
@@ -214,7 +217,7 @@ export function OrderDetailsDialog({ order, open, onOpenChange, type }: OrderDet
                 
                 <div className="flex items-start gap-2">
                   <Calendar className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
-                  <div>Kunde seit {formatDate(customer.createdAt.toString())}</div>
+                  <div>Kunde seit {formatDate(customer.createdAt)}</div>
                 </div>
               </div>
             ) : order.customerId ? (
@@ -338,7 +341,7 @@ export function OrderDetailsDialog({ order, open, onOpenChange, type }: OrderDet
                 <Calendar className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
                 <div>
                   <div className="text-sm text-muted-foreground">Bestelldatum</div>
-                  <div>{formatDate(order.createdAt.toString())}</div>
+                  <div>{formatDate(order.createdAt)}</div>
                 </div>
               </div>
               
@@ -346,7 +349,7 @@ export function OrderDetailsDialog({ order, open, onOpenChange, type }: OrderDet
                 <Clock className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
                 <div>
                   <div className="text-sm text-muted-foreground">Letzte Änderung</div>
-                  <div>{formatDateTime((order.updatedAt || order.createdAt).toString())}</div>
+                  <div>{formatDateTime(order.updatedAt || order.createdAt)}</div>
                 </div>
               </div>
 

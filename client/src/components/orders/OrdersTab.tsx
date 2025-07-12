@@ -30,7 +30,7 @@ import { Package, Settings, Search, Filter, Download, Plus, MoreVertical, CheckS
 import { SparePartsManagementDialog } from "./SparePartsManagementDialog";
 import { AddSparePartDialog } from "./AddSparePartDialog";
 import { AddAccessoryDialog } from "./AddAccessoryDialog";
-// Temporarily disabled OrderDetailsDialog due to crashes
+import { OrderDetailsDialog } from "./OrderDetailsDialog";
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -108,10 +108,10 @@ export function OrdersTab() {
   const [isAddAccessoryDialogOpen, setIsAddAccessoryDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"spare-parts" | "accessories">("spare-parts");
   
-  // OrderDetailsDialog State - DISABLED due to crashes
-  // const [selectedOrder, setSelectedOrder] = useState<any>(null);
-  // const [isOrderDetailsDialogOpen, setIsOrderDetailsDialogOpen] = useState(false);
-  // const [orderDetailsType, setOrderDetailsType] = useState<"spare-part" | "accessory">("spare-part");
+  // OrderDetailsDialog State
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [isOrderDetailsDialogOpen, setIsOrderDetailsDialogOpen] = useState(false);
+  const [orderDetailsType, setOrderDetailsType] = useState<"spare-part" | "accessory">("spare-part");
   
   // Filter und Suche States
   const [searchTerm, setSearchTerm] = useState("");
@@ -156,23 +156,15 @@ export function OrdersTab() {
   };
 
   const handleOrderRowClick = (order: any, type: "spare-part" | "accessory") => {
-    // Temporarily show simple alert instead of dialog to prevent crashes
-    const orderName = type === "spare-part" ? order.partName : order.articleName;
-    const status = order.status;
-    const quantity = order.quantity;
-    
-    alert(`${type === "spare-part" ? "Ersatzteil" : "Zubehör"} Details:\n\n` +
-          `Name: ${orderName}\n` +
-          `Menge: ${quantity}\n` +
-          `Status: ${status}\n\n` +
-          `(Vollständige Details werden in der nächsten Version verfügbar sein)`);
+    setSelectedOrder(order);
+    setOrderDetailsType(type);
+    setIsOrderDetailsDialogOpen(true);
   };
 
-  // DISABLED - handleOrderDetailsClose function removed due to crashes
-  // const handleOrderDetailsClose = () => {
-  //   setIsOrderDetailsDialogOpen(false);
-  //   setSelectedOrder(null);
-  // };
+  const handleOrderDetailsClose = () => {
+    setIsOrderDetailsDialogOpen(false);
+    setSelectedOrder(null);
+  };
 
   // Bulk-Aktionen für Ersatzteile
   const bulkUpdateMutation = useMutation({
@@ -1330,13 +1322,12 @@ export function OrdersTab() {
         onOpenChange={setIsAddAccessoryDialogOpen}
       />
 
-      {/* OrderDetailsDialog DISABLED due to crashes */}
-      {/* <OrderDetailsDialog
+      <OrderDetailsDialog
         order={selectedOrder}
         open={isOrderDetailsDialogOpen}
         onOpenChange={handleOrderDetailsClose}
         type={orderDetailsType}
-      /> */}
+      />
     </div>
   );
 }
