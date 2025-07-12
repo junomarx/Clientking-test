@@ -30,7 +30,7 @@ import { Package, Settings, Search, Filter, Download, Plus, MoreVertical, CheckS
 import { SparePartsManagementDialog } from "./SparePartsManagementDialog";
 import { AddSparePartDialog } from "./AddSparePartDialog";
 import { AddAccessoryDialog } from "./AddAccessoryDialog";
-import { CompleteOrderDetailsDialog } from "./CompleteOrderDetailsDialog";
+// Alle React-Dialog-Komponenten entfernt - verursachen weiterhin Crashes
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -108,10 +108,7 @@ export function OrdersTab() {
   const [isAddAccessoryDialogOpen, setIsAddAccessoryDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"spare-parts" | "accessories">("spare-parts");
   
-  // SimpleOrderModal State
-  const [selectedOrder, setSelectedOrder] = useState<any>(null);
-  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
-  const [orderModalType, setOrderModalType] = useState<"spare-part" | "accessory">("spare-part");
+  // Native Browser-Modal State - ALLE React-Modals entfernt
   
   // Filter und Suche States
   const [searchTerm, setSearchTerm] = useState("");
@@ -155,10 +152,133 @@ export function OrdersTab() {
     setSelectedRepairId(null);
   };
 
-  const handleOrderRowClick = (order: any, type: "spare-part" | "accessory") => {
-    setSelectedOrder(order);
-    setOrderModalType(type);
-    setIsOrderModalOpen(true);
+  const handleOrderRowClick = async (order: any, type: "spare-part" | "accessory") => {
+    // Vollständige native Browser-Implementierung ohne React-Modal
+    const isAccessory = type === "accessory";
+    const orderName = isAccessory ? order.articleName : order.partName;
+    
+    // Kundendaten laden falls vorhanden
+    let customerData = null;
+    if (order.customerId) {
+      try {
+        const response = await apiRequest('GET', `/api/customers/${order.customerId}`);
+        if (response.ok) {
+          customerData = await response.json();
+        }
+      } catch (error) {
+        console.error('Fehler beim Laden der Kundendaten:', error);
+      }
+    }
+    
+    // Vollständige Informationen sammeln
+    let details = `🔧 ${isAccessory ? "ZUBEHÖR" : "ERSATZTEIL"} DETAILS\n`;
+    details += `${"=".repeat(50)}\n\n`;
+    
+    // Artikel-Informationen
+    details += `📦 ARTIKEL-INFORMATIONEN:\n`;
+    details += `   • Name: ${orderName}\n`;
+    details += `   • Menge: ${order.quantity}x\n`;
+    details += `   • Status: ${order.status.toUpperCase()}\n`;
+    details += `   • Erstellt: ${new Date(order.createdAt).toLocaleDateString("de-DE")}\n`;
+    
+    if (isAccessory) {
+      details += `   • Einzelpreis: €${order.unitPrice || "0.00"}\n`;
+      details += `   • Gesamtpreis: €${order.totalPrice || "0.00"}\n`;
+      if (order.downPayment) {
+        details += `   • Anzahlung: €${order.downPayment}\n`;
+      }
+      details += `   • Typ: ${order.type === "kundenbestellung" ? "Kundenbestellung" : "Lager"}\n`;
+    } else {
+      if (order.supplier) {
+        details += `   • Lieferant: ${order.supplier}\n`;
+      }
+      if (order.repairId) {
+        details += `   • Reparatur-ID: #${order.repairId}\n`;
+      }
+    }
+    
+    details += `\n`;
+    
+    // Kundendaten
+    if (customerData) {
+      details += `👤 KUNDENDATEN:\n`;
+      details += `   • Name: ${customerData.firstName} ${customerData.lastName}\n`;
+      if (customerData.phone) {
+        details += `   • Telefon: ${customerData.phone}\n`;
+      }
+      if (customerData.email) {
+        details += `   • E-Mail: ${customerData.email}\n`;
+      }
+      if (customerData.address || customerData.zipCode || customerData.city) {
+        details += `   • Adresse: `;
+        if (customerData.address) details += `${customerData.address}, `;
+        if (customerData.zipCode || customerData.city) {
+          details += `${customerData.zipCode || ""} ${customerData.city || ""}`;
+        }
+        details += `\n`;
+      }
+      details += `   • Kunde seit: ${new Date(customerData.createdAt).toLocaleDateString("de-DE")}\n`;
+    } else if (order.customerId) {
+      details += `👤 KUNDENDATEN: Lade...\n`;
+    } else {
+      details += `👤 KUNDENDATEN: Lager-Bestellung (kein Kunde)\n`;
+    }
+    
+    if (order.notes) {
+      details += `\n📝 NOTIZEN:\n${order.notes}\n`;
+    }
+    
+    details += `\n${"=".repeat(50)}\n`;
+    details += `💡 STATUS ÄNDERN:\n`;
+    details += `   • Verwenden Sie die Dropdown-Menüs in der Tabelle\n`;
+    details += `   • Verfügbare Status: Bestellen → Bestellt → Eingetroffen → Erledigt\n`;
+    details += `   • "Erledigt" = automatische Löschung\n`;
+    
+    // Status-Änderung anbieten
+    const newStatus = prompt(
+      details + `\n\n🔄 STATUS ÄNDERN?\n` +
+      `Aktueller Status: ${order.status}\n\n` +
+      `Neuen Status eingeben:\n` +
+      `• "bestellen" = Bestellen\n` +
+      `• "bestellt" = Bestellt\n` +
+      `• "eingetroffen" = Eingetroffen\n` +
+      `• "erledigt" = Erledigt (wird gelöscht)\n\n` +
+      `Neuen Status eingeben oder "abbrechen":`
+    );
+    
+    if (newStatus && newStatus.toLowerCase() !== "abbrechen" && 
+        ["bestellen", "bestellt", "eingetroffen", "erledigt"].includes(newStatus.toLowerCase())) {
+      
+      try {
+        if (isAccessory) {
+          await apiRequest('PUT', `/api/orders/accessories/bulk-update`, {
+            accessoryIds: [order.id],
+            status: newStatus.toLowerCase()
+          });
+        } else {
+          await apiRequest('PUT', `/api/orders/spare-parts/bulk-update`, {
+            sparePartIds: [order.id],
+            status: newStatus.toLowerCase()
+          });
+        }
+        
+        toast({
+          title: "Status aktualisiert",
+          description: `Status wurde auf "${newStatus}" geändert`,
+        });
+        
+        // Cache invalidieren
+        queryClient.invalidateQueries({ queryKey: ['/api/orders/spare-parts'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/orders/accessories'] });
+        
+      } catch (error: any) {
+        toast({
+          title: "Fehler",
+          description: error.message || "Status konnte nicht geändert werden",
+          variant: "destructive",
+        });
+      }
+    }
   };
 
   // handleOrderDetailsClose entfernt - nicht mehr benötigt
@@ -1319,12 +1439,7 @@ export function OrdersTab() {
         onOpenChange={setIsAddAccessoryDialogOpen}
       />
 
-      <CompleteOrderDetailsDialog
-        isOpen={isOrderModalOpen}
-        onClose={() => setIsOrderModalOpen(false)}
-        order={selectedOrder}
-        type={orderModalType}
-      />
+      {/* Alle React-Modal-Komponenten permanent entfernt - verwenden native Browser-Dialoge */}
     </div>
   );
 }
