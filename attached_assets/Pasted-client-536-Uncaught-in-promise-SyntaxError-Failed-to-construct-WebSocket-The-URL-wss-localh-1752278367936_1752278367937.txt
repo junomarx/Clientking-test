@@ -1,0 +1,112 @@
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=85i-C4qDuusR' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+ClearCacheHelpers.ts:12 Alle gespeicherten Herstellern wurden gelöscht.
+ClearCacheHelpers.ts:22 Alle gespeicherten Modelle wurden gelöscht.
+ClearCacheHelpers.ts:32 Alle gespeicherten Gerätetypen wurden gelöscht.
+main.tsx:14 Cache für Gerätearten und Hersteller wurde beim Start gelöscht
+PrintOptionsDialog.tsx:64 PrintOptionsDialog gerendert mit open: false repairId: null canPrintLabels: true
+App.tsx:125 UserId bereits im localStorage: 54
+ClearCacheHelpers.ts:12 Alle gespeicherten Herstellern wurden gelöscht.
+ClearCacheHelpers.ts:22 Alle gespeicherten Modelle wurden gelöscht.
+App.tsx:144 Cache für Gerätearten und Hersteller wurde beim Start gelöscht
+main.tsx:25 Alter Service Worker entfernt
+main.tsx:31 Alle Caches gelöscht
+main.tsx:35 PWA Service Worker neu registriert: https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/
+NewOrderModal.tsx:191 MODAL CLOSED - Resetting state
+NewOrderModal.tsx:612 Keine Fehlereinträge für den ausgewählten Gerätetyp gefunden, verwende Standardliste
+use-online-status.tsx:50 Verbinde WebSocket für Online-Status: wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/ws/status
+/api/can-view-detailed-stats:1 
+        
+        
+       Failed to load resource: the server responded with a status of 401 (Unauthorized)
+use-online-status.tsx:55 WebSocket-Verbindung für Online-Status hergestellt
+use-online-status.tsx:115 WebSocket-Authentifizierung erfolgreich
+RepairDetailsDialog.tsx:80 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:206 🔍 DEBUG: useEffect für E-Mail-Historie ausgeführt. emailHistoryData: undefined
+RepairDetailsDialog.tsx:211 🔍 DEBUG: Keine emailHistoryData vorhanden, Historie wird geleert
+RepairDetailsDialog.tsx:80 RepairDetailsDialog geöffnet: false repairId: null
+use-online-status.tsx:84 WebSocket-Verbindung geschlossen: 1005 
+hook.js:608 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. Error Component Stack
+    at DescriptionWarning (chunk-YUGUAPEY.js?v=2e28e5a6:331:29)
+    at chunk-YUGUAPEY.js?v=2e28e5a6:235:13
+    at chunk-YUGUAPEY.js?v=2e28e5a6:158:58
+    at Presence (chunk-7ZIEIKXH.js?v=2e28e5a6:24:11)
+    at chunk-YUGUAPEY.js?v=2e28e5a6:149:64
+    at chunk-2K77HOHX.js?v=2e28e5a6:79:13
+    at chunk-2K77HOHX.js?v=2e28e5a6:56:13
+    at chunk-Q6YJROYD.js?v=2e28e5a6:42:13
+    at chunk-EARHAFA3.js?v=2e28e5a6:260:22
+    at Presence (chunk-7ZIEIKXH.js?v=2e28e5a6:24:11)
+    at Provider (chunk-E7IAXTU4.js?v=2e28e5a6:38:15)
+    at DialogPortal (chunk-YUGUAPEY.js?v=2e28e5a6:111:11)
+    at _c3 (dialog.tsx:35:6)
+    at Provider (chunk-E7IAXTU4.js?v=2e28e5a6:38:15)
+    at Dialog (chunk-YUGUAPEY.js?v=2e28e5a6:52:5)
+    at AddAccessoryDialog (AddAccessoryDialog.tsx:122:3)
+    at div (<anonymous>)
+    at OrdersTab (OrdersTab.tsx:103:51)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at chunk-Q6YJROYD.js?v=2e28e5a6:42:13
+    at @radix-ui_react-scroll-area.js?v=2e28e5a6:114:13
+    at div (<anonymous>)
+    at chunk-Q6YJROYD.js?v=2e28e5a6:42:13
+    at Provider (chunk-E7IAXTU4.js?v=2e28e5a6:38:15)
+    at @radix-ui_react-scroll-area.js?v=2e28e5a6:52:7
+    at _c (scroll-area.tsx:9:6)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Home (Home.tsx:26:37)
+    at ProtectedRoute (protected-route.tsx:5:34)
+    at Route (wouter.js?v=2e28e5a6:265:16)
+    at Switch (wouter.js?v=2e28e5a6:321:17)
+    at Router (<anonymous>)
+    at Provider (chunk-E7IAXTU4.js?v=2e28e5a6:38:15)
+    at TooltipProvider (@radix-ui_react-tooltip.js?v=2e28e5a6:64:5)
+    at PrintManagerProvider (PrintOptionsManager.tsx:25:40)
+    at ThemeProvider (use-theme.tsx:22:33)
+    at BusinessSettingsProvider (use-business-settings.tsx:21:44)
+    at KioskModeProvider (use-kiosk-mode.tsx:32:37)
+    at OnlineStatusProvider (use-online-status.tsx:24:40)
+    at AuthProvider (use-auth.tsx:48:32)
+    at QueryClientProvider (@tanstack_react-query.js?v=2e28e5a6:2805:3)
+    at App (<anonymous>)
+overrideMethod @ hook.js:608
+use-online-status.tsx:93 Versuche WebSocket-Wiederverbindung...
+use-online-status.tsx:50 Verbinde WebSocket für Online-Status: wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/ws/status
+use-online-status.tsx:55 WebSocket-Verbindung für Online-Status hergestellt
+use-online-status.tsx:115 WebSocket-Authentifizierung erfolgreich
+use-online-status.tsx:84 WebSocket-Verbindung geschlossen: 1005 
+use-online-status.tsx:93 Versuche WebSocket-Wiederverbindung...
+use-online-status.tsx:50 Verbinde WebSocket für Online-Status: wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/ws/status
+use-online-status.tsx:55 WebSocket-Verbindung für Online-Status hergestellt
+use-online-status.tsx:115 WebSocket-Authentifizierung erfolgreich
+AddAccessoryDialog.tsx:282 onSubmit called with data: Object
+AddAccessoryDialog.tsx:283 inStock: true
+AddAccessoryDialog.tsx:284 articles state: Array(3)
+AddAccessoryDialog.tsx:289 Valid articles: Array(3)
+AddAccessoryDialog.tsx:302 Calling createMutation.mutate with: Object
+use-online-status.tsx:84 WebSocket-Verbindung geschlossen: 1005 
+use-online-status.tsx:93 Versuche WebSocket-Wiederverbindung...
+use-online-status.tsx:50 Verbinde WebSocket für Online-Status: wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/ws/status
+use-online-status.tsx:55 WebSocket-Verbindung für Online-Status hergestellt
+use-online-status.tsx:115 WebSocket-Authentifizierung erfolgreich
+use-online-status.tsx:84 WebSocket-Verbindung geschlossen: 1005 
+use-online-status.tsx:93 Versuche WebSocket-Wiederverbindung...
+use-online-status.tsx:50 Verbinde WebSocket für Online-Status: wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/ws/status
+use-online-status.tsx:55 WebSocket-Verbindung für Online-Status hergestellt
+use-online-status.tsx:115 WebSocket-Authentifizierung erfolgreich
+use-online-status.tsx:84 WebSocket-Verbindung geschlossen: 1005 
+use-online-status.tsx:93 Versuche WebSocket-Wiederverbindung...
+use-online-status.tsx:50 Verbinde WebSocket für Online-Status: wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/ws/status
+use-online-status.tsx:55 WebSocket-Verbindung für Online-Status hergestellt
+use-online-status.tsx:115 WebSocket-Authentifizierung erfolgreich
+use-online-status.tsx:84 WebSocket-Verbindung geschlossen: 1005 
+use-online-status.tsx:93 Versuche WebSocket-Wiederverbindung...
+use-online-status.tsx:50 Verbinde WebSocket für Online-Status: wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/ws/status
+use-online-status.tsx:55 WebSocket-Verbindung für Online-Status hergestellt
+use-online-status.tsx:115 WebSocket-Authentifizierung erfolgreich

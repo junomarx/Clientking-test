@@ -1173,11 +1173,23 @@ export function OrdersTab() {
                               Als eingetroffen markieren
                             </DropdownMenuItem>
                             <DropdownMenuItem 
-                              onClick={async () => {
-                                console.log(`🔄 Manual status change: ${accessory.id} -> erledigt`);
-                                handleAccessoryStatusChange(accessory.id, "erledigt");
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                console.log(`🔄 DROPDOWN CLICK: ${accessory.id} -> erledigt`);
+                                console.log(`🔄 Current status: ${accessory.status}`);
+                                if (accessory.status !== "erledigt") {
+                                  handleAccessoryStatusChange(accessory.id, "erledigt");
+                                } else {
+                                  console.log(`⚠️ Already erledigt, should auto-delete now`);
+                                  // Force delete if already erledigt
+                                  singleAccessoryUpdateMutation.mutate({
+                                    accessoryIds: [accessory.id],
+                                    status: "erledigt",
+                                  });
+                                }
                               }}
-                              disabled={accessory.status === "erledigt"}
+                              disabled={false}
                             >
                               <CheckSquare className="h-4 w-4 mr-2" />
                               Als erledigt markieren
