@@ -113,6 +113,7 @@ The Handyshop Verwaltung is a comprehensive phone repair shop management system 
 
 ## Changelog
 
+- July 12, 2025: KRITISCHER AUTO-DELETE BUG ENDGÜLTIG BEHOBEN - Server-seitige Auto-Delete-Logik in storage.ts implementiert: bulkUpdateAccessoryStatus und updateAccessory löschen Artikel automatisch bei Status "erledigt" statt sie zu aktualisieren, funktioniert für alle Dropdown-Änderungen und Bulk-Operationen, Client-Side-Löschlogik entfernt da Server jetzt alles handled
 - July 11, 2025: VOLLSTÄNDIGE BESTELLFUNKTIONEN REPARIERT - PDF Export Button ersetzt Excel Button, automatisches Löschen bei Status "eingetroffen" (Ersatzteile) und "erledigt" (Zubehör) implementiert, "Bearbeiten" Button für Zubehör mit temporärer Prompt-Funktionalität repariert, nur noch ein PDF Export Button der gefiltert nur "bestellen" Status exportiert, Test-Button für Auto-Delete-Funktionalität hinzugefügt
 - July 11, 2025: KRITISCHE LOGIK-FEHLER BEHOBEN - Status-Problem für neue Zubehör-Artikel korrigiert: Standard-Status von "bestellt" auf "bestellen" geändert in Schema und AddAccessoryDialog, "Bearbeiten" Button in Zubehör-Tabelle funktionsfähig gemacht mit onClick-Handler und singleAccessoryUpdateMutation
 - July 11, 2025: Dialog-Interface komplett überarbeitet - Karteikarten-Design entfernt, kompakte Grid-Ansicht mit direkten Eingabefeldern implementiert, Dialog scrollbar gemacht, "Erstellen" Button repariert mit direkter onSubmit-Funktion und Console-Logging für Debugging
