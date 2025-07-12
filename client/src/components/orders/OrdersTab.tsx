@@ -195,14 +195,14 @@ export function OrdersTab() {
         <!-- Header -->
         <div class="flex justify-between items-center mb-6 border-b pb-4">
           <h2 class="text-xl font-bold text-gray-900">
-            ${isAccessory ? "🔧 Zubehör" : "⚙️ Ersatzteil"} Details
+            ${isAccessory ? "Zubehör" : "Ersatzteil"} Details
           </h2>
           <button id="closeModal" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
         </div>
         
         <!-- Artikel-Info -->
         <div class="mb-6 bg-gray-50 p-4 rounded-lg">
-          <h3 class="font-semibold text-gray-900 mb-3">📦 Artikel-Informationen</h3>
+          <h3 class="font-semibold text-gray-900 mb-3">Artikel-Informationen</h3>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
             <div><span class="font-medium">Name:</span> ${orderName}</div>
             <div><span class="font-medium">Menge:</span> ${order.quantity}x</div>
@@ -228,7 +228,7 @@ export function OrdersTab() {
         <!-- Kundendaten -->
         ${customerData ? `
           <div class="mb-6 bg-blue-50 p-4 rounded-lg">
-            <h3 class="font-semibold text-gray-900 mb-3">👤 Kundendaten</h3>
+            <h3 class="font-semibold text-gray-900 mb-3">Kundendaten</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
               <div><span class="font-medium">Name:</span> ${customerData.firstName} ${customerData.lastName}</div>
               ${customerData.phone ? `<div><span class="font-medium">Telefon:</span> ${customerData.phone}</div>` : ''}
@@ -244,25 +244,65 @@ export function OrdersTab() {
           </div>
         ` : order.customerId ? `
           <div class="mb-6 bg-yellow-50 p-4 rounded-lg">
-            <p class="text-sm text-yellow-800">👤 Kundendaten werden geladen...</p>
+            <p class="text-sm text-yellow-800">Kundendaten werden geladen...</p>
           </div>
         ` : `
           <div class="mb-6 bg-gray-50 p-4 rounded-lg">
-            <p class="text-sm text-gray-600">👤 Lager-Bestellung (kein Kunde zugeordnet)</p>
+            <p class="text-sm text-gray-600">Lager-Bestellung (kein Kunde zugeordnet)</p>
           </div>
         `}
         
         <!-- Notizen -->
         ${order.notes ? `
           <div class="mb-6 bg-green-50 p-4 rounded-lg">
-            <h3 class="font-semibold text-gray-900 mb-2">📝 Notizen</h3>
+            <h3 class="font-semibold text-gray-900 mb-2">Notizen</h3>
             <p class="text-sm text-gray-700 whitespace-pre-wrap">${order.notes}</p>
           </div>
         ` : ''}
         
+        <!-- Bearbeiten-Bereich -->
+        ${isAccessory ? `
+        <div class="bg-blue-50 p-4 rounded-lg mb-6">
+          <h3 class="font-semibold text-gray-900 mb-3">Bearbeiten</h3>
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Artikel-Name</label>
+              <input type="text" id="edit-articleName" value="${order.articleName || ''}" 
+                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Menge</label>
+              <input type="number" id="edit-quantity" value="${order.quantity || 1}" min="1"
+                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Einzelpreis (€)</label>
+              <input type="number" id="edit-unitPrice" value="${(order.unitPrice || '').replace('€', '')}" step="0.01" min="0"
+                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Anzahlung (€)</label>
+              <input type="number" id="edit-downPayment" value="${(order.downPayment || '').replace('€', '')}" step="0.01" min="0"
+                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Notizen</label>
+            <textarea id="edit-notes" rows="2" 
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Zusätzliche Notizen...">${order.notes || ''}</textarea>
+          </div>
+          <div class="flex gap-2">
+            <button id="save-changes" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+              Änderungen speichern
+            </button>
+          </div>
+        </div>
+        ` : ''}
+        
         <!-- Status ändern -->
         <div class="bg-orange-50 p-4 rounded-lg">
-          <h3 class="font-semibold text-gray-900 mb-3">🔄 Status ändern</h3>
+          <h3 class="font-semibold text-gray-900 mb-3">Status ändern</h3>
           <div class="flex flex-wrap gap-2">
             <button id="status-bestellen" class="px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 text-sm">
               Bestellen
@@ -289,6 +329,57 @@ export function OrdersTab() {
     
     // Event Listeners
     content.querySelector('#closeModal').onclick = () => modal.remove();
+    
+    // Bearbeiten-Button für Zubehör
+    if (isAccessory) {
+      const saveButton = content.querySelector('#save-changes');
+      if (saveButton) {
+        saveButton.onclick = async () => {
+          const articleName = content.querySelector('#edit-articleName').value;
+          const quantity = parseInt(content.querySelector('#edit-quantity').value);
+          const unitPrice = parseFloat(content.querySelector('#edit-unitPrice').value) || 0;
+          const downPayment = parseFloat(content.querySelector('#edit-downPayment').value) || 0;
+          const notes = content.querySelector('#edit-notes').value;
+          
+          // Berechne Gesamtpreis
+          const totalPrice = quantity * unitPrice;
+          
+          try {
+            const response = await apiRequest('PATCH', `/api/orders/accessories/${order.id}`, {
+              articleName,
+              quantity,
+              unitPrice,
+              totalPrice,
+              downPayment,
+              notes
+            });
+            
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            toast({
+              title: "Erfolg",
+              description: "Zubehör erfolgreich aktualisiert"
+            });
+            
+            // Cache invalidieren
+            queryClient.invalidateQueries({ queryKey: ['/api/orders/accessories'] });
+            queryClient.invalidateQueries({ queryKey: ['/api/orders/spare-parts'] });
+            queryClient.invalidateQueries({ queryKey: ['/api/spare-parts/with-repairs'] });
+            
+            modal.remove();
+          } catch (error) {
+            console.error('Fehler beim Aktualisieren:', error);
+            toast({
+              title: "Fehler",
+              description: error.message || "Fehler beim Aktualisieren",
+              variant: "destructive"
+            });
+          }
+        };
+      }
+    }
     
     // Status-Buttons
     ['bestellen', 'bestellt', 'eingetroffen', 'erledigt'].forEach(status => {
