@@ -512,7 +512,7 @@ export function OrdersTab() {
 
   const bulkAccessoryUpdateMutation = useMutation({
     mutationFn: async ({ accessoryIds, status }: { accessoryIds: number[]; status: string }) => {
-      const response = await apiRequest("PATCH", "/api/orders/accessories-bulk-update", {
+      const response = await apiRequest("PUT", "/api/orders/accessories/bulk-update", {
         accessoryIds,
         status,
       }, {
@@ -917,7 +917,7 @@ export function OrdersTab() {
   // Single accessory update mutation with auto-delete logic
   const singleAccessoryUpdateMutation = useMutation({
     mutationFn: async ({ accessoryIds, status }: { accessoryIds: number[]; status: string }) => {
-      const response = await apiRequest("PATCH", "/api/orders/accessories-bulk-update", {
+      const response = await apiRequest("PUT", "/api/orders/accessories/bulk-update", {
         accessoryIds,
         status,
       }, {
