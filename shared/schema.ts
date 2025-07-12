@@ -817,6 +817,7 @@ export const accessories = pgTable("accessories", {
   quantity: integer("quantity").notNull().default(1),
   unitPrice: text("unit_price").notNull(), // Preis pro Stück
   totalPrice: text("total_price").notNull(), // Gesamtpreis
+  downPayment: text("down_payment"), // Anzahlung (optional)
   
   // Kunden-Informationen (optional für Lager-Artikel)
   customerId: integer("customer_id").references(() => customers.id),

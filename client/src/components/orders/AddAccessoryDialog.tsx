@@ -49,7 +49,8 @@ const accessoryFormSchema = z.object({
   // Für Einzelartikel (alte Methode - nicht auf Lager)
   articleName: z.string().optional(),
   quantity: z.number().optional(),
-  price: z.number().optional(),
+  price: z.string().optional(),
+  downPayment: z.string().optional(),
   
   // Für Multi-Artikel (auf Lager)
   articles: z.array(z.object({
@@ -85,10 +86,10 @@ const accessoryFormSchema = z.object({
         path: ["quantity"],
       });
     }
-    if (data.price === undefined || data.price < 0) {
+    if (!data.price || data.price.trim() === "") {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Preis muss positiv sein",
+        message: "Preis ist erforderlich",
         path: ["price"],
       });
     }
@@ -147,7 +148,8 @@ export function AddAccessoryDialog({
       address: "",
       articleName: "",
       quantity: 1,
-      price: 0,
+      price: "",
+      downPayment: "",
       articles: [{ articleName: "", quantity: 1 }],
       notes: "",
     },
@@ -179,7 +181,8 @@ export function AddAccessoryDialog({
         address: "",
         articleName: "",
         quantity: 1,
-        price: 0,
+        price: "",
+        downPayment: "",
         articles: [{ articleName: "", quantity: 1 }],
         notes: "",
       });
@@ -240,11 +243,13 @@ export function AddAccessoryDialog({
         return createdAccessories;
       } else {
         // Einzelartikel für Kundenbestellung
+        const priceValue = parseFloat(data.price || "0");
         const accessoryData: InsertAccessory = {
           articleName: data.articleName!,
           quantity: data.quantity!,
-          unitPrice: data.price!.toFixed(2),
-          totalPrice: (data.price! * data.quantity!).toFixed(2),
+          unitPrice: data.price || "0",
+          totalPrice: (priceValue * data.quantity!).toFixed(2),
+          downPayment: data.downPayment || undefined,
           customerId: customerId,
           type: "kundenbestellung",
           status: "bestellen",
@@ -600,7 +605,7 @@ export function AddAccessoryDialog({
                       )}
                     />
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-3 gap-4">
                       <FormField
                         control={form.control}
                         name="quantity"
@@ -628,11 +633,25 @@ export function AddAccessoryDialog({
                             <FormLabel>Preis (€)</FormLabel>
                             <FormControl>
                               <Input 
-                                type="number"
-                                step="0.01"
-                                min={0}
                                 {...field}
-                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                placeholder="z.B. 29.99"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="downPayment"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Anzahlung (€)</FormLabel>
+                            <FormControl>
+                              <Input 
+                                {...field}
+                                placeholder="z.B. 10.00"
                               />
                             </FormControl>
                             <FormMessage />
