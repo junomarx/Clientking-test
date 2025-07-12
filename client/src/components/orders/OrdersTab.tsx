@@ -260,42 +260,53 @@ export function OrdersTab() {
           </div>
         ` : ''}
         
-        <!-- Bearbeiten-Bereich -->
+        <!-- Bearbeiten-Button und Bereich -->
         ${isAccessory ? `
         <div class="bg-blue-50 p-4 rounded-lg mb-6">
-          <h3 class="font-semibold text-gray-900 mb-3">Bearbeiten</h3>
-          <div class="grid grid-cols-2 gap-4 mb-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Artikel-Name</label>
-              <input type="text" id="edit-articleName" value="${order.articleName || ''}" 
-                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Menge</label>
-              <input type="number" id="edit-quantity" value="${order.quantity || 1}" min="1"
-                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Einzelpreis (€)</label>
-              <input type="number" id="edit-unitPrice" value="${(order.unitPrice || '').replace('€', '')}" step="0.01" min="0"
-                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Anzahlung (€)</label>
-              <input type="number" id="edit-downPayment" value="${(order.downPayment || '').replace('€', '')}" step="0.01" min="0"
-                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-            </div>
-          </div>
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Notizen</label>
-            <textarea id="edit-notes" rows="2" 
-                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Zusätzliche Notizen...">${order.notes || ''}</textarea>
-          </div>
-          <div class="flex gap-2">
-            <button id="save-changes" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
-              Änderungen speichern
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-semibold text-gray-900">Bearbeiten</h3>
+            <button id="toggle-edit" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">
+              Bearbeiten
             </button>
+          </div>
+          
+          <div id="edit-section" class="hidden">
+            <div class="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Artikel-Name</label>
+                <input type="text" id="edit-articleName" value="${order.articleName || ''}" 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Menge</label>
+                <input type="number" id="edit-quantity" value="${order.quantity || 1}" min="1"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Einzelpreis (€)</label>
+                <input type="number" id="edit-unitPrice" value="${(order.unitPrice || '').replace('€', '')}" step="0.01" min="0"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Anzahlung (€)</label>
+                <input type="number" id="edit-downPayment" value="${(order.downPayment || '').replace('€', '')}" step="0.01" min="0"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              </div>
+            </div>
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Notizen</label>
+              <textarea id="edit-notes" rows="2" 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Zusätzliche Notizen...">${order.notes || ''}</textarea>
+            </div>
+            <div class="flex gap-2">
+              <button id="save-changes" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                Änderungen speichern
+              </button>
+              <button id="cancel-edit" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600">
+                Abbrechen
+              </button>
+            </div>
           </div>
         </div>
         ` : ''}
@@ -330,8 +341,31 @@ export function OrdersTab() {
     // Event Listeners
     content.querySelector('#closeModal').onclick = () => modal.remove();
     
-    // Bearbeiten-Button für Zubehör
+    // Bearbeiten-Toggle-Button für Zubehör
     if (isAccessory) {
+      const toggleButton = content.querySelector('#toggle-edit');
+      const editSection = content.querySelector('#edit-section');
+      const cancelButton = content.querySelector('#cancel-edit');
+      
+      if (toggleButton && editSection) {
+        toggleButton.onclick = () => {
+          if (editSection.classList.contains('hidden')) {
+            editSection.classList.remove('hidden');
+            toggleButton.textContent = 'Schließen';
+          } else {
+            editSection.classList.add('hidden');
+            toggleButton.textContent = 'Bearbeiten';
+          }
+        };
+      }
+      
+      if (cancelButton && editSection && toggleButton) {
+        cancelButton.onclick = () => {
+          editSection.classList.add('hidden');
+          toggleButton.textContent = 'Bearbeiten';
+        };
+      }
+      
       const saveButton = content.querySelector('#save-changes');
       if (saveButton) {
         saveButton.onclick = async () => {
@@ -367,6 +401,10 @@ export function OrdersTab() {
             queryClient.invalidateQueries({ queryKey: ['/api/orders/accessories'] });
             queryClient.invalidateQueries({ queryKey: ['/api/orders/spare-parts'] });
             queryClient.invalidateQueries({ queryKey: ['/api/spare-parts/with-repairs'] });
+            
+            // Bearbeiten-Bereich schließen
+            editSection.classList.add('hidden');
+            toggleButton.textContent = 'Bearbeiten';
             
             modal.remove();
           } catch (error) {
