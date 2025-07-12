@@ -30,7 +30,7 @@ import { Package, Settings, Search, Filter, Download, Plus, MoreVertical, CheckS
 import { SparePartsManagementDialog } from "./SparePartsManagementDialog";
 import { AddSparePartDialog } from "./AddSparePartDialog";
 import { AddAccessoryDialog } from "./AddAccessoryDialog";
-import { OrderDetailsDialog } from "./OrderDetailsDialog";
+import { SimpleOrderModal } from "./SimpleOrderModal";
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -108,10 +108,10 @@ export function OrdersTab() {
   const [isAddAccessoryDialogOpen, setIsAddAccessoryDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"spare-parts" | "accessories">("spare-parts");
   
-  // OrderDetailsDialog State
+  // SimpleOrderModal State
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
-  const [isOrderDetailsDialogOpen, setIsOrderDetailsDialogOpen] = useState(false);
-  const [orderDetailsType, setOrderDetailsType] = useState<"spare-part" | "accessory">("spare-part");
+  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+  const [orderModalType, setOrderModalType] = useState<"spare-part" | "accessory">("spare-part");
   
   // Filter und Suche States
   const [searchTerm, setSearchTerm] = useState("");
@@ -157,14 +157,11 @@ export function OrdersTab() {
 
   const handleOrderRowClick = (order: any, type: "spare-part" | "accessory") => {
     setSelectedOrder(order);
-    setOrderDetailsType(type);
-    setIsOrderDetailsDialogOpen(true);
+    setOrderModalType(type);
+    setIsOrderModalOpen(true);
   };
 
-  const handleOrderDetailsClose = () => {
-    setIsOrderDetailsDialogOpen(false);
-    setSelectedOrder(null);
-  };
+  // handleOrderDetailsClose entfernt - nicht mehr benötigt
 
   // Bulk-Aktionen für Ersatzteile
   const bulkUpdateMutation = useMutation({
@@ -1322,11 +1319,11 @@ export function OrdersTab() {
         onOpenChange={setIsAddAccessoryDialogOpen}
       />
 
-      <OrderDetailsDialog
+      <SimpleOrderModal
+        isOpen={isOrderModalOpen}
+        onClose={() => setIsOrderModalOpen(false)}
         order={selectedOrder}
-        open={isOrderDetailsDialogOpen}
-        onOpenChange={handleOrderDetailsClose}
-        type={orderDetailsType}
+        type={orderModalType}
       />
     </div>
   );
