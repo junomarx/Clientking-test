@@ -153,10 +153,15 @@ export function OrdersTab() {
   };
 
   const handleOrderRowClick = async (order: any, type: "spare-part" | "accessory") => {
-    // Debug: Daten struktur anzeigen
-    console.log('Order data:', order);
-    console.log('downPayment field:', order.downPayment);
-    console.log('down_payment field:', order.down_payment);
+    // Debug: Vollständige Datenstruktur anzeigen
+    console.log('Full order object:', JSON.stringify(order, null, 2));
+    console.log('Available keys:', Object.keys(order));
+    
+    // Check all payment-related fields
+    const paymentFields = ['downPayment', 'down_payment', 'downpayment', 'anzahlung'];
+    paymentFields.forEach(field => {
+      console.log(`${field}:`, order[field]);
+    });
     
     // Native HTML-Modal erstellen ohne React
     const isAccessory = type === "accessory";
@@ -219,7 +224,7 @@ export function OrdersTab() {
             ${isAccessory ? `
               <div><span class="font-medium">Einzelpreis:</span> €${order.unitPrice || "0.00"}</div>
               <div><span class="font-medium">Gesamtpreis:</span> €${order.totalPrice || "0.00"}</div>
-              <div><span class="font-medium">Anzahlung:</span> €${order.downPayment || order.down_payment || "0.00"}</div>
+              <div><span class="font-medium">Anzahlung:</span> €${order.downPayment || order.down_payment || order.downpayment || "0.00"}</div>
               <div><span class="font-medium">Typ:</span> ${order.type === "kundenbestellung" ? "Kundenbestellung" : "Lager"}</div>
             ` : `
               ${order.supplier ? `<div><span class="font-medium">Lieferant:</span> ${order.supplier}</div>` : ''}
@@ -396,27 +401,7 @@ export function OrdersTab() {
         throw new Error("Fehler beim Aktualisieren der Zubehör-Artikel");
       }
       
-      // Auto-delete if status is "erledigt"
-      if (status === "erledigt") {
-        console.log(`🔄 BULK Auto-deleting ${accessoryIds.length} accessories with status "erledigt"`);
-        for (const accessoryId of accessoryIds) {
-          try {
-            console.log(`🗑️ BULK Attempting to delete accessory ${accessoryId}...`);
-            const deleteResponse = await apiRequest("DELETE", `/api/orders/accessories/${accessoryId}`, null, {
-              "X-User-ID": String(user?.id || 0),
-            });
-            if (deleteResponse.ok) {
-              console.log(`✅ BULK Auto-deleted accessory ${accessoryId} with status "erledigt"`);
-            } else {
-              console.error(`❌ BULK Failed to delete accessory ${accessoryId}: ${deleteResponse.status}`);
-              const errorText = await deleteResponse.text();
-              console.error(`❌ BULK Delete error details:`, errorText);
-            }
-          } catch (deleteError) {
-            console.error(`❌ BULK Failed to auto-delete accessory ${accessoryId}:`, deleteError);
-          }
-        }
-      }
+      // Server handles auto-delete
       
       return response.json();
     },
@@ -540,24 +525,7 @@ export function OrdersTab() {
         throw new Error("Fehler beim Aktualisieren des Ersatzteils");
       }
       
-      // Auto-delete if status is "eingetroffen"
-      if (status === "eingetroffen") {
-        console.log(`Auto-deleting ${partIds.length} spare parts with status "eingetroffen"`);
-        for (const partId of partIds) {
-          try {
-            const deleteResponse = await apiRequest("DELETE", `/api/orders/spare-parts/${partId}`, null, {
-              "X-User-ID": String(user?.id || 0),
-            });
-            if (deleteResponse.ok) {
-              console.log(`✅ Auto-deleted spare part ${partId} with status "eingetroffen"`);
-            } else {
-              console.error(`❌ Failed to delete spare part ${partId}: ${deleteResponse.status}`);
-            }
-          } catch (deleteError) {
-            console.error(`❌ Failed to auto-delete spare part ${partId}:`, deleteError);
-          }
-        }
-      }
+      // Server handles auto-delete
       
       return response.json();
     },
@@ -836,27 +804,7 @@ export function OrdersTab() {
         throw new Error("Fehler beim Aktualisieren des Zubehörs");
       }
       
-      // Auto-delete if status is "erledigt"
-      if (status === "erledigt") {
-        console.log(`🔄 Auto-deleting ${accessoryIds.length} accessories with status "erledigt"`);
-        for (const accessoryId of accessoryIds) {
-          try {
-            console.log(`🗑️ Attempting to delete accessory ${accessoryId}...`);
-            const deleteResponse = await apiRequest("DELETE", `/api/orders/accessories/${accessoryId}`, null, {
-              "X-User-ID": String(user?.id || 0),
-            });
-            if (deleteResponse.ok) {
-              console.log(`✅ Auto-deleted accessory ${accessoryId} with status "erledigt"`);
-            } else {
-              console.error(`❌ Failed to delete accessory ${accessoryId}: ${deleteResponse.status}`);
-              const errorText = await deleteResponse.text();
-              console.error(`❌ Delete error details:`, errorText);
-            }
-          } catch (deleteError) {
-            console.error(`❌ Failed to auto-delete accessory ${accessoryId}:`, deleteError);
-          }
-        }
-      }
+      // Server handles auto-delete
       
       return response.json();
     },

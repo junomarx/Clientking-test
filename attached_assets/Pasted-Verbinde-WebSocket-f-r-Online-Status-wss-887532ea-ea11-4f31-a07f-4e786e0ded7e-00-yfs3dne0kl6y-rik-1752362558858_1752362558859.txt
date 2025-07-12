@@ -1,0 +1,57 @@
+Verbinde WebSocket für Online-Status: wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/ws/status
+Sidebar.tsx:51 
+        
+        
+       GET https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/api/can-view-detailed-stats 401 (Unauthorized)
+checkStatsPermission @ Sidebar.tsx:51
+(anonymous) @ Sidebar.tsx:62
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=c02f710a:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=c02f710a:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=c02f710a:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=c02f710a:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=c02f710a:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=c02f710a:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=c02f710a:19447
+commitRootImpl @ chunk-RPCDYKBN.js?v=c02f710a:19416
+commitRoot @ chunk-RPCDYKBN.js?v=c02f710a:19277
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=c02f710a:18895
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=c02f710a:9119
+(anonymous) @ chunk-RPCDYKBN.js?v=c02f710a:18627
+setTimeout
+scheduleFn @ @tanstack_react-query.js?v=c02f710a:555
+flush @ @tanstack_react-query.js?v=c02f710a:569
+batch @ @tanstack_react-query.js?v=c02f710a:587
+dispatch_fn @ @tanstack_react-query.js?v=c02f710a:996
+setData @ @tanstack_react-query.js?v=c02f710a:696
+onSuccess @ @tanstack_react-query.js?v=c02f710a:897
+resolve @ @tanstack_react-query.js?v=c02f710a:456
+Promise.then
+run @ @tanstack_react-query.js?v=c02f710a:498
+start @ @tanstack_react-query.js?v=c02f710a:536
+fetch @ @tanstack_react-query.js?v=c02f710a:926
+executeFetch_fn @ @tanstack_react-query.js?v=c02f710a:2211
+onSubscribe @ @tanstack_react-query.js?v=c02f710a:1898
+subscribe @ @tanstack_react-query.js?v=c02f710a:24
+(anonymous) @ @tanstack_react-query.js?v=c02f710a:3022
+subscribeToStore @ chunk-RPCDYKBN.js?v=c02f710a:11984
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=c02f710a:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=c02f710a:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=c02f710a:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=c02f710a:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=c02f710a:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=c02f710a:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=c02f710a:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=c02f710a:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=c02f710a:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=c02f710a:19432
+commitRoot @ chunk-RPCDYKBN.js?v=c02f710a:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=c02f710a:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=c02f710a:18718
+workLoop @ chunk-RPCDYKBN.js?v=c02f710a:197
+flushWork @ chunk-RPCDYKBN.js?v=c02f710a:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=c02f710a:384
+use-online-status.tsx:55 WebSocket-Verbindung für Online-Status hergestellt
+use-online-status.tsx:115 WebSocket-Authentifizierung erfolgreich
+OrdersTab.tsx:157 Order data: {id: 43, articleName: 'yo mum', quantity: 1, unitPrice: '89', totalPrice: '89.00', …}
+OrdersTab.tsx:158 downPayment field: undefined
+OrdersTab.tsx:159 down_payment field: undefined
