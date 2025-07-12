@@ -169,8 +169,10 @@ export function OrdersTab() {
       queryClient.invalidateQueries({ 
         predicate: (query) => {
           return Array.isArray(query.queryKey) && 
-                 query.queryKey[0] === '/api/repairs' && 
-                 query.queryKey[2] === 'spare-parts';
+                 query.queryKey.length === 1 &&
+                 typeof query.queryKey[0] === 'string' &&
+                 query.queryKey[0].includes('/api/repairs/') &&
+                 query.queryKey[0].includes('/spare-parts');
         }
       });
       toast({
@@ -373,8 +375,10 @@ export function OrdersTab() {
       queryClient.invalidateQueries({ 
         predicate: (query) => {
           return Array.isArray(query.queryKey) && 
-                 query.queryKey[0] === '/api/repairs' && 
-                 query.queryKey[2] === 'spare-parts';
+                 query.queryKey.length === 1 &&
+                 typeof query.queryKey[0] === 'string' &&
+                 query.queryKey[0].includes('/api/repairs/') &&
+                 query.queryKey[0].includes('/spare-parts');
         }
       });
       toast({
