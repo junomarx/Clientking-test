@@ -153,7 +153,7 @@ export function OrdersTab() {
   };
 
   const handleOrderRowClick = async (order: any, type: "spare-part" | "accessory") => {
-    // Vollständige native Browser-Implementierung ohne React-Modal
+    // Native HTML-Modal erstellen ohne React
     const isAccessory = type === "accessory";
     const orderName = isAccessory ? order.articleName : order.partName;
     
@@ -170,115 +170,164 @@ export function OrdersTab() {
       }
     }
     
-    // Vollständige Informationen sammeln
-    let details = `🔧 ${isAccessory ? "ZUBEHÖR" : "ERSATZTEIL"} DETAILS\n`;
-    details += `${"=".repeat(50)}\n\n`;
+    // Modal-Container erstellen
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4';
+    modal.onclick = (e) => {
+      if (e.target === modal) modal.remove();
+    };
     
-    // Artikel-Informationen
-    details += `📦 ARTIKEL-INFORMATIONEN:\n`;
-    details += `   • Name: ${orderName}\n`;
-    details += `   • Menge: ${order.quantity}x\n`;
-    details += `   • Status: ${order.status.toUpperCase()}\n`;
-    details += `   • Erstellt: ${new Date(order.createdAt).toLocaleDateString("de-DE")}\n`;
+    // Modal-Content
+    const content = document.createElement('div');
+    content.className = 'bg-white rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto';
     
-    if (isAccessory) {
-      details += `   • Einzelpreis: €${order.unitPrice || "0.00"}\n`;
-      details += `   • Gesamtpreis: €${order.totalPrice || "0.00"}\n`;
-      if (order.downPayment) {
-        details += `   • Anzahlung: €${order.downPayment}\n`;
-      }
-      details += `   • Typ: ${order.type === "kundenbestellung" ? "Kundenbestellung" : "Lager"}\n`;
-    } else {
-      if (order.supplier) {
-        details += `   • Lieferant: ${order.supplier}\n`;
-      }
-      if (order.repairId) {
-        details += `   • Reparatur-ID: #${order.repairId}\n`;
-      }
-    }
+    const statusColors = {
+      'bestellen': 'bg-red-100 text-red-800',
+      'bestellt': 'bg-yellow-100 text-yellow-800', 
+      'eingetroffen': 'bg-blue-100 text-blue-800',
+      'erledigt': 'bg-green-100 text-green-800'
+    };
     
-    details += `\n`;
+    content.innerHTML = `
+      <div class="p-6">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6 border-b pb-4">
+          <h2 class="text-xl font-bold text-gray-900">
+            ${isAccessory ? "🔧 Zubehör" : "⚙️ Ersatzteil"} Details
+          </h2>
+          <button id="closeModal" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+        </div>
+        
+        <!-- Artikel-Info -->
+        <div class="mb-6 bg-gray-50 p-4 rounded-lg">
+          <h3 class="font-semibold text-gray-900 mb-3">📦 Artikel-Informationen</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+            <div><span class="font-medium">Name:</span> ${orderName}</div>
+            <div><span class="font-medium">Menge:</span> ${order.quantity}x</div>
+            <div class="flex items-center gap-2">
+              <span class="font-medium">Status:</span>
+              <span class="px-2 py-1 rounded-full text-xs ${statusColors[order.status] || 'bg-gray-100 text-gray-800'}">
+                ${order.status.toUpperCase()}
+              </span>
+            </div>
+            <div><span class="font-medium">Erstellt:</span> ${new Date(order.createdAt).toLocaleDateString("de-DE")}</div>
+            ${isAccessory ? `
+              <div><span class="font-medium">Einzelpreis:</span> €${order.unitPrice || "0.00"}</div>
+              <div><span class="font-medium">Gesamtpreis:</span> €${order.totalPrice || "0.00"}</div>
+              ${order.downPayment ? `<div><span class="font-medium">Anzahlung:</span> €${order.downPayment}</div>` : ''}
+              <div><span class="font-medium">Typ:</span> ${order.type === "kundenbestellung" ? "Kundenbestellung" : "Lager"}</div>
+            ` : `
+              ${order.supplier ? `<div><span class="font-medium">Lieferant:</span> ${order.supplier}</div>` : ''}
+              ${order.repairId ? `<div><span class="font-medium">Reparatur-ID:</span> #${order.repairId}</div>` : ''}
+            `}
+          </div>
+        </div>
+        
+        <!-- Kundendaten -->
+        ${customerData ? `
+          <div class="mb-6 bg-blue-50 p-4 rounded-lg">
+            <h3 class="font-semibold text-gray-900 mb-3">👤 Kundendaten</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+              <div><span class="font-medium">Name:</span> ${customerData.firstName} ${customerData.lastName}</div>
+              ${customerData.phone ? `<div><span class="font-medium">Telefon:</span> ${customerData.phone}</div>` : ''}
+              ${customerData.email ? `<div><span class="font-medium">E-Mail:</span> ${customerData.email}</div>` : ''}
+              ${customerData.address || customerData.zipCode || customerData.city ? `
+                <div class="md:col-span-2">
+                  <span class="font-medium">Adresse:</span> 
+                  ${customerData.address || ''} ${customerData.zipCode || ''} ${customerData.city || ''}
+                </div>
+              ` : ''}
+              <div><span class="font-medium">Kunde seit:</span> ${new Date(customerData.createdAt).toLocaleDateString("de-DE")}</div>
+            </div>
+          </div>
+        ` : order.customerId ? `
+          <div class="mb-6 bg-yellow-50 p-4 rounded-lg">
+            <p class="text-sm text-yellow-800">👤 Kundendaten werden geladen...</p>
+          </div>
+        ` : `
+          <div class="mb-6 bg-gray-50 p-4 rounded-lg">
+            <p class="text-sm text-gray-600">👤 Lager-Bestellung (kein Kunde zugeordnet)</p>
+          </div>
+        `}
+        
+        <!-- Notizen -->
+        ${order.notes ? `
+          <div class="mb-6 bg-green-50 p-4 rounded-lg">
+            <h3 class="font-semibold text-gray-900 mb-2">📝 Notizen</h3>
+            <p class="text-sm text-gray-700 whitespace-pre-wrap">${order.notes}</p>
+          </div>
+        ` : ''}
+        
+        <!-- Status ändern -->
+        <div class="bg-orange-50 p-4 rounded-lg">
+          <h3 class="font-semibold text-gray-900 mb-3">🔄 Status ändern</h3>
+          <div class="flex flex-wrap gap-2">
+            <button id="status-bestellen" class="px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 text-sm">
+              Bestellen
+            </button>
+            <button id="status-bestellt" class="px-3 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-sm">
+              Bestellt
+            </button>
+            <button id="status-eingetroffen" class="px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">
+              Eingetroffen
+            </button>
+            <button id="status-erledigt" class="px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600 text-sm">
+              Erledigt (wird gelöscht)
+            </button>
+          </div>
+          <p class="text-xs text-gray-500 mt-2">
+            Aktueller Status: <strong>${order.status}</strong>
+          </p>
+        </div>
+      </div>
+    `;
     
-    // Kundendaten
-    if (customerData) {
-      details += `👤 KUNDENDATEN:\n`;
-      details += `   • Name: ${customerData.firstName} ${customerData.lastName}\n`;
-      if (customerData.phone) {
-        details += `   • Telefon: ${customerData.phone}\n`;
-      }
-      if (customerData.email) {
-        details += `   • E-Mail: ${customerData.email}\n`;
-      }
-      if (customerData.address || customerData.zipCode || customerData.city) {
-        details += `   • Adresse: `;
-        if (customerData.address) details += `${customerData.address}, `;
-        if (customerData.zipCode || customerData.city) {
-          details += `${customerData.zipCode || ""} ${customerData.city || ""}`;
+    modal.appendChild(content);
+    document.body.appendChild(modal);
+    
+    // Event Listeners
+    content.querySelector('#closeModal').onclick = () => modal.remove();
+    
+    // Status-Buttons
+    ['bestellen', 'bestellt', 'eingetroffen', 'erledigt'].forEach(status => {
+      content.querySelector(`#status-${status}`).onclick = async () => {
+        if (status === 'erledigt' && !confirm('Artikel wird unwiderruflich gelöscht. Fortfahren?')) {
+          return;
         }
-        details += `\n`;
-      }
-      details += `   • Kunde seit: ${new Date(customerData.createdAt).toLocaleDateString("de-DE")}\n`;
-    } else if (order.customerId) {
-      details += `👤 KUNDENDATEN: Lade...\n`;
-    } else {
-      details += `👤 KUNDENDATEN: Lager-Bestellung (kein Kunde)\n`;
-    }
-    
-    if (order.notes) {
-      details += `\n📝 NOTIZEN:\n${order.notes}\n`;
-    }
-    
-    details += `\n${"=".repeat(50)}\n`;
-    details += `💡 STATUS ÄNDERN:\n`;
-    details += `   • Verwenden Sie die Dropdown-Menüs in der Tabelle\n`;
-    details += `   • Verfügbare Status: Bestellen → Bestellt → Eingetroffen → Erledigt\n`;
-    details += `   • "Erledigt" = automatische Löschung\n`;
-    
-    // Status-Änderung anbieten
-    const newStatus = prompt(
-      details + `\n\n🔄 STATUS ÄNDERN?\n` +
-      `Aktueller Status: ${order.status}\n\n` +
-      `Neuen Status eingeben:\n` +
-      `• "bestellen" = Bestellen\n` +
-      `• "bestellt" = Bestellt\n` +
-      `• "eingetroffen" = Eingetroffen\n` +
-      `• "erledigt" = Erledigt (wird gelöscht)\n\n` +
-      `Neuen Status eingeben oder "abbrechen":`
-    );
-    
-    if (newStatus && newStatus.toLowerCase() !== "abbrechen" && 
-        ["bestellen", "bestellt", "eingetroffen", "erledigt"].includes(newStatus.toLowerCase())) {
-      
-      try {
-        if (isAccessory) {
-          await apiRequest('PUT', `/api/orders/accessories/bulk-update`, {
-            accessoryIds: [order.id],
-            status: newStatus.toLowerCase()
+        
+        try {
+          if (isAccessory) {
+            await apiRequest('PUT', `/api/orders/accessories/bulk-update`, {
+              accessoryIds: [order.id],
+              status: status
+            });
+          } else {
+            await apiRequest('PUT', `/api/orders/spare-parts/bulk-update`, {
+              sparePartIds: [order.id],
+              status: status
+            });
+          }
+          
+          toast({
+            title: "Status aktualisiert",
+            description: `Status wurde auf "${status}" geändert`,
           });
-        } else {
-          await apiRequest('PUT', `/api/orders/spare-parts/bulk-update`, {
-            sparePartIds: [order.id],
-            status: newStatus.toLowerCase()
+          
+          // Cache invalidieren
+          queryClient.invalidateQueries({ queryKey: ['/api/orders/spare-parts'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/orders/accessories'] });
+          
+          modal.remove();
+          
+        } catch (error: any) {
+          toast({
+            title: "Fehler",
+            description: error.message || "Status konnte nicht geändert werden",
+            variant: "destructive",
           });
         }
-        
-        toast({
-          title: "Status aktualisiert",
-          description: `Status wurde auf "${newStatus}" geändert`,
-        });
-        
-        // Cache invalidieren
-        queryClient.invalidateQueries({ queryKey: ['/api/orders/spare-parts'] });
-        queryClient.invalidateQueries({ queryKey: ['/api/orders/accessories'] });
-        
-      } catch (error: any) {
-        toast({
-          title: "Fehler",
-          description: error.message || "Status konnte nicht geändert werden",
-          variant: "destructive",
-        });
-      }
-    }
+      };
+    });
   };
 
   // handleOrderDetailsClose entfernt - nicht mehr benötigt
