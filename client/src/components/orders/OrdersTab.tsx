@@ -165,6 +165,14 @@ export function OrdersTab() {
       queryClient.invalidateQueries({ queryKey: ['/api/orders/spare-parts'] });
       queryClient.invalidateQueries({ queryKey: ['/api/spare-parts/with-repairs'] });
       queryClient.invalidateQueries({ queryKey: ['/api/repairs'] }); // Auch Reparaturen neu laden
+      // Invalidate all repair-specific spare parts queries for RepairDetailsDialog
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          return Array.isArray(query.queryKey) && 
+                 query.queryKey[0] === '/api/repairs' && 
+                 query.queryKey[2] === 'spare-parts';
+        }
+      });
       toast({
         title: "Ersatzteile aktualisiert",
         description: "Die ausgewählten Ersatzteile wurden erfolgreich aktualisiert.",
@@ -361,6 +369,14 @@ export function OrdersTab() {
       queryClient.invalidateQueries({ queryKey: ['/api/orders/spare-parts'] });
       queryClient.invalidateQueries({ queryKey: ['/api/spare-parts/with-repairs'] });
       queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
+      // Invalidate all repair-specific spare parts queries for RepairDetailsDialog
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          return Array.isArray(query.queryKey) && 
+                 query.queryKey[0] === '/api/repairs' && 
+                 query.queryKey[2] === 'spare-parts';
+        }
+      });
       toast({
         title: "Status aktualisiert",
         description: "Ersatzteil-Status wurde erfolgreich geändert.",
