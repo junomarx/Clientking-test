@@ -153,6 +153,11 @@ export function OrdersTab() {
   };
 
   const handleOrderRowClick = async (order: any, type: "spare-part" | "accessory") => {
+    // Debug: Daten struktur anzeigen
+    console.log('Order data:', order);
+    console.log('downPayment field:', order.downPayment);
+    console.log('down_payment field:', order.down_payment);
+    
     // Native HTML-Modal erstellen ohne React
     const isAccessory = type === "accessory";
     const orderName = isAccessory ? order.articleName : order.partName;
@@ -214,7 +219,7 @@ export function OrdersTab() {
             ${isAccessory ? `
               <div><span class="font-medium">Einzelpreis:</span> €${order.unitPrice || "0.00"}</div>
               <div><span class="font-medium">Gesamtpreis:</span> €${order.totalPrice || "0.00"}</div>
-              <div><span class="font-medium">Anzahlung:</span> €${order.downPayment || "0.00"}</div>
+              <div><span class="font-medium">Anzahlung:</span> €${order.downPayment || order.down_payment || "0.00"}</div>
               <div><span class="font-medium">Typ:</span> ${order.type === "kundenbestellung" ? "Kundenbestellung" : "Lager"}</div>
             ` : `
               ${order.supplier ? `<div><span class="font-medium">Lieferant:</span> ${order.supplier}</div>` : ''}
@@ -321,10 +326,7 @@ export function OrdersTab() {
           await queryClient.refetchQueries({ queryKey: ['/api/orders/spare-parts'] });
           await queryClient.refetchQueries({ queryKey: ['/api/orders/accessories'] });
           
-          // Kurz warten für Server-Update
-          setTimeout(() => {
-            window.location.reload();
-          }, 500);
+          // Modal schließen und Daten werden automatisch aktualisiert
           
           modal.remove();
           
