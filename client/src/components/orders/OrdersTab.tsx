@@ -762,48 +762,7 @@ export function OrdersTab() {
             <Package className="h-4 w-4" />
             <span className="hidden md:inline">Zubehör hinzufügen</span>
           </Button>
-          <Button
-            onClick={async () => {
-              console.log("🧪 Testing auto-delete functionality...");
-              
-              // Create test accessory
-              const testAccessory = {
-                articleName: "TEST Auto-Delete",
-                quantity: 1,
-                unitPrice: "0.00",
-                totalPrice: "0.00",
-                notes: "Test für automatisches Löschen",
-                customerId: null,
-                isStock: true,
-              };
-              
-              try {
-                const response = await apiRequest("POST", "/api/orders/accessories", testAccessory, {
-                  "X-User-ID": String(user?.id || 0),
-                });
-                
-                if (response.ok) {
-                  const data = await response.json();
-                  console.log(`✅ Created test accessory with ID: ${data.id}`);
-                  
-                  // Wait 1000ms then mark as "erledigt" to trigger auto-delete
-                  setTimeout(() => {
-                    console.log(`🔄 Marking accessory ${data.id} as "erledigt"...`);
-                    handleAccessoryStatusChange(data.id, "erledigt");
-                  }, 1000);
-                } else {
-                  console.error("❌ Failed to create test accessory");
-                }
-              } catch (error) {
-                console.error("❌ Error creating test accessory:", error);
-              }
-            }}
-            className="flex items-center gap-2"
-            size="sm"
-            variant="destructive"
-          >
-            🧪 <span className="hidden md:inline">Test Auto-Delete</span>
-          </Button>
+          
         </div>
       </div>
 
