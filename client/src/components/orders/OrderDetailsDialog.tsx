@@ -82,6 +82,26 @@ export function OrderDetailsDialog({ order, open, onOpenChange, type }: OrderDet
     return format(new Date(dateString), 'dd.MM.yyyy HH:mm', { locale: de });
   };
 
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status) {
+      case 'bestellen': return 'destructive';
+      case 'bestellt': return 'secondary';
+      case 'eingetroffen': return 'default';
+      case 'erledigt': return 'default';
+      default: return 'outline';
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'bestellen': return 'Bestellen';
+      case 'bestellt': return 'Bestellt';
+      case 'eingetroffen': return 'Eingetroffen';
+      case 'erledigt': return 'Erledigt';
+      default: return status;
+    }
+  };
+
   // Kundendaten laden
   useEffect(() => {
     const fetchCustomerData = async () => {
@@ -130,26 +150,6 @@ export function OrderDetailsDialog({ order, open, onOpenChange, type }: OrderDet
       setStatusHistory(mockHistory);
     }
   }, [open, order, user]);
-
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case 'bestellen': return 'destructive';
-      case 'bestellt': return 'secondary';
-      case 'eingetroffen': return 'default';
-      case 'erledigt': return 'default';
-      default: return 'outline';
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'bestellen': return 'Bestellen';
-      case 'bestellt': return 'Bestellt';
-      case 'eingetroffen': return 'Eingetroffen';
-      case 'erledigt': return 'Erledigt';
-      default: return status;
-    }
-  };
 
   // Status-Update-Mutation
   const updateStatusMutation = useMutation({
