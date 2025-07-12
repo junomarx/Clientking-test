@@ -323,7 +323,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/orders/accessories-bulk-update", async (req: Request, res: Response) => {
+  app.put("/api/orders/accessories/bulk-update", async (req: Request, res: Response) => {
     try {
       const userId = parseInt(req.header('X-User-ID') || '0');
       if (!userId) {
@@ -585,6 +585,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Fehler beim Speichern der Kiosk-Unterschrift:", error);
       res.status(500).json({ message: "Fehler beim Speichern der Unterschrift" });
+    }
+  });
+
+  // Ersatzteil Bulk-Update Route (Header-basiert)
+  app.put("/api/orders/spare-parts/bulk-update", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.header('X-User-ID') || '0');
+      if (!userId) {
+        return res.status(401).json({ message: "X-User-ID Header fehlt" });
+      }
+      
+      const { sparePartIds, status } = req.body;
+      
+      console.log(`[DIREKTE ROUTE] Bulk-Update für Ersatzteile:`, { sparePartIds, status, userId });
+      
+      if (!Array.isArray(sparePartIds) || sparePartIds.length === 0) {
+        return res.status(400).json({ message: "Ungültige Ersatzteil-IDs" });
+      }
+      
+      if (!status || typeof status !== 'string') {
+        return res.status(400).json({ message: "Ungültiger Status" });
+      }
+      
+      const success = await storage.bulkUpdateSparePartStatus(sparePartIds, status, userId);
+      
+      if (success) {
+        res.json({ message: "Ersatzteile erfolgreich aktualisiert", sparePartIds, status });
+      } else {
+        res.status(500).json({ message: "Fehler beim Aktualisieren der Ersatzteile" });
+      }
+    } catch (error) {
+      console.error("[DIREKTE ROUTE] Fehler beim Bulk-Update der Ersatzteile:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Aktualisieren der Ersatzteile",
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
   

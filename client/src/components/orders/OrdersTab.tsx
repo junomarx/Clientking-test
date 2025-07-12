@@ -214,7 +214,7 @@ export function OrdersTab() {
             ${isAccessory ? `
               <div><span class="font-medium">Einzelpreis:</span> €${order.unitPrice || "0.00"}</div>
               <div><span class="font-medium">Gesamtpreis:</span> €${order.totalPrice || "0.00"}</div>
-              ${order.downPayment ? `<div><span class="font-medium">Anzahlung:</span> €${order.downPayment}</div>` : ''}
+              <div><span class="font-medium">Anzahlung:</span> €${order.downPayment || "0.00"}</div>
               <div><span class="font-medium">Typ:</span> ${order.type === "kundenbestellung" ? "Kundenbestellung" : "Lager"}</div>
             ` : `
               ${order.supplier ? `<div><span class="font-medium">Lieferant:</span> ${order.supplier}</div>` : ''}
@@ -296,16 +296,18 @@ export function OrdersTab() {
         }
         
         try {
-          if (isAccessory) {
-            await apiRequest('PUT', `/api/orders/accessories/bulk-update`, {
-              accessoryIds: [order.id],
-              status: status
-            });
-          } else {
-            await apiRequest('PUT', `/api/orders/spare-parts/bulk-update`, {
-              sparePartIds: [order.id],
-              status: status
-            });
+          const response = isAccessory 
+            ? await apiRequest('PUT', `/api/orders/accessories/bulk-update`, {
+                accessoryIds: [order.id],
+                status: status
+              })
+            : await apiRequest('PUT', `/api/orders/spare-parts/bulk-update`, {
+                sparePartIds: [order.id],
+                status: status
+              });
+          
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
           }
           
           toast({
@@ -313,9 +315,16 @@ export function OrdersTab() {
             description: `Status wurde auf "${status}" geändert`,
           });
           
-          // Cache invalidieren
-          queryClient.invalidateQueries({ queryKey: ['/api/orders/spare-parts'] });
-          queryClient.invalidateQueries({ queryKey: ['/api/orders/accessories'] });
+          // Forcierte Cache-Invalidierung und Neuladung
+          await queryClient.invalidateQueries({ queryKey: ['/api/orders/spare-parts'] });
+          await queryClient.invalidateQueries({ queryKey: ['/api/orders/accessories'] });
+          await queryClient.refetchQueries({ queryKey: ['/api/orders/spare-parts'] });
+          await queryClient.refetchQueries({ queryKey: ['/api/orders/accessories'] });
+          
+          // Kurz warten für Server-Update
+          setTimeout(() => {
+            window.location.reload();
+          }, 500);
           
           modal.remove();
           
