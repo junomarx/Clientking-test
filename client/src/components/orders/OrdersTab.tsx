@@ -184,10 +184,35 @@ export function OrdersTab() {
       const response = await apiRequest("PATCH", "/api/orders/accessories-bulk-update", {
         accessoryIds,
         status,
+      }, {
+        "X-User-ID": String(user?.id || 0),
       });
       if (!response.ok) {
         throw new Error("Fehler beim Aktualisieren der Zubehör-Artikel");
       }
+      
+      // Auto-delete if status is "erledigt"
+      if (status === "erledigt") {
+        console.log(`🔄 BULK Auto-deleting ${accessoryIds.length} accessories with status "erledigt"`);
+        for (const accessoryId of accessoryIds) {
+          try {
+            console.log(`🗑️ BULK Attempting to delete accessory ${accessoryId}...`);
+            const deleteResponse = await apiRequest("DELETE", `/api/orders/accessories/${accessoryId}`, null, {
+              "X-User-ID": String(user?.id || 0),
+            });
+            if (deleteResponse.ok) {
+              console.log(`✅ BULK Auto-deleted accessory ${accessoryId} with status "erledigt"`);
+            } else {
+              console.error(`❌ BULK Failed to delete accessory ${accessoryId}: ${deleteResponse.status}`);
+              const errorText = await deleteResponse.text();
+              console.error(`❌ BULK Delete error details:`, errorText);
+            }
+          } catch (deleteError) {
+            console.error(`❌ BULK Failed to auto-delete accessory ${accessoryId}:`, deleteError);
+          }
+        }
+      }
+      
       return response.json();
     },
     onSuccess: () => {
@@ -359,10 +384,21 @@ export function OrdersTab() {
       return;
     }
 
-    bulkAccessoryUpdateMutation.mutate({
-      accessoryIds: Array.from(selectedAccessories),
-      status,
-    });
+    console.log(`🔄 BULK UPDATE: ${selectedAccessories.size} accessories -> ${status}`);
+    
+    // For "erledigt" status, use the auto-delete mutation instead
+    if (status === "erledigt") {
+      console.log(`🗑️ Using auto-delete mutation for bulk "erledigt" status`);
+      singleAccessoryUpdateMutation.mutate({
+        accessoryIds: Array.from(selectedAccessories),
+        status,
+      });
+    } else {
+      bulkAccessoryUpdateMutation.mutate({
+        accessoryIds: Array.from(selectedAccessories),
+        status,
+      });
+    }
   };
 
   // Exportfunktionen
