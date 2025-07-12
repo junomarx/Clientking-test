@@ -2031,6 +2031,23 @@ export class DatabaseStorage implements IStorage {
     const user = await this.getUser(userId);
     if (!user || !user.shopId) return undefined;
     
+    // AUTO-DELETE: If status is "erledigt", delete instead of update
+    if (accessoryData.status === "erledigt") {
+      console.log(`🗑️ SERVER: Auto-deleting single accessory ${id} with status "erledigt"`);
+      
+      const deleteResult = await db
+        .delete(accessories)
+        .where(and(eq(accessories.id, id), eq(accessories.shopId, user.shopId)))
+        .returning();
+      
+      if (deleteResult.length > 0) {
+        console.log(`✅ SERVER: Auto-deleted accessory ${id} with "erledigt" status`);
+        return deleteResult[0]; // Return the deleted accessory
+      }
+      return undefined;
+    }
+    
+    // Regular status update for non-"erledigt" statuses
     const [accessory] = await db
       .update(accessories)
       .set({ ...accessoryData, updatedAt: new Date() })
@@ -2059,7 +2076,25 @@ export class DatabaseStorage implements IStorage {
       
       console.log(`bulkUpdateAccessoryStatus: Aktualisiere ${accessoryIds.length} Zubehör-Artikel für Benutzer ${userId} (Shop ${user.shopId}) auf Status '${status}'`);
       
-      // Shop-Isolation: Nur Zubehör des eigenen Shops aktualisieren
+      // AUTO-DELETE: If status is "erledigt", delete instead of update
+      if (status === "erledigt") {
+        console.log(`🗑️ SERVER: Auto-deleting ${accessoryIds.length} accessories with status "erledigt"`);
+        
+        const deleteResult = await db
+          .delete(accessories)
+          .where(
+            and(
+              inArray(accessories.id, accessoryIds),
+              eq(accessories.shopId, user.shopId)
+            )
+          );
+        
+        const deletedCount = deleteResult.rowCount;
+        console.log(`✅ SERVER: Auto-deleted ${deletedCount} accessories with "erledigt" status`);
+        return deletedCount > 0;
+      }
+      
+      // Regular status update for non-"erledigt" statuses
       const result = await db
         .update(accessories)
         .set({ 
