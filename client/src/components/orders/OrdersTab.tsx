@@ -30,6 +30,7 @@ import { Package, Settings, Search, Filter, Download, Plus, MoreVertical, CheckS
 import { SparePartsManagementDialog } from "./SparePartsManagementDialog";
 import { AddSparePartDialog } from "./AddSparePartDialog";
 import { AddAccessoryDialog } from "./AddAccessoryDialog";
+import { OrderDetailsDialog } from "./OrderDetailsDialog";
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -107,6 +108,11 @@ export function OrdersTab() {
   const [isAddAccessoryDialogOpen, setIsAddAccessoryDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"spare-parts" | "accessories">("spare-parts");
   
+  // OrderDetailsDialog State
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [isOrderDetailsDialogOpen, setIsOrderDetailsDialogOpen] = useState(false);
+  const [orderDetailsType, setOrderDetailsType] = useState<"spare-part" | "accessory">("spare-part");
+  
   // Filter und Suche States
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -147,6 +153,17 @@ export function OrdersTab() {
   const handleSparePartsDialogClose = () => {
     setIsSparePartsDialogOpen(false);
     setSelectedRepairId(null);
+  };
+
+  const handleOrderRowClick = (order: any, type: "spare-part" | "accessory") => {
+    setSelectedOrder(order);
+    setOrderDetailsType(type);
+    setIsOrderDetailsDialogOpen(true);
+  };
+
+  const handleOrderDetailsClose = () => {
+    setIsOrderDetailsDialogOpen(false);
+    setSelectedOrder(null);
   };
 
   // Bulk-Aktionen für Ersatzteile
@@ -933,8 +950,12 @@ export function OrdersTab() {
                 filteredSpareParts.map((part) => {
                   const relatedRepair = repairsWithParts.find(r => r.id === part.repairId);
                   return (
-                    <TableRow key={part.id} className="hover:bg-gray-50">
-                      <TableCell>
+                    <TableRow 
+                      key={part.id} 
+                      className="hover:bg-gray-50 cursor-pointer"
+                      onClick={() => handleOrderRowClick(part, "spare-part")}
+                    >
+                      <TableCell onClick={(e) => e.stopPropagation()}>
                         <Checkbox
                           checked={selectedParts.has(part.id)}
                           onCheckedChange={(checked) => handleSelectPart(part.id, checked as boolean)}
@@ -971,7 +992,7 @@ export function OrdersTab() {
                           {getStatusLabel(part.status)}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
@@ -1105,8 +1126,12 @@ export function OrdersTab() {
                   </TableRow>
                 ) : (
                   accessories.map((accessory) => (
-                    <TableRow key={accessory.id} className="hover:bg-gray-50">
-                      <TableCell>
+                    <TableRow 
+                      key={accessory.id} 
+                      className="hover:bg-gray-50 cursor-pointer"
+                      onClick={() => handleOrderRowClick(accessory, "accessory")}
+                    >
+                      <TableCell onClick={(e) => e.stopPropagation()}>
                         <Checkbox
                           checked={selectedAccessories.has(accessory.id)}
                           onCheckedChange={(checked) => handleSelectAccessory(accessory.id, checked as boolean)}
@@ -1143,7 +1168,7 @@ export function OrdersTab() {
                       <TableCell className="text-sm text-gray-500">
                         {format(new Date(accessory.createdAt), 'dd.MM.yyyy', { locale: de })}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
@@ -1295,6 +1320,13 @@ export function OrdersTab() {
       <AddAccessoryDialog
         open={isAddAccessoryDialogOpen}
         onOpenChange={setIsAddAccessoryDialogOpen}
+      />
+
+      <OrderDetailsDialog
+        order={selectedOrder}
+        open={isOrderDetailsDialogOpen}
+        onOpenChange={handleOrderDetailsClose}
+        type={orderDetailsType}
       />
     </div>
   );
