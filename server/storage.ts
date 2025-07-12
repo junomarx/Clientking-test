@@ -2008,12 +2008,33 @@ export class DatabaseStorage implements IStorage {
     const user = await this.getUser(userId);
     if (!user || !user.shopId) return [];
     
-    const userAccessories = await db
-      .select()
+    const accessoryList = await db
+      .select({
+        id: accessories.id,
+        articleName: accessories.articleName,
+        quantity: accessories.quantity,
+        unitPrice: accessories.unitPrice,
+        totalPrice: accessories.totalPrice,
+        customerId: accessories.customerId,
+        type: accessories.type,
+        status: accessories.status,
+        notes: accessories.notes,
+        createdAt: accessories.createdAt,
+        updatedAt: accessories.updatedAt,
+        shopId: accessories.shopId,
+        userId: accessories.userId,
+        customerName: sql<string>`CASE 
+          WHEN ${accessories.customerId} IS NOT NULL 
+          THEN CONCAT(${customers.firstName}, ' ', ${customers.lastName})
+          ELSE NULL 
+        END`.as('customerName')
+      })
       .from(accessories)
+      .leftJoin(customers, eq(accessories.customerId, customers.id))
       .where(eq(accessories.shopId, user.shopId))
       .orderBy(desc(accessories.createdAt));
-    return userAccessories;
+    
+    return accessoryList;
   }
 
   async getAccessory(id: number, userId: number): Promise<Accessory | undefined> {
@@ -4773,8 +4794,28 @@ export class DatabaseStorage implements IStorage {
       const shopId = user.shopId || 1;
       
       const accessoryList = await db
-        .select()
+        .select({
+          id: accessories.id,
+          articleName: accessories.articleName,
+          quantity: accessories.quantity,
+          unitPrice: accessories.unitPrice,
+          totalPrice: accessories.totalPrice,
+          customerId: accessories.customerId,
+          type: accessories.type,
+          status: accessories.status,
+          notes: accessories.notes,
+          createdAt: accessories.createdAt,
+          updatedAt: accessories.updatedAt,
+          shopId: accessories.shopId,
+          userId: accessories.userId,
+          customerName: sql<string>`CASE 
+            WHEN ${accessories.customerId} IS NOT NULL 
+            THEN CONCAT(${customers.firstName}, ' ', ${customers.lastName})
+            ELSE NULL 
+          END`.as('customerName')
+        })
         .from(accessories)
+        .leftJoin(customers, eq(accessories.customerId, customers.id))
         .where(eq(accessories.shopId, shopId))
         .orderBy(desc(accessories.createdAt));
       

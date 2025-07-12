@@ -72,6 +72,7 @@ interface Accessory {
   unitPrice: string;
   totalPrice: string;
   customerId: number | null;
+  customerName?: string | null;
   type: "lager" | "kundenbestellung";
   status: string;
   notes?: string;
@@ -1104,7 +1105,9 @@ export function OrdersTab() {
                       </TableCell>
                       <TableCell>
                         {accessory.customerId ? (
-                          <span className="text-blue-600">Kunde #{accessory.customerId}</span>
+                          <span className="text-blue-600">
+                            {accessory.customerName || `Kunde #${accessory.customerId}`}
+                          </span>
                         ) : (
                           <span className="text-gray-500">Lager</span>
                         )}
