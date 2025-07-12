@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
-import { SparePart, Accessory, Customer, SelectUser } from '@shared/schema';
+import { SparePart, Accessory, Customer } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { apiRequest } from '@/lib/queryClient';
@@ -23,18 +23,13 @@ import {
   User,
   Calendar,
   Euro,
-  MoreVertical,
   Phone,
   Mail,
   MapPin,
-  History,
-  ChevronDown,
-  ChevronUp,
   Clock,
   FileText,
   Tag,
   Clipboard,
-  Pencil,
   AlertCircle,
   CheckSquare,
   Settings
@@ -43,15 +38,6 @@ import {
 // Vereinter Order-Typ für Ersatzteile und Zubehör
 export type OrderItem = (SparePart & { customerName?: string; type: 'spare-part' }) | 
                         (Accessory & { customerName?: string; type: 'accessory' });
-
-interface StatusHistoryEntry {
-  id: number;
-  oldStatus: string | null;
-  newStatus: string;
-  changedAt: string;
-  changedByUsername: string | null;
-  notes: string | null;
-}
 
 interface OrderDetailsDialogProps {
   order: OrderItem | null;
@@ -65,21 +51,27 @@ export function OrderDetailsDialog({ order, open, onOpenChange, type }: OrderDet
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [customer, setCustomer] = useState<Customer | null>(null);
-  const [statusHistory, setStatusHistory] = useState<StatusHistoryEntry[]>([]);
-  const [showStatusHistory, setShowStatusHistory] = useState(false);
 
   if (!order) return null;
 
   const isAccessory = type === 'accessory';
   const title = isAccessory ? 'Zubehör Details' : 'Ersatzteil Details';
 
-  // Formatierungshilfsfunktionen
+  // Hilfsfunktionen
   const formatDate = (dateString: string) => {
-    return format(new Date(dateString), 'dd.MM.yyyy', { locale: de });
+    try {
+      return format(new Date(dateString), 'dd.MM.yyyy', { locale: de });
+    } catch {
+      return 'Unbekannt';
+    }
   };
 
   const formatDateTime = (dateString: string) => {
-    return format(new Date(dateString), 'dd.MM.yyyy HH:mm', { locale: de });
+    try {
+      return format(new Date(dateString), 'dd.MM.yyyy HH:mm', { locale: de });
+    } catch {
+      return 'Unbekannt';
+    }
   };
 
   const getStatusBadgeVariant = (status: string) => {
@@ -121,36 +113,6 @@ export function OrderDetailsDialog({ order, open, onOpenChange, type }: OrderDet
     fetchCustomerData();
   }, [order.customerId, open]);
 
-  // Status-Verlauf laden (Mock-Daten für jetzt)
-  useEffect(() => {
-    if (open) {
-      // Simulierter Status-Verlauf basierend auf dem aktuellen Status
-      const mockHistory: StatusHistoryEntry[] = [
-        {
-          id: 1,
-          oldStatus: null,
-          newStatus: 'bestellen',
-          changedAt: order.createdAt.toString(),
-          changedByUsername: user?.username || null,
-          notes: 'Bestellung erstellt'
-        }
-      ];
-
-      if (order.status !== 'bestellen') {
-        mockHistory.push({
-          id: 2,
-          oldStatus: 'bestellen',
-          newStatus: order.status,
-          changedAt: order.updatedAt?.toString() || order.createdAt.toString(),
-          changedByUsername: user?.username || null,
-          notes: `Status geändert zu ${getStatusLabel(order.status)}`
-        });
-      }
-
-      setStatusHistory(mockHistory);
-    }
-  }, [open, order, user]);
-
   // Status-Update-Mutation
   const updateStatusMutation = useMutation({
     mutationFn: async (newStatus: string) => {
@@ -169,7 +131,6 @@ export function OrderDetailsDialog({ order, open, onOpenChange, type }: OrderDet
       }
     },
     onSuccess: () => {
-      // Cache invalidieren
       queryClient.invalidateQueries({ queryKey: ['/api/orders/spare-parts'] });
       queryClient.invalidateQueries({ queryKey: ['/api/orders/accessories'] });
       toast({
@@ -343,54 +304,11 @@ export function OrderDetailsDialog({ order, open, onOpenChange, type }: OrderDet
               
               <div className="flex items-start gap-2">
                 <Clock className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className="text-sm text-muted-foreground">Status</div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setShowStatusHistory(!showStatusHistory)}
-                      className="h-6 px-2 text-xs"
-                    >
-                      <History className="h-3 w-3 mr-1" />
-                      Verlauf
-                      {showStatusHistory ? <ChevronUp className="h-3 w-3 ml-1" /> : <ChevronDown className="h-3 w-3 ml-1" />}
-                    </Button>
-                  </div>
-                  
-                  {/* Aktueller Status */}
+                <div>
+                  <div className="text-sm text-muted-foreground">Status</div>
                   <Badge variant={getStatusBadgeVariant(order.status)} className="mb-2">
                     {getStatusLabel(order.status)}
                   </Badge>
-                  
-                  {/* Status-Verlauf */}
-                  {showStatusHistory && (
-                    <div className="mt-2 space-y-2 border-t pt-2">
-                      {statusHistory.map((entry) => (
-                        <div key={entry.id} className="text-xs bg-white p-2 rounded border">
-                          <div className="flex items-center justify-between">
-                            <span className="font-medium">
-                              {entry.oldStatus ? `${getStatusLabel(entry.oldStatus)} → ` : ''}
-                              {getStatusLabel(entry.newStatus)}
-                            </span>
-                            <span className="text-muted-foreground">
-                              {formatDateTime(entry.changedAt)}
-                            </span>
-                          </div>
-                          {entry.changedByUsername && (
-                            <div className="text-muted-foreground mt-1">
-                              von {entry.changedByUsername}
-                            </div>
-                          )}
-                          {entry.notes && (
-                            <div className="text-muted-foreground mt-1 italic">
-                              {entry.notes}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
               </div>
 
