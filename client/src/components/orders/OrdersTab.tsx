@@ -30,7 +30,7 @@ import { Package, Settings, Search, Filter, Download, Plus, MoreVertical, CheckS
 import { SparePartsManagementDialog } from "./SparePartsManagementDialog";
 import { AddSparePartDialog } from "./AddSparePartDialog";
 import { AddAccessoryDialog } from "./AddAccessoryDialog";
-import { SimpleOrderModal } from "./SimpleOrderModal";
+import { CompleteOrderDetailsDialog } from "./CompleteOrderDetailsDialog";
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -1319,7 +1319,7 @@ export function OrdersTab() {
         onOpenChange={setIsAddAccessoryDialogOpen}
       />
 
-      <SimpleOrderModal
+      <CompleteOrderDetailsDialog
         isOpen={isOrderModalOpen}
         onClose={() => setIsOrderModalOpen(false)}
         order={selectedOrder}
