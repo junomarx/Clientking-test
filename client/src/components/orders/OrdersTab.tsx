@@ -153,15 +153,7 @@ export function OrdersTab() {
   };
 
   const handleOrderRowClick = async (order: any, type: "spare-part" | "accessory") => {
-    // Debug: Vollständige Datenstruktur anzeigen
-    console.log('Full order object:', JSON.stringify(order, null, 2));
-    console.log('Available keys:', Object.keys(order));
-    
-    // Check all payment-related fields
-    const paymentFields = ['downPayment', 'down_payment', 'downpayment', 'anzahlung'];
-    paymentFields.forEach(field => {
-      console.log(`${field}:`, order[field]);
-    });
+    // downPayment Feld sollte jetzt verfügbar sein
     
     // Native HTML-Modal erstellen ohne React
     const isAccessory = type === "accessory";
@@ -224,7 +216,7 @@ export function OrdersTab() {
             ${isAccessory ? `
               <div><span class="font-medium">Einzelpreis:</span> €${order.unitPrice || "0.00"}</div>
               <div><span class="font-medium">Gesamtpreis:</span> €${order.totalPrice || "0.00"}</div>
-              <div><span class="font-medium">Anzahlung:</span> €${order.downPayment || order.down_payment || order.downpayment || "0.00"}</div>
+              <div><span class="font-medium">Anzahlung:</span> €${order.downPayment || "0.00"}</div>
               <div><span class="font-medium">Typ:</span> ${order.type === "kundenbestellung" ? "Kundenbestellung" : "Lager"}</div>
             ` : `
               ${order.supplier ? `<div><span class="font-medium">Lieferant:</span> ${order.supplier}</div>` : ''}
