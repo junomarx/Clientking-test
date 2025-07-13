@@ -1085,9 +1085,10 @@ export function OrdersTab() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {/* Mobile-first responsive Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {/* Suche */}
-            <div className="relative">
+            <div className="relative sm:col-span-2 lg:col-span-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
                 placeholder="Ersatzteil, Auftrag, Kunde..."
@@ -1127,11 +1128,11 @@ export function OrdersTab() {
             {/* Export Buttons */}
             <Button 
               variant="outline" 
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 sm:col-span-2 lg:col-span-1"
               onClick={exportOrdersToPDF}
             >
               <FileText className="h-4 w-4" />
-              Bestellungen PDF
+              <span className="hidden sm:inline">Bestellungen</span> PDF
             </Button>
           </div>
         </CardContent>
@@ -1141,37 +1142,40 @@ export function OrdersTab() {
       {selectedParts.size > 0 && (
         <Card className="mb-4 border-blue-200 bg-blue-50">
           <CardContent className="p-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <span className="text-sm font-medium">
                 {selectedParts.size} Ersatzteil(e) ausgewählt
               </span>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => handleBulkUpdate("bestellt")}
                   disabled={bulkUpdateMutation.isPending}
+                  className="justify-center"
                 >
                   <CheckSquare className="h-4 w-4 mr-2" />
-                  Als bestellt markieren
+                  <span className="hidden sm:inline">Als</span> bestellt <span className="hidden sm:inline">markieren</span>
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => handleBulkUpdate("eingetroffen")}
                   disabled={bulkUpdateMutation.isPending}
+                  className="justify-center"
                 >
                   <Package className="h-4 w-4 mr-2" />
-                  Als eingetroffen markieren
+                  <span className="hidden sm:inline">Als</span> eingetroffen <span className="hidden sm:inline">markieren</span>
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => handleBulkUpdate("erledigt")}
                   disabled={bulkUpdateMutation.isPending}
+                  className="justify-center"
                 >
                   <CheckSquare className="h-4 w-4 mr-2" />
-                  Als erledigt markieren
+                  <span className="hidden sm:inline">Als</span> erledigt <span className="hidden sm:inline">markieren</span>
                 </Button>
               </div>
             </div>
@@ -1179,10 +1183,11 @@ export function OrdersTab() {
         </Card>
       )}
 
-      {/* Ersatzteile-Tabelle */}
+      {/* Ersatzteile-Tabelle - Desktop */}
       {activeTab === "spare-parts" && (
         <Card>
-          <div className="p-4">
+          {/* Desktop Table */}
+          <div className="hidden md:block p-4">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -1299,6 +1304,101 @@ export function OrdersTab() {
             </TableBody>
             </Table>
           </div>
+
+          {/* Mobile Cards */}
+          <div className="md:hidden p-4 space-y-3">
+            {filteredSpareParts.length > 0 ? (
+              filteredSpareParts.map((part) => {
+                const relatedRepair = repairsWithParts.find(r => r.id === part.repairId);
+                return (
+                  <div 
+                    key={part.id} 
+                    className="bg-white border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                    onClick={() => handleOrderRowClick(part, "spare-part")}
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <Checkbox
+                          checked={selectedParts.has(part.id)}
+                          onCheckedChange={(checked) => handleSelectPart(part.id, checked as boolean)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <div>
+                          <div className="font-semibold text-sm">{part.partName}</div>
+                          {relatedRepair && (
+                            <div className="text-xs text-gray-500">
+                              {relatedRepair.orderCode} • {relatedRepair.brand} {relatedRepair.model}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <Badge variant={getStatusBadgeVariant(part.status)} className="text-xs">
+                        {getStatusLabel(part.status)}
+                      </Badge>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 mb-3">
+                      <div>
+                        <span className="font-medium">Lieferant:</span><br />
+                        {part.supplier || "-"}
+                      </div>
+                      <div>
+                        <span className="font-medium">Erstellt:</span><br />
+                        {format(new Date(part.createdAt), 'dd.MM.yyyy', { locale: de })}
+                      </div>
+                    </div>
+
+                    {part.notes && (
+                      <div className="text-xs text-gray-500 mb-3 p-2 bg-gray-50 rounded">
+                        {part.notes}
+                      </div>
+                    )}
+
+                    <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="sm" className="h-8">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem 
+                            onClick={() => handleSinglePartStatusUpdate(part.id, "bestellt")}
+                            disabled={part.status === "bestellt"}
+                          >
+                            <CheckSquare className="h-4 w-4 mr-2" />
+                            Als bestellt markieren
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleSinglePartStatusUpdate(part.id, "eingetroffen")}
+                            disabled={part.status === "eingetroffen"}
+                          >
+                            <Package className="h-4 w-4 mr-2" />
+                            Als eingetroffen markieren
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleSinglePartStatusUpdate(part.id, "erledigt")}
+                            disabled={part.status === "erledigt"}
+                          >
+                            <CheckSquare className="h-4 w-4 mr-2" />
+                            Als erledigt markieren
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+                <Package className="h-12 w-12 mb-4 text-gray-400" />
+                <p className="text-sm font-medium">Keine Ersatzteile vorhanden</p>
+                <p className="text-xs text-gray-400 mt-1 text-center">
+                  Fügen Sie Ersatzteile über "Ersatzteil hinzufügen" hinzu
+                </p>
+              </div>
+            )}
+          </div>
         </Card>
       )}
 
@@ -1306,37 +1406,40 @@ export function OrdersTab() {
       {activeTab === "accessories" && selectedAccessories.size > 0 && (
         <Card className="mb-4 border-blue-200 bg-blue-50">
           <CardContent className="p-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <span className="text-sm font-medium">
                 {selectedAccessories.size} Zubehör-Artikel ausgewählt
               </span>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => handleBulkAccessoryUpdate("bestellt")}
                   disabled={bulkAccessoryUpdateMutation.isPending}
+                  className="justify-center"
                 >
                   <CheckSquare className="h-4 w-4 mr-2" />
-                  Als bestellt markieren
+                  <span className="hidden sm:inline">Als</span> bestellt <span className="hidden sm:inline">markieren</span>
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => handleBulkAccessoryUpdate("eingetroffen")}
                   disabled={bulkAccessoryUpdateMutation.isPending}
+                  className="justify-center"
                 >
                   <Package className="h-4 w-4 mr-2" />
-                  Als eingetroffen markieren
+                  <span className="hidden sm:inline">Als</span> eingetroffen <span className="hidden sm:inline">markieren</span>
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => handleBulkAccessoryUpdate("erledigt")}
                   disabled={bulkAccessoryUpdateMutation.isPending}
+                  className="justify-center"
                 >
                   <CheckSquare className="h-4 w-4 mr-2" />
-                  Als erledigt markieren
+                  <span className="hidden sm:inline">Als</span> erledigt <span className="hidden sm:inline">markieren</span>
                 </Button>
               </div>
             </div>
@@ -1347,7 +1450,8 @@ export function OrdersTab() {
       {/* Zubehör-Tabelle */}
       {activeTab === "accessories" && (
         <Card>
-          <div className="p-4">
+          {/* Desktop Table */}
+          <div className="hidden md:block p-4">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -1473,72 +1577,117 @@ export function OrdersTab() {
               </TableBody>
             </Table>
           </div>
+
+          {/* Mobile Cards */}
+          <div className="md:hidden p-4 space-y-3">
+            {accessories.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+                <Package className="h-12 w-12 mb-4 text-gray-400" />
+                <p className="text-sm font-medium">Noch keine Zubehör-Bestellungen</p>
+                <p className="text-xs text-gray-400 mt-1 text-center">
+                  Erstellen Sie Ihre erste Zubehör-Bestellung mit dem Button oben
+                </p>
+              </div>
+            ) : (
+              accessories.map((accessory) => (
+                <div 
+                  key={accessory.id} 
+                  className="bg-white border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => handleOrderRowClick(accessory, "accessory")}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <Checkbox
+                        checked={selectedAccessories.has(accessory.id)}
+                        onCheckedChange={(checked) => handleSelectAccessory(accessory.id, checked as boolean)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <div>
+                        <div className="font-semibold text-sm">{accessory.articleName}</div>
+                        <div className="text-xs text-gray-500">
+                          {accessory.customerId ? (
+                            <span className="text-blue-600">
+                              {accessory.customerName || `Kunde #${accessory.customerId}`}
+                            </span>
+                          ) : (
+                            <span className="text-gray-500">Lager</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                      <Badge variant={getAccessoryStatusBadgeVariant(accessory.status)} className="text-xs">
+                        {getAccessoryStatusLabel(accessory.status)}
+                      </Badge>
+                      <Badge variant="outline" className="text-xs">{accessory.quantity}x</Badge>
+                    </div>
+                  </div>
+                  
+                  <div className="text-xs text-gray-600 mb-3">
+                    <span className="font-medium">Erstellt:</span> {format(new Date(accessory.createdAt), 'dd.MM.yyyy', { locale: de })}
+                  </div>
+
+                  {accessory.notes && (
+                    <div className="text-xs text-gray-500 mb-3 p-2 bg-gray-50 rounded">
+                      {accessory.notes}
+                    </div>
+                  )}
+
+                  <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" className="h-8">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem 
+                          onClick={() => handleAccessoryStatusChange(accessory.id, "bestellt")}
+                          disabled={accessory.status === "bestellt"}
+                        >
+                          <CheckSquare className="h-4 w-4 mr-2" />
+                          Als bestellt markieren
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleAccessoryStatusChange(accessory.id, "eingetroffen")}
+                          disabled={accessory.status === "eingetroffen"}
+                        >
+                          <Package className="h-4 w-4 mr-2" />
+                          Als eingetroffen markieren
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            console.log(`🔄 DROPDOWN CLICK: ${accessory.id} -> erledigt`);
+                            console.log(`🔄 Current status: ${accessory.status}`);
+                            if (accessory.status !== "erledigt") {
+                              handleAccessoryStatusChange(accessory.id, "erledigt");
+                            } else {
+                              console.log(`⚠️ Already erledigt, should auto-delete now`);
+                              // Force delete if already erledigt
+                              singleAccessoryUpdateMutation.mutate({
+                                accessoryIds: [accessory.id],
+                                status: "erledigt",
+                              });
+                            }
+                          }}
+                          disabled={false}
+                        >
+                          <CheckSquare className="h-4 w-4 mr-2" />
+                          Als erledigt markieren
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </Card>
       )}
 
-      {/* Mobile Card View */}
-      <div className="md:hidden space-y-3">
-        {filteredSpareParts.map((part) => {
-          const relatedRepair = repairsWithParts.find(r => r.id === part.repairId);
-          return (
-            <Card key={part.id} className="p-4">
-              <div className="space-y-3">
-                <div className="flex justify-between items-start">
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      checked={selectedParts.has(part.id)}
-                      onCheckedChange={(checked) => handleSelectPart(part.id, checked as boolean)}
-                    />
-                    <div>
-                      <div className="font-medium text-sm">{part.partName}</div>
-                      <div className="text-gray-600 text-xs">
-                        {relatedRepair ? `${relatedRepair.orderCode} - ${relatedRepair.brand} ${relatedRepair.model}` : 'Auftrag nicht gefunden'}
-                      </div>
-                    </div>
-                  </div>
-                  <Badge variant={getStatusBadgeVariant(part.status)} className="text-xs">
-                    {getStatusLabel(part.status)}
-                  </Badge>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
-                  <div>
-                    <span className="font-medium">Lieferant:</span> {part.supplier || '-'}
-                  </div>
-                  <div>
-                    <span className="font-medium">Kosten:</span> {part.cost ? `€${part.cost.toFixed(2)}` : '-'}
-                  </div>
-                </div>
-                
-                {part.notes && (
-                  <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
-                    {part.notes}
-                  </div>
-                )}
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-500">
-                    {format(new Date(part.createdAt), 'dd.MM.yyyy', { locale: de })}
-                  </span>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => relatedRepair && handleManageParts(relatedRepair.id)}>
-                        <Settings className="h-4 w-4 mr-2" />
-                        Bearbeiten
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </div>
-            </Card>
-          );
-        })}
-      </div>
+
 
       {selectedRepairId && (
         <SparePartsManagementDialog
