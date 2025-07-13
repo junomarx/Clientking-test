@@ -4441,7 +4441,8 @@ export class DatabaseStorage implements IStorage {
         .from(spareParts)
         .where(and(
           eq(spareParts.shopId, shopId),
-          not(eq(spareParts.status, 'erledigt'))
+          not(eq(spareParts.status, 'erledigt')),
+          not(eq(spareParts.status, 'eingetroffen')) // Eingetroffene Ersatzteile aus Bestellungen-Liste ausblenden
         ))
         .orderBy(desc(spareParts.repairId), desc(spareParts.createdAt));
       
@@ -4483,8 +4484,8 @@ export class DatabaseStorage implements IStorage {
         .innerJoin(repairs, eq(spareParts.repairId, repairs.id))
         .where(and(
           eq(spareParts.shopId, shopId),
-          eq(repairs.status, 'warten_auf_ersatzteile')
-          // hideFromOrdersList Filter temporär entfernt bis DB-Migration abgeschlossen
+          eq(repairs.status, 'warten_auf_ersatzteile'),
+          not(eq(spareParts.status, 'eingetroffen')) // Eingetroffene Ersatzteile aus Bestellungen-Liste ausblenden
         ))
         .orderBy(desc(spareParts.createdAt));
       
