@@ -129,6 +129,12 @@ export function OrdersTab() {
     refetchInterval: 5000, // Reduziert von 30s auf 5s für bessere Performance
   });
 
+  // Alle Reparaturen abrufen für die Validierung
+  const { data: allRepairs = [], isLoading: isLoadingAllRepairs } = useQuery<{id: number; orderCode: string; status: string}[]>({
+    queryKey: ['/api/repairs'],
+    refetchInterval: 5000,
+  });
+
   // Reparaturen mit Ersatzteilen abrufen
   const { data: repairsWithParts = [], isLoading: isLoadingRepairs, error: repairsError } = useQuery<RepairWithCustomer[]>({
     queryKey: ['/api/spare-parts/with-repairs'],
@@ -141,7 +147,7 @@ export function OrdersTab() {
     refetchInterval: 5000,
   });
 
-  const isLoading = isLoadingSpareParts || isLoadingRepairs || isLoadingAccessories;
+  const isLoading = isLoadingSpareParts || isLoadingRepairs || isLoadingAccessories || isLoadingAllRepairs;
   const error = sparePartsError || repairsError || accessoriesError;
 
   const handleManageParts = (repairId: number) => {
@@ -156,7 +162,7 @@ export function OrdersTab() {
 
   const handleAddSparePartClick = () => {
     // Prüfe, ob es Reparaturen mit Status "eingegangen" gibt
-    const incomingRepairs = repairsWithParts.filter(repair => repair.status === 'eingegangen');
+    const incomingRepairs = allRepairs.filter(repair => repair.status === 'eingegangen');
     
     if (incomingRepairs.length === 0) {
       toast({
