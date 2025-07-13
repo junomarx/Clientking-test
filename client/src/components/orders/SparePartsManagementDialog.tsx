@@ -219,11 +219,11 @@ export function SparePartsManagementDialog({
   const getStatusBadgeVariant = (status: string | null | undefined) => {
     switch (status) {
       case 'bestellen':
-        return 'destructive';
+        return 'outline';
       case 'bestellt':
         return 'secondary';
       case 'eingetroffen':
-        return 'default';
+        return 'outline';
       default:
         return 'outline';
     }
@@ -248,7 +248,7 @@ export function SparePartsManagementDialog({
         <DialogHeader>
           <div className="flex justify-between items-center">
             <DialogTitle>Ersatzteile verwalten</DialogTitle>
-            {/* Schließen-Button nur für mobile Ansicht */}
+            {/* Schließen-Button für mobile Ansicht */}
             <Button
               variant="ghost"
               size="icon"

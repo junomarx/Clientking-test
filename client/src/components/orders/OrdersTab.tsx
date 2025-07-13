@@ -341,20 +341,17 @@ export function OrdersTab() {
         ` : ''}
         
         <!-- Status ändern -->
-        <div class="bg-orange-50 p-4 rounded-lg">
+        <div class="bg-gray-50 p-4 rounded-lg">
           <h3 class="font-semibold text-gray-900 mb-3">Status ändern</h3>
-          <div class="flex flex-wrap gap-2">
-            <button id="status-bestellen" class="px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 text-sm">
-              Bestellen
-            </button>
-            <button id="status-bestellt" class="px-3 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-sm">
-              Bestellt
-            </button>
-            <button id="status-eingetroffen" class="px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">
-              Eingetroffen
-            </button>
-            <button id="status-erledigt" class="px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600 text-sm">
-              Erledigt (wird gelöscht)
+          <div class="space-y-2">
+            <select id="status-select" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              <option value="bestellen" ${order.status === 'bestellen' ? 'selected' : ''}>Bestellen</option>
+              <option value="bestellt" ${order.status === 'bestellt' ? 'selected' : ''}>Bestellt</option>
+              <option value="eingetroffen" ${order.status === 'eingetroffen' ? 'selected' : ''}>Eingetroffen</option>
+              <option value="erledigt" ${order.status === 'erledigt' ? 'selected' : ''}>Erledigt (wird gelöscht)</option>
+            </select>
+            <button id="update-status-btn" class="w-full px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm">
+              Status aktualisieren
             </button>
           </div>
           <p class="text-xs text-gray-500 mt-2">
@@ -448,9 +445,13 @@ export function OrdersTab() {
       }
     }
     
-    // Status-Buttons
-    ['bestellen', 'bestellt', 'eingetroffen', 'erledigt'].forEach(status => {
-      content.querySelector(`#status-${status}`).onclick = async () => {
+    // Status-Update-Button
+    const updateStatusBtn = content.querySelector('#update-status-btn');
+    if (updateStatusBtn) {
+      updateStatusBtn.onclick = async () => {
+        const statusSelect = content.querySelector('#status-select');
+        const status = statusSelect.value;
+        
         if (status === 'erledigt' && !confirm('Artikel wird unwiderruflich gelöscht. Fortfahren?')) {
           return;
         }
@@ -482,7 +483,6 @@ export function OrdersTab() {
           await queryClient.refetchQueries({ queryKey: ['/api/orders/accessories'] });
           
           // Modal schließen und Daten werden automatisch aktualisiert
-          
           modal.remove();
           
         } catch (error: any) {
@@ -493,7 +493,7 @@ export function OrdersTab() {
           });
         }
       };
-    });
+    }
   };
 
   // handleOrderDetailsClose entfernt - nicht mehr benötigt
@@ -847,11 +847,11 @@ export function OrdersTab() {
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
       case 'bestellen':
-        return 'destructive';
+        return 'outline';
       case 'bestellt':
         return 'secondary';
       case 'eingetroffen':
-        return 'default';
+        return 'outline';
       case 'erledigt':
         return 'outline';
       default:
