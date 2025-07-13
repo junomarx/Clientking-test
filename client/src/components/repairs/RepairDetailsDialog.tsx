@@ -402,7 +402,6 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                           statusHistoryData
                             .filter((entry) => entry.newStatus !== repair.status) // Aktuellen Status ausschließen
                             .slice(0, 5)
-                            .reverse() // Ältester unten, neuester oben
                             .map((entry) => (
                               <div key={entry.id} className="flex items-center justify-between text-xs py-1">
                                 <div className="flex items-center gap-2">
