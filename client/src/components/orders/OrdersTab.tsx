@@ -358,6 +358,13 @@ export function OrdersTab() {
             Aktueller Status: <strong>${order.status}</strong>
           </p>
         </div>
+        
+        <!-- Mobiler Schließen-Button -->
+        <div class="mt-6 sm:hidden">
+          <button id="closeMobileModal" class="w-full px-4 py-3 bg-gray-600 text-white rounded-md hover:bg-gray-700 font-medium">
+            Schließen
+          </button>
+        </div>
       </div>
     `;
     
@@ -366,6 +373,12 @@ export function OrdersTab() {
     
     // Event Listeners
     content.querySelector('#closeModal').onclick = () => modal.remove();
+    
+    // Mobiler Schließen-Button
+    const closeMobileBtn = content.querySelector('#closeMobileModal');
+    if (closeMobileBtn) {
+      closeMobileBtn.onclick = () => modal.remove();
+    }
     
     // Bearbeiten-Toggle-Button für Zubehör
     if (isAccessory) {
