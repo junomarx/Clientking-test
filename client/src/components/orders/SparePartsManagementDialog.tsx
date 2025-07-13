@@ -54,6 +54,7 @@ const formSchema = insertSparePartSchema.omit({
   repairId: true
 }).extend({
   cost: z.number().optional(),
+  status: z.enum(["bestellen", "bestellt", "eingetroffen"]).default("bestellen"),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -459,7 +460,7 @@ export function SparePartsManagementDialog({
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Status *</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value || "bestellen"}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Status wählen" />
