@@ -4483,7 +4483,8 @@ export class DatabaseStorage implements IStorage {
         .innerJoin(repairs, eq(spareParts.repairId, repairs.id))
         .where(and(
           eq(spareParts.shopId, shopId),
-          eq(repairs.status, 'warten_auf_ersatzteile')
+          eq(repairs.status, 'warten_auf_ersatzteile'),
+          eq(spareParts.hideFromOrdersList, false) // Nur sichtbare Ersatzteile
         ))
         .orderBy(desc(spareParts.createdAt));
       
@@ -4681,20 +4682,26 @@ export class DatabaseStorage implements IStorage {
       
       const repairIds = [...new Set(affectedParts.map(p => p.repairId))];
       
-      // Bei Status "eingetroffen": Löschen statt Update (aus Bestellungen-Liste entfernen)
+      // Bei Status "eingetroffen": hideFromOrdersList setzen statt löschen
       if (status === 'eingetroffen') {
-        console.log(`🗑️ AUTO-DELETE: Lösche Ersatzteile mit IDs ${partIds.join(', ')} da Status = eingetroffen`);
+        console.log(`👁️ HIDE-FROM-ORDERS: Verstecke Ersatzteile mit IDs ${partIds.join(', ')} aus Bestellungen-Liste da Status = eingetroffen`);
         
-        // Ersatzteile löschen (bleiben im RepairDetailsDialog über andere Abfragen verfügbar)
-        const deleteResult = await db
-          .delete(spareParts)
+        // Ersatzteile als versteckt markieren (bleiben im RepairDetailsDialog sichtbar)
+        const hideResult = await db
+          .update(spareParts)
+          .set({
+            status,
+            hideFromOrdersList: true,
+            deliveryDate: new Date(),
+            updatedAt: new Date(),
+          })
           .where(and(
             inArray(spareParts.id, partIds),
             eq(spareParts.shopId, shopId)
           ));
         
-        if (deleteResult.rowCount && deleteResult.rowCount > 0) {
-          console.log(`✅ AUTO-DELETE: ${deleteResult.rowCount} Ersatzteile erfolgreich gelöscht`);
+        if (hideResult.rowCount && hideResult.rowCount > 0) {
+          console.log(`✅ HIDE-FROM-ORDERS: ${hideResult.rowCount} Ersatzteile erfolgreich aus Bestellungen-Liste ausgeblendet`);
           
           // Status aller betroffenen Reparaturen aktualisieren
           for (const repairId of repairIds) {

@@ -778,6 +778,7 @@ export const spareParts = pgTable("spare_parts", {
   notes: text("notes"), // Notizen
   userId: integer("user_id").notNull().references(() => users.id),
   shopId: integer("shop_id").notNull().default(1),
+  hideFromOrdersList: boolean("hide_from_orders_list").default(false), // Ausblenden aus Bestellungen-Liste
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
