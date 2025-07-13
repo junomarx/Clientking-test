@@ -86,9 +86,11 @@ export function SparePartsManagementDialog({
   });
 
   // Ersatzteile für diese Reparatur abrufen
-  const { data: spareParts = [], isLoading } = useQuery<SparePart[]>({
+  const { data: spareParts = [], isLoading, error } = useQuery<SparePart[]>({
     queryKey: ['/api/repairs', repairId, 'spare-parts'],
     enabled: open && !!repairId,
+    retry: 1,
+    retryOnMount: false,
   });
 
   useEffect(() => {
@@ -106,16 +108,21 @@ export function SparePartsManagementDialog({
 
   const createMutation = useMutation({
     mutationFn: async (data: FormData) => {
+      if (!repairId) {
+        throw new Error("Reparatur-ID ist erforderlich");
+      }
+      
       const submitData: InsertSparePart = {
         ...data,
         repairId,
         cost: data.cost || undefined,
+        status: data.status || "bestellen",
       };
       
       const response = await apiRequest("POST", "/api/spare-parts", submitData);
       if (!response.ok) {
         const error = await response.text();
-        throw new Error(error);
+        throw new Error(error || "Fehler beim Hinzufügen des Ersatzteils");
       }
       return response.json();
     },
@@ -198,16 +205,18 @@ export function SparePartsManagementDialog({
   };
 
   const handleStatusChange = (id: number, status: string) => {
+    if (!id || !status) return;
     updateMutation.mutate({ id, data: { status } });
   };
 
   const handleDelete = (id: number) => {
+    if (!id) return;
     if (confirm("Sind Sie sicher, dass Sie dieses Ersatzteil löschen möchten?")) {
       deleteMutation.mutate(id);
     }
   };
 
-  const getStatusBadgeVariant = (status: string) => {
+  const getStatusBadgeVariant = (status: string | null | undefined) => {
     switch (status) {
       case 'bestellen':
         return 'destructive';
@@ -220,7 +229,7 @@ export function SparePartsManagementDialog({
     }
   };
 
-  const getStatusLabel = (status: string) => {
+  const getStatusLabel = (status: string | null | undefined) => {
     switch (status) {
       case 'bestellen':
         return 'Bestellen';
@@ -229,7 +238,7 @@ export function SparePartsManagementDialog({
       case 'eingetroffen':
         return 'Eingetroffen';
       default:
-        return status;
+        return status || 'Unbekannt';
     }
   };
 
@@ -269,7 +278,11 @@ export function SparePartsManagementDialog({
             
             {isLoading ? (
               <div className="text-center py-4">Laden...</div>
-            ) : spareParts.length === 0 ? (
+            ) : error ? (
+              <div className="text-center py-4 text-red-500">
+                Fehler beim Laden der Ersatzteile
+              </div>
+            ) : !spareParts || spareParts.length === 0 ? (
               <div className="text-center py-4 text-gray-500">
                 Keine Ersatzteile vorhanden
               </div>
@@ -289,26 +302,94 @@ export function SparePartsManagementDialog({
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {spareParts.map((part) => (
-                        <TableRow key={part.id}>
-                          <TableCell>
-                            <div>
-                              <div className="font-medium">{part.partName}</div>
+                      {spareParts && spareParts.length > 0 && spareParts.map((part) => {
+                        if (!part || !part.id) return null;
+                        return (
+                          <TableRow key={part.id}>
+                            <TableCell>
+                              <div>
+                                <div className="font-medium">{part.partName || '-'}</div>
+                                {part.notes && (
+                                  <div className="text-xs text-gray-500 mt-1">{part.notes}</div>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>{part.supplier || '-'}</TableCell>
+                            <TableCell>
+                              {part.cost && typeof part.cost === 'number' ? `€${part.cost.toFixed(2)}` : '-'}
+                            </TableCell>
+                            <TableCell>
+                              <Select
+                                value={part.status || "bestellen"}
+                                onValueChange={(value) => handleStatusChange(part.id, value)}
+                              >
+                                <SelectTrigger className="w-32">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="bestellen">Bestellen</SelectItem>
+                                  <SelectItem value="bestellt">Bestellt</SelectItem>
+                                  <SelectItem value="eingetroffen">Eingetroffen</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
+                            <TableCell className="text-sm text-gray-500">
+                              {part.createdAt ? format(new Date(part.createdAt), 'dd.MM.yyyy', { locale: de }) : '-'}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDelete(part.id)}
+                                disabled={deleteMutation.isPending}
+                              >
+                                <Trash2 className="h-4 w-4 text-red-500" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* Mobile Card View */}
+                <div className="md:hidden space-y-3">
+                  {spareParts && spareParts.length > 0 && spareParts.map((part) => {
+                    if (!part || !part.id) return null;
+                    return (
+                      <Card key={part.id} className="p-4">
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="font-medium text-sm">{part.partName || '-'}</div>
                               {part.notes && (
                                 <div className="text-xs text-gray-500 mt-1">{part.notes}</div>
                               )}
                             </div>
-                          </TableCell>
-                          <TableCell>{part.supplier || '-'}</TableCell>
-                          <TableCell>
-                            {part.cost ? `€${part.cost.toFixed(2)}` : '-'}
-                          </TableCell>
-                          <TableCell>
+                            <Badge variant={getStatusBadgeVariant(part.status || "bestellen")} className="text-xs ml-2">
+                              {getStatusLabel(part.status || "bestellen")}
+                            </Badge>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
+                            <div>
+                              <span className="font-medium">Lieferant:</span> {part.supplier || '-'}
+                            </div>
+                            <div>
+                              <span className="font-medium">Kosten:</span> {part.cost && typeof part.cost === 'number' ? `€${part.cost.toFixed(2)}` : '-'}
+                            </div>
+                            <div className="col-span-2">
+                              <span className="font-medium">Erstellt:</span> {part.createdAt ? format(new Date(part.createdAt), 'dd.MM.yyyy', { locale: de }) : '-'}
+                            </div>
+                          </div>
+                          
+                          <div className="flex justify-between items-center">
                             <Select
-                              value={part.status}
+                              value={part.status || "bestellen"}
                               onValueChange={(value) => handleStatusChange(part.id, value)}
                             >
-                              <SelectTrigger className="w-32">
+                              <SelectTrigger className="w-28 h-8 text-xs">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -317,83 +398,21 @@ export function SparePartsManagementDialog({
                                 <SelectItem value="eingetroffen">Eingetroffen</SelectItem>
                               </SelectContent>
                             </Select>
-                          </TableCell>
-                          <TableCell className="text-sm text-gray-500">
-                            {format(new Date(part.createdAt), 'dd.MM.yyyy', { locale: de })}
-                          </TableCell>
-                          <TableCell className="text-right">
+                            
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => handleDelete(part.id)}
                               disabled={deleteMutation.isPending}
+                              className="h-8 w-8 p-0"
                             >
                               <Trash2 className="h-4 w-4 text-red-500" />
                             </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-
-                {/* Mobile Card View */}
-                <div className="md:hidden space-y-3">
-                  {spareParts.map((part) => (
-                    <Card key={part.id} className="p-4">
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="font-medium text-sm">{part.partName}</div>
-                            {part.notes && (
-                              <div className="text-xs text-gray-500 mt-1">{part.notes}</div>
-                            )}
-                          </div>
-                          <Badge variant={getStatusBadgeVariant(part.status)} className="text-xs ml-2">
-                            {getStatusLabel(part.status)}
-                          </Badge>
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
-                          <div>
-                            <span className="font-medium">Lieferant:</span> {part.supplier || '-'}
-                          </div>
-                          <div>
-                            <span className="font-medium">Kosten:</span> {part.cost ? `€${part.cost.toFixed(2)}` : '-'}
-                          </div>
-                          <div className="col-span-2">
-                            <span className="font-medium">Erstellt:</span> {format(new Date(part.createdAt), 'dd.MM.yyyy', { locale: de })}
                           </div>
                         </div>
-                        
-                        <div className="flex justify-between items-center">
-                          <Select
-                            value={part.status}
-                            onValueChange={(value) => handleStatusChange(part.id, value)}
-                          >
-                            <SelectTrigger className="w-28 h-8 text-xs">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="bestellen">Bestellen</SelectItem>
-                              <SelectItem value="bestellt">Bestellt</SelectItem>
-                              <SelectItem value="eingetroffen">Eingetroffen</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(part.id)}
-                            disabled={deleteMutation.isPending}
-                            className="h-8 w-8 p-0"
-                          >
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                          </Button>
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
+                      </Card>
+                    );
+                  })}
                 </div>
               </>
             )}
