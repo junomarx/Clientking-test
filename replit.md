@@ -113,7 +113,7 @@ The Handyshop Verwaltung is a comprehensive phone repair shop management system 
 
 ## Changelog
 
-- July 13, 2025: ERSATZTEIL-NAVIGATION IMPLEMENTIERT - Klick auf Ersatzteil-Zeile öffnet jetzt RepairDetailsDialog der zugehörigen Reparatur, Auto-Delete Funktionalität für "eingetroffen" Status funktioniert (Ersatzteile werden aus Bestellungen-Liste entfernt), alle Ersatzteil-Funktionen wieder vollständig verfügbar
+- July 13, 2025: ERSATZTEIL-PERSISTENZ KORRIGIERT - Ersatzteile werden bei Status "eingetroffen" NICHT mehr aus Datenbank gelöscht, bleiben im RepairDetailsDialog sichtbar, werden nur aus Bestellungen-Liste gefiltert, manuelle Löschung nur über RepairDetailsDialog möglich, Reparatur-Status korrekt auf "ersatzteil_eingetroffen" gesetzt
 - July 12, 2025: UI-BEREINIGUNG ABGESCHLOSSEN - Test-Auto-Delete Button und "Bestellungen PDF" Button aus Header der Bestellungen-Seite entfernt, Interface fokussiert auf Kernfunktionen (Ersatzteil/Zubehör hinzufügen), PDF-Export weiterhin im Filter-Bereich verfügbar
 - July 12, 2025: BEARBEITEN-INTERFACE OPTIMIERT - "Bearbeiten" Option aus Aktionen-Spalte entfernt, Bearbeiten-Funktionalität nur noch im Detail-Modal verfügbar bei Klick auf Zeile, kollapsible Toggle-Button-System im Modal mit Ein-/Ausklapp-Funktion, sauberere Tabellen-Optik durch Fokus auf Status-Aktionen
 - July 12, 2025: KRITISCHER AUTO-DELETE BUG ENDGÜLTIG BEHOBEN - Server-seitige Auto-Delete-Logik in storage.ts implementiert: bulkUpdateAccessoryStatus und updateAccessory löschen Artikel automatisch bei Status "erledigt" statt sie zu aktualisieren, funktioniert für alle Dropdown-Änderungen und Bulk-Operationen, Client-Side-Löschlogik entfernt da Server jetzt alles handled

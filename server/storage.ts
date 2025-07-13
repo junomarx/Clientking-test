@@ -4708,14 +4708,8 @@ export class DatabaseStorage implements IStorage {
             await this.checkAndUpdateRepairStatus(repairId, userId);
           }
           
-          // DANN die Ersatzteile aus der Bestellungen-Liste löschen
-          console.log(`🗑️ AUTO-DELETE: Lösche eingetroffene Ersatzteile aus Bestellungen-Liste`);
-          await db
-            .delete(spareParts)
-            .where(and(
-              inArray(spareParts.id, partIds),
-              eq(spareParts.shopId, shopId)
-            ));
+          // Ersatzteile bleiben vollständig in der Datenbank erhalten
+          console.log(`✅ BEHALTEN: Eingetroffene Ersatzteile bleiben im RepairDetailsDialog erhalten, werden nur aus Bestellungen-Liste gefiltert`);
           
           return true;
         }
