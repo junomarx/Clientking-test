@@ -154,6 +154,22 @@ export function OrdersTab() {
     setSelectedRepairId(null);
   };
 
+  const handleAddSparePartClick = () => {
+    // Prüfe, ob es Reparaturen mit Status "eingegangen" gibt
+    const incomingRepairs = repairsWithParts.filter(repair => repair.status === 'eingegangen');
+    
+    if (incomingRepairs.length === 0) {
+      toast({
+        title: "Keine Reparaturen verfügbar",
+        description: "Es gibt derzeit keine Reparaturen mit dem Status 'eingegangen'. Ersatzteile können nur für Reparaturen im Status 'eingegangen' bestellt werden.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsAddSparePartDialogOpen(true);
+  };
+
   const handleOrderRowClick = async (order: any, type: "spare-part" | "accessory") => {
     // Für Ersatzteile: RepairDetailsDialog öffnen
     if (type === "spare-part" && order.repairId) {
@@ -1030,7 +1046,7 @@ export function OrdersTab() {
         
         <div className="flex items-center gap-2">
           <Button
-            onClick={() => setIsAddSparePartDialogOpen(true)}
+            onClick={handleAddSparePartClick}
             className="flex items-center gap-2"
             size="sm"
           >
