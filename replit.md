@@ -113,6 +113,7 @@ The Handyshop Verwaltung is a comprehensive phone repair shop management system 
 
 ## Changelog
 
+- July 13, 2025: ORDERS-DIALOG MOBILE-OPTIMIERUNG ABGESCHLOSSEN - SparePartsManagementDialog vollständig responsive mit mobiler Card-Ansicht statt Desktop-Tabellen, mobile-only Schließen-Button im Header hinzugefügt, alle Buttons und Formulare für mobile Geräte optimiert mit full-width Layouts
 - July 13, 2025: VOLLSTÄNDIGE MOBILE-OPTIMIERUNG BESTELLUNGEN ABGESCHLOSSEN - Bestellungen-Seite komplett responsive mit adaptiven Card-Layouts für mobile Geräte, responsive Bulk-Aktionen mit verkürzten Button-Labels, beide Tabs (Ersatzteile + Zubehör) vollständig mobile-optimiert, alle Funktionen (Checkboxes, Dropdown-Menüs, Status-Updates) funktionieren in mobiler Ansicht
 - July 13, 2025: ERSATZTEIL-PERSISTENZ KORRIGIERT - Ersatzteile werden bei Status "eingetroffen" NICHT mehr aus Datenbank gelöscht, bleiben im RepairDetailsDialog sichtbar, werden nur aus Bestellungen-Liste gefiltert, manuelle Löschung nur über RepairDetailsDialog möglich, Reparatur-Status korrekt auf "ersatzteil_eingetroffen" gesetzt
 - July 12, 2025: UI-BEREINIGUNG ABGESCHLOSSEN - Test-Auto-Delete Button und "Bestellungen PDF" Button aus Header der Bestellungen-Seite entfernt, Interface fokussiert auf Kernfunktionen (Ersatzteil/Zubehör hinzufügen), PDF-Export weiterhin im Filter-Bereich verfügbar

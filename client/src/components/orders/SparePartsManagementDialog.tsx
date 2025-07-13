@@ -41,7 +41,10 @@ import { insertSparePartSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import type { InsertSparePart, SparePart } from "@shared/schema";
 import { z } from "zod";
-import { Trash2, Plus } from "lucide-react";
+import { Trash2, Plus, X } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { MoreVertical } from "lucide-react";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 
@@ -233,18 +236,30 @@ export function SparePartsManagementDialog({
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Ersatzteile verwalten</DialogTitle>
+          <div className="flex justify-between items-center">
+            <DialogTitle>Ersatzteile verwalten</DialogTitle>
+            {/* Schließen-Button nur für mobile Ansicht */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClose}
+              className="md:hidden h-6 w-6"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </DialogHeader>
         
         <div className="space-y-4">
           {/* Bestehende Ersatzteile */}
           <div>
-            <div className="flex justify-between items-center mb-3">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3">
               <h3 className="text-sm font-medium">Bestehende Ersatzteile</h3>
               <Button
                 size="sm"
                 onClick={() => setIsAddingNew(true)}
                 disabled={isAddingNew}
+                className="w-full sm:w-auto"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Hinzufügen
@@ -258,64 +273,128 @@ export function SparePartsManagementDialog({
                 Keine Ersatzteile vorhanden
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Lieferant</TableHead>
-                    <TableHead>Kosten</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Erstellt</TableHead>
-                    <TableHead className="text-right">Aktionen</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+              <>
+                {/* Desktop Table View */}
+                <div className="hidden md:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Lieferant</TableHead>
+                        <TableHead>Kosten</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Erstellt</TableHead>
+                        <TableHead className="text-right">Aktionen</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {spareParts.map((part) => (
+                        <TableRow key={part.id}>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{part.partName}</div>
+                              {part.notes && (
+                                <div className="text-xs text-gray-500 mt-1">{part.notes}</div>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>{part.supplier || '-'}</TableCell>
+                          <TableCell>
+                            {part.cost ? `€${part.cost.toFixed(2)}` : '-'}
+                          </TableCell>
+                          <TableCell>
+                            <Select
+                              value={part.status}
+                              onValueChange={(value) => handleStatusChange(part.id, value)}
+                            >
+                              <SelectTrigger className="w-32">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="bestellen">Bestellen</SelectItem>
+                                <SelectItem value="bestellt">Bestellt</SelectItem>
+                                <SelectItem value="eingetroffen">Eingetroffen</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell className="text-sm text-gray-500">
+                            {format(new Date(part.createdAt), 'dd.MM.yyyy', { locale: de })}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDelete(part.id)}
+                              disabled={deleteMutation.isPending}
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* Mobile Card View */}
+                <div className="md:hidden space-y-3">
                   {spareParts.map((part) => (
-                    <TableRow key={part.id}>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{part.partName}</div>
-                          {part.notes && (
-                            <div className="text-xs text-gray-500 mt-1">{part.notes}</div>
-                          )}
+                    <Card key={part.id} className="p-4">
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="font-medium text-sm">{part.partName}</div>
+                            {part.notes && (
+                              <div className="text-xs text-gray-500 mt-1">{part.notes}</div>
+                            )}
+                          </div>
+                          <Badge variant={getStatusBadgeVariant(part.status)} className="text-xs ml-2">
+                            {getStatusLabel(part.status)}
+                          </Badge>
                         </div>
-                      </TableCell>
-                      <TableCell>{part.supplier || '-'}</TableCell>
-                      <TableCell>
-                        {part.cost ? `€${part.cost.toFixed(2)}` : '-'}
-                      </TableCell>
-                      <TableCell>
-                        <Select
-                          value={part.status}
-                          onValueChange={(value) => handleStatusChange(part.id, value)}
-                        >
-                          <SelectTrigger className="w-32">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="bestellen">Bestellen</SelectItem>
-                            <SelectItem value="bestellt">Bestellt</SelectItem>
-                            <SelectItem value="eingetroffen">Eingetroffen</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell className="text-sm text-gray-500">
-                        {format(new Date(part.createdAt), 'dd.MM.yyyy', { locale: de })}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(part.id)}
-                          disabled={deleteMutation.isPending}
-                        >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
+                        
+                        <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
+                          <div>
+                            <span className="font-medium">Lieferant:</span> {part.supplier || '-'}
+                          </div>
+                          <div>
+                            <span className="font-medium">Kosten:</span> {part.cost ? `€${part.cost.toFixed(2)}` : '-'}
+                          </div>
+                          <div className="col-span-2">
+                            <span className="font-medium">Erstellt:</span> {format(new Date(part.createdAt), 'dd.MM.yyyy', { locale: de })}
+                          </div>
+                        </div>
+                        
+                        <div className="flex justify-between items-center">
+                          <Select
+                            value={part.status}
+                            onValueChange={(value) => handleStatusChange(part.id, value)}
+                          >
+                            <SelectTrigger className="w-28 h-8 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="bestellen">Bestellen</SelectItem>
+                              <SelectItem value="bestellt">Bestellt</SelectItem>
+                              <SelectItem value="eingetroffen">Eingetroffen</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(part.id)}
+                            disabled={deleteMutation.isPending}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
                   ))}
-                </TableBody>
-              </Table>
+                </div>
+              </>
             )}
           </div>
 
@@ -417,17 +496,19 @@ export function SparePartsManagementDialog({
                     )}
                   />
 
-                  <div className="flex justify-end gap-2">
+                  <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
                     <Button
                       type="button"
                       variant="outline"
                       onClick={() => setIsAddingNew(false)}
+                      className="w-full sm:w-auto"
                     >
                       Abbrechen
                     </Button>
                     <Button
                       type="submit"
                       disabled={createMutation.isPending}
+                      className="w-full sm:w-auto"
                     >
                       {createMutation.isPending && (
                         <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
@@ -441,8 +522,12 @@ export function SparePartsManagementDialog({
           )}
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+        <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2">
+          <Button 
+            variant="outline" 
+            onClick={onClose}
+            className="w-full sm:w-auto"
+          >
             Schließen
           </Button>
         </DialogFooter>
