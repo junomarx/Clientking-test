@@ -4681,14 +4681,37 @@ export class DatabaseStorage implements IStorage {
       
       const repairIds = [...new Set(affectedParts.map(p => p.repairId))];
       
-      // Bulk-Update durchführen
+      // Bei Status "eingetroffen": Löschen statt Update (aus Bestellungen-Liste entfernen)
+      if (status === 'eingetroffen') {
+        console.log(`🗑️ AUTO-DELETE: Lösche Ersatzteile mit IDs ${partIds.join(', ')} da Status = eingetroffen`);
+        
+        // Ersatzteile löschen (bleiben im RepairDetailsDialog über andere Abfragen verfügbar)
+        const deleteResult = await db
+          .delete(spareParts)
+          .where(and(
+            inArray(spareParts.id, partIds),
+            eq(spareParts.shopId, shopId)
+          ));
+        
+        if (deleteResult.rowCount && deleteResult.rowCount > 0) {
+          console.log(`✅ AUTO-DELETE: ${deleteResult.rowCount} Ersatzteile erfolgreich gelöscht`);
+          
+          // Status aller betroffenen Reparaturen aktualisieren
+          for (const repairId of repairIds) {
+            await this.checkAndUpdateRepairStatus(repairId, userId);
+          }
+          return true;
+        }
+        return false;
+      }
+      
+      // Normales Update für andere Status
       const result = await db
         .update(spareParts)
         .set({
           status,
           updatedAt: new Date(),
           ...(status === 'bestellt' ? { orderDate: new Date() } : {}),
-          ...(status === 'eingetroffen' ? { deliveryDate: new Date() } : {}),
         })
         .where(and(
           inArray(spareParts.id, partIds),
