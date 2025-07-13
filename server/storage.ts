@@ -4682,25 +4682,40 @@ export class DatabaseStorage implements IStorage {
       
       const repairIds = [...new Set(affectedParts.map(p => p.repairId))];
       
-      // Bei Status "eingetroffen": Löschen (temporär bis DB-Migration abgeschlossen)
+      // Bei Status "eingetroffen": Erst Status setzen, dann Reparatur-Status prüfen, dann löschen
       if (status === 'eingetroffen') {
-        console.log(`🗑️ AUTO-DELETE: Lösche Ersatzteile mit IDs ${partIds.join(', ')} da Status = eingetroffen (temporär)`);
+        console.log(`📦 EINGETROFFEN: Markiere Ersatzteile mit IDs ${partIds.join(', ')} als eingetroffen`);
         
-        // Ersatzteile löschen - temporäre Lösung
-        const deleteResult = await db
-          .delete(spareParts)
+        // Erst normales Update durchführen
+        const updateResult = await db
+          .update(spareParts)
+          .set({
+            status,
+            deliveryDate: new Date(),
+            updatedAt: new Date(),
+          })
           .where(and(
             inArray(spareParts.id, partIds),
             eq(spareParts.shopId, shopId)
           ));
         
-        if (deleteResult.rowCount && deleteResult.rowCount > 0) {
-          console.log(`✅ AUTO-DELETE: ${deleteResult.rowCount} Ersatzteile erfolgreich gelöscht (temporär)`);
+        if (updateResult.rowCount && updateResult.rowCount > 0) {
+          console.log(`✅ STATUS-UPDATE: ${updateResult.rowCount} Ersatzteile als eingetroffen markiert`);
           
-          // Status aller betroffenen Reparaturen aktualisieren
+          // Status aller betroffenen Reparaturen aktualisieren (sollte zu "ersatzteil_eingetroffen" werden)
           for (const repairId of repairIds) {
             await this.checkAndUpdateRepairStatus(repairId, userId);
           }
+          
+          // DANN die Ersatzteile aus der Bestellungen-Liste löschen
+          console.log(`🗑️ AUTO-DELETE: Lösche eingetroffene Ersatzteile aus Bestellungen-Liste`);
+          await db
+            .delete(spareParts)
+            .where(and(
+              inArray(spareParts.id, partIds),
+              eq(spareParts.shopId, shopId)
+            ));
+          
           return true;
         }
         return false;
