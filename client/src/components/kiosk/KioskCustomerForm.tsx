@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,7 @@ interface KioskCustomerFormProps {
 
 export function KioskCustomerForm({ onCancel, onSuccess }: KioskCustomerFormProps) {
   const { toast } = useToast();
+  const firstInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState<CustomerFormData>({
     firstName: '',
     lastName: '',
@@ -34,6 +35,19 @@ export function KioskCustomerForm({ onCancel, onSuccess }: KioskCustomerFormProp
     zipCode: '',
     city: ''
   });
+
+  // Automatisches Fokussieren des ersten Eingabefelds für Tablet-Tastatur
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (firstInputRef.current) {
+        firstInputRef.current.focus();
+        // Zusätzlicher Trigger für iOS/Android
+        firstInputRef.current.click();
+      }
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   const createCustomerMutation = useMutation({
     mutationFn: async (data: CustomerFormData) => {
@@ -116,12 +130,18 @@ export function KioskCustomerForm({ onCancel, onSuccess }: KioskCustomerFormProp
                     Vorname <span className="text-red-500">*</span>
                   </Label>
                   <Input
+                    ref={firstInputRef}
                     id="firstName"
                     value={formData.firstName}
                     onChange={(e) => handleInputChange('firstName', e.target.value)}
                     placeholder="Ihr Vorname"
                     className="text-lg h-12 mt-2"
                     required
+                    autoCapitalize="words"
+                    autoCorrect="off"
+                    spellCheck="false"
+                    inputMode="text"
+                    autoFocus
                   />
                 </div>
                 <div>
@@ -135,6 +155,10 @@ export function KioskCustomerForm({ onCancel, onSuccess }: KioskCustomerFormProp
                     placeholder="Ihr Nachname"
                     className="text-lg h-12 mt-2"
                     required
+                    autoCapitalize="words"
+                    autoCorrect="off"
+                    spellCheck="false"
+                    inputMode="text"
                   />
                 </div>
               </div>
@@ -153,6 +177,9 @@ export function KioskCustomerForm({ onCancel, onSuccess }: KioskCustomerFormProp
                     className="text-lg h-12 mt-2"
                     type="tel"
                     required
+                    autoCorrect="off"
+                    spellCheck="false"
+                    inputMode="tel"
                   />
                 </div>
                 <div>
@@ -166,6 +193,10 @@ export function KioskCustomerForm({ onCancel, onSuccess }: KioskCustomerFormProp
                     placeholder="Ihre E-Mail-Adresse"
                     className="text-lg h-12 mt-2"
                     type="email"
+                    autoCorrect="off"
+                    spellCheck="false"
+                    autoCapitalize="off"
+                    inputMode="email"
                   />
                 </div>
               </div>
@@ -181,6 +212,9 @@ export function KioskCustomerForm({ onCancel, onSuccess }: KioskCustomerFormProp
                   onChange={(e) => handleInputChange('address', e.target.value)}
                   placeholder="Ihre Adresse"
                   className="text-lg h-12 mt-2"
+                  autoCorrect="off"
+                  spellCheck="false"
+                  inputMode="text"
                 />
               </div>
 
@@ -196,6 +230,10 @@ export function KioskCustomerForm({ onCancel, onSuccess }: KioskCustomerFormProp
                     onChange={(e) => handleInputChange('zipCode', e.target.value)}
                     placeholder="Postleitzahl"
                     className="text-lg h-12 mt-2"
+                    autoCorrect="off"
+                    spellCheck="false"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                   />
                 </div>
                 <div>
@@ -208,6 +246,10 @@ export function KioskCustomerForm({ onCancel, onSuccess }: KioskCustomerFormProp
                     onChange={(e) => handleInputChange('city', e.target.value)}
                     placeholder="Ihr Wohnort"
                     className="text-lg h-12 mt-2"
+                    autoCapitalize="words"
+                    autoCorrect="off"
+                    spellCheck="false"
+                    inputMode="text"
                   />
                 </div>
               </div>
