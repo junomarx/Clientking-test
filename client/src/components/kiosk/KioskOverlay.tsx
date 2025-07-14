@@ -108,104 +108,70 @@ export function KioskOverlay() {
         );
       default:
         return (
-          <div className="min-h-screen bg-white flex items-center justify-center p-8">
-            <div className="max-w-2xl w-full space-y-8">
-              {/* Header */}
-              <div className="text-center">
-                <div className="flex justify-center mb-4">
-                  {(user?.username === "bugi" || user?.username === "jahuu.eu") ? (
-                    businessSettings?.logoUrl ? (
-                      <img 
-                        src={businessSettings.logoUrl} 
-                        alt={businessSettings.businessName || "Firmenlogo"}
-                        className="h-16 w-auto max-w-xs object-contain"
-                      />
-                    ) : (
-                      <Tablet className="h-16 w-16 text-blue-600" />
-                    )
-                  ) : (
-                    <img 
-                      src={clientKingLogo} 
-                      alt="ClientKing Handyshop Verwaltung"
-                      className="h-32 w-auto max-w-md object-contain"
-                    />
-                  )}
-                </div>
-                <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                  Kundendatenerfassung
-                </h1>
-                <p className="text-xl text-gray-600">
-                  Willkommen! Geben Sie Ihre persönlichen Daten ein.
-                </p>
-              </div>
-
-              {/* Action Cards */}
-              <div className="space-y-6">
-                {/* Kundendaten erfassen - Hauptfunktion */}
-                <Card className="cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-blue-300"
-                      onClick={() => setCurrentView('customer-form')}>
-                  <CardHeader className="text-center pb-6">
-                    <div className="flex justify-center mb-4">
-                      <User className="h-16 w-16 text-blue-600" />
-                    </div>
-                    <CardTitle className="text-3xl mb-2">Kundendaten erfassen</CardTitle>
-                    <CardDescription className="text-lg text-gray-600">
-                      Geben Sie Ihre persönlichen Daten für die Reparaturannahme ein
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button className="w-full h-16 text-xl bg-blue-600 hover:bg-blue-700" size="lg">
-                      Daten eingeben
-                    </Button>
-                  </CardContent>
-                </Card>
-
-                {/* Unterschrift - nur wenn angefordert */}
-                {signatureRequest && (
-                  <Card className="border-orange-300 bg-orange-50 cursor-pointer hover:shadow-lg transition-shadow"
-                        onClick={() => setCurrentView('signature')}>
-                    <CardHeader className="text-center pb-4">
-                      <div className="flex justify-center mb-4">
-                        <Shield className="h-12 w-12 text-orange-600" />
-                      </div>
-                      <CardTitle className="text-2xl text-orange-700">
-                        Unterschrift erforderlich
-                      </CardTitle>
-                      <CardDescription className="text-lg text-orange-600">
-                        Bitte unterschreiben Sie für Ihre Reparatur
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Button className="w-full h-16 text-xl bg-orange-600 hover:bg-orange-700" size="lg">
-                        Jetzt unterschreiben
-                      </Button>
-                    </CardContent>
-                  </Card>
+          <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+            <div className="w-full max-w-4xl bg-white p-10 text-center shadow-lg rounded-xl relative">
+              {/* Logo */}
+              <div className="mb-5">
+                {businessSettings?.logoUrl ? (
+                  <img 
+                    src={businessSettings.logoUrl} 
+                    alt={businessSettings.businessName || "Firmenlogo"}
+                    className="max-h-20 mx-auto object-contain"
+                  />
+                ) : (
+                  <img 
+                    src={clientKingLogo} 
+                    alt="Firmenlogo"
+                    className="max-h-20 mx-auto object-contain"
+                  />
                 )}
-
-                {/* Zur Unterschrift Button - kompakt */}
-                <div className="text-center">
-                  <Button 
-                    onClick={() => window.location.reload()}
-                    className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 text-lg"
-                    size="lg"
-                  >
-                    Zur Unterschrift
-                  </Button>
-                </div>
               </div>
 
-              {/* Exit Button - Small and discrete */}
-              <div className="text-center pt-8">
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => setShowExitDialog(true)}
-                  className="text-gray-400 hover:text-gray-600"
+              {/* Info Text */}
+              <div className="text-lg mb-8">
+                Bitte geben Sie Ihre Daten für die Auftragserfassung ein.
+              </div>
+
+              {/* Buttons */}
+              <div className="space-y-3">
+                <button 
+                  onClick={() => setCurrentView('customer-form')}
+                  className="block w-full max-w-md mx-auto px-4 py-4 text-lg bg-blue-600 text-white border-none rounded-md cursor-pointer hover:bg-blue-700 transition-colors"
                 >
-                  <Shield className="h-4 w-4 mr-1" />
-                  Admin-Zugang
-                </Button>
+                  KUNDENDATEN EINGEBEN
+                </button>
+                
+                {signatureRequest && (
+                  <button 
+                    onClick={() => setCurrentView('signature')}
+                    className="block w-full max-w-md mx-auto px-4 py-4 text-lg bg-blue-600 text-white border-none rounded-md cursor-pointer hover:bg-blue-700 transition-colors"
+                  >
+                    UNTERSCHRIFT LEISTEN
+                  </button>
+                )}
+                
+                {/* Zur Unterschrift Button - falls kein aktiver Request */}
+                {!signatureRequest && (
+                  <button 
+                    onClick={() => window.location.reload()}
+                    className="block w-full max-w-md mx-auto px-4 py-4 text-lg bg-blue-600 text-white border-none rounded-md cursor-pointer hover:bg-blue-700 transition-colors"
+                  >
+                    ZUR UNTERSCHRIFT
+                  </button>
+                )}
+              </div>
+
+              {/* Privacy Note */}
+              <div className="mt-8 text-sm text-gray-600">
+                Ihre Daten werden vertraulich behandelt und nicht an Dritte weitergegeben.
+              </div>
+
+              {/* Admin Link */}
+              <div 
+                onClick={() => setShowExitDialog(true)}
+                className="absolute bottom-4 right-5 text-xs text-gray-400 cursor-pointer hover:underline"
+              >
+                Admin Zugang
               </div>
             </div>
           </div>

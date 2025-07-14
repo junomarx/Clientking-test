@@ -6054,17 +6054,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Keine Geschäftseinstellungen gefunden" });
       }
       
-      // ClientKing Logo für alle außer "bugi"
-      const useClientKingLogo = currentUser.username !== "bugi";
-      const logoUrl = useClientKingLogo 
-        ? "/src/assets/clientking-logo.png" 
-        : (businessSettings.logoImage || null);
+      // Verwende Logo aus business_settings falls vorhanden, sonst Fallback auf ClientKing Logo
+      const logoUrl = businessSettings.logoImage || null;
       
       console.log('Kiosk Business Settings geladen:', {
         businessName: businessSettings.businessName,
         username: currentUser.username,
-        useClientKingLogo,
-        hasOriginalLogo: !!businessSettings.logoImage
+        hasCustomLogo: !!businessSettings.logoImage,
+        logoUrl: logoUrl
       });
       
       // Nur die für das Frontend notwendigen Felder zurückgeben
