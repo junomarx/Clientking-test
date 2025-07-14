@@ -108,8 +108,8 @@ export function KioskOverlay() {
         );
       default:
         return (
-          <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-            <div className="w-full h-full bg-white p-10 text-center shadow-lg rounded-xl relative">
+          <div className="fixed inset-0 bg-gray-100 flex items-center justify-center">
+            <div className="w-full h-full bg-white p-10 text-center relative">
               {/* Logo */}
               <div className="mb-5">
                 {businessSettings?.logoUrl ? (
@@ -150,15 +150,13 @@ export function KioskOverlay() {
                   </button>
                 )}
                 
-                {/* Zur Unterschrift Button - falls kein aktiver Request */}
-                {!signatureRequest && (
-                  <button 
-                    onClick={() => window.location.reload()}
-                    className="block w-full max-w-md mx-auto px-4 py-4 text-lg bg-blue-600 text-white border-none rounded-md cursor-pointer hover:bg-blue-700 transition-colors"
-                  >
-                    ZUR UNTERSCHRIFT
-                  </button>
-                )}
+                {/* Zur Unterschrift Button - immer anzeigen */}
+                <button 
+                  onClick={() => window.location.reload()}
+                  className="block w-full max-w-md mx-auto px-4 py-4 text-lg bg-green-600 text-white border-none rounded-md cursor-pointer hover:bg-green-700 transition-colors"
+                >
+                  ZUR UNTERSCHRIFT
+                </button>
               </div>
 
               {/* Privacy Note */}
