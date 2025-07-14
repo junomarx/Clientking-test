@@ -108,21 +108,21 @@ export function KioskOverlay() {
         );
       default:
         return (
-          <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-            <div className="w-full max-w-4xl bg-white p-10 text-center shadow-lg rounded-xl relative">
+          <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+            <div className="w-full h-full bg-white p-10 text-center shadow-lg rounded-xl relative">
               {/* Logo */}
               <div className="mb-5">
                 {businessSettings?.logoUrl ? (
                   <img 
                     src={businessSettings.logoUrl} 
                     alt={businessSettings.businessName || "Firmenlogo"}
-                    className="max-h-20 mx-auto object-contain"
+                    className="max-h-40 mx-auto object-contain"
                   />
                 ) : (
                   <img 
                     src={clientKingLogo} 
                     alt="Firmenlogo"
-                    className="max-h-20 mx-auto object-contain"
+                    className="max-h-40 mx-auto object-contain"
                   />
                 )}
               </div>
