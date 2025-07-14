@@ -54,6 +54,7 @@ export function OnlineStatusProvider({ children }: { children: ReactNode }) {
       wsRef.current.onopen = () => {
         console.log('WebSocket-Verbindung für Online-Status hergestellt');
         setIsConnected(true);
+        setWsStatus('connected');
         setConnectionError(null);
         isReconnecting.current = false;
 
@@ -83,12 +84,14 @@ export function OnlineStatusProvider({ children }: { children: ReactNode }) {
       wsRef.current.onclose = (event) => {
         console.log('WebSocket-Verbindung geschlossen:', event.code, event.reason);
         setIsConnected(false);
+        setWsStatus('disconnected');
         stopHeartbeat();
         stopActivityTracking();
         
         // Automatische Wiederverbindung nach 3 Sekunden
         if (!isReconnecting.current && user) {
           isReconnecting.current = true;
+          setWsStatus('connecting');
           reconnectTimeout.current = setTimeout(() => {
             console.log('Versuche WebSocket-Wiederverbindung...');
             connectWebSocket();
@@ -100,6 +103,7 @@ export function OnlineStatusProvider({ children }: { children: ReactNode }) {
         console.error('WebSocket-Fehler:', error);
         setConnectionError('Verbindungsfehler beim Online-Status');
         setIsConnected(false);
+        setWsStatus('error');
       };
 
     } catch (error) {
@@ -112,7 +116,8 @@ export function OnlineStatusProvider({ children }: { children: ReactNode }) {
   const handleWebSocketMessage = (message: any) => {
     switch (message.type) {
       case 'auth_success':
-        console.log('WebSocket-Authentifizierung erfolgreich');
+        console.log('✅ WebSocket-Authentifizierung erfolgreich');
+        setWsStatus('connected');
         break;
         
       case 'status_update':
@@ -124,6 +129,7 @@ export function OnlineStatusProvider({ children }: { children: ReactNode }) {
         
       case 'heartbeat_ack':
         // Heartbeat-Bestätigung erhalten
+        console.log('💓 Heartbeat bestätigt');
         break;
         
       case 'signature-request':
@@ -161,8 +167,12 @@ export function OnlineStatusProvider({ children }: { children: ReactNode }) {
         });
         break;
         
+      case 'kiosk_registered':
+        console.log('🎯 Kiosk erfolgreich registriert:', message);
+        break;
+        
       default:
-        console.log('Unbekannte WebSocket-Nachricht:', message);
+        console.log('❓ Unbekannte WebSocket-Nachricht:', message);
     }
   };
 
@@ -243,14 +253,24 @@ export function OnlineStatusProvider({ children }: { children: ReactNode }) {
 
   const sendMessage = (message: any) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
+      console.log('📤 Sende WebSocket-Nachricht:', message);
       wsRef.current.send(JSON.stringify(message));
+    } else {
+      console.warn('⚠️ WebSocket nicht bereit für Nachricht:', {
+        message,
+        readyState: wsRef.current?.readyState,
+        wsStatus
+      });
     }
   };
 
   // Effekte
   useEffect(() => {
     if (user) {
+      setWsStatus('connecting');
       connectWebSocket();
+    } else {
+      setWsStatus('disconnected');
     }
 
     return () => {
@@ -275,6 +295,7 @@ export function OnlineStatusProvider({ children }: { children: ReactNode }) {
       setOnlineUsers([]);
       setOnlineCount(0);
       setIsConnected(false);
+      setWsStatus('disconnected');
       setConnectionError(null);
     }
   }, [user]);
