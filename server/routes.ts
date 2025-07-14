@@ -6262,16 +6262,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         model: repairs.model,
         statusDate: sql<string>`
           CASE 
-            WHEN ${repairs.status} = 'ausser_haus' AND ${statusHistory.changedAt} IS NOT NULL 
-            THEN ${statusHistory.changedAt}::date
+            WHEN ${repairs.status} = 'ausser_haus' AND ${repairStatusHistory.changedAt} IS NOT NULL 
+            THEN ${repairStatusHistory.changedAt}::date
             WHEN ${repairs.status} = 'ausser_haus' 
             THEN ${repairs.createdAt}::date
-            ELSE ${statusHistory.changedAt}::date
+            ELSE ${repairStatusHistory.changedAt}::date
           END
         `
       })
       .from(repairs)
-      .leftJoin(statusHistory, eq(statusHistory.repairId, repairs.id))
+      .leftJoin(repairStatusHistory, eq(repairStatusHistory.repairId, repairs.id))
       .where(and(
         eq(repairs.shopId, shopId),
         gte(repairs.createdAt, start),
@@ -6281,9 +6281,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           eq(repairs.status, 'ausser_haus'),
           // Oder hatte "Außer Haus" Status während des Zeitraums
           and(
-            eq(statusHistory.newStatus, 'ausser_haus'),
-            gte(statusHistory.changedAt, start),
-            lte(statusHistory.changedAt, end)
+            eq(repairStatusHistory.newStatus, 'ausser_haus'),
+            gte(repairStatusHistory.changedAt, start),
+            lte(repairStatusHistory.changedAt, end)
           )
         )
       ))
