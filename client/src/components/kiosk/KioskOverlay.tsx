@@ -111,7 +111,7 @@ export function KioskOverlay() {
           <div className="fixed inset-0 bg-gray-100 flex items-center justify-center">
             <div className="w-full h-full bg-white p-10 text-center relative">
               {/* Logo */}
-              <div className="mb-5">
+              <div className="mb-12">
                 {businessSettings?.logoUrl ? (
                   <img 
                     src={businessSettings.logoUrl} 
@@ -153,7 +153,7 @@ export function KioskOverlay() {
                 {/* Zur Unterschrift Button - immer anzeigen */}
                 <button 
                   onClick={() => window.location.reload()}
-                  className="block w-full max-w-md mx-auto px-4 py-4 text-lg bg-green-600 text-white border-none rounded-md cursor-pointer hover:bg-green-700 transition-colors"
+                  className="block w-3/5 mx-auto px-4 py-4 text-lg bg-green-600 text-white border-none rounded-md cursor-pointer hover:bg-green-700 transition-colors"
                 >
                   ZUR UNTERSCHRIFT
                 </button>
