@@ -116,13 +116,13 @@ export function KioskOverlay() {
                   <img 
                     src={businessSettings.logoUrl} 
                     alt={businessSettings.businessName || "Firmenlogo"}
-                    className="max-h-40 mx-auto object-contain"
+                    className="max-h-40 max-w-80 mx-auto object-contain"
                   />
                 ) : (
                   <img 
                     src={clientKingLogo} 
                     alt="Firmenlogo"
-                    className="max-h-40 mx-auto object-contain"
+                    className="max-h-40 max-w-80 mx-auto object-contain"
                   />
                 )}
               </div>
