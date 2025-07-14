@@ -113,6 +113,7 @@ The Handyshop Verwaltung is a comprehensive phone repair shop management system 
 
 ## Changelog
 
+- July 14, 2025: KIOSK-MODE DESIGN VOLLSTÄNDIG ÜBERARBEITET - Neues HTML/CSS Layout nach Vorgaben implementiert mit grauem Hintergrund und weißem Container, dynamisches Logo-System für alle Benutzer aktiviert (business_settings Logo statt hardcodierte Benutzer), Logo-Größenbeschränkungen auf 220px Höhe und 460px Breite gesetzt, Vollbild-Layout ohne Schatten für echte Kiosk-Darstellung, "Zur Unterschrift" Button repariert
 - July 13, 2025: ORDERS-DIALOG DESIGN VOLLSTÄNDIG HARMONISIERT - Alle bunten Status-Buttons durch subtile Dropdown-Menüs ersetzt, Status-Badges auf outline/secondary Varianten angepasst, mobiler Schließen-Button für OrdersTab hinzugefügt, einheitliches Design mit RepairDetailsDialog erreicht - alle Dialoge verwenden jetzt konsistente Farbschemas
 - July 13, 2025: KRITISCHER CRASH-BUG ENDGÜLTIG BEHOBEN - Validierung vor Dialog-Öffnung implementiert: prüft ob Reparaturen mit Status "eingegangen" existieren, zeigt klare Toast-Fehlermeldung statt App-Crash, SparePartsManagementDialog zusätzlich abgesichert mit umfassenden Null-Checks, sichere Array-Mapping implementiert - App crasht garantiert nicht mehr
 - July 13, 2025: ORDERS-DIALOG MOBILE-OPTIMIERUNG ABGESCHLOSSEN - SparePartsManagementDialog vollständig responsive mit mobiler Card-Ansicht statt Desktop-Tabellen, mobile-only Schließen-Button im Header hinzugefügt, alle Buttons und Formulare für mobile Geräte optimiert mit full-width Layouts
