@@ -168,9 +168,7 @@ export function KioskOverlay() {
               <div 
                 onClick={() => setShowExitDialog(true)}
                 className="absolute bottom-4 right-5 text-xs text-gray-400 cursor-pointer hover:underline"
-              >
-                Admin Zugang
-              </div>
+              >Clientking</div>
             </div>
           </div>
         );
