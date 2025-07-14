@@ -153,7 +153,7 @@ export function KioskOverlay() {
                 {/* Zur Unterschrift Button - immer anzeigen */}
                 <button 
                   onClick={() => window.location.reload()}
-                  className="block w-3/5 mx-auto px-4 py-4 text-lg bg-green-600 text-white border-none rounded-md cursor-pointer hover:bg-green-700 transition-colors"
+                  className="block w-full max-w-[268px] mx-auto px-4 py-4 text-lg bg-green-600 text-white border-none rounded-md cursor-pointer hover:bg-green-700 transition-colors"
                 >
                   ZUR UNTERSCHRIFT
                 </button>
