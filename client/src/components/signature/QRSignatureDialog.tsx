@@ -64,19 +64,25 @@ export function QRSignatureDialog({ open, onOpenChange, repair, businessName, si
   // Kiosk-Senden Funktion
   const sendToKiosk = async () => {
     try {
+      console.log('📤 Sende Unterschrifts-Anfrage an Kiosk für Reparatur ID:', repair.id);
+      
       const response = await apiRequest('POST', '/api/send-to-kiosk', {
         repairId: repair.id
       });
       
+      const responseData = await response.json();
+      console.log('📥 Server-Antwort:', responseData);
+      
       if (response.ok) {
         toast({
           title: 'An Kiosk gesendet',
-          description: 'Die Unterschriftsanfrage wurde an das Kiosk-Gerät gesendet.',
+          description: `Die Unterschriftsanfrage wurde an das Kiosk-Gerät gesendet. Status: ${responseData.sent ? 'Kiosk verfügbar' : 'Kein Kiosk aktiv'}`,
         });
       } else {
-        throw new Error('Fehler beim Senden');
+        throw new Error(responseData.message || 'Fehler beim Senden');
       }
     } catch (error) {
+      console.error('❌ Fehler beim Senden an Kiosk:', error);
       toast({
         title: 'Fehler',
         description: 'Die Anfrage konnte nicht an das Kiosk gesendet werden.',

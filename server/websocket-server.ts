@@ -244,6 +244,7 @@ class OnlineStatusManager {
     if (user && user.socket === ws) {
       user.isKiosk = true;
       console.log(`📱 Kiosk registriert: ${user.username} (${userId}) - WebSocket bereit`);
+      console.log(`📱 Aktuelle Kiosk-Geräte: ${Array.from(this.connectedUsers.values()).filter(u => u.isKiosk).map(u => u.username).join(', ')}`);
       
       // Bestätigung senden
       ws.send(JSON.stringify({
@@ -251,6 +252,8 @@ class OnlineStatusManager {
         message: 'Kiosk registration successful',
         timestamp: Date.now()
       }));
+    } else {
+      console.error(`❌ Kiosk-Registrierung fehlgeschlagen für userId ${userId}: Benutzer nicht gefunden oder WebSocket stimmt nicht überein`);
     }
   }
 
@@ -281,15 +284,24 @@ class OnlineStatusManager {
   // Gezielte Broadcast-Nachricht nur an Kiosk-Geräte
   broadcastToKiosks(message: any): void {
     const messageString = JSON.stringify(message);
+    const kioskUsers = Array.from(this.connectedUsers.values()).filter(u => u.isKiosk);
     
-    for (const user of this.connectedUsers.values()) {
-      if (user.isKiosk && user.socket.readyState === WebSocket.OPEN) {
+    console.log(`📡 Sende Nachricht an ${kioskUsers.length} Kiosk-Geräte:`, kioskUsers.map(u => `${u.username}(${u.userId})`));
+    
+    if (kioskUsers.length === 0) {
+      console.warn(`⚠️ Keine Kiosk-Geräte registriert! Aktuelle Verbindungen: ${Array.from(this.connectedUsers.values()).map(u => `${u.username}(kiosk:${u.isKiosk})`).join(', ')}`);
+    }
+    
+    for (const user of kioskUsers) {
+      if (user.socket.readyState === WebSocket.OPEN) {
         try {
           user.socket.send(messageString);
-          console.log(`Kiosk message sent to ${user.username} (${user.userId})`);
+          console.log(`✅ Kiosk-Nachricht gesendet an ${user.username} (${user.userId})`);
         } catch (error) {
-          console.error('Error sending kiosk message:', error);
+          console.error(`❌ Fehler beim Senden an Kiosk ${user.username}:`, error);
         }
+      } else {
+        console.warn(`⚠️ Kiosk-WebSocket nicht bereit: ${user.username} (Status: ${user.socket.readyState})`);
       }
     }
   }

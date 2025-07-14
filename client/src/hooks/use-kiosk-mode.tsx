@@ -44,15 +44,23 @@ export function KioskModeProvider({ children }: { children: ReactNode }) {
     const handleWebSocketMessage = (event: CustomEvent) => {
       try {
         const message = event.detail;
-        console.log('Kiosk: WebSocket-Nachricht empfangen', message);
+        console.log('🎯 Kiosk: WebSocket-Nachricht empfangen', message);
+        console.log('🎯 Kiosk-Status:', {
+          isKioskMode,
+          hasMessage: !!message,
+          messageType: message?.type,
+          hasPayload: !!message?.payload,
+          repairId: message?.payload?.repairId
+        });
         
         if (message.type === 'signature-request') {
-          console.log('📝 Kiosk: Unterschrifts-Anfrage erhalten', {
+          console.log('✅ Kiosk: Gültige Unterschrifts-Anfrage wird verarbeitet', {
             repairId: message.payload.repairId,
             customerName: message.payload.customerName,
             attempt: message.payload.attempt || 1
           });
-          setSignatureRequest({
+          
+          const newSignatureRequest = {
             repairId: message.payload.repairId,
             tempId: message.payload.tempId || `temp-${Date.now()}`,
             customerName: message.payload.customerName,
@@ -67,10 +75,15 @@ export function KioskModeProvider({ children }: { children: ReactNode }) {
             repairTerms: message.payload.repairTerms,
             shopName: message.payload.shopName,
             timestamp: Date.now()
-          });
+          };
+          
+          console.log('📝 Kiosk: Neue Unterschrifts-Anfrage erstellt:', newSignatureRequest);
+          setSignatureRequest(newSignatureRequest);
+        } else {
+          console.warn('⚠️ Kiosk: Nachricht ist keine Unterschrifts-Anfrage:', message?.type);
         }
       } catch (error) {
-        console.error('Fehler beim Verarbeiten der Unterschrifts-Anfrage:', error);
+        console.error('❌ Fehler beim Verarbeiten der Unterschrifts-Anfrage:', error);
       }
     };
 
@@ -85,19 +98,30 @@ export function KioskModeProvider({ children }: { children: ReactNode }) {
   // Automatische Kiosk-Registrierung bei jeder WebSocket-Verbindung
   useEffect(() => {
     if (isKioskMode && wsStatus === 'connected' && sendMessage && user?.id) {
-      console.log('📱 Kiosk-Registrierung wird gestartet für Benutzer:', user.id);
+      console.log('📱 Kiosk-Registrierung wird gestartet für Benutzer:', user.id, 'WebSocket Status:', wsStatus);
       
       // Kurze Verzögerung um sicherzustellen, dass WebSocket vollständig verbunden ist
       const registerTimer = setTimeout(() => {
-        sendMessage({
-          type: 'register-kiosk',
-          userId: user.id,
-          timestamp: Date.now()
-        });
-        console.log('📱 Kiosk-Registrierungsnachricht gesendet');
-      }, 100);
+        try {
+          sendMessage({
+            type: 'register-kiosk',
+            userId: user.id,
+            timestamp: Date.now()
+          });
+          console.log('📱 Kiosk-Registrierungsnachricht erfolgreich gesendet für Benutzer:', user.id);
+        } catch (error) {
+          console.error('❌ Fehler beim Senden der Kiosk-Registrierung:', error);
+        }
+      }, 200); // Erhöhte Verzögerung für stabilere Verbindung
       
       return () => clearTimeout(registerTimer);
+    } else {
+      console.log('❌ Kiosk-Registrierung nicht möglich:', {
+        isKioskMode,
+        wsStatus,
+        hasSendMessage: !!sendMessage,
+        hasUserId: !!user?.id
+      });
     }
   }, [isKioskMode, wsStatus, sendMessage, user?.id]);
 
@@ -105,17 +129,26 @@ export function KioskModeProvider({ children }: { children: ReactNode }) {
     setIsKioskMode(true);
     localStorage.setItem('kioskMode', 'true');
     
-    console.log('Kiosk-Modus aktiviert für Benutzer:', user?.id);
-    console.log('WebSocket Status:', wsStatus);
-    console.log('sendMessage verfügbar:', !!sendMessage);
+    console.log('🔄 Kiosk-Modus aktiviert für Benutzer:', user?.id);
+    console.log('🔄 WebSocket Status:', wsStatus);
+    console.log('🔄 sendMessage verfügbar:', !!sendMessage);
     
     // Sofortige Registrierung wenn WebSocket verbunden ist
     if (wsStatus === 'connected' && sendMessage && user?.id) {
-      console.log('Registriere Kiosk-Gerät sofort für Benutzer:', user.id);
-      sendMessage({
-        type: 'register-kiosk',
-        userId: user.id
-      });
+      console.log('🚀 Registriere Kiosk-Gerät sofort für Benutzer:', user.id);
+      // Kleine Verzögerung auch hier für stabilere Registrierung
+      setTimeout(() => {
+        try {
+          sendMessage({
+            type: 'register-kiosk',
+            userId: user.id,
+            timestamp: Date.now()
+          });
+          console.log('✅ Sofortige Kiosk-Registrierung gesendet');
+        } catch (error) {
+          console.error('❌ Fehler bei sofortiger Kiosk-Registrierung:', error);
+        }
+      }, 100);
     }
   };
 
