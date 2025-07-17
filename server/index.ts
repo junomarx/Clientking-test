@@ -21,15 +21,7 @@ import { addSupportAccessTable } from "./add-support-access-table";
 import { addSupportRequestStatus } from "./add-support-request-status";
 import fileUpload from "express-fileupload";
 
-// Setze globale SMTP-Absender-E-Mail wenn nicht vorhanden
-if (!process.env.SMTP_SENDER_EMAIL) {
-  process.env.SMTP_SENDER_EMAIL = "noreply@phonerepair.at";
-}
-
-// Setze globalen SMTP-Absender-Namen wenn nicht vorhanden
-if (!process.env.SMTP_SENDER_NAME) {
-  process.env.SMTP_SENDER_NAME = "Handyshop Verwaltung";
-}
+// SMTP wird individuell pro Geschäft konfiguriert
 
 const app = express();
 

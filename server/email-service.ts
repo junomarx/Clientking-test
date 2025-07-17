@@ -31,50 +31,7 @@ export class EmailService {
     this.initSuperadminSmtpTransporter(); // Asynchron, aber kein await in constructor möglich
   }
 
-  /**
-   * Initialisiert den Standard-SMTP-Transporter mit den Umgebungsvariablen
-   */
-  private initDefaultSmtpTransporter() {
-    try {
-      const smtpHost = process.env.SMTP_HOST;
-      const smtpPort = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT) : 587;
-      const smtpUser = process.env.SMTP_USER;
-      const smtpPassword = process.env.SMTP_PASSWORD;
-      
-      // Prüfe, ob alle erforderlichen SMTP-Einstellungen vorhanden sind
-      if (!smtpHost || !smtpPort || !smtpUser || !smtpPassword) {
-        console.warn('Eine oder mehrere globale SMTP-Einstellungen fehlen');
-      } else {
-        // Verwende die globalen SMTP-Einstellungen als Fallback
-        const config = {
-          host: smtpHost,
-          port: smtpPort,
-          secure: smtpPort === 465, // true für 465, false für andere Ports
-          auth: {
-            user: smtpUser,
-            pass: smtpPassword
-          },
-          // Debug-Optionen aktivieren
-          debug: true,
-          logger: true
-        };
-        
-        console.log('Standard SMTP-Konfiguration:', {
-          host: config.host,
-          port: config.port,
-          secure: config.secure,
-          auth: { user: config.auth.user, pass: '********' }
-        });
-        
-        this.smtpTransporter = nodemailer.createTransport(config);
-        
-        console.log(`Standard SMTP-Transporter für ${smtpHost} wurde initialisiert`);
-      }
-    } catch (error) {
-      console.error('Fehler beim Initialisieren des Standard-SMTP-Transporters:', error);
-      this.smtpTransporter = null;
-    }
-  }
+
 
   /**
    * Initialisiert den zentralen SMTP-Transporter mit den Einstellungen aus der Datenbank

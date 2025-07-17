@@ -77,8 +77,7 @@ The Handyshop Verwaltung is a comprehensive phone repair shop management system 
 - **drizzle-orm**: Type-safe database operations
 - **@radix-ui/react-\***: UI component primitives
 - **@tanstack/react-query**: Server state management
-- **nodemailer**: Email sending (fallback)
-- **@sendgrid/mail**: Primary email service
+- **nodemailer**: Email sending functionality
 
 ### Development Tools
 - **vite**: Build tool and dev server
@@ -88,9 +87,8 @@ The Handyshop Verwaltung is a comprehensive phone repair shop management system 
 - **esbuild**: Server bundling
 
 ### Email Services
-- **Primary**: Brevo SMTP (smtp-relay.brevo.com)
-- **Fallback**: SendGrid API
-- **Configuration**: Environment-based SMTP settings
+- **SMTP**: User-configurable SMTP settings per business
+- **Configuration**: Business-specific SMTP settings stored in database
 
 ## Deployment Strategy
 
@@ -113,6 +111,7 @@ The Handyshop Verwaltung is a comprehensive phone repair shop management system 
 
 ## Changelog
 
+- July 17, 2025: BREVO SMTP UND SENDGRID API KOMPLETT ENTFERNT - Alle veralteten E-Mail-Service-Referenzen aus dem gesamten Codebase entfernt: @sendgrid/mail Package deinstalliert, Brevo SMTP Konfigurationen aus deployment_guide.md und .env.example entfernt, initDefaultSmtpTransporter-Funktion aus email-service.ts gelöscht, Testdateien server/test-mail.js und server/api-user-smtp-test.ts entfernt, README.deployment.md bereinigt - System verwendet jetzt ausschließlich individuell konfigurierte SMTP-Einstellungen pro Geschäft
 - July 14, 2025: WEBSOCKET-KIOSK-KOMMUNIKATION VOLLSTÄNDIG REPARIERT - Kritisches Problem behoben: Kiosk-Registrierung funktioniert jetzt korrekt, wsStatus wird ordnungsgemäß auf "connected" gesetzt, erweiterte Debug-Ausgaben für vollständige Nachverfolgung implementiert, Unterschrifts-Anfragen werden erfolgreich an registrierte Kiosk-Geräte gesendet, System funktioniert komplett zwischen Admin-Interface und Kiosk-Display
 - July 14, 2025: KIOSK-MODE DESIGN VOLLSTÄNDIG ÜBERARBEITET - Neues HTML/CSS Layout nach Vorgaben implementiert mit grauem Hintergrund und weißem Container, dynamisches Logo-System für alle Benutzer aktiviert (business_settings Logo statt hardcodierte Benutzer), Logo-Größenbeschränkungen auf 220px Höhe und 460px Breite gesetzt, Vollbild-Layout ohne Schatten für echte Kiosk-Darstellung, "Zur Unterschrift" Button repariert
 - July 13, 2025: ORDERS-DIALOG DESIGN VOLLSTÄNDIG HARMONISIERT - Alle bunten Status-Buttons durch subtile Dropdown-Menüs ersetzt, Status-Badges auf outline/secondary Varianten angepasst, mobiler Schließen-Button für OrdersTab hinzugefügt, einheitliches Design mit RepairDetailsDialog erreicht - alle Dialoge verwenden jetzt konsistente Farbschemas

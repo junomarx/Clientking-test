@@ -53,8 +53,9 @@ Diese Anleitung hilft Ihnen dabei, die Handyshop Verwaltungssoftware auf Ihrem e
 
 3. Passen Sie mindestens die folgenden Einstellungen an:
    - `DATABASE_URL`: Die Verbindungs-URL für Ihre PostgreSQL-Datenbank
-   - `SMTP_*`: SMTP-Server-Konfiguration für den E-Mail-Versand
    - `SESSION_SECRET`: Ein langer, zufälliger String für die Sitzungssicherheit
+   
+   SMTP wird individuell pro Geschäft über die Web-Oberfläche konfiguriert.
 
 ### 4. Server starten
 

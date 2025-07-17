@@ -25,12 +25,11 @@ PGPASSWORD=ihr_database_password
 PGPORT=5432
 PGUSER=ihr_database_user
 
-# E-Mail (Brevo/SMTP)
-BREVO_API_KEY=ihr_brevo_api_key
-SMTP_HOST=smtp-relay.brevo.com
-SMTP_PORT=587
-SMTP_USER=ihr_smtp_user
-SMTP_PASSWORD=ihr_smtp_password
+# E-Mail (SMTP - Optional, wird individuell konfiguriert)
+# SMTP_HOST=ihr.smtp.server.com
+# SMTP_PORT=587
+# SMTP_USER=ihr_smtp_user
+# SMTP_PASSWORD=ihr_smtp_password
 
 # Session Secret (generieren Sie einen sicheren String)
 SESSION_SECRET=ihr_sehr_sicherer_session_schluessel_hier
