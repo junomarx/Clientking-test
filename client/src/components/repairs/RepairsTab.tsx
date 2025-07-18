@@ -297,7 +297,12 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
     return repairs
       .filter(repair => {
         // Apply status filter
-        if (statusFilter !== 'all' && repair.status !== statusFilter) {
+        if (statusFilter === 'hide_abgeholt') {
+          // "Abgeholt ausblenden" - zeige alle Status außer "abgeholt"
+          if (repair.status === 'abgeholt') {
+            return false;
+          }
+        } else if (statusFilter !== 'all' && repair.status !== statusFilter) {
           return false;
         }
 
@@ -534,6 +539,7 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Alle Status</SelectItem>
+              <SelectItem value="hide_abgeholt">Abgeholt ausblenden</SelectItem>
               <SelectItem value="eingegangen">Eingegangen</SelectItem>
               <SelectItem value="in_reparatur">In Reparatur</SelectItem>
               <SelectItem value="ersatzteile_bestellen">Ersatzteile bestellen</SelectItem>
