@@ -5209,32 +5209,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.updateRepairDeviceCode(repairId, encryptedCode, deviceCodeType, userId);
       }
 
-      // QR-CODE PICKUP OPTIMIERUNG: Automatische Status-Änderung von "fertig" zu "abgeholt"
+      // UNTERSCHRIFT ZUR REPARATUR HINZUFÜGEN
       const signatureType = tempSignature.repairData?.signatureType;
       const repairId = tempSignature.repairData?.repairId;
       const currentStatus = tempSignature.repairData?.status;
+      const userId = tempSignature.userId;
       
-      if (signatureType === 'pickup' && currentStatus === 'fertig' && repairId) {
-        console.log(`🚀 QR-Code Pickup-Unterschrift: Status "fertig" → "abgeholt" für Reparatur ${repairId}`);
+      if (repairId && signature && userId) {
+        console.log(`📝 QR-Code: Speichere Unterschrift für Reparatur ${repairId}, Typ: ${signatureType}`);
         
         try {
-          // Status ohne E-Mail-Benachrichtigung auf "abgeholt" setzen
-          await pool.query(
-            'UPDATE repairs SET status = $1 WHERE id = $2',
-            ['abgeholt', repairId]
-          );
-          
-          // Status-History-Eintrag für automatische Änderung erstellen
-          const shopId = tempSignature.shopId;
-          
-          await pool.query(
-            'INSERT INTO repair_status_history (repair_id, old_status, new_status, changed_at, changed_by, notes, shop_id) VALUES ($1, $2, $3, NOW(), NULL, $4, $5)',
-            [repairId, 'fertig', 'abgeholt', 'Automatisch nach QR-Code Pickup-Unterschrift', shopId]
-          );
-          
-          console.log(`✅ QR-Code Status-Änderung erfolgreich: ${repairId} fertig → abgeholt`);
-        } catch (statusError) {
-          console.error(`❌ Fehler bei automatischer Status-Änderung (QR-Code):`, statusError);
+          // Unterschrift zur Reparatur hinzufügen
+          if (signatureType === 'dropoff') {
+            await storage.updateRepairSignature(repairId, signature, 'dropoff', userId);
+            console.log(`✅ QR-Code Dropoff-Unterschrift gespeichert für Reparatur ${repairId}`);
+          } else if (signatureType === 'pickup') {
+            await storage.updateRepairSignature(repairId, signature, 'pickup', userId);
+            console.log(`✅ QR-Code Pickup-Unterschrift gespeichert für Reparatur ${repairId}`);
+            
+            // PICKUP OPTIMIERUNG: Automatische Status-Änderung von "fertig" zu "abgeholt"
+            if (currentStatus === 'fertig') {
+              console.log(`🚀 QR-Code Pickup: Status "fertig" → "abgeholt" für Reparatur ${repairId}`);
+              
+              // Status ohne E-Mail-Benachrichtigung auf "abgeholt" setzen
+              await pool.query(
+                'UPDATE repairs SET status = $1 WHERE id = $2',
+                ['abgeholt', repairId]
+              );
+              
+              // Status-History-Eintrag für automatische Änderung erstellen
+              const shopId = tempSignature.shopId;
+              
+              await pool.query(
+                'INSERT INTO repair_status_history (repair_id, old_status, new_status, changed_at, changed_by, notes, shop_id) VALUES ($1, $2, $3, NOW(), NULL, $4, $5)',
+                [repairId, 'fertig', 'abgeholt', 'Automatisch nach QR-Code Pickup-Unterschrift', shopId]
+              );
+              
+              console.log(`✅ QR-Code Status-Änderung erfolgreich: ${repairId} fertig → abgeholt`);
+            }
+          }
+        } catch (signatureError) {
+          console.error(`❌ Fehler beim Speichern der QR-Code-Unterschrift:`, signatureError);
         }
       }
 

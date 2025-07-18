@@ -107,13 +107,12 @@ export default function SignaturePage() {
       } else if (new Date() > new Date(data.expiresAt)) {
         setError("Dieser Unterschriftlink ist abgelaufen.");
       } else {
-        // WICHTIG: Bei Pickup-Unterschriften direkt zur Unterschrift springen
-        // (entspricht der Kiosk-Mode Optimierung)
-        if (data.repairData?.signatureType === 'pickup') {
-          console.log('🚀 Pickup-Unterschrift erkannt - direkter Sprung zur Unterschrift');
-          setCurrentStep("signature");
-          setTermsAccepted(true); // Bedingungen automatisch akzeptiert
-        }
+        // SOFORTIGER QUERFORMAT-MODUS FÜR ALLE QR-CODE UNTERSCHRIFTEN
+        console.log('🚀 QR-Code Unterschrift - direkter Sprung zu Querformat-Unterschrift');
+        setCurrentStep("signature");
+        setTermsAccepted(true); // Bedingungen automatisch akzeptiert
+        setIsLandscape(true); // Sofort Querformat aktivieren
+        setShowLandscapePrompt(false); // Kein Prompt
       }
 
     } catch (err) {
