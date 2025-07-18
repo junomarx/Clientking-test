@@ -472,15 +472,7 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                             .map((entry) => (
                               <div key={entry.id} className="flex items-center justify-between text-xs py-1">
                                 <div className="flex items-center gap-2">
-                                  <div className="flex items-center gap-1">
-                                    {entry.oldStatus && (
-                                      <>
-                                        {getStatusBadge(entry.oldStatus)}
-                                        <span className="text-[10px] text-muted-foreground">→</span>
-                                      </>
-                                    )}
-                                    {getStatusBadge(entry.newStatus)}
-                                  </div>
+                                  {getStatusBadge(entry.newStatus)}
                                   {entry.notes && (
                                     <span className="text-[9px] text-muted-foreground ml-1 italic">
                                       ({entry.notes.length > 25 ? entry.notes.substring(0, 25) + '...' : entry.notes})
