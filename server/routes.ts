@@ -569,6 +569,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
       }
 
+      // Automatische Status-Änderung bei Pickup-Unterschrift (Status "fertig" → "abgeholt")
+      if (signatureType === 'pickup' && status === 'fertig') {
+        console.log(`Status "fertig" → "abgeholt" für Reparatur ${repairId} nach Pickup-Unterschrift`);
+        
+        // Status ohne E-Mail-Benachrichtigung auf "abgeholt" setzen
+        await pool.query(
+          'UPDATE repairs SET status = $1 WHERE id = $2',
+          ['abgeholt', repairId]
+        );
+        
+        // Status-History-Eintrag für automatische Änderung erstellen
+        // Zuerst shopId der Reparatur abrufen
+        const repairDetailsResult = await pool.query(
+          'SELECT shop_id FROM repairs WHERE id = $1',
+          [repairId]
+        );
+        
+        if (repairDetailsResult.rows.length > 0) {
+          const shopId = repairDetailsResult.rows[0].shop_id;
+          
+          // History-Eintrag mit System-Referenz (changedBy = null für automatische Änderungen)
+          await pool.query(
+            'INSERT INTO repair_status_history (repair_id, old_status, new_status, changed_at, changed_by, notes, shop_id) VALUES ($1, $2, $3, NOW(), NULL, $4, $5)',
+            [repairId, 'fertig', 'abgeholt', 'Automatisch nach Pickup-Unterschrift im Kiosk-Modus', shopId]
+          );
+        }
+        
+        console.log(`✅ Status automatisch auf "abgeholt" gesetzt für Reparatur ${repairId}`);
+      }
+
       // WebSocket-Nachricht an Hauptgerät senden
       const { getOnlineStatusManager } = await import('./websocket-server');
       const onlineStatusManager = getOnlineStatusManager();

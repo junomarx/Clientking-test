@@ -111,6 +111,7 @@ The Handyshop Verwaltung is a comprehensive phone repair shop management system 
 
 ## Changelog
 
+- July 18, 2025: KIOSK-MODE PICKUP-WORKFLOW OPTIMIERT - Direkter Sprung zur Unterschrift bei Status "fertig" implementiert (überspringt Bedingungen/Code-Schritte), automatische Status-Änderung "fertig" → "abgeholt" nach Pickup-Unterschrift ohne E-Mail-Benachrichtigung, Status-History-Eintrag für automatische Änderungen erstellt, "Zurück"-Button bei direktem Unterschrifts-Sprung entfernt
 - July 18, 2025: DIREKTE NOTIZ-FUNKTIONALITÄT IMPLEMENTIERT - Plus-Button neben "Auftragsinformationen" Titel hinzugefügt, vollständiger Dialog für Notiz-Eingabe mit Zeitstempel-Funktion erstellt, automatische Formatierung mit [DD.MM.YYYY HH:mm] Zeitstempel, Vorschau vorhandener Notizen im Dialog, erfolgreiche Integration mit PATCH /api/repairs/{id} Endpunkt für Notiz-Updates
 - July 18, 2025: EDIT KUNDENDATEN BUTTON HINZUGEFÜGT - Bleistift-Symbol neben "Kundendaten" Titel im RepairDetailsDialog integriert, öffnet existierenden EditCustomerDialog, ermöglicht direkte Bearbeitung von Kundendaten ohne umständlichen Workflow
 - July 18, 2025: A4-E-MAIL-PROBLEM ENDGÜLTIG BEHOBEN - Kritischer SMTP-Absender-Adress-Bug in routes.ts und email-service.ts gefixt: hardcodierte office@connect7.at Referenzen durch businessSettings.email/smtpUser ersetzt, sendRawEmail-Methode korrigiert um konfigurierte SMTP-Absender-Adresse zu verwenden, "Abgeholt ausblenden" Filter erfolgreich implementiert - A4-Reparaturaufträge funktionieren jetzt vollständig per E-Mail

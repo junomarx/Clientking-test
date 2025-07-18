@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -23,12 +23,27 @@ export function KioskSignature({ onCancel, onSuccess }: KioskSignatureProps) {
   const sigCanvas = useRef<SignatureCanvas>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // 3-Schritte-Prozess
-  const [currentStep, setCurrentStep] = useState<"terms" | "deviceCode" | "signature">("terms");
+  // 3-Schritte-Prozess - aber bei Status "fertig" direkt zur Unterschrift
+  const getInitialStep = () => {
+    // Bei Status "fertig" direkt zur Unterschrift springen
+    if (signatureRequest?.status === "fertig") {
+      return "signature";
+    }
+    return "terms";
+  };
+  
+  const [currentStep, setCurrentStep] = useState<"terms" | "deviceCode" | "signature">(getInitialStep());
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [deviceCode, setDeviceCode] = useState<string>("");
   const [deviceCodeType, setDeviceCodeType] = useState<"pin" | "pattern" | null>(null);
   const [showPatternDrawer, setShowPatternDrawer] = useState(false);
+
+  // Effect um currentStep bei Änderung der signatureRequest zu aktualisieren
+  useEffect(() => {
+    if (signatureRequest) {
+      setCurrentStep(getInitialStep());
+    }
+  }, [signatureRequest]);
 
   // Reparaturbedingungen sind jetzt direkt in der signatureRequest enthalten
 
@@ -402,14 +417,17 @@ export function KioskSignature({ onCancel, onSuccess }: KioskSignatureProps) {
           </div>
           
           <div className="flex gap-4">
-            <Button
-              variant="outline"
-              onClick={() => setCurrentStep("deviceCode")}
-              className="flex-1"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Zurück
-            </Button>
+            {/* Zurück-Button nur anzeigen wenn nicht bei Status "fertig" (da dann direkt zur Unterschrift gesprungen wird) */}
+            {signatureRequest?.status !== "fertig" && (
+              <Button
+                variant="outline"
+                onClick={() => setCurrentStep("deviceCode")}
+                className="flex-1"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Zurück
+              </Button>
+            )}
             
             <Button
               variant="outline"
