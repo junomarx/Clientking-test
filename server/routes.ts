@@ -5212,7 +5212,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // UNTERSCHRIFT ZUR REPARATUR HINZUFÜGEN
       const signatureType = tempSignature.repairData?.signatureType;
       const repairId = tempSignature.repairData?.repairId;
-      const currentStatus = tempSignature.repairData?.status;
       const userId = tempSignature.userId;
       
       if (repairId && signature && userId) {
@@ -5227,9 +5226,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             await storage.updateRepairSignature(repairId, signature, 'pickup', userId);
             console.log(`✅ QR-Code Pickup-Unterschrift gespeichert für Reparatur ${repairId}`);
             
-            // PICKUP OPTIMIERUNG: Automatische Status-Änderung von "fertig" zu "abgeholt"
-            if (currentStatus === 'fertig') {
-              console.log(`🚀 QR-Code Pickup: Status "fertig" → "abgeholt" für Reparatur ${repairId}`);
+            // PICKUP OPTIMIERUNG: Aktuellen Status aus Datenbank abrufen und prüfen
+            const currentRepair = await storage.getRepair(repairId, userId);
+            if (currentRepair && currentRepair.status === 'fertig') {
+              console.log(`🚀 QR-Code Pickup: Aktueller Status "fertig" → "abgeholt" für Reparatur ${repairId}`);
               
               // Status ohne E-Mail-Benachrichtigung auf "abgeholt" setzen
               await pool.query(
@@ -5246,6 +5246,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               );
               
               console.log(`✅ QR-Code Status-Änderung erfolgreich: ${repairId} fertig → abgeholt`);
+            } else {
+              console.log(`ℹ️ QR-Code Pickup: Status nicht "fertig" (aktuell: ${currentRepair?.status}) - keine automatische Änderung`);
             }
           }
         } catch (signatureError) {
