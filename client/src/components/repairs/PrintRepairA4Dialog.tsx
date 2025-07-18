@@ -406,6 +406,10 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
         onClose(); // Dialog schließen nach erfolgreichem Versand
       } else {
         const errorData = await response.json();
+        // Spezielle Behandlung für SMTP-Konfigurationsfehler
+        if (errorData.message && errorData.message.includes('SMTP-Einstellungen')) {
+          throw new Error('Bitte konfigurieren Sie zuerst Ihre SMTP-Einstellungen in den Geschäftseinstellungen, um E-Mails versenden zu können.');
+        }
         throw new Error(errorData.message || 'E-Mail konnte nicht gesendet werden');
       }
     } catch (err) {

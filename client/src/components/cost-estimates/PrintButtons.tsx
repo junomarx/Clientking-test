@@ -227,6 +227,10 @@ export function PrintButtons({
         });
       } else {
         const errorData = await response.json();
+        // Spezielle Behandlung für SMTP-Konfigurationsfehler
+        if (errorData.message && errorData.message.includes('SMTP-Einstellungen')) {
+          throw new Error('Bitte konfigurieren Sie zuerst Ihre SMTP-Einstellungen in den Geschäftseinstellungen, um E-Mails versenden zu können.');
+        }
         throw new Error(errorData.message || 'Fehler beim Senden der E-Mail');
       }
     } catch (error) {
