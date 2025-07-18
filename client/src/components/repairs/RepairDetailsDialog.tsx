@@ -27,6 +27,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { DeviceCodeDisplay } from './DeviceCodeDisplay';
 import SparePartsList from '@/components/spare-parts/SparePartsList';
 import { EditCustomerDialog } from '@/components/customers/EditCustomerDialog';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import {
   Dialog,
@@ -40,6 +41,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import {
   Smartphone,
   Calendar,
@@ -65,7 +68,9 @@ import {
   Pen,
   Send,
   QrCode,
-  TestTube
+  TestTube,
+  Plus,
+  Save
 } from 'lucide-react';
 
 interface RepairDetailsDialogProps {
@@ -84,6 +89,8 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
   const [emailHistory, setEmailHistory] = useState<EmailHistoryWithTemplate[]>([]);
   const [showStatusHistory, setShowStatusHistory] = useState(false);
   const [showEditCustomerDialog, setShowEditCustomerDialog] = useState(false);
+  const [showAddNoteDialog, setShowAddNoteDialog] = useState(false);
+  const [newNote, setNewNote] = useState('');
   
   // Auth-Hook für Benutzerinformationen (Preispaket)
   const { user } = useAuth();
@@ -100,6 +107,56 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
 
   // Test-E-Mail-Funktionalität
   const [isSendingTestEmail, setIsSendingTestEmail] = useState(false);
+  
+  // QueryClient für Cache-Invalidierung
+  const queryClient = useQueryClient();
+
+  // Mutation für das Hinzufügen von Notizen
+  const addNoteMutation = useMutation({
+    mutationFn: async (noteText: string) => {
+      if (!repair?.id) throw new Error("Reparatur-ID fehlt");
+      
+      // Erstelle formatierte Notiz mit Zeitstempel
+      const timestamp = format(new Date(), 'dd.MM.yyyy HH:mm', { locale: de });
+      const formattedNote = repair.notes 
+        ? `${repair.notes}\n\n[${timestamp}] ${noteText}`
+        : `[${timestamp}] ${noteText}`;
+      
+      const response = await apiRequest('PATCH', `/api/repairs/${repair.id}`, {
+        notes: formattedNote
+      });
+      return response.json();
+    },
+    onSuccess: (updatedRepair) => {
+      toast({
+        title: "Notiz hinzugefügt",
+        description: "Die Notiz wurde erfolgreich gespeichert.",
+      });
+      
+      // Aktualisiere die lokalen Reparatur-Daten
+      setRepair(updatedRepair);
+      
+      // Invalidiere den Cache
+      queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
+      
+      // Schließe den Dialog und reset das Formular
+      setShowAddNoteDialog(false);
+      setNewNote('');
+    },
+    onError: (error) => {
+      toast({
+        title: "Fehler",
+        description: `Notiz konnte nicht hinzugefügt werden: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleAddNote = () => {
+    if (newNote.trim()) {
+      addNoteMutation.mutate(newNote.trim());
+    }
+  };
 
   const handleSendTestEmail = async () => {
     if (!repair || !customer?.email) {
@@ -446,6 +503,15 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
             <h3 className="text-lg font-medium flex items-center gap-2 mb-3">
               <Clipboard className="h-5 w-5" />
               Auftragsinformationen
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowAddNoteDialog(true)}
+                className="h-6 w-6 p-0 ml-auto hover:bg-gray-200"
+                title="Notiz hinzufügen"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -728,6 +794,64 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
         onClose={() => setShowEditCustomerDialog(false)}
         customer={customer}
       />
+      
+      {/* Add Note Dialog */}
+      <Dialog open={showAddNoteDialog} onOpenChange={setShowAddNoteDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Notiz hinzufügen</DialogTitle>
+            <DialogDescription>
+              Fügen Sie eine neue Notiz zur Reparatur hinzu. Die Notiz wird automatisch mit einem Zeitstempel versehen.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="note" className="text-sm font-medium">
+                Notiz
+              </label>
+              <Textarea
+                id="note"
+                placeholder="Beschreiben Sie hier den aktuellen Status, durchgeführte Arbeiten oder wichtige Hinweise..."
+                value={newNote}
+                onChange={(e) => setNewNote(e.target.value)}
+                className="mt-1 min-h-[100px]"
+              />
+            </div>
+            
+            {repair?.notes && (
+              <div className="border rounded p-3 bg-gray-50">
+                <div className="text-sm font-medium text-muted-foreground mb-2">
+                  Vorhandene Notizen:
+                </div>
+                <div className="text-sm whitespace-pre-wrap max-h-32 overflow-y-auto">
+                  {repair.notes}
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowAddNoteDialog(false);
+                setNewNote('');
+              }}
+            >
+              Abbrechen
+            </Button>
+            <Button
+              onClick={handleAddNote}
+              disabled={!newNote.trim() || addNoteMutation.isPending}
+              className="flex items-center gap-2"
+            >
+              <Save className="h-4 w-4" />
+              {addNoteMutation.isPending ? 'Speichert...' : 'Notiz speichern'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
