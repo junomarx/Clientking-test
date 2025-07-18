@@ -26,6 +26,7 @@ import { CustomSignaturePad } from '@/components/ui/signature-pad';
 import { useAuth } from '@/hooks/use-auth';
 import { DeviceCodeDisplay } from './DeviceCodeDisplay';
 import SparePartsList from '@/components/spare-parts/SparePartsList';
+import { EditCustomerDialog } from '@/components/customers/EditCustomerDialog';
 
 import {
   Dialog,
@@ -60,7 +61,7 @@ import {
   ChevronDown,
   ChevronUp,
   Printer,
-
+  Edit,
   Pen,
   Send,
   QrCode,
@@ -82,6 +83,7 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [emailHistory, setEmailHistory] = useState<EmailHistoryWithTemplate[]>([]);
   const [showStatusHistory, setShowStatusHistory] = useState(false);
+  const [showEditCustomerDialog, setShowEditCustomerDialog] = useState(false);
   
   // Auth-Hook für Benutzerinformationen (Preispaket)
   const { user } = useAuth();
@@ -258,6 +260,15 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
             <h3 className="text-lg font-medium flex items-center gap-2 mb-3">
               <User className="h-5 w-5" />
               Kundendaten
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowEditCustomerDialog(true)}
+                className="h-6 w-6 p-0 ml-auto hover:bg-gray-200"
+                title="Kundendaten bearbeiten"
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
             </h3>
             
             {customer ? (
@@ -709,6 +720,13 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
         repairId={repairId}
         repair={repair}
         signatureType="dropoff" 
+      />
+      
+      {/* EditCustomerDialog */}
+      <EditCustomerDialog
+        open={showEditCustomerDialog}
+        onClose={() => setShowEditCustomerDialog(false)}
+        customer={customer}
       />
     </Dialog>
   );
