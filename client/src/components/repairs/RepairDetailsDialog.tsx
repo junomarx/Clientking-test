@@ -468,12 +468,24 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                       <div className="max-h-32 overflow-y-auto space-y-2 pr-1">
                         {statusHistoryData && statusHistoryData.length > 0 ? (
                           statusHistoryData
-                            .filter((entry) => entry.newStatus !== repair.status) // Aktuellen Status ausschließen
-                            .slice(0, 5)
+                            .slice(0, 8) // Mehr Einträge anzeigen statt Filter
                             .map((entry) => (
                               <div key={entry.id} className="flex items-center justify-between text-xs py-1">
                                 <div className="flex items-center gap-2">
-                                  {getStatusBadge(entry.newStatus)}
+                                  <div className="flex items-center gap-1">
+                                    {entry.oldStatus && (
+                                      <>
+                                        {getStatusBadge(entry.oldStatus)}
+                                        <span className="text-[10px] text-muted-foreground">→</span>
+                                      </>
+                                    )}
+                                    {getStatusBadge(entry.newStatus)}
+                                  </div>
+                                  {entry.notes && (
+                                    <span className="text-[9px] text-muted-foreground ml-1 italic">
+                                      ({entry.notes.length > 25 ? entry.notes.substring(0, 25) + '...' : entry.notes})
+                                    </span>
+                                  )}
                                 </div>
                                 <span className="text-[10px] text-muted-foreground">
                                   {format(new Date(entry.changedAt), 'dd.MM.yyyy HH:mm', { locale: de })}
