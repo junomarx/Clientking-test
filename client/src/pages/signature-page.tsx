@@ -16,6 +16,8 @@ interface SignatureData {
     shopName: string;
     estimatedCost?: string;
     depositAmount?: string;
+    signatureType?: 'dropoff' | 'pickup';
+    repairId?: number;
     customerData?: {
       firstName: string;
       lastName: string;
@@ -104,6 +106,14 @@ export default function SignaturePage() {
         setError("Diese Unterschrift wurde bereits geleistet.");
       } else if (new Date() > new Date(data.expiresAt)) {
         setError("Dieser Unterschriftlink ist abgelaufen.");
+      } else {
+        // WICHTIG: Bei Pickup-Unterschriften direkt zur Unterschrift springen
+        // (entspricht der Kiosk-Mode Optimierung)
+        if (data.repairData?.signatureType === 'pickup') {
+          console.log('🚀 Pickup-Unterschrift erkannt - direkter Sprung zur Unterschrift');
+          setCurrentStep("signature");
+          setTermsAccepted(true); // Bedingungen automatisch akzeptiert
+        }
       }
 
     } catch (err) {
