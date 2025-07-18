@@ -3387,9 +3387,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Geschäftseinstellungen für den Absender abrufen
       const businessSettings = await storage.getBusinessSettings(userId);
       
-      // E-Mail-Absender-Informationen festlegen
+      // E-Mail-Absender-Informationen aus Geschäftseinstellungen verwenden
       const senderName = businessSettings?.businessName || 'Handyshop Verwaltung';
-      const senderEmail = 'office@connect7.at';
+      const senderEmail = businessSettings?.email || businessSettings?.smtpUser || 'office@example.com';
       
       const subject = `Reparaturauftrag ${orderCode || repair.orderCode}`;
       
@@ -4709,7 +4709,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         const emailSent = await storage.sendEmailWithAttachment({
           to: recipient,
-          from: `${businessSettings?.businessName || 'Handyshop'} <office@connect7.at>`,
+          from: `${businessSettings?.businessName || 'Handyshop'} <${businessSettings?.email || businessSettings?.smtpUser || 'office@example.com'}>`,
           subject: `Reparaturauftrag ${correctOrderCode}`,
           htmlBody: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">

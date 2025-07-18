@@ -462,7 +462,8 @@ export class EmailService {
           }
         });
         
-        const fromField = options.from || `"${businessSetting.smtpSenderName || businessSetting.businessName || 'Handyshop'}" <${businessSetting.smtpUser}>`;
+        // Verwende immer die konfigurierte SMTP-E-Mail-Adresse für den Absender
+        const fromField = `"${businessSetting.smtpSenderName || businessSetting.businessName || 'Handyshop'}" <${businessSetting.smtpUser}>`;
         
         console.log(`Sende E-Mail von: ${fromField} an: ${options.to}`);
         
