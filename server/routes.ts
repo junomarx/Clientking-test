@@ -1473,6 +1473,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Fehler beim Abrufen des Gerätecodes" });
     }
   });
+
+  // Gerätecode aktualisieren/hinzufügen
+  app.patch("/api/repairs/:id/device-code", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const repairId = parseInt(req.params.id);
+      const userId = (req.user as any).id;
+      const { deviceCode, deviceCodeType } = req.body;
+
+      if (!deviceCode || !deviceCodeType) {
+        return res.status(400).json({ message: "deviceCode und deviceCodeType sind erforderlich" });
+      }
+
+      // Prüfe, ob die Reparatur dem Benutzer gehört
+      const repair = await storage.getRepair(repairId, userId);
+      if (!repair) {
+        return res.status(404).json({ message: "Reparatur nicht gefunden" });
+      }
+
+      // Gerätecode verschlüsseln (Base64-Kodierung)
+      const encryptedCode = Buffer.from(deviceCode, 'utf-8').toString('base64');
+
+      // Reparatur mit neuem Gerätecode aktualisieren
+      const updatedRepair = await storage.updateRepair(repairId, {
+        deviceCode: encryptedCode,
+        deviceCodeType: deviceCodeType
+      }, userId);
+
+      if (!updatedRepair) {
+        return res.status(500).json({ message: "Fehler beim Aktualisieren des Gerätecodes" });
+      }
+
+      console.log(`Gerätecode für Reparatur ${repairId} wurde aktualisiert durch Benutzer ${userId}`);
+      
+      res.json({
+        message: "Gerätecode wurde erfolgreich aktualisiert",
+        deviceCodeType: updatedRepair.deviceCodeType
+      });
+    } catch (error) {
+      console.error("Fehler beim Aktualisieren des Gerätecodes:", error);
+      res.status(500).json({ message: "Fehler beim Aktualisieren des Gerätecodes" });
+    }
+  });
+
+  // Gerätecode löschen
+  app.delete("/api/repairs/:id/device-code", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const repairId = parseInt(req.params.id);
+      const userId = (req.user as any).id;
+
+      // Prüfe, ob die Reparatur dem Benutzer gehört
+      const repair = await storage.getRepair(repairId, userId);
+      if (!repair) {
+        return res.status(404).json({ message: "Reparatur nicht gefunden" });
+      }
+
+      // Gerätecode und -typ entfernen
+      const updatedRepair = await storage.updateRepair(repairId, {
+        deviceCode: null,
+        deviceCodeType: null
+      }, userId);
+
+      if (!updatedRepair) {
+        return res.status(500).json({ message: "Fehler beim Löschen des Gerätecodes" });
+      }
+
+      console.log(`Gerätecode für Reparatur ${repairId} wurde gelöscht durch Benutzer ${userId}`);
+      
+      res.json({
+        message: "Gerätecode wurde erfolgreich gelöscht"
+      });
+    } catch (error) {
+      console.error("Fehler beim Löschen des Gerätecodes:", error);
+      res.status(500).json({ message: "Fehler beim Löschen des Gerätecodes" });
+    }
+  });
   
   app.get("/api/customers/:id/repairs", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
     try {

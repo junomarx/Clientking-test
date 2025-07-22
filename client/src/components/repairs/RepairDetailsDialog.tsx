@@ -25,6 +25,7 @@ import { SignatureDialog } from './SignatureDialog';
 import { CustomSignaturePad } from '@/components/ui/signature-pad';
 import { useAuth } from '@/hooks/use-auth';
 import { DeviceCodeDisplay } from './DeviceCodeDisplay';
+import { EditDeviceCodeDialog } from './EditDeviceCodeDialog';
 import SparePartsList from '@/components/spare-parts/SparePartsList';
 import { EditCustomerDialog } from '@/components/customers/EditCustomerDialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -90,6 +91,7 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
   const [showStatusHistory, setShowStatusHistory] = useState(false);
   const [showEditCustomerDialog, setShowEditCustomerDialog] = useState(false);
   const [showAddNoteDialog, setShowAddNoteDialog] = useState(false);
+  const [showEditDeviceCodeDialog, setShowEditDeviceCodeDialog] = useState(false);
   const [newNote, setNewNote] = useState('');
   
   // Auth-Hook für Benutzerinformationen (Preispaket)
@@ -415,18 +417,33 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                 </div>
               )}
               
-              {repair.deviceCode && (
-                <div className="flex items-start gap-2">
-                  <Pen className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
-                  <div>
+              <div className="flex items-start gap-2">
+                <Pen className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
                     <div className="text-sm text-muted-foreground">Gerätecode</div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowEditDeviceCodeDialog(true)}
+                      className="h-6 w-6 p-0 hover:bg-gray-200"
+                      title="Gerätecode bearbeiten"
+                    >
+                      <Edit className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  {repair.deviceCode ? (
                     <DeviceCodeDisplay 
                       repairId={repair.id} 
                       deviceCodeType={repair.deviceCodeType || null} 
                     />
-                  </div>
+                  ) : (
+                    <div className="text-sm text-muted-foreground italic">
+                      Kein Gerätecode gespeichert
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
               
               <div className="flex items-start gap-2">
                 <AlertCircle className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
@@ -856,6 +873,24 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Customer Dialog */}
+      <EditCustomerDialog
+        open={showEditCustomerDialog}
+        onOpenChange={setShowEditCustomerDialog}
+        customerId={customer?.id || 0}
+      />
+
+      {/* Edit Device Code Dialog */}
+      {repair && (
+        <EditDeviceCodeDialog
+          open={showEditDeviceCodeDialog}
+          onOpenChange={setShowEditDeviceCodeDialog}
+          repairId={repair.id}
+          currentCode={repair.deviceCode || undefined}
+          currentCodeType={repair.deviceCodeType || undefined}
+        />
+      )}
     </Dialog>
   );
 }
