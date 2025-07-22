@@ -39,20 +39,44 @@ function PatternGrid({
 }) {
   const [isDrawing, setIsDrawing] = useState(false);
 
-  const handleDotClick = (index: number) => {
-    if (!isDrawing) {
-      // Start new pattern
-      setIsDrawing(true);
-      onDotsChange([index]);
-    } else {
-      // Continue pattern if dot not already selected
+  const handleMouseDown = (index: number) => {
+    setIsDrawing(true);
+    onDotsChange([index]);
+  };
+
+  const handleMouseEnter = (index: number) => {
+    if (isDrawing && !selectedDots.includes(index)) {
+      onDotsChange([...selectedDots, index]);
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDrawing(false);
+  };
+
+  const handleTouchStart = (index: number, e: React.TouchEvent) => {
+    e.preventDefault();
+    setIsDrawing(true);
+    onDotsChange([index]);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDrawing) return;
+    e.preventDefault();
+    
+    const touch = e.touches[0];
+    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+    const dotElement = element?.closest('[data-dot-index]');
+    
+    if (dotElement) {
+      const index = parseInt(dotElement.getAttribute('data-dot-index') || '0');
       if (!selectedDots.includes(index)) {
         onDotsChange([...selectedDots, index]);
       }
     }
   };
 
-  const handleMouseUp = () => {
+  const handleTouchEnd = () => {
     setIsDrawing(false);
   };
 
@@ -63,21 +87,21 @@ function PatternGrid({
         style={{ width: '160px', height: '160px' }}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
+        onTouchEnd={handleTouchEnd}
+        onTouchMove={handleTouchMove}
       >
         {Array.from({ length: 9 }, (_, i) => (
           <div
             key={i}
+            data-dot-index={i}
             className={`w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold text-sm cursor-pointer transition-colors ${
               selectedDots.includes(i) 
                 ? 'bg-blue-500 border-blue-600 text-white' 
                 : 'bg-gray-100 border-gray-300 text-gray-400 hover:bg-gray-200'
             }`}
-            onClick={() => handleDotClick(i)}
-            onMouseEnter={() => {
-              if (isDrawing && !selectedDots.includes(i)) {
-                onDotsChange([...selectedDots, i]);
-              }
-            }}
+            onMouseDown={() => handleMouseDown(i)}
+            onMouseEnter={() => handleMouseEnter(i)}
+            onTouchStart={(e) => handleTouchStart(i, e)}
           >
             {i + 1}
           </div>
