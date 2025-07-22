@@ -20,6 +20,19 @@ export function DeviceCodeDisplay({ repairId, deviceCodeType }: DeviceCodeDispla
   const [decryptedCode, setDecryptedCode] = useState<string | null>(null);
   const { toast } = useToast();
 
+  const getDeviceCodeTypeLabel = (type: string) => {
+    switch (type) {
+      case 'pin':
+        return 'PIN/Code';
+      case 'password':
+        return 'Passwort';
+      case 'pattern':
+        return 'Android-Muster';
+      default:
+        return 'PIN/Code'; // Fallback für unbekannte Typen
+    }
+  };
+
   const revealCode = async () => {
     if (revealed && decryptedCode) {
       setRevealed(false);
@@ -116,7 +129,7 @@ export function DeviceCodeDisplay({ repairId, deviceCodeType }: DeviceCodeDispla
               {renderDeviceCode()}
             </span>
             <span className="text-xs text-muted-foreground">
-              ({deviceCodeType === 'text' ? 'PIN/Code' : 'Android-Muster'})
+              ({getDeviceCodeTypeLabel(deviceCodeType || 'pin')})
             </span>
           </>
         )}
