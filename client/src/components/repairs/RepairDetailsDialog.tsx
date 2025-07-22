@@ -206,7 +206,13 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
     }, 300);
   };
   
-  // Daten der Reparatur abrufen
+  // Spezifische Reparatur-Daten abrufen
+  const { data: specificRepair } = useQuery<Repair>({
+    queryKey: [`/api/repairs/${repairId}`],
+    enabled: open && repairId !== null,
+  });
+  
+  // Fallback: Alle Reparaturen abrufen für den Fall, dass spezifische Abfrage fehlschlägt
   const { data: repairs } = useQuery<Repair[]>({
     queryKey: ['/api/repairs'],
     enabled: open && repairId !== null,
@@ -215,7 +221,7 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
   // Kundendaten abrufen
   const { data: customers } = useQuery<Customer[]>({
     queryKey: ['/api/customers'],
-    enabled: open && repair?.customerId !== undefined,
+    enabled: open && (specificRepair?.customerId || repair?.customerId) !== undefined,
   });
   
   // E-Mail-Verlauf abrufen
@@ -251,8 +257,9 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
   
   // Reparatur und zugehörigen Kunden finden, wenn IDs vorhanden sind
   useEffect(() => {
-    if (repairs && repairId) {
-      const foundRepair = repairs.find(r => r.id === repairId);
+    if (repairId) {
+      // Verwende spezifische Reparatur-Daten wenn verfügbar, sonst fallback zu repairs array
+      const foundRepair = specificRepair || (repairs && repairs.find(r => r.id === repairId));
       setRepair(foundRepair || null);
       
       if (foundRepair && customers) {
@@ -260,7 +267,7 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
         setCustomer(foundCustomer || null);
       }
     }
-  }, [repairs, customers, repairId]);
+  }, [specificRepair, repairs, customers, repairId]);
   
   // E-Mail-Verlauf setzen, wenn Daten verfügbar sind
   useEffect(() => {

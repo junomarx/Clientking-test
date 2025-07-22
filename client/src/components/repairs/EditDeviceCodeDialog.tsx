@@ -126,7 +126,15 @@ export function EditDeviceCodeDialog({
       return response.json();
     },
     onSuccess: () => {
+      // Invalidate multiple query patterns to ensure UI updates
       queryClient.invalidateQueries({ queryKey: [`/api/repairs/${repairId}`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/repairs/${repairId}/device-code`] });
+      
+      // Force refresh of all repair-related data
+      queryClient.refetchQueries({ queryKey: ['/api/repairs'] });
+      queryClient.refetchQueries({ queryKey: [`/api/repairs/${repairId}`] });
+      
       toast({
         title: 'Erfolg',
         description: 'Gerätecode wurde erfolgreich gespeichert',
@@ -151,7 +159,15 @@ export function EditDeviceCodeDialog({
       return response.json();
     },
     onSuccess: () => {
+      // Invalidate multiple query patterns to ensure UI updates
       queryClient.invalidateQueries({ queryKey: [`/api/repairs/${repairId}`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/repairs/${repairId}/device-code`] });
+      
+      // Force refresh of all repair-related data
+      queryClient.refetchQueries({ queryKey: ['/api/repairs'] });
+      queryClient.refetchQueries({ queryKey: [`/api/repairs/${repairId}`] });
+      
       toast({
         title: 'Erfolg',
         description: 'Gerätecode wurde erfolgreich gelöscht',
