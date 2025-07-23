@@ -44,6 +44,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   Smartphone,
   Calendar,
@@ -501,7 +502,18 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                   
                   {/* Aktueller Status */}
                   <div className="flex items-center gap-3 mb-3">
-                    {getStatusBadge(repair.status)}
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="cursor-pointer">
+                            {getStatusBadge(repair.status)}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Zuletzt geändert von: {statusHistoryData?.length > 0 ? statusHistoryData[0].changedByUsername || 'System' : 'System'}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                     <div className="text-xs text-muted-foreground">
                       {format(new Date(repair.updatedAt), 'dd.MM.yyyy HH:mm', { locale: de })}
                     </div>
@@ -519,7 +531,19 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                             .map((entry) => (
                               <div key={entry.id} className="flex items-center justify-between text-xs py-1">
                                 <div className="flex items-center gap-2 flex-1">
-                                  {getStatusBadge(entry.newStatus)}
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <div className="cursor-pointer">
+                                          {getStatusBadge(entry.newStatus)}
+                                        </div>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Geändert von: {entry.changedByUsername || 'System'}</p>
+                                        {entry.notes && <p>Notiz: {entry.notes}</p>}
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
                                   {entry.changedByUsername && (
                                     <span className="text-[9px] text-muted-foreground italic">
                                       von {entry.changedByUsername}
