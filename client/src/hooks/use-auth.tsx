@@ -19,7 +19,7 @@ function useNavigateInAuth() {
 type UserResponse = Omit<User, "password">;
 
 type LoginData = {
-  username: string;
+  email: string;
   password: string;
 };
 

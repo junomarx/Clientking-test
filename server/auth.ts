@@ -67,11 +67,23 @@ export function setupAuth(app: Express) {
   app.use(passport.session());
 
   passport.use(
-    new LocalStrategy(async (username, password, done) => {
+    new LocalStrategy({ usernameField: 'email' }, async (email, password, done) => {
       try {
-        const user = await storage.getUserByUsername(username);
+        // Erst versuchen per E-Mail zu finden (für Mitarbeiter)
+        let user = await storage.getUserByEmail(email);
+        
+        // Fallback: Falls nicht per E-Mail gefunden, versuche per Benutzername (für bestehende Shop-Owner)
+        if (!user) {
+          user = await storage.getUserByUsername(email);
+        }
+        
         if (!user || !(await comparePasswords(password, user.password))) {
-          return done(null, false, { message: 'Ungültiger Benutzername oder Passwort' });
+          return done(null, false, { message: 'Ungültige E-Mail/Benutzername oder Passwort' });
+        }
+        
+        // Prüfe ob der Benutzer aktiv ist
+        if (!user.isActive) {
+          return done(null, false, { message: 'Ihr Konto ist deaktiviert. Kontaktieren Sie den Administrator.' });
         } 
         // Überprüfe, ob der Benutzer aktiv ist (es sei denn, es ist ein Superadmin)
         else if (!user.isActive && !user.isSuperadmin) {

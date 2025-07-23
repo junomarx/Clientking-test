@@ -20,9 +20,9 @@ import {
   DialogFooter 
 } from "@/components/ui/dialog";
 
-// Login schema
+// Login schema - akzeptiert sowohl E-Mail als auch Benutzername
 const loginSchema = z.object({
-  username: z.string().min(3, "Benutzername muss mindestens 3 Zeichen haben."),
+  email: z.string().min(3, "E-Mail oder Benutzername ist erforderlich."),
   password: z.string().min(6, "Passwort muss mindestens 6 Zeichen haben."),
 });
 
@@ -70,7 +70,7 @@ export default function AuthPage() {
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
     },
   });
@@ -123,7 +123,7 @@ export default function AuthPage() {
   }
   
   function onLoginSubmit(data: LoginFormValues) {
-    console.log('Login-Versuch mit Benutzer:', data.username);
+    console.log('Login-Versuch mit E-Mail/Benutzername:', data.email);
     loginMutation.mutate(data);
     
     // Nach der erfolgreichen Anmeldung prüfen wir, ob die userId im localStorage vorhanden ist
@@ -265,12 +265,12 @@ export default function AuthPage() {
                     <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-5">
                       <FormField
                         control={loginForm.control}
-                        name="username"
+                        name="email"
                         render={({ field }) => (
                           <FormItem>
                             <FormControl>
                               <Input 
-                                placeholder="Benutzername *" 
+                                placeholder="E-Mail oder Benutzername *" 
                                 {...field} 
                                 className="h-12 px-4 border-gray-200 focus:border-blue-500"
                               />
