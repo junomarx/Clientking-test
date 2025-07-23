@@ -208,9 +208,11 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
   };
   
   // Spezifische Reparatur-Daten abrufen
-  const { data: specificRepair } = useQuery<Repair>({
+  const { data: specificRepair, refetch: refetchRepair } = useQuery<Repair>({
     queryKey: [`/api/repairs/${repairId}`],
     enabled: open && repairId !== null,
+    staleTime: 0, // Immer frische Daten laden
+    cacheTime: 0, // Keine Cache-Zeit
   });
   
   // Fallback: Alle Reparaturen abrufen für den Fall, dass spezifische Abfrage fehlschlägt
@@ -243,7 +245,7 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
   });
 
   // Status-Verlauf abrufen
-  const { data: statusHistoryData } = useQuery<StatusHistoryEntry[]>({
+  const { data: statusHistoryData, refetch: refetchStatusHistory } = useQuery<StatusHistoryEntry[]>({
     queryKey: ['/api/repairs', repairId, 'status-history'],
     queryFn: async () => {
       if (!repairId) return [];
@@ -256,6 +258,7 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
         }
         const data = await response.json();
         console.log('🔍 Status-History-Daten erhalten:', data);
+        console.log('🔍 Aktueller Repair-Status aus Repair-Objekt:', repair?.status);
         return data;
       } catch (error) {
         console.error('Fehler beim Abrufen der Status-History:', error);
@@ -270,14 +273,22 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
     if (repairId) {
       // Verwende spezifische Reparatur-Daten wenn verfügbar, sonst fallback zu repairs array
       const foundRepair = specificRepair || (repairs && repairs.find(r => r.id === repairId));
+      console.log('🔍 Gefundene Reparatur:', foundRepair);
+      console.log('🔍 Status der gefundenen Reparatur:', foundRepair?.status);
       setRepair(foundRepair || null);
       
       if (foundRepair && customers) {
         const foundCustomer = customers.find(c => c.id === foundRepair.customerId);
         setCustomer(foundCustomer || null);
       }
+      
+      // Status-History und Reparatur-Daten neu laden wenn sich die Reparatur ändert
+      if (foundRepair && repairId) {
+        refetchStatusHistory();
+        refetchRepair();
+      }
     }
-  }, [specificRepair, repairs, customers, repairId]);
+  }, [specificRepair, repairs, customers, repairId, refetchStatusHistory, refetchRepair]);
   
   // E-Mail-Verlauf setzen, wenn Daten verfügbar sind
   useEffect(() => {
