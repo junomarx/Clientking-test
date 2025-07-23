@@ -97,7 +97,7 @@ export default function EmployeesPage() {
   // Mitarbeiter Status ändern
   const updateEmployeeStatusMutation = useMutation({
     mutationFn: async ({ employeeId, isActive }: { employeeId: number; isActive: boolean }) => {
-      const response = await apiRequest('PATCH', `/api/employees/${employeeId}`, { isActive });
+      const response = await apiRequest('PATCH', `/api/employees/${employeeId}/status`, { isActive });
       return response.json();
     },
     onSuccess: () => {
