@@ -377,6 +377,17 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                   <div>Kunde seit {formatDate(customer.createdAt.toString())}</div>
                 </div>
                 
+                {/* Erstellt von Information für Kunde */}
+                {customer.createdBy && (
+                  <div className="flex items-start gap-2">
+                    <User className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+                    <div>
+                      <div className="text-sm text-muted-foreground">Kunde erstellt von</div>
+                      <div className="text-sm font-medium">{customer.createdBy}</div>
+                    </div>
+                  </div>
+                )}
+                
                 {/* Test-E-Mail Button im Kundendaten-Bereich */}
                 {customer.email && (
                   <div className="mt-3 pt-3 border-t border-gray-200">
@@ -459,6 +470,17 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                   <div className="whitespace-pre-wrap">{repair.issue ? repair.issue.split(',').join('\n') : ''}</div>
                 </div>
               </div>
+              
+              {/* Erstellt von Information */}
+              {repair.createdBy && (
+                <div className="flex items-start gap-2">
+                  <User className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+                  <div>
+                    <div className="text-sm text-muted-foreground">Erstellt von</div>
+                    <div className="text-sm font-medium">{repair.createdBy}</div>
+                  </div>
+                </div>
+              )}
               
               <div className="flex items-start gap-2">
                 <Clock className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
