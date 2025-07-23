@@ -18,9 +18,10 @@ import { EmailSettingsTab } from '@/components/settings/EmailSettingsTab';
 import { PrintSettingsTab } from '@/components/settings/PrintSettingsTab';
 import { SubscriptionSettingsTab } from '@/components/settings/SubscriptionSettingsTab';
 import { UserSettingsTab } from '@/components/settings/UserSettingsTab';
+import EmployeesPage from '@/pages/employees-page';
 
 type Tab = 'dashboard' | 'repairs' | 'orders' | 'customers' | 'statistics' | 'cost-estimates' | 
-          'business-settings' | 'email-settings' | 'print-settings' | 'subscription-settings' | 'user-settings';
+          'business-settings' | 'email-settings' | 'print-settings' | 'subscription-settings' | 'user-settings' | 'employees';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
@@ -47,7 +48,7 @@ export default function Home() {
     if (tabParam) {
       const validTabs = [
         'dashboard', 'repairs', 'orders', 'customers', 'statistics', 'cost-estimates',
-        'business-settings', 'email-settings', 'print-settings', 'subscription-settings', 'user-settings'
+        'business-settings', 'email-settings', 'print-settings', 'subscription-settings', 'user-settings', 'employees'
       ];
       if (validTabs.includes(tabParam)) {
         setActiveTab(tabParam as Tab);
@@ -185,6 +186,10 @@ export default function Home() {
               
               {activeTab === 'user-settings' && (
                 <UserSettingsTab />
+              )}
+              
+              {activeTab === 'employees' && (
+                <EmployeesPage />
               )}
             </div>
           </ScrollArea>

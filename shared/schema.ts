@@ -35,6 +35,9 @@ export const customers = pgTable("customers", {
   userId: integer("user_id").references(() => users.id),
   // Jeder Kunde gehört zu einem Shop (für Multi-Tenant-Isolation)
   shopId: integer("shop_id").default(1),
+  // Audit-Trail: Wer hat den Kunden erstellt
+  createdBy: integer("created_by").references(() => users.id),
+  createdBySource: text("created_by_source").default("normal"), // "normal", "kiosk"
 });
 
 export const insertCustomerSchema = createInsertSchema(customers).omit({
@@ -118,6 +121,9 @@ export const repairs = pgTable("repairs", {
   userId: integer("user_id").references(() => users.id),
   // Jede Reparatur gehört zu einem Shop (für Multi-Tenant-Isolation)
   shopId: integer("shop_id").default(1),
+  // Audit-Trail: Wer hat die Reparatur erstellt
+  createdBy: integer("created_by").references(() => users.id),
+  createdBySource: text("created_by_source").default("normal"), // "normal", "kiosk"
   // Speichert, ob bereits eine Bewertungsanfrage gesendet wurde
   reviewRequestSent: boolean("review_request_sent").default(false),
   
@@ -209,6 +215,13 @@ export const users = pgTable("users", {
   isActive: boolean("is_active").default(false).notNull(), // Benutzer muss vom Admin freigeschaltet werden
   isAdmin: boolean("is_admin").default(false).notNull(),   // Administrator-Rechte
   isSuperadmin: boolean("is_superadmin").default(false).notNull(), // Superadmin-Rechte (kann alle Shops verwalten)
+  
+  // Mitarbeiter-System
+  role: text("role").default("owner").notNull(), // "owner" oder "employee"
+  parentUserId: integer("parent_user_id"), // NULL für Shop-Owner, User-ID des Shop-Besitzers für Mitarbeiter - Referenz wird später hinzugefügt
+  permissions: jsonb("permissions"), // Granulare Berechtigungen für Mitarbeiter
+  firstName: text("first_name"), // Vorname für bessere Identifikation
+  lastName: text("last_name"), // Nachname für bessere Identifikation
   // Für Abwärtskompatibilität während der Migration
   pricingPlan: text("pricing_plan").default("basic"),      // Wird ersetzt durch packageId
   featureOverrides: jsonb("feature_overrides"),            // Individuelle Feature-Freischaltungen (wird auslaufen)
@@ -413,6 +426,7 @@ export const repairStatusHistory = pgTable("repair_status_history", {
   newStatus: text("new_status").notNull(),
   changedAt: timestamp("changed_at").defaultNow().notNull(),
   changedBy: integer("changed_by").references(() => users.id),
+  changedBySource: text("changed_by_source").default("normal"), // "normal", "kiosk" 
   notes: text("notes"),
   userId: integer("user_id").references(() => users.id),
   shopId: integer("shop_id").default(1),

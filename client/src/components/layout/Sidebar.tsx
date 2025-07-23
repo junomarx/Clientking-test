@@ -220,6 +220,21 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
           Benutzerdaten
         </Button>
         
+        {/* Mitarbeiterverwaltung - nur für Shop-Owner */}
+        {user && user.role === 'owner' && (
+          <Button 
+            variant={activeTab === 'employees' ? 'default' : 'ghost'}
+            className="w-full justify-start"
+            onClick={() => {
+              onTabChange('employees');
+              if (isMobile) closeMenu();
+            }}
+          >
+            <User className="h-5 w-5 mr-2" />
+            Mitarbeiter
+          </Button>
+        )}
+        
         {/* Kiosk-Modus Aktivierung */}
         <div className="pt-2 border-t">
           <KioskActivationButton />

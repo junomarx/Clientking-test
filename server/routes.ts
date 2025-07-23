@@ -47,6 +47,7 @@ import { supportAccessRouter } from "./support-access-routes";
 import { registerSuperadminRoutes } from "./superadmin-routes";
 import { registerGlobalDeviceRoutes } from "./global-device-routes";
 import { registerSuperadminPrintTemplatesRoutes } from "./superadmin-print-templates-routes";
+import { setupEmployeeRoutes } from "./employee-routes";
 import path from 'path';
 import fs from 'fs';
 // jsPDF will be imported dynamically
@@ -823,6 +824,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Set up authentication
   setupAuth(app);
+  
+  // Set up employee routes (must be after authentication)
+  setupEmployeeRoutes(app);
   
   // Set up superadmin routes FIRST (before middleware that might interfere)
   registerSuperadminRoutes(app);

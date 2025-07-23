@@ -222,6 +222,12 @@ export interface IStorage {
   
   // Method to get repairs waiting for spare parts with customer data
   getRepairsWaitingForParts(userId: number): Promise<any[]>;
+  
+  // Employee Management
+  getEmployeesByShopOwner(ownerId: number): Promise<User[]>;
+  createEmployee(employeeData: Partial<User>): Promise<User>;
+  updateEmployeeStatus(employeeId: number, isActive: boolean): Promise<User>;
+  deleteEmployee(employeeId: number): Promise<void>;
 
   // Zubehör-Methoden
   createAccessory(accessoryData: InsertAccessory): Promise<Accessory>;
@@ -4932,6 +4938,57 @@ export class DatabaseStorage implements IStorage {
       console.error('❌ Fehler beim Löschen der Zubehör-Bestellung:', error);
       return false;
     }
+  }
+
+  // Employee Management Methods
+  async getEmployeesByShopOwner(ownerId: number): Promise<User[]> {
+    const shopOwner = await this.getUser(ownerId);
+    if (!shopOwner || shopOwner.role !== 'owner') {
+      return [];
+    }
+
+    const employees = await db
+      .select()
+      .from(users)
+      .where(and(
+        eq(users.parentUserId, ownerId),
+        eq(users.role, 'employee')
+      ));
+
+    return employees;
+  }
+
+  async createEmployee(employeeData: Partial<User>): Promise<User> {
+    const [employee] = await db
+      .insert(users)
+      .values({
+        ...employeeData,
+        role: 'employee',
+        isActive: true,
+      } as any)
+      .returning();
+
+    return employee;
+  }
+
+  async updateEmployeeStatus(employeeId: number, isActive: boolean): Promise<User> {
+    const [employee] = await db
+      .update(users)
+      .set({ isActive })
+      .where(eq(users.id, employeeId))
+      .returning();
+
+    if (!employee) {
+      throw new Error('Employee not found');
+    }
+
+    return employee;
+  }
+
+  async deleteEmployee(employeeId: number): Promise<void> {
+    await db
+      .delete(users)
+      .where(eq(users.id, employeeId));
   }
 }
 
