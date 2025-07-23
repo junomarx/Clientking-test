@@ -35,9 +35,8 @@ export const customers = pgTable("customers", {
   userId: integer("user_id").references(() => users.id),
   // Jeder Kunde gehört zu einem Shop (für Multi-Tenant-Isolation)
   shopId: integer("shop_id").default(1),
-  // Audit-Trail: Wer hat den Kunden erstellt
-  createdBy: integer("created_by").references(() => users.id),
-  createdBySource: text("created_by_source").default("normal"), // "normal", "kiosk"
+  // Audit-Trail: Wer hat den Kunden erstellt (Mitarbeiter-System)
+  createdBy: text("created_by"), // Speichert Benutzername oder "KIOSK-MODUS"
 });
 
 export const insertCustomerSchema = createInsertSchema(customers).omit({
@@ -121,9 +120,8 @@ export const repairs = pgTable("repairs", {
   userId: integer("user_id").references(() => users.id),
   // Jede Reparatur gehört zu einem Shop (für Multi-Tenant-Isolation)
   shopId: integer("shop_id").default(1),
-  // Audit-Trail: Wer hat die Reparatur erstellt
-  createdBy: integer("created_by").references(() => users.id),
-  createdBySource: text("created_by_source").default("normal"), // "normal", "kiosk"
+  // Audit-Trail: Wer hat die Reparatur erstellt (Mitarbeiter-System)
+  createdBy: text("created_by"), // Speichert Benutzername oder "KIOSK-MODUS"
   // Speichert, ob bereits eine Bewertungsanfrage gesendet wurde
   reviewRequestSent: boolean("review_request_sent").default(false),
   
@@ -425,8 +423,7 @@ export const repairStatusHistory = pgTable("repair_status_history", {
   oldStatus: text("old_status"),
   newStatus: text("new_status").notNull(),
   changedAt: timestamp("changed_at").defaultNow().notNull(),
-  changedBy: integer("changed_by").references(() => users.id),
-  changedBySource: text("changed_by_source").default("normal"), // "normal", "kiosk" 
+  changedBy: text("changed_by"), // Benutzername der Person, die die Änderung vorgenommen hat 
   notes: text("notes"),
   userId: integer("user_id").references(() => users.id),
   shopId: integer("shop_id").default(1),
