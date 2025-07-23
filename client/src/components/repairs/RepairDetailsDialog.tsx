@@ -521,9 +521,7 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                         <TooltipContent>
                           <p>Aktueller Status: {getStatusText(repair.status)}</p>
                           <p>Zuletzt geändert: {format(new Date(repair.updatedAt), 'dd.MM.yyyy HH:mm', { locale: de })}</p>
-                          {statusHistoryData?.length > 0 && (
-                            <p>Geändert von: {statusHistoryData[0].changedByUsername || 'System'}</p>
-                          )}
+                          <p>Status: {repair.status}</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -538,7 +536,9 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                       <div className="text-xs font-medium text-muted-foreground mb-2">Status-Verlauf</div>
                       <div className="max-h-32 overflow-y-auto space-y-2 pr-1">
                         {statusHistoryData && statusHistoryData.length > 0 ? (
-                          statusHistoryData.map((entry) => (
+                          statusHistoryData
+                            .filter((entry) => entry.newStatus !== repair.status) // Aktuellen Status aus Verlauf ausschließen
+                            .map((entry) => (
                             <div key={entry.id} className="flex items-center justify-between text-xs py-1">
                               <div className="flex items-center gap-2 flex-1">
                                 <TooltipProvider>
@@ -571,7 +571,7 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                             </div>
                           ))
                         ) : (
-                          <div className="text-xs text-muted-foreground">Status-Verlauf nicht verfügbar</div>
+                          <div className="text-xs text-muted-foreground">Kein früherer Status verfügbar</div>
                         )}
                       </div>
                     </div>
