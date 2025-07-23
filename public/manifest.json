@@ -1,12 +1,12 @@
 {
-  "name": "Handyshop Verwaltung",
-  "short_name": "Handyshop",
-  "description": "Professional mobile repair shop management system",
+  "name": "ClientKing - Handyshop Verwaltung",
+  "short_name": "ClientKing",
+  "description": "Professional mobile repair shop management system powered by ClientKing",
   "start_url": "/?source=pwa",
   "id": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#1f2937",
+  "theme_color": "#0C395C",
   "orientation": "any",
   "icons": [
     {
@@ -20,6 +20,12 @@
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any maskable"
+    },
+    {
+      "src": "/clientking-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
     }
   ],
   "categories": ["business", "productivity"],

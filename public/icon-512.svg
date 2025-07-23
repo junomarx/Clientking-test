@@ -1,32 +1,13 @@
 <svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-  <rect width="512" height="512" fill="#ffffff"/>
-  
-  <!-- Phone body -->
-  <rect x="176" y="128" width="160" height="256" rx="20" ry="20" fill="#2563eb" stroke="#1e3a8a" stroke-width="8"/>
-  
-  <!-- Screen -->
-  <rect x="192" y="160" width="128" height="192" rx="10" ry="10" fill="#bfdbfe"/>
-  
-  <!-- Crown -->
-  <path d="M160 96 L176 128 L213 64 L256 96 L293 64 L330 128 L352 96 L320 160 L192 160 Z" fill="#fbbf24" stroke="#f59e0b" stroke-width="4"/>
-  
-  <!-- Crown jewels -->
-  <circle cx="213" cy="80" r="16" fill="#fbbf24" stroke="#1e3a8a" stroke-width="4"/>
-  <circle cx="256" cy="112" r="16" fill="#fbbf24" stroke="#1e3a8a" stroke-width="4"/>
-  <circle cx="299" cy="80" r="16" fill="#fbbf24" stroke="#1e3a8a" stroke-width="4"/>
-  
-  <!-- Arms -->
-  <ellipse cx="144" cy="240" rx="32" ry="20" fill="#1e3a8a"/>
-  <ellipse cx="368" cy="240" rx="32" ry="20" fill="#1e3a8a"/>
-  
-  <!-- Cape -->
-  <path d="M128 224 Q112 256 128 288 Q144 320 176 320 L176 256 Z" fill="#dc2626"/>
-  
-  <!-- Tool (screwdriver) -->
-  <rect x="384" y="192" width="64" height="10" rx="5" fill="#dc2626"/>
-  <rect x="448" y="176" width="32" height="42" rx="5" fill="#1e3a8a"/>
-  
-  <!-- Legs -->
-  <rect x="208" y="384" width="20" height="64" rx="10" fill="#1e3a8a"/>
-  <rect x="284" y="384" width="20" height="64" rx="10" fill="#1e3a8a"/>
+  <rect width="512" height="512" fill="#FCFCFC"/>
+  <g transform="translate(256,256) scale(0.2)">
+    <g transform="translate(-512,-512)">
+      <path fill="#0C395C" d="M0 0h1024v1024H0V0z"/>
+      <path fill="#A2C6E0" d="M378 312h245l8 3 6 5 3 6 1 4v360l-3 9-5 6-6 3-30 1H391l-13-1-7-4-5-6-2-11V323l2-9 4-6 5-4z"/>
+      <path fill="#1F547E" d="M357 271h287l10 4 7 6 5 9 1 4v426l-4 10-6 7-9 5-4 1H356l-10-4-6-5-6-12-1-86 1-14 6-9 4-11 1-5v-12l-4-13-6-10-1-1-1-44V312l2-11 4-8 8-7zm21 41l-9 3-6 5-3 6-1 7v354l2 11 6 7 6 3 13 1h218l23-1 8-5 5-8 1-5V340l-3-8-5-6-6-3-4-1z"/>
+      <path fill="#F2B628" d="M499 122l5 1 10 16 10 15 16 25 13 19 3 3 8 1 9-6 13-11 20-15 15-12 7-5 8-1 1 2-15 97-2 1H382l-3-16-12-79v-5l7 1 19 14 15 12 14 11 10 8 7 5h8l18-27 17-26 13-20z"/>
+      <text x="150" y="800" font-family="Arial Black, sans-serif" font-size="300" font-weight="900" fill="#FCFCFC">CLIENT</text>
+      <text x="300" y="900" font-family="Arial Black, sans-serif" font-size="200" font-weight="900" fill="#F2B628">KING</text>
+    </g>
+  </g>
 </svg>
