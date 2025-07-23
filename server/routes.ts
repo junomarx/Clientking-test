@@ -2167,6 +2167,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Nicht authentifiziert" });
       }
       
+      // Rollenbasierte Berechtigung: Nur Shop-Owner haben Zugriff auf Geschäftseinstellungen
+      const userRole = (req.user as any).role;
+      if (userRole !== 'owner') {
+        return res.status(403).json({ message: "Zugriff verweigert: Nur Shop-Owner können Geschäftseinstellungen abrufen" });
+      }
+      
       // Benutzer-ID direkt aus der Session nehmen
       const userId = (req.user as any).id;
       const username = (req.user as any).username;
@@ -2235,6 +2241,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       if (!req.user) {
         return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      // Rollenbasierte Berechtigung: Nur Shop-Owner können Geschäftseinstellungen ändern
+      const userRole = (req.user as any).role;
+      if (userRole !== 'owner') {
+        return res.status(403).json({ message: "Zugriff verweigert: Nur Shop-Owner können Geschäftseinstellungen ändern" });
       }
       
       // Benutzer-ID direkt aus der Session nehmen
@@ -2915,6 +2927,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "Unauthorized" });
       }
       
+      // Rollenbasierte Berechtigung: Nur Shop-Owner haben Zugriff auf E-Mail-Vorlagen
+      const userRole = (req.user as any).role;
+      if (userRole !== 'owner') {
+        return res.status(403).json({ error: "Zugriff verweigert: Nur Shop-Owner können E-Mail-Vorlagen verwalten" });
+      }
+      
       // userId an die Methode übergeben, um shop-basierte Filterung zu ermöglichen
       const allTemplates = await storage.getAllEmailTemplates(userId);
       
@@ -2963,6 +2981,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!userId) {
         return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      // Rollenbasierte Berechtigung: Nur Shop-Owner haben Zugriff auf E-Mail-Vorlagen
+      const userRole = (req.user as any).role;
+      if (userRole !== 'owner') {
+        return res.status(403).json({ error: "Zugriff verweigert: Nur Shop-Owner können E-Mail-Vorlagen verwalten" });
       }
       
       // userId an die Methode übergeben, um shop-basierte Filterung zu ermöglichen
