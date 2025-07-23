@@ -39,6 +39,7 @@ import {
 import { usePrintManager } from './PrintOptionsManager';
 import { QRSignatureDialog } from '../signature/QRSignatureDialog';
 import { useBusinessSettings } from '@/hooks/use-business-settings';
+import { useAuth } from '@/hooks/use-auth';
 
 interface RepairsTabProps {
   onNewOrder: () => void;
@@ -61,6 +62,7 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
   // SMS-Funktionalität wurde entfernt
   const [selectedRepairDetails, setSelectedRepairDetails] = useState<Repair | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
   
   // PrintManager für Druckoptionen
   const { showPrintOptions } = usePrintManager();
@@ -685,23 +687,26 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
                             <p>Status ändern</p>
                           </TooltipContent>
                         </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button 
-                              className="text-red-600 hover:text-red-800 p-1 transform hover:scale-110 transition-all" 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedRepairId(repair.id);
-                                setShowDeleteDialog(true);
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Löschen</p>
-                          </TooltipContent>
-                        </Tooltip>
+                        {/* Nur Shop-Owner können löschen, Mitarbeiter nicht */}
+                        {user?.role !== 'employee' && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button 
+                                className="text-red-600 hover:text-red-800 p-1 transform hover:scale-110 transition-all" 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedRepairId(repair.id);
+                                  setShowDeleteDialog(true);
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Löschen</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -901,23 +906,26 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
                   ) : (
                     <div className="w-9" aria-hidden="true"></div>
                   )}
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button 
-                        className="text-red-600 hover:text-red-800 p-2 rounded-full hover:bg-white transition-colors" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedRepairId(repair.id);
-                          setShowDeleteDialog(true);
-                        }}
-                      >
-                        <Trash2 className="h-5 w-5" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Löschen</p>
-                    </TooltipContent>
-                  </Tooltip>
+                  {/* Nur Shop-Owner können löschen, Mitarbeiter nicht */}
+                  {user?.role !== 'employee' && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button 
+                          className="text-red-600 hover:text-red-800 p-2 rounded-full hover:bg-white transition-colors" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedRepairId(repair.id);
+                            setShowDeleteDialog(true);
+                          }}
+                        >
+                          <Trash2 className="h-5 w-5" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Löschen</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
                 </div>
               </div>
             ))

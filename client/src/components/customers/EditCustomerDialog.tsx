@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
 import { Customer } from '@/lib/types';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -34,6 +35,7 @@ interface EditCustomerDialogProps {
 export function EditCustomerDialog({ open, onClose, customer }: EditCustomerDialogProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
   
   // Setup form
   const form = useForm<CustomerFormValues>({
@@ -244,14 +246,17 @@ export function EditCustomerDialog({ open, onClose, customer }: EditCustomerDial
                     Abbrechen
                   </Button>
                   
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    onClick={() => setShowDeleteDialog(true)}
-                  >
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    Löschen
-                  </Button>
+                  {/* Nur Shop-Owner können löschen, Mitarbeiter nicht */}
+                  {user?.role !== 'employee' && (
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      onClick={() => setShowDeleteDialog(true)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Löschen
+                    </Button>
+                  )}
                 </div>
                 
                 <Button 
