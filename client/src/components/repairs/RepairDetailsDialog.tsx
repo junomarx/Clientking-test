@@ -20,7 +20,7 @@ interface StatusHistoryEntry {
 }
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
-import { getStatusBadge } from '@/lib/utils';
+import { getStatusBadge, getStatusText } from '@/lib/utils/statusBadges';
 import { SignatureDialog } from './SignatureDialog';
 import { CustomSignaturePad } from '@/components/ui/signature-pad';
 import { useAuth } from '@/hooks/use-auth';
@@ -519,7 +519,7 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                           </div>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>Aktueller Status: {getStatusLabel(repair.status)}</p>
+                          <p>Aktueller Status: {getStatusText(repair.status)}</p>
                           <p>Zuletzt geändert: {format(new Date(repair.updatedAt), 'dd.MM.yyyy HH:mm', { locale: de })}</p>
                           {statusHistoryData?.length > 0 && (
                             <p>Geändert von: {statusHistoryData[0].changedByUsername || 'System'}</p>
