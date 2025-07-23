@@ -6,7 +6,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import { Employee } from '@/lib/types';
+// Employee interface lokal definiert da nicht in @/lib/types vorhanden
+interface Employee {
+  id: number;
+  username: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  role: string;
+  isActive: boolean;
+  parentUserId: number;
+  createdAt: string;
+}
 import { apiRequest } from '@/lib/queryClient';
 import { Loader2 } from 'lucide-react';
 
