@@ -248,10 +248,19 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
     queryFn: async () => {
       if (!repairId) return [];
       console.log('🔍 Status-History abfragen für Reparatur ID:', repairId);
-      const response = await apiRequest('GET', `/api/repairs/${repairId}/status-history`);
-      const data = await response.json();
-      console.log('🔍 Status-History-Daten erhalten:', data);
-      return data;
+      try {
+        const response = await apiRequest('GET', `/api/repairs/${repairId}/status-history`);
+        if (!response.ok) {
+          console.warn('Status-History konnte nicht abgerufen werden:', response.status);
+          return [];
+        }
+        const data = await response.json();
+        console.log('🔍 Status-History-Daten erhalten:', data);
+        return data;
+      } catch (error) {
+        console.error('Fehler beim Abrufen der Status-History:', error);
+        return [];
+      }
     },
     enabled: open && repairId !== null,
   });
@@ -510,7 +519,11 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                           </div>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>Zuletzt geändert von: {statusHistoryData?.length > 0 ? statusHistoryData[0].changedByUsername || 'System' : 'System'}</p>
+                          <p>Aktueller Status: {getStatusLabel(repair.status)}</p>
+                          <p>Zuletzt geändert: {format(new Date(repair.updatedAt), 'dd.MM.yyyy HH:mm', { locale: de })}</p>
+                          {statusHistoryData?.length > 0 && (
+                            <p>Geändert von: {statusHistoryData[0].changedByUsername || 'System'}</p>
+                          )}
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -525,43 +538,40 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                       <div className="text-xs font-medium text-muted-foreground mb-2">Status-Verlauf</div>
                       <div className="max-h-32 overflow-y-auto space-y-2 pr-1">
                         {statusHistoryData && statusHistoryData.length > 0 ? (
-                          statusHistoryData
-                            .slice(1) // Erstes Element (neuester Status) überspringen, da es der aktuelle Status ist
-                            .slice(0, 8) // Maximal 8 vergangene Einträge anzeigen
-                            .map((entry) => (
-                              <div key={entry.id} className="flex items-center justify-between text-xs py-1">
-                                <div className="flex items-center gap-2 flex-1">
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <div className="cursor-pointer">
-                                          {getStatusBadge(entry.newStatus)}
-                                        </div>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p>Geändert von: {entry.changedByUsername || 'System'}</p>
-                                        {entry.notes && <p>Notiz: {entry.notes}</p>}
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                  {entry.changedByUsername && (
-                                    <span className="text-[9px] text-muted-foreground italic">
-                                      von {entry.changedByUsername}
-                                    </span>
-                                  )}
-                                  {entry.notes && (
-                                    <span className="text-[9px] text-muted-foreground ml-1 italic">
-                                      ({entry.notes.length > 25 ? entry.notes.substring(0, 25) + '...' : entry.notes})
-                                    </span>
-                                  )}
-                                </div>
-                                <span className="text-[10px] text-muted-foreground flex-shrink-0">
-                                  {format(new Date(entry.changedAt), 'dd.MM.yyyy HH:mm', { locale: de })}
-                                </span>
+                          statusHistoryData.map((entry) => (
+                            <div key={entry.id} className="flex items-center justify-between text-xs py-1">
+                              <div className="flex items-center gap-2 flex-1">
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <div className="cursor-pointer">
+                                        {getStatusBadge(entry.newStatus)}
+                                      </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Geändert von: {entry.changedByUsername || 'System'}</p>
+                                      {entry.notes && <p>Notiz: {entry.notes}</p>}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                                {entry.changedByUsername && (
+                                  <span className="text-[9px] text-muted-foreground italic">
+                                    von {entry.changedByUsername}
+                                  </span>
+                                )}
+                                {entry.notes && (
+                                  <span className="text-[9px] text-muted-foreground ml-1 italic">
+                                    ({entry.notes.length > 25 ? entry.notes.substring(0, 25) + '...' : entry.notes})
+                                  </span>
+                                )}
                               </div>
-                            ))
+                              <span className="text-[10px] text-muted-foreground flex-shrink-0">
+                                {format(new Date(entry.changedAt), 'dd.MM.yyyy HH:mm', { locale: de })}
+                              </span>
+                            </div>
+                          ))
                         ) : (
-                          <div className="text-xs text-muted-foreground">Kein Verlauf vorhanden</div>
+                          <div className="text-xs text-muted-foreground">Status-Verlauf nicht verfügbar</div>
                         )}
                       </div>
                     </div>
