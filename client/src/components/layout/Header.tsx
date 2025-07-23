@@ -238,19 +238,19 @@ export function Header({ variant = "landing", activeTab, onTabChange }: HeaderPr
                           <Printer className="h-5 w-5 mr-2" />
                           Drucken
                         </Button>
+                        <Button 
+                          variant={activeTab === 'subscription-settings' ? 'default' : 'ghost'}
+                          className="w-full justify-start"
+                          onClick={() => {
+                            if (onTabChange) onTabChange('subscription-settings');
+                            setMenuOpen(false);
+                          }}
+                        >
+                          <CreditCard className="h-5 w-5 mr-2" />
+                          Abonnement
+                        </Button>
                       </>
                     )}
-                    <Button 
-                      variant={activeTab === 'subscription-settings' ? 'default' : 'ghost'}
-                      className="w-full justify-start"
-                      onClick={() => {
-                        if (onTabChange) onTabChange('subscription-settings');
-                        setMenuOpen(false);
-                      }}
-                    >
-                      <CreditCard className="h-5 w-5 mr-2" />
-                      Abonnement
-                    </Button>
                     <Button 
                       variant={activeTab === 'user-settings' ? 'default' : 'ghost'}
                       className="w-full justify-start"

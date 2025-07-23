@@ -164,50 +164,65 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
         </h3>
       </div>
       <div className="space-y-1">
-        <Button 
-          variant={activeTab === 'business-settings' ? 'default' : 'ghost'}
-          className="w-full justify-start"
-          onClick={() => {
-            onTabChange('business-settings');
-            if (isMobile) closeMenu();
-          }}
-        >
-          <Building className="h-5 w-5 mr-2" />
-          Geschäft
-        </Button>
-        <Button 
-          variant={activeTab === 'email-settings' ? 'default' : 'ghost'}
-          className="w-full justify-start"
-          onClick={() => {
-            onTabChange('email-settings');
-            if (isMobile) closeMenu();
-          }}
-        >
-          <Mail className="h-5 w-5 mr-2" />
-          E-Mail
-        </Button>
-        <Button 
-          variant={activeTab === 'print-settings' ? 'default' : 'ghost'}
-          className="w-full justify-start"
-          onClick={() => {
-            onTabChange('print-settings');
-            if (isMobile) closeMenu();
-          }}
-        >
-          <Printer className="h-5 w-5 mr-2" />
-          Drucken
-        </Button>
-        <Button 
-          variant={activeTab === 'subscription-settings' ? 'default' : 'ghost'}
-          className="w-full justify-start"
-          onClick={() => {
-            onTabChange('subscription-settings');
-            if (isMobile) closeMenu();
-          }}
-        >
-          <CreditCard className="h-5 w-5 mr-2" />
-          Abonnement
-        </Button>
+        {/* Geschäft - nur für Shop-Owner */}
+        {user && user.role === 'owner' && (
+          <Button 
+            variant={activeTab === 'business-settings' ? 'default' : 'ghost'}
+            className="w-full justify-start"
+            onClick={() => {
+              onTabChange('business-settings');
+              if (isMobile) closeMenu();
+            }}
+          >
+            <Building className="h-5 w-5 mr-2" />
+            Geschäft
+          </Button>
+        )}
+        
+        {/* E-Mail - nur für Shop-Owner */}
+        {user && user.role === 'owner' && (
+          <Button 
+            variant={activeTab === 'email-settings' ? 'default' : 'ghost'}
+            className="w-full justify-start"
+            onClick={() => {
+              onTabChange('email-settings');
+              if (isMobile) closeMenu();
+            }}
+          >
+            <Mail className="h-5 w-5 mr-2" />
+            E-Mail
+          </Button>
+        )}
+        
+        {/* Drucken - nur für Shop-Owner */}
+        {user && user.role === 'owner' && (
+          <Button 
+            variant={activeTab === 'print-settings' ? 'default' : 'ghost'}
+            className="w-full justify-start"
+            onClick={() => {
+              onTabChange('print-settings');
+              if (isMobile) closeMenu();
+            }}
+          >
+            <Printer className="h-5 w-5 mr-2" />
+            Drucken
+          </Button>
+        )}
+        
+        {/* Abonnement - nur für Shop-Owner */}
+        {user && user.role === 'owner' && (
+          <Button 
+            variant={activeTab === 'subscription-settings' ? 'default' : 'ghost'}
+            className="w-full justify-start"
+            onClick={() => {
+              onTabChange('subscription-settings');
+              if (isMobile) closeMenu();
+            }}
+          >
+            <CreditCard className="h-5 w-5 mr-2" />
+            Abonnement
+          </Button>
+        )}
         <Button 
           variant={activeTab === 'user-settings' ? 'default' : 'ghost'}
           className="w-full justify-start"
