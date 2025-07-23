@@ -226,6 +226,7 @@ export interface IStorage {
   // Employee Management
   getEmployeesByShopOwner(ownerId: number): Promise<User[]>;
   createEmployee(employeeData: Partial<User>): Promise<User>;
+  updateEmployee(employeeId: number, updateData: Partial<User>, userId: number): Promise<User>;
   updateEmployeeStatus(employeeId: number, isActive: boolean): Promise<User>;
   deleteEmployee(employeeId: number): Promise<void>;
 
@@ -4968,6 +4969,23 @@ export class DatabaseStorage implements IStorage {
       } as any)
       .returning();
 
+    return employee;
+  }
+
+  async updateEmployee(employeeId: number, updateData: Partial<User>, userId: number): Promise<User> {
+    console.log(`📝 Aktualisiere Mitarbeiter ${employeeId} mit Daten:`, updateData);
+    
+    const [employee] = await db
+      .update(users)
+      .set(updateData)
+      .where(eq(users.id, employeeId))
+      .returning();
+
+    if (!employee) {
+      throw new Error('Mitarbeiter nicht gefunden');
+    }
+
+    console.log(`✅ Mitarbeiter ${employeeId} erfolgreich aktualisiert`);
     return employee;
   }
 

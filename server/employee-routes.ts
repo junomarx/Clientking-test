@@ -108,13 +108,99 @@ export function setupEmployeeRoutes(app: Express) {
     }
   });
 
-  // Mitarbeiter aktivieren/deaktivieren
-  app.patch("/api/employees/:id", async (req, res) => {
-    if (!req.isAuthenticated()) {
+  // Mitarbeiter bearbeiten - rollenbasierte Berechtigungen
+  app.patch("/api/employees/:id/edit", async (req, res) => {
+    const customUserId = req.headers['x-user-id'];
+    let user;
+    
+    if (customUserId) {
+      try {
+        const userId = parseInt(customUserId.toString());
+        user = await storage.getUser(userId);
+        if (!user) {
+          return res.status(401).json({ message: "Benutzer nicht gefunden" });
+        }
+      } catch (error) {
+        return res.status(401).json({ message: "Ungültige Benutzer-ID" });
+      }
+    } else if (req.isAuthenticated()) {
+      user = req.user;
+    } else {
       return res.status(401).json({ message: "Nicht angemeldet" });
     }
 
-    const user = req.user;
+    const employeeId = parseInt(req.params.id);
+    if (!employeeId) {
+      return res.status(400).json({ message: "Ungültige Mitarbeiter-ID" });
+    }
+
+    const updateData = req.body;
+    console.log(`Benutzer ${user.username} (${user.role}) bearbeitet Mitarbeiter ${employeeId}:`, updateData);
+
+    try {
+      // Berechtigungsprüfung: Shop-Owner kann alles bearbeiten, Mitarbeiter nur ihr eigenes Passwort
+      if (user.role === 'owner') {
+        // Shop-Owner kann Benutzernamen, E-Mail, Namen bearbeiten (aber nicht Passwort)
+        const allowedFields = ['username', 'email', 'firstName', 'lastName'];
+        const filteredData: any = {};
+        
+        for (const field of allowedFields) {
+          if (updateData[field] !== undefined) {
+            filteredData[field] = updateData[field];
+          }
+        }
+
+        if (Object.keys(filteredData).length === 0) {
+          return res.status(400).json({ message: "Keine gültigen Felder zum Aktualisieren" });
+        }
+
+        const updatedEmployee = await storage.updateEmployee(employeeId, filteredData, user.id);
+        console.log(`✅ Mitarbeiter ${employeeId} durch Shop-Owner ${user.username} aktualisiert`);
+        res.json(updatedEmployee);
+      } else {
+        // Mitarbeiter kann nur sein eigenes Passwort ändern
+        if (employeeId !== user.id) {
+          return res.status(403).json({ message: "Sie können nur Ihre eigenen Daten bearbeiten" });
+        }
+
+        if (!updateData.password) {
+          return res.status(400).json({ message: "Nur Passwort-Änderungen sind erlaubt" });
+        }
+
+        // Passwort hashen (wie bei der Registrierung)
+        const hashedPassword = await hashPassword(updateData.password);
+        const updatedEmployee = await storage.updateEmployee(employeeId, { password: hashedPassword }, user.id);
+        
+        console.log(`✅ Passwort für Mitarbeiter ${employeeId} (${user.username}) geändert`);
+        res.json({ message: "Passwort erfolgreich geändert" });
+      }
+    } catch (error) {
+      console.error("Fehler beim Bearbeiten des Mitarbeiters:", error);
+      res.status(500).json({ message: "Fehler beim Bearbeiten des Mitarbeiters" });
+    }
+  });
+
+  // Mitarbeiter Status aktivieren/deaktivieren
+  app.patch("/api/employees/:id/status", async (req, res) => {
+    const customUserId = req.headers['x-user-id'];
+    let user;
+    
+    if (customUserId) {
+      try {
+        const userId = parseInt(customUserId.toString());
+        user = await storage.getUser(userId);
+        if (!user) {
+          return res.status(401).json({ message: "Benutzer nicht gefunden" });
+        }
+      } catch (error) {
+        return res.status(401).json({ message: "Ungültige Benutzer-ID" });
+      }
+    } else if (req.isAuthenticated()) {
+      user = req.user;
+    } else {
+      return res.status(401).json({ message: "Nicht angemeldet" });
+    }
+
     if (user.role !== 'owner') {
       return res.status(403).json({ message: "Keine Berechtigung" });
     }

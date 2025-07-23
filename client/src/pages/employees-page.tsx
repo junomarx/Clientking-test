@@ -7,9 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Plus, Trash2, User, Mail, Phone } from 'lucide-react';
+import { Plus, Trash2, Edit, User, Mail, Phone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
 import { apiRequest } from '@/lib/queryClient';
+import { EditEmployeeDialog } from '@/components/employees/EditEmployeeDialog';
 
 interface Employee {
   id: number;
@@ -33,6 +35,8 @@ interface NewEmployeeForm {
 
 export default function EmployeesPage() {
   const [isNewEmployeeDialogOpen, setIsNewEmployeeDialogOpen] = useState(false);
+  const [isEditEmployeeDialogOpen, setIsEditEmployeeDialogOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [newEmployeeForm, setNewEmployeeForm] = useState<NewEmployeeForm>({
     username: '',
     password: '',
@@ -43,6 +47,10 @@ export default function EmployeesPage() {
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  
+  // Bestimme Benutzerrolle (Shop-Owner vs. Mitarbeiter)
+  const userRole = user?.role === 'admin' ? 'owner' : 'employee';
 
   // Mitarbeiter abrufen
   const { data: employees = [], isLoading } = useQuery<Employee[]>({
@@ -152,6 +160,11 @@ export default function EmployeesPage() {
     }
   };
 
+  const handleEditEmployee = (employee: Employee) => {
+    setSelectedEmployee(employee);
+    setIsEditEmployeeDialogOpen(true);
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-96">
@@ -220,15 +233,28 @@ export default function EmployeesPage() {
                     {employee.isActive ? "Aktiv" : "Inaktiv"}
                   </Label>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleDeleteEmployee(employee.id, `${employee.firstName} ${employee.lastName}`)}
-                  disabled={deleteEmployeeMutation.isPending}
-                  className="text-destructive hover:text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                <div className="flex gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleEditEmployee(employee)}
+                    disabled={updateEmployeeStatusMutation.isPending}
+                    className="text-primary hover:text-primary"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  {userRole === 'owner' && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteEmployee(employee.id, `${employee.firstName} ${employee.lastName}`)}
+                      disabled={deleteEmployeeMutation.isPending}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -331,6 +357,14 @@ export default function EmployeesPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Employee Dialog */}
+      <EditEmployeeDialog
+        open={isEditEmployeeDialogOpen}
+        onOpenChange={setIsEditEmployeeDialogOpen}
+        employee={selectedEmployee}
+        userRole={userRole}
+      />
     </div>
   );
 }
