@@ -81,19 +81,16 @@ export function setupAuth(app: Express) {
           return done(null, false, { message: 'Ungültige E-Mail/Benutzername oder Passwort' });
         }
         
-        // Prüfe ob der Benutzer aktiv ist
-        if (!user.isActive) {
-          return done(null, false, { message: 'Ihr Konto ist deaktiviert. Kontaktieren Sie den Administrator.' });
-        } 
         // Überprüfe, ob der Benutzer aktiv ist (es sei denn, es ist ein Superadmin)
-        else if (!user.isActive && !user.isSuperadmin) {
+        if (!user.isActive && !user.isSuperadmin) {
           return done(null, false, { message: 'Konto ist nicht aktiviert. Bitte warten Sie auf die Freischaltung durch einen Superadministrator.' });
-        } 
-        else {
-          // Aktualisiere den letzten Login-Zeitpunkt
-          await storage.updateUserLastLogin(user.id);
-          return done(null, user);
         }
+        
+        // Aktualisiere den letzten Login-Zeitpunkt
+        if (storage.updateUserLastLogin) {
+          await storage.updateUserLastLogin(user.id);
+        }
+        return done(null, user);
       } catch (error) {
         return done(error);
       }
