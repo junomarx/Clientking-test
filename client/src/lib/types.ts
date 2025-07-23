@@ -4,11 +4,12 @@ export interface Customer {
   firstName: string;
   lastName: string;
   phone: string;
-  email?: string;
+  email?: string | null; // Allow null for consistency with database
   address?: string;
   zipCode?: string;
   city?: string;
   createdAt: string;
+  createdBy?: string | null; // Wer den Kunden erstellt hat
 }
 
 // Device types
@@ -21,7 +22,7 @@ export type RepairStatus = 'eingegangen' | 'in_reparatur' | 'ersatzteil_eingetro
 export interface Repair {
   id: number;
   orderCode?: string | null; // Neue Auftragsnummer im Format: [Hersteller][Geräteart][4 Ziffern], z.B. AS1496
-  customerId: number;
+  customerId: number | null; // Allow null for consistency with database
   deviceType: DeviceType;
   brand: string;
   model: string;
@@ -34,6 +35,7 @@ export interface Repair {
   createdAt: string;
   updatedAt: string;
   reviewRequestSent?: boolean;
+  createdBy?: string | null; // Wer den Auftrag erstellt hat
   // Unterschrift bei Abgabe des Geräts
   dropoffSignature?: string | null; // Digitale Unterschrift als Base64-kodiertes Bild (Abgabe)
   dropoffSignedAt?: string | null; // Datum/Uhrzeit der Unterschrift bei Abgabe

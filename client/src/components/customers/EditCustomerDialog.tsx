@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -28,14 +28,20 @@ type CustomerFormValues = z.infer<typeof customerSchema>;
 
 interface EditCustomerDialogProps {
   open: boolean;
-  onClose: () => void;
-  customer: Customer | null;
+  onOpenChange: (open: boolean) => void;
+  customerId: number;
 }
 
-export function EditCustomerDialog({ open, onClose, customer }: EditCustomerDialogProps) {
+export function EditCustomerDialog({ open, onOpenChange, customerId }: EditCustomerDialogProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+  
+  // Load customer data
+  const { data: customer, isLoading } = useQuery<Customer>({
+    queryKey: [`/api/customers/${customerId}`],
+    enabled: open && customerId > 0,
+  });
   
   // Setup form
   const form = useForm<CustomerFormValues>({
@@ -80,7 +86,7 @@ export function EditCustomerDialog({ open, onClose, customer }: EditCustomerDial
       });
       queryClient.invalidateQueries({ queryKey: [`/api/customers/${customer?.id}`] });
       queryClient.invalidateQueries({ queryKey: ['/api/customers'] });
-      onClose();
+      onOpenChange(false);
     },
     onError: (error) => {
       toast({
@@ -106,7 +112,7 @@ export function EditCustomerDialog({ open, onClose, customer }: EditCustomerDial
       queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
       queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
       setShowDeleteDialog(false);
-      onClose();
+      onOpenChange(false);
     },
     onError: (error) => {
       toast({
@@ -122,11 +128,26 @@ export function EditCustomerDialog({ open, onClose, customer }: EditCustomerDial
     updateMutation.mutate(values);
   }
 
-  if (!open || !customer) return null;
+  if (!open) return null;
+  
+  if (isLoading) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-[600px]">
+          <div className="flex items-center justify-center p-8">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <span className="ml-2">Lade Kundendaten...</span>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+  
+  if (!customer) return null;
 
   return (
     <>
-      <Dialog open={open} onOpenChange={onClose}>
+      <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Kunde bearbeiten</DialogTitle>
@@ -241,7 +262,7 @@ export function EditCustomerDialog({ open, onClose, customer }: EditCustomerDial
                   <Button 
                     type="button" 
                     variant="outline" 
-                    onClick={onClose}
+                    onClick={() => onOpenChange(false)}
                   >
                     Abbrechen
                   </Button>

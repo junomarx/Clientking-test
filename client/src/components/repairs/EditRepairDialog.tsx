@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
 import { Repair } from '@/lib/types';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 
@@ -59,6 +60,7 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
   console.log('EditRepairDialog geöffnet:', open, 'repair:', repair?.id);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   
   // Form definition - orderCode excluded as it's read-only
@@ -458,15 +460,18 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
                 >
                   Abbrechen
                 </Button>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  onClick={() => setShowDeleteDialog(true)}
-                  className="rounded-lg"
-                >
-                  <Trash2 className="h-4 w-4 mr-1" />
-                  Löschen
-                </Button>
+                {/* Nur Shop-Owner können löschen, Mitarbeiter nicht */}
+                {user?.role !== 'employee' && (
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={() => setShowDeleteDialog(true)}
+                    className="rounded-lg"
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Löschen
+                  </Button>
+                )}
               </div>
               <Button 
                 type="submit"

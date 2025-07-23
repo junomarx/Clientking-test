@@ -1644,7 +1644,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           repairId: repair.id,
           oldStatus: null, // Kein vorheriger Status bei Erstellung
           newStatus: repair.status || 'eingegangen',
-          changedBy: userId,
+          changedBy: user.username, // Benutzername statt ID speichern
           userId: userId,
           shopId: user.shopId,
           notes: "Auftrag erstellt"
@@ -1887,18 +1887,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Repair not found" });
       }
       
-      // Get status history with user information
+      // Get status history - changedBy is already stored as username (text)
       const statusHistory = await db
         .select({
           id: repairStatusHistory.id,
           oldStatus: repairStatusHistory.oldStatus,
           newStatus: repairStatusHistory.newStatus,
           changedAt: repairStatusHistory.changedAt,
-          changedByUsername: users.username,
+          changedByUsername: repairStatusHistory.changedBy, // This is already the username
           notes: repairStatusHistory.notes
         })
         .from(repairStatusHistory)
-        .leftJoin(users, eq(repairStatusHistory.changedBy, users.id))
         .where(
           and(
             eq(repairStatusHistory.repairId, repairId),

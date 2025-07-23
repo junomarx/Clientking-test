@@ -2400,7 +2400,7 @@ export class DatabaseStorage implements IStorage {
                 and(
                   eq(repairStatusHistory.repairId, id),
                   eq(repairStatusHistory.newStatus, status),
-                  eq(repairStatusHistory.changedBy, userId),
+                  eq(repairStatusHistory.changedBy, user.username),
                   eq(repairStatusHistory.shopId, user.shopId),
                   gte(repairStatusHistory.changedAt, fiveMinutesAgo)
                 )
@@ -2412,7 +2412,7 @@ export class DatabaseStorage implements IStorage {
                 repairId: id,
                 oldStatus: oldStatus,
                 newStatus: status,
-                changedBy: userId,
+                changedBy: user.username, // Benutzername statt ID speichern
                 userId: userId,
                 shopId: user.shopId
               });
@@ -2840,7 +2840,7 @@ export class DatabaseStorage implements IStorage {
           repairId: createdRepair.id,
           oldStatus: null, // Kein vorheriger Status bei Erstellung
           newStatus: status,
-          changedBy: userId || null,
+          changedBy: user?.username || "SYSTEM", // Benutzername statt ID speichern
           userId: userId || null,
           shopId: userShopId,
           notes: "Auftrag erstellt"
