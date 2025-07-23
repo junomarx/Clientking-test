@@ -50,10 +50,7 @@ export default function EmployeesPage() {
   const { user } = useAuth();
   
   // Bestimme Benutzerrolle (Shop-Owner vs. Mitarbeiter)
-  // Debug: Log user info
-  console.log('Current user:', user);
   const userRole = (user?.role === 'admin' || user?.role === 'owner') ? 'owner' : 'employee';
-  console.log('Determined userRole:', userRole);
 
   // Mitarbeiter abrufen
   const { data: employees = [], isLoading } = useQuery<Employee[]>({
