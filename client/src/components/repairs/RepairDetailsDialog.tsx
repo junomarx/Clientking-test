@@ -492,7 +492,8 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                       <div className="max-h-32 overflow-y-auto space-y-2 pr-1">
                         {statusHistoryData && statusHistoryData.length > 0 ? (
                           statusHistoryData
-                            .slice(0, 8) // Mehr Einträge anzeigen statt Filter
+                            .slice(1) // Erstes Element (neuester Status) überspringen, da es der aktuelle Status ist
+                            .slice(0, 8) // Maximal 8 vergangene Einträge anzeigen
                             .map((entry) => (
                               <div key={entry.id} className="flex items-center justify-between text-xs py-1">
                                 <div className="flex items-center gap-2">
