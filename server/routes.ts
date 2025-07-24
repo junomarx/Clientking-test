@@ -6561,6 +6561,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // LEIHGERÄTE API ROUTES
+  // Verfügbare Leihgeräte abrufen (MUSS vor der :id Route stehen!)
+  app.get("/api/loaner-devices/available", async (req: Request, res: Response) => {
+    try {
+      const userIdHeader = req.headers['x-user-id'] as string;
+      
+      if (!userIdHeader) {
+        return res.status(401).json({ message: "Benutzer-ID fehlt" });
+      }
+      
+      const userId = parseInt(userIdHeader);
+      const devices = await storage.getAvailableLoanerDevices(userId);
+      res.json(devices);
+    } catch (error) {
+      console.error("Fehler beim Abrufen verfügbarer Leihgeräte:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen verfügbarer Leihgeräte" });
+    }
+  });
+
   // Alle Leihgeräte abrufen
   app.get("/api/loaner-devices", async (req: Request, res: Response) => {
     try {
@@ -6594,24 +6612,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Fehler beim Abrufen des Leihgeräts:", error);
       res.status(500).json({ message: "Fehler beim Abrufen des Leihgeräts" });
-    }
-  });
-
-  // Verfügbare Leihgeräte abrufen
-  app.get("/api/loaner-devices/available", async (req: Request, res: Response) => {
-    try {
-      const userIdHeader = req.headers['x-user-id'] as string;
-      
-      if (!userIdHeader) {
-        return res.status(401).json({ message: "Benutzer-ID fehlt" });
-      }
-      
-      const userId = parseInt(userIdHeader);
-      const devices = await storage.getAvailableLoanerDevices(userId);
-      res.json(devices);
-    } catch (error) {
-      console.error("Fehler beim Abrufen verfügbarer Leihgeräte:", error);
-      res.status(500).json({ message: "Fehler beim Abrufen verfügbarer Leihgeräte" });
     }
   });
 

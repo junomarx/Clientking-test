@@ -226,50 +226,43 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
   // Verfügbare Leihgeräte abrufen
   const { data: availableLoanerDevices = [] } = useQuery({
     queryKey: ['/api/loaner-devices/available'],
-    queryFn: async () => {
-      const response = await apiRequest('GET', '/api/loaner-devices/available');
-      return response.json();
-    },
     enabled: open && repairId !== null,
+    staleTime: 0,
   });
 
-  // Zugewiesenes Leihgerät abrufen
-  const { data: currentLoanerDevice } = useQuery({
+  // Zugewiesenes Leihgerät für diese Reparatur abrufen
+  const { data: currentLoanerDevice, refetch: refetchLoanerDevice } = useQuery({
     queryKey: [`/api/repairs/${repairId}/loaner-device`],
-    queryFn: async () => {
-      if (!repairId) return null;
-      const response = await apiRequest('GET', `/api/repairs/${repairId}/loaner-device`);
-      return response.ok ? response.json() : null;
-    },
     enabled: open && repairId !== null,
+    staleTime: 0,
   });
 
-  // Leihgerät zuweisen
+  // Mutation für Leihgeräte-Zuweisung
   const assignLoanerMutation = useMutation({
     mutationFn: async ({ repairId, deviceId }: { repairId: number; deviceId: number }) => {
-      const response = await apiRequest('POST', `/api/repairs/${repairId}/assign-loaner/${deviceId}`);
+      const response = await apiRequest('POST', `/api/repairs/${repairId}/assign-loaner`, { deviceId });
       return response.json();
     },
     onSuccess: () => {
       toast({
-        title: 'Erfolg',
-        description: 'Leihgerät wurde erfolgreich zugewiesen.',
+        title: "Leihgerät zugewiesen",
+        description: "Das Leihgerät wurde erfolgreich der Reparatur zugewiesen.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
-      queryClient.invalidateQueries({ queryKey: [`/api/repairs/${repairId}/loaner-device`] });
-      queryClient.invalidateQueries({ queryKey: ['/api/loaner-devices'] });
       setShowLoanerDeviceDialog(false);
+      refetchLoanerDevice();
+      queryClient.invalidateQueries({ queryKey: ['/api/loaner-devices/available'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/loaner-devices'] });
     },
-    onError: (error: Error) => {
+    onError: (error: any) => {
       toast({
-        title: 'Fehler',
-        description: error.message,
-        variant: 'destructive',
+        title: "Fehler",
+        description: `Leihgerät konnte nicht zugewiesen werden: ${error.message}`,
+        variant: "destructive",
       });
     },
   });
 
-  // Leihgerät zurückgeben
+  // Mutation für Leihgeräte-Rückgabe
   const returnLoanerMutation = useMutation({
     mutationFn: async (repairId: number) => {
       const response = await apiRequest('POST', `/api/repairs/${repairId}/return-loaner`);
@@ -277,18 +270,18 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
     },
     onSuccess: () => {
       toast({
-        title: 'Erfolg',
-        description: 'Leihgerät wurde erfolgreich zurückgegeben.',
+        title: "Leihgerät zurückgegeben",
+        description: "Das Leihgerät wurde erfolgreich zurückgegeben und ist wieder verfügbar.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
-      queryClient.invalidateQueries({ queryKey: [`/api/repairs/${repairId}/loaner-device`] });
+      refetchLoanerDevice();
+      queryClient.invalidateQueries({ queryKey: ['/api/loaner-devices/available'] });
       queryClient.invalidateQueries({ queryKey: ['/api/loaner-devices'] });
     },
-    onError: (error: Error) => {
+    onError: (error: any) => {
       toast({
-        title: 'Fehler',
-        description: error.message,
-        variant: 'destructive',
+        title: "Fehler",
+        description: `Leihgerät konnte nicht zurückgegeben werden: ${error.message}`,
+        variant: "destructive",
       });
     },
   });
