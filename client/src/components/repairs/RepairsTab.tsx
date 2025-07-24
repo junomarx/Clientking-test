@@ -480,37 +480,43 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
 
   // QR-Code Unterschrift öffnen
   const handleOpenQRSignature = async (repair: any) => {
-    // Prüfe zuerst, ob die Reparatur Status "fertig" hat und ein Leihgerät zugewiesen ist
-    if (repair.status === 'fertig' && repair.loanerDeviceId) {
+    // Prüfe bei Status "fertig" IMMER, ob ein Leihgerät zugewiesen ist
+    if (repair.status === 'fertig') {
       try {
-        // Lade Leihgerät-Informationen
+        // Lade Leihgerät-Informationen über API
         const response = await fetch(`/api/repairs/${repair.id}/loaner-device`);
         if (response.ok) {
           const loanerDevice = await response.json();
           
-          // Speichere die Reparatur-Daten für später
-          setPendingSignatureRepair({
-            id: repair.id,
-            customerName: repair.customerName,
-            device: `${repair.brand} ${repair.model}`,
-            issue: repair.issue,
-            status: repair.status,
-            estimatedCost: repair.estimatedCost,
-            depositAmount: repair.depositAmount,
-            customerId: repair.customerId
-          });
-          
-          // Zeige Warning Dialog
-          setLoanerDeviceInfo(loanerDevice);
-          setShowLoanerDeviceWarning(true);
-          return;
+          // Wenn ein Leihgerät zugewiesen ist, zeige Warning Dialog
+          if (loanerDevice) {
+            console.log('🚨 LEIHGERÄT GEFUNDEN - Zeige Warning Dialog:', loanerDevice);
+            
+            // Speichere die Reparatur-Daten für später
+            setPendingSignatureRepair({
+              id: repair.id,
+              customerName: repair.customerName,
+              device: `${repair.brand} ${repair.model}`,
+              issue: repair.issue,
+              status: repair.status,
+              estimatedCost: repair.estimatedCost,
+              depositAmount: repair.depositAmount,
+              customerId: repair.customerId
+            });
+            
+            // Zeige Warning Dialog
+            setLoanerDeviceInfo(loanerDevice);
+            setShowLoanerDeviceWarning(true);
+            return;
+          }
         }
       } catch (error) {
-        console.log('Keine Leihgerät-Information verfügbar, öffne QR-Code direkt');
+        console.log('Keine Leihgerät-Information verfügbar oder 404 - kein Leihgerät zugewiesen');
       }
     }
     
-    // Standardverhalten: QR-Code Dialog direkt öffnen
+    // Standardverhalten: QR-Code Dialog direkt öffnen (kein Leihgerät oder anderer Status)
+    console.log('🟢 KEIN LEIHGERÄT - Öffne QR-Code direkt');
     setSelectedRepairForSignature({
       id: repair.id,
       customerName: repair.customerName,
