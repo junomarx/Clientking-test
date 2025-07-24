@@ -34,7 +34,8 @@ import {
   ChevronsRight,
   Info,
   QrCode,
-  RefreshCw
+  RefreshCw,
+  Smartphone
 } from 'lucide-react';
 import { usePrintManager } from './PrintOptionsManager';
 import { QRSignatureDialog } from '../signature/QRSignatureDialog';
@@ -625,6 +626,19 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex space-x-2">
+                        {/* Leihgeräte-Indikator */}
+                        {repair.loanerDeviceId && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="text-orange-600 p-1">
+                                <Smartphone className="h-4 w-4" />
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Leihgerät ausgegeben</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <button 
@@ -851,6 +865,19 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
                   </div>
                 </div>
                 <div className="flex justify-center gap-6 p-3 bg-gray-50 border-t border-gray-100">
+                  {/* Leihgeräte-Indikator für mobile Ansicht */}
+                  {repair.loanerDeviceId && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="text-orange-600 p-2">
+                          <Smartphone className="h-5 w-5" />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Leihgerät ausgegeben</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button 
