@@ -327,10 +327,10 @@ export default function AuthPage() {
                               <FormControl>
                                 <Input 
                                   placeholder="Shop-Owner Benutzername *" 
-                                  {...field} 
+                                  value={field.value || ""}
                                   onChange={(e) => {
                                     console.log('Owner Username Input:', e.target.value);
-                                    field.onChange(e);
+                                    field.onChange(e.target.value);
                                   }}
                                   className="h-12 px-4 border-gray-200 focus:border-blue-500"
                                 />
