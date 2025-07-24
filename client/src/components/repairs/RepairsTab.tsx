@@ -346,7 +346,7 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [repairs, customers, searchTerm, statusFilter, filterByToday]);
 
-  const handleUpdateStatus = () => {
+  const handleUpdateStatus = async () => {
     if (!selectedRepairId || !newStatus) {
       console.log('Keine Reparatur oder Status ausgewählt');
       return;
@@ -354,16 +354,27 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
     
     console.log(`Status-Update wird ausgeführt: ID=${selectedRepairId}, newStatus=${newStatus}, sendEmail=${sendEmail}`);
     
-    // Status auf "fertig" aktualisieren mit optionaler E-Mail-Benachrichtigung
-    if (newStatus === 'fertig') {
-      updateStatusMutation.mutate({ 
-        id: selectedRepairId, 
-        status: newStatus, 
-        sendEmail: sendEmail
-      });
-    }
-    // Status auf "abgeholt" aktualisieren, und evtl. Bewertungsanfrage senden
-    else if (newStatus === 'abgeholt') {
+    // Bei Status "abgeholt" prüfen, ob noch ein Leihgerät zugewiesen ist
+    if (newStatus === 'abgeholt') {
+      try {
+        const response = await apiRequest('GET', `/api/repairs/${selectedRepairId}/loaner-device`);
+        if (response.ok) {
+          const loanerDevice = await response.json();
+          if (loanerDevice) {
+            toast({
+              title: "Leihgerät nicht zurückgegeben",
+              description: `Der Kunde hat noch ein Leihgerät (${loanerDevice.brand} ${loanerDevice.model}). Bitte zuerst das Leihgerät zurückgeben, bevor der Status auf "abgeholt" geändert wird.`,
+              variant: "destructive",
+            });
+            setShowStatusDialog(false);
+            return;
+          }
+        }
+      } catch (error) {
+        // Wenn API-Fehler (404 = kein Leihgerät), können wir fortfahren
+        console.log('Keine Leihgerät-Information verfügbar, Status-Änderung wird fortgesetzt');
+      }
+      
       updateStatusMutation.mutate({ 
         id: selectedRepairId, 
         status: newStatus
@@ -376,6 +387,14 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
             }, 500); // Kleine Verzögerung, damit die Statusänderung zuerst verarbeitet wird
           }
         }
+      });
+    }
+    // Status auf "fertig" aktualisieren mit optionaler E-Mail-Benachrichtigung
+    else if (newStatus === 'fertig') {
+      updateStatusMutation.mutate({ 
+        id: selectedRepairId, 
+        status: newStatus, 
+        sendEmail: sendEmail
       });
     }
     // Status auf "ersatzteil_eingetroffen" mit E-Mail-Benachrichtigung

@@ -68,12 +68,12 @@ export function ChangeStatusDialog({
 
   // SMTP-Infos basierend auf Geschäftseinstellungen ermitteln
   React.useEffect(() => {
-    if (businessSettings && businessSettings.smtpUser) {
+    if (businessSettings && (businessSettings as any).smtpUser) {
       // Priorität 1: SMTP-Benutzer aus den Einstellungen
-      setSmtpInfo(businessSettings.smtpUser);
-    } else if (businessSettings && businessSettings.email) {
+      setSmtpInfo((businessSettings as any).smtpUser);
+    } else if (businessSettings && (businessSettings as any).email) {
       // Priorität 2: E-Mail aus den Geschäftseinstellungen 
-      setSmtpInfo(businessSettings.email);
+      setSmtpInfo((businessSettings as any).email);
     } else {
       // Fallback
       setSmtpInfo('office@connect7.at');
@@ -155,7 +155,7 @@ export function ChangeStatusDialog({
   };
   
   // Form submission handler
-  const onSubmit: SubmitHandler<StatusFormValues> = (data) => {
+  const onSubmit: SubmitHandler<StatusFormValues> = async (data) => {
     if (!repairId) {
       toast({
         title: 'Fehler',
@@ -163,6 +163,27 @@ export function ChangeStatusDialog({
         variant: 'destructive',
       });
       return;
+    }
+    
+    // Bei Status "abgeholt" prüfen, ob noch ein Leihgerät zugewiesen ist
+    if (data.status === 'abgeholt') {
+      try {
+        const response = await fetch(`/api/repairs/${repairId}/loaner-device`);
+        if (response.ok) {
+          const loanerDevice = await response.json();
+          if (loanerDevice) {
+            toast({
+              title: "Leihgerät nicht zurückgegeben",
+              description: `Der Kunde hat noch ein Leihgerät (${loanerDevice.brand} ${loanerDevice.model}). Bitte zuerst das Leihgerät zurückgeben, bevor der Status auf "abgeholt" geändert wird.`,
+              variant: "destructive",
+            });
+            return;
+          }
+        }
+      } catch (error) {
+        // Wenn API-Fehler (404 = kein Leihgerät), können wir fortfahren
+        console.log('Keine Leihgerät-Information verfügbar, Status-Änderung wird fortgesetzt');
+      }
     }
     
     onUpdateStatus(repairId, data.status, data.sendEmail, data.technicianNote);
