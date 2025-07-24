@@ -6615,6 +6615,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const deviceData = {
         ...req.body,
+        userId: userId,
         shopId: user.shopId || 1,
         status: 'verfügbar'
       };
