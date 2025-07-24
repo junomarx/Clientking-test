@@ -6644,15 +6644,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Erstelle Leihgerät mit Daten:', deviceData);
       console.log('userId in deviceData:', deviceData.userId);
       
-      // Explizit userId setzen
+      // Explizit userId setzen - Schema-korrekte Feldnamen verwenden
       const deviceToInsert = {
-        geraetetyp: deviceData.geraetetyp,
-        hersteller: deviceData.hersteller,
-        modell: deviceData.modell,
+        deviceType: deviceData.deviceType,
+        brand: deviceData.brand,
+        model: deviceData.model,
         imei: deviceData.imei || null,
-        zustand: deviceData.zustand,
-        status: deviceData.status,
-        notizen: deviceData.notizen || null,
+        condition: deviceData.condition,
+        status: deviceData.status || 'verfügbar',
+        notes: deviceData.notes || null,
         userId: userId, // Explizit setzen
         shopId: user.shopId || 1
       };
