@@ -300,15 +300,14 @@ export default function AuthPage() {
                       type="button"
                       variant={isEmployeeLogin ? "default" : "outline"}
                       onClick={() => {
-                        setIsEmployeeLogin(!isEmployeeLogin);
-                        // Formular zurücksetzen beim Wechsel
-                        loginForm.reset({
-                          email: "",
-                          password: "",
-                          ownerUsername: "",
-                          employeeCredential: "",
-                          isEmployeeLogin: !isEmployeeLogin,
-                        });
+                        const newEmployeeMode = !isEmployeeLogin;
+                        setIsEmployeeLogin(newEmployeeMode);
+                        // Formular zurücksetzen beim Wechsel - NUR die Felder löschen
+                        loginForm.setValue("email", "");
+                        loginForm.setValue("password", "");
+                        loginForm.setValue("ownerUsername", "");
+                        loginForm.setValue("employeeCredential", "");
+                        loginForm.setValue("isEmployeeLogin", newEmployeeMode);
                       }}
                       className="w-full h-12 mb-4"
                     >
@@ -329,6 +328,10 @@ export default function AuthPage() {
                                 <Input 
                                   placeholder="Shop-Owner Benutzername *" 
                                   {...field} 
+                                  onChange={(e) => {
+                                    console.log('Owner Username Input:', e.target.value);
+                                    field.onChange(e);
+                                  }}
                                   className="h-12 px-4 border-gray-200 focus:border-blue-500"
                                 />
                               </FormControl>
