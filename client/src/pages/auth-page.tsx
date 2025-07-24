@@ -22,20 +22,21 @@ import {
 
 // Login schema - unterstützt normalen und Mitarbeiter-Login
 const loginSchema = z.object({
-  email: z.string().min(3, "E-Mail oder Benutzername ist erforderlich."),
+  email: z.string().default(""),
   password: z.string().min(6, "Passwort muss mindestens 6 Zeichen haben."),
   isEmployeeLogin: z.boolean().default(false),
-  ownerUsername: z.string().optional(),
-  employeeCredential: z.string().optional(),
+  ownerUsername: z.string().default(""),
+  employeeCredential: z.string().default(""),
 }).refine((data) => {
   if (data.isEmployeeLogin) {
     return data.ownerUsername && data.ownerUsername.length >= 3 && 
            data.employeeCredential && data.employeeCredential.length >= 3;
+  } else {
+    return data.email && data.email.length >= 3;
   }
-  return true;
 }, {
-  message: "Bei Mitarbeiter-Login sind Owner-Benutzername und Mitarbeiter-Benutzername erforderlich.",
-  path: ["ownerUsername"],
+  message: "Bitte alle erforderlichen Felder ausfüllen.",
+  path: ["email"],
 });
 
 // Register schema - vereinfacht basierend auf dem gewünschten Design
