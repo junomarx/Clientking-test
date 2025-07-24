@@ -311,7 +311,7 @@ export default function AuthPage() {
                                 <Input 
                                   type="text"
                                   placeholder="Benutzername *" 
-                                  autoComplete="username"
+                                  autoComplete="off"
                                   {...field} 
                                   className="h-12 px-4 border-gray-200 focus:border-blue-500"
                                 />
@@ -330,7 +330,7 @@ export default function AuthPage() {
                                 <Input 
                                   type="text"
                                   placeholder="Mitarbeiter *" 
-                                  autoComplete="email"
+                                  autoComplete="off"
                                   {...field} 
                                   className="h-12 px-4 border-gray-200 focus:border-blue-500"
                                 />
@@ -370,7 +370,9 @@ export default function AuthPage() {
                             <FormItem>
                               <FormControl>
                                 <Input 
+                                  type="text"
                                   placeholder="Benutzername *" 
+                                  autoComplete="username"
                                   {...field} 
                                   className="h-12 px-4 border-gray-200 focus:border-blue-500"
                                 />
@@ -389,6 +391,7 @@ export default function AuthPage() {
                                 <Input 
                                   type="password" 
                                   placeholder="Passwort *" 
+                                  autoComplete="current-password"
                                   {...field} 
                                   className="h-12 px-4 border-gray-200 focus:border-blue-500"
                                 />
