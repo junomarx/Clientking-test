@@ -5080,18 +5080,26 @@ export class DatabaseStorage implements IStorage {
 
   async createLoanerDevice(device: InsertLoanerDevice): Promise<LoanerDevice> {
     try {
+      console.log('STORAGE: createLoanerDevice aufgerufen mit:', JSON.stringify(device, null, 2));
+      
+      const insertData = {
+        ...device,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      
+      console.log('STORAGE: Finale Insert-Daten:', JSON.stringify(insertData, null, 2));
+      console.log('STORAGE: userId in insertData:', insertData.userId);
+      
       const [newDevice] = await db
         .insert(loanerDevices)
-        .values({
-          ...device,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        })
+        .values(insertData)
         .returning();
 
+      console.log('STORAGE: Erfolgreich erstellt:', JSON.stringify(newDevice, null, 2));
       return newDevice;
     } catch (error) {
-      console.error('Fehler beim Erstellen des Leihgeräts:', error);
+      console.error('STORAGE: Fehler beim Erstellen des Leihgeräts:', error);
       throw error;
     }
   }
