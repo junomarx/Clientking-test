@@ -174,48 +174,61 @@ export default function EmployeesPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
+      {/* Header - responsive für mobile Geräte */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Mitarbeiterverwaltung</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl md:text-3xl font-bold">Mitarbeiterverwaltung</h1>
+          <p className="text-muted-foreground text-sm md:text-base">
             Verwalten Sie die Mitarbeiter Ihres Geschäfts
           </p>
         </div>
-        <Button onClick={() => setIsNewEmployeeDialogOpen(true)}>
+        <Button 
+          onClick={() => setIsNewEmployeeDialogOpen(true)}
+          className="w-full sm:w-auto"
+        >
           <Plus className="h-4 w-4 mr-2" />
           Neuer Mitarbeiter
         </Button>
       </div>
 
-      {/* Mitarbeiter-Liste */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {/* Mitarbeiter-Liste - responsive Grid */}
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {employees.map((employee) => (
           <Card key={employee.id} className="relative">
             <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
+              {/* Mobile-optimierter Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div className="flex items-center space-x-2">
-                  <User className="h-5 w-5 text-muted-foreground" />
-                  <CardTitle className="text-lg">
+                  <User className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                  <CardTitle className="text-base md:text-lg truncate">
                     {employee.firstName} {employee.lastName}
                   </CardTitle>
                 </div>
-                <Badge variant={employee.isActive ? "default" : "secondary"}>
+                <Badge 
+                  variant={employee.isActive ? "default" : "secondary"}
+                  className="self-start sm:self-center"
+                >
                   {employee.isActive ? "Aktiv" : "Inaktiv"}
                 </Badge>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* E-Mail mit Umbruch für mobile Geräte */}
               <div className="space-y-2">
-
-                <div className="flex items-center space-x-2 text-sm">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium">E-Mail:</span>
-                  <span className="text-muted-foreground">{employee.email}</span>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2 text-sm">
+                  <div className="flex items-center space-x-2 mb-1 sm:mb-0">
+                    <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <span className="font-medium">E-Mail:</span>
+                  </div>
+                  <span className="text-muted-foreground break-all sm:break-normal">
+                    {employee.email}
+                  </span>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-2">
+              {/* Actions - mobile-optimiert */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-2 border-t">
                 <div className="flex items-center space-x-2">
                   <Switch
                     checked={employee.isActive}
@@ -226,25 +239,27 @@ export default function EmployeesPage() {
                     {employee.isActive ? "Aktiv" : "Inaktiv"}
                   </Label>
                 </div>
-                <div className="flex gap-1">
+                <div className="flex gap-2 justify-end">
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
                     onClick={() => handleEditEmployee(employee)}
                     disabled={updateEmployeeStatusMutation.isPending}
                     className="text-primary hover:text-primary"
                   >
-                    <Edit className="h-4 w-4" />
+                    <Edit className="h-4 w-4 mr-1" />
+                    <span className="hidden sm:inline">Bearbeiten</span>
                   </Button>
                   {userRole === 'owner' && (
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
                       onClick={() => handleDeleteEmployee(employee.id, `${employee.firstName} ${employee.lastName}`)}
                       disabled={deleteEmployeeMutation.isPending}
                       className="text-destructive hover:text-destructive"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      <span className="hidden sm:inline">Löschen</span>
                     </Button>
                   )}
                 </div>
@@ -273,12 +288,12 @@ export default function EmployeesPage() {
 
       {/* Neuer Mitarbeiter Dialog */}
       <Dialog open={isNewEmployeeDialogOpen} onOpenChange={setIsNewEmployeeDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Neuen Mitarbeiter erstellen</DialogTitle>
+            <DialogTitle className="text-lg md:text-xl">Neuen Mitarbeiter erstellen</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="firstName">Vorname</Label>
                 <Input
@@ -323,18 +338,18 @@ export default function EmployeesPage() {
               />
             </div>
             
-            <div className="flex gap-3 pt-4">
+            <div className="flex flex-col sm:flex-row gap-3 pt-4">
               <Button
                 onClick={handleCreateEmployee}
                 disabled={createEmployeeMutation.isPending}
-                className="flex-1"
+                className="w-full sm:flex-1"
               >
                 {createEmployeeMutation.isPending ? "Wird erstellt..." : "Erstellen"}
               </Button>
               <Button
                 variant="outline"
                 onClick={() => setIsNewEmployeeDialogOpen(false)}
-                className="flex-1"
+                className="w-full sm:flex-1"
               >
                 Abbrechen
               </Button>

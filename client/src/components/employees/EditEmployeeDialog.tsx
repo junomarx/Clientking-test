@@ -165,9 +165,9 @@ export function EditEmployeeDialog({ open, onOpenChange, employee, userRole }: E
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className="text-lg md:text-xl">
             {userRole === 'owner' ? 'Mitarbeiter bearbeiten' : 'Meine Einstellungen'}
           </DialogTitle>
         </DialogHeader>
@@ -176,7 +176,7 @@ export function EditEmployeeDialog({ open, onOpenChange, employee, userRole }: E
           {userRole === 'owner' ? (
             // Owner kann alle Daten bearbeiten
             <>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="firstName">Vorname</Label>
                   <Input
@@ -222,17 +222,19 @@ export function EditEmployeeDialog({ open, onOpenChange, employee, userRole }: E
                 />
               </div>
 
-              <div className="flex justify-between pt-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:justify-between pt-4">
                 <Button 
                   type="button" 
                   variant="outline" 
                   onClick={handleClose}
+                  className="w-full sm:w-auto"
                 >
                   Abbrechen
                 </Button>
                 <Button 
                   onClick={handleSubmit}
                   disabled={updateEmployeeMutation.isPending}
+                  className="w-full sm:w-auto"
                 >
                   {updateEmployeeMutation.isPending ? (
                     <>
@@ -280,17 +282,19 @@ export function EditEmployeeDialog({ open, onOpenChange, employee, userRole }: E
                 </div>
               </div>
 
-              <div className="flex justify-between pt-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:justify-between pt-4">
                 <Button 
                   type="button" 
                   variant="outline" 
                   onClick={handleClose}
+                  className="w-full sm:w-auto"
                 >
                   Abbrechen
                 </Button>
                 <Button 
                   onClick={handleSubmit}
                   disabled={updateEmployeeMutation.isPending || !isPasswordChange}
+                  className="w-full sm:w-auto"
                 >
                   {updateEmployeeMutation.isPending ? (
                     <>
