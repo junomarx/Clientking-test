@@ -547,6 +547,17 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   
+  /**
+   * Gibt den Display-Namen für einen Benutzer zurück
+   * Shop-Owner: Benutzername, Mitarbeiter: Vorname
+   */
+  public getUserDisplayName(user: any): string {
+    if (user.role === 'employee') {
+      return user.firstName || 'Unbekannter Mitarbeiter';
+    }
+    return user.username || 'Unbekannter Benutzer';
+  }
+  
   // Implementierung der E-Mail-Methoden
   
   /**
@@ -2402,7 +2413,7 @@ export class DatabaseStorage implements IStorage {
                 and(
                   eq(repairStatusHistory.repairId, id),
                   eq(repairStatusHistory.newStatus, status),
-                  eq(repairStatusHistory.changedBy, user.username),
+                  eq(repairStatusHistory.changedBy, this.getUserDisplayName(user)),
                   eq(repairStatusHistory.shopId, user.shopId),
                   gte(repairStatusHistory.changedAt, fiveMinutesAgo)
                 )
@@ -2414,7 +2425,7 @@ export class DatabaseStorage implements IStorage {
                 repairId: id,
                 oldStatus: oldStatus,
                 newStatus: status,
-                changedBy: user.username, // Benutzername statt ID speichern
+                changedBy: this.getUserDisplayName(user), // Display-Name (Benutzername für Shop-Owner, Vorname für Mitarbeiter)
                 userId: userId,
                 shopId: user.shopId
               });
@@ -2842,7 +2853,7 @@ export class DatabaseStorage implements IStorage {
           repairId: createdRepair.id,
           oldStatus: null, // Kein vorheriger Status bei Erstellung
           newStatus: status,
-          changedBy: user?.username || "SYSTEM", // Benutzername statt ID speichern
+          changedBy: user ? this.getUserDisplayName(user) : "SYSTEM", // Display-Name (Benutzername für Shop-Owner, Vorname für Mitarbeiter)
           userId: userId || null,
           shopId: userShopId,
           notes: "Auftrag erstellt"

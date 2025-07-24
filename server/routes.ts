@@ -1115,6 +1115,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...customerData,
         userId: userId,
         shopId: user.shopId,
+        createdBy: storage.getUserDisplayName(user), // Audit-Trail: Benutzername für Shop-Owner, Vorname für Mitarbeiter
         createdAt: new Date()
       };
       
@@ -4158,17 +4159,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         console.log("Erstelle automatisch Kunde für Kostenvoranschlag:", customerData);
         
-        // Direkte Datenbankoperation für Kundenerstellung
-        const user = await db.execute(`SELECT shop_id FROM users WHERE id = ${(req.user as any).id}`);
-        const shopId = user.rows[0]?.shop_id || 1;
+        // Benutzer holen für createdBy und Shop-ID
+        const userId = (req.user as any).id;
+        const [user] = await db.select().from(users).where(eq(users.id, userId));
+        if (!user || !user.shopId) {
+          return res.status(403).json({ error: "Zugriff verweigert: Keine Shop-ID vorhanden" });
+        }
         
-        const customerResult = await db.execute(`
-          INSERT INTO customers (first_name, last_name, phone, email, address, zip_code, city, user_id, shop_id)
-          VALUES ('${customerData.firstName}', '${customerData.lastName}', '${customerData.phone}', 
-                  '${customerData.email}', '${customerData.address}', '${customerData.postalCode}', 
-                  '${customerData.city}', ${(req.user as any).id}, ${shopId})
-          RETURNING id
-        `);
+        // Moderne Drizzle-ORM Syntax für sichere Kundenerstellung
+        const [newCustomer] = await db
+          .insert(customers)
+          .values({
+            firstName: customerData.firstName,
+            lastName: customerData.lastName,
+            phone: customerData.phone,
+            email: customerData.email,
+            address: customerData.address,
+            zipCode: customerData.postalCode,
+            city: customerData.city,
+            userId: userId,
+            shopId: user.shopId,
+            createdBy: storage.getUserDisplayName(user), // Audit-Trail: Benutzername für Shop-Owner, Vorname für Mitarbeiter
+            createdAt: new Date()
+          })
+          .returning();
+        
+        const customerResult = { rows: [{ id: newCustomer.id }] };
         
         customerId = customerResult.rows[0]?.id;
         console.log("Neuer Kunde erstellt mit ID:", customerId);
@@ -4179,25 +4195,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Bei bestehenden Kunden: Adressdaten aus der Datenbank laden
       if (!isNewCustomer && customerId) {
-        const customerFromDb = await db.execute(`
-          SELECT first_name, last_name, phone, email, address, zip_code, city 
-          FROM customers WHERE id = ${customerId}
-        `);
+        const [dbCustomer] = await db
+          .select({
+            firstName: customers.firstName,
+            lastName: customers.lastName,
+            phone: customers.phone,
+            email: customers.email,
+            address: customers.address,
+            zipCode: customers.zipCode,
+            city: customers.city
+          })
+          .from(customers)
+          .where(eq(customers.id, customerId))
+          .limit(1);
         
-        if (customerFromDb.rows.length > 0) {
-          const dbCustomer = customerFromDb.rows[0];
+        if (dbCustomer) {
           // Überschreibe Formulardaten mit Datenbankdaten
-          req.body.firstName = dbCustomer.first_name;
-          req.body.lastName = dbCustomer.last_name;
+          req.body.firstName = dbCustomer.firstName;
+          req.body.lastName = dbCustomer.lastName;
           req.body.phone = dbCustomer.phone;
           req.body.email = dbCustomer.email;
           req.body.address = dbCustomer.address;
-          req.body.postalCode = dbCustomer.zip_code;
+          req.body.postalCode = dbCustomer.zipCode;
           req.body.city = dbCustomer.city;
           
           console.log("Adressdaten aus Datenbank geladen für Kunde", customerId, ":", {
             address: dbCustomer.address,
-            zipCode: dbCustomer.zip_code,
+            zipCode: dbCustomer.zipCode,
             city: dbCustomer.city
           });
         }

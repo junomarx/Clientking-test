@@ -207,7 +207,7 @@ export type PricingPlan = typeof pricingPlans[number];
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
+  username: text("username"), // Nullable: nur Shop-Owner haben Benutzernamen, Mitarbeiter nicht
   password: text("password").notNull(),
   email: text("email").notNull(),
   isActive: boolean("is_active").default(false).notNull(), // Benutzer muss vom Admin freigeschaltet werden
