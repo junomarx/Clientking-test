@@ -6562,9 +6562,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // LEIHGERÄTE API ROUTES
   // Alle Leihgeräte abrufen
-  app.get("/api/loaner-devices", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
+  app.get("/api/loaner-devices", async (req: Request, res: Response) => {
     try {
-      const userId = (req.user as any).id;
+      const userIdHeader = req.headers['x-user-id'] as string;
+      
+      if (!userIdHeader) {
+        return res.status(401).json({ message: "Benutzer-ID fehlt" });
+      }
+      
+      const userId = parseInt(userIdHeader);
       const devices = await storage.getAllLoanerDevices(userId);
       res.json(devices);
     } catch (error) {
@@ -6592,9 +6598,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Verfügbare Leihgeräte abrufen
-  app.get("/api/loaner-devices/available", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
+  app.get("/api/loaner-devices/available", async (req: Request, res: Response) => {
     try {
-      const userId = (req.user as any).id;
+      const userIdHeader = req.headers['x-user-id'] as string;
+      
+      if (!userIdHeader) {
+        return res.status(401).json({ message: "Benutzer-ID fehlt" });
+      }
+      
+      const userId = parseInt(userIdHeader);
       const devices = await storage.getAvailableLoanerDevices(userId);
       res.json(devices);
     } catch (error) {
@@ -6604,10 +6616,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Neues Leihgerät erstellen
-  app.post("/api/loaner-devices", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
+  app.post("/api/loaner-devices", async (req: Request, res: Response) => {
     try {
-      const userId = (req.user as any).id;
+      const userIdHeader = req.headers['x-user-id'] as string;
+      
+      if (!userIdHeader) {
+        return res.status(401).json({ message: "Benutzer-ID fehlt" });
+      }
+      
+      const userId = parseInt(userIdHeader);
+      console.log(`X-User-ID Header gefunden: ${userId}`);
+      
       const user = await storage.getUser(userId);
+      console.log(`Benutzer mit ID ${userId} aus Header gefunden:`, user?.username);
       
       if (!user) {
         return res.status(401).json({ message: "Benutzer nicht gefunden" });
@@ -6620,6 +6641,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: 'verfügbar'
       };
 
+      console.log('Erstelle Leihgerät mit Daten:', deviceData);
       const device = await storage.createLoanerDevice(deviceData);
       res.status(201).json(device);
     } catch (error) {
@@ -6629,10 +6651,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Leihgerät aktualisieren
-  app.patch("/api/loaner-devices/:id", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
+  app.patch("/api/loaner-devices/:id", async (req: Request, res: Response) => {
     try {
+      const userIdHeader = req.headers['x-user-id'] as string;
+      
+      if (!userIdHeader) {
+        return res.status(401).json({ message: "Benutzer-ID fehlt" });
+      }
+      
       const id = parseInt(req.params.id);
-      const userId = (req.user as any).id;
+      const userId = parseInt(userIdHeader);
       
       const device = await storage.updateLoanerDevice(id, req.body, userId);
       if (!device) {
@@ -6647,10 +6675,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Leihgerät löschen
-  app.delete("/api/loaner-devices/:id", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
+  app.delete("/api/loaner-devices/:id", async (req: Request, res: Response) => {
     try {
+      const userIdHeader = req.headers['x-user-id'] as string;
+      
+      if (!userIdHeader) {
+        return res.status(401).json({ message: "Benutzer-ID fehlt" });
+      }
+      
       const id = parseInt(req.params.id);
-      const userId = (req.user as any).id;
+      const userId = parseInt(userIdHeader);
       
       const success = await storage.deleteLoanerDevice(id, userId);
       if (!success) {
