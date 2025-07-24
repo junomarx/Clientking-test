@@ -36,7 +36,10 @@ The Handyshop Verwaltung is a comprehensive phone repair shop management system 
 ### User Management & Authentication
 - Session-based authentication with secure password hashing
 - Multi-shop isolation ensuring GDPR compliance
-- Role-based permissions (admin/user)
+- **Rollenbasierte Authentifizierung**:
+  - Shop-Owner: Anmeldung per Benutzername (role='owner' oder null)
+  - Mitarbeiter: Anmeldung per E-Mail-Adresse (role='employee')
+  - Mitarbeiter-Benutzernamen dienen nur shopinternen Audit-Trail-Zwecken
 - User registration with email verification
 
 ### Customer & Repair Management
@@ -111,6 +114,7 @@ The Handyshop Verwaltung is a comprehensive phone repair shop management system 
 
 ## Changelog
 
+- July 24, 2025: ROLLENBASIERTE AUTHENTIFIZIERUNG VOLLSTÄNDIG IMPLEMENTIERT - Strikte Trennung zwischen Shop-Owner (Benutzername-Login) und Mitarbeiter (E-Mail-Login) implementiert, UNIQUE constraint auf username entfernt um Shop-Owner und Mitarbeiter mit gleichem Namen zu erlauben, Mitarbeiter-Benutzername dient ausschließlich shopinternen Audit-Trail-Zwecken (nicht für Authentifizierung), System blockiert rollenbasierte Login-Verstöße mit klaren Fehlermeldungen
 - July 24, 2025: PASSWORT-RESET-VEREINFACHUNG IMPLEMENTIERT - Passwort-Eingabefeld für Mitarbeiterbearbeitung vereinfacht: Checkbox und Infotexte entfernt, Passwort-Feld immer aktiv wie andere Eingabefelder, optional nutzbar (nur bei Eingabe wird Passwort geändert), Shop-Owner können direkt vergessene Mitarbeiterpasswörter zurücksetzen ohne umständliche UI-Elemente
 - July 23, 2025: ROLLENBASIERTE UI-BERECHTIGUNGEN VOLLSTÄNDIG IMPLEMENTIERT - Geschäfts-, E-Mail-Einstellungen und Statistiken für Mitarbeiter ausgeblendet in Header.tsx, Backend API-Endpunkte mit rollenbasierten Berechtigungen geschützt (nur role='owner' hat Zugriff), Frontend und Backend arbeiten synchron für maximale Sicherheit, Mitarbeiter können nur Kernfunktionen nutzen (Reparaturen, Kunden, Kostenvoranschläge)
 - July 23, 2025: E-MAIL-BASIERTE ANMELDUNG FÜR MITARBEITER IMPLEMENTIERT - Backend LocalStrategy für E-Mail-Login konfiguriert, Fallback auf Benutzernamen für bestehende Shop-Owner, Frontend Login-Formular akzeptiert E-Mail oder Benutzername, getUserByEmail Methode im Storage verfügbar, doppelte Validierung entfernt, System unterstützt sowohl E-Mail- als auch Benutzernamen-Anmeldung für bessere Flexibilität
