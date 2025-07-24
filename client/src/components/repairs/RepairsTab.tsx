@@ -459,6 +459,17 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
     return filteredRepairs.slice(startIndex, endIndex);
   }, [filteredRepairs, currentPage, itemsPerPage]);
   
+  // Debug: Log alle Reparaturen mit loanerDeviceId  
+  React.useEffect(() => {
+    if (paginatedRepairs) {
+      paginatedRepairs.forEach(repair => {
+        if (repair.loanerDeviceId) {
+          console.log(`✅ Repair ${repair.orderCode} has loanerDeviceId:`, repair.loanerDeviceId);
+        }
+      });
+    }
+  }, [paginatedRepairs]);
+  
   // Reset pagination when filtering changes
   useEffect(() => {
     setCurrentPage(1);
