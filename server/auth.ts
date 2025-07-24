@@ -188,9 +188,17 @@ export function setupAuth(app: Express) {
       // Vollständige Adresse zusammenstellen
       const companyAddress = `${streetAddress}, ${zipCode} ${city}, ${country}`;
       
+      // Prüfe nur auf Shop-Owner mit dem gleichen Benutzernamen
+      // Mitarbeiter-Benutzernamen sind erlaubt, da sie sich per E-Mail anmelden
       const existingUser = await storage.getUserByUsername(username);
-      if (existingUser) {
-        return res.status(400).json({ message: "Benutzername existiert bereits" });
+      if (existingUser && (!existingUser.role || existingUser.role === 'owner')) {
+        console.log(`❌ Shop-Owner-Benutzername "${username}" bereits vergeben`);
+        return res.status(400).json({ message: "Benutzername bereits vergeben" });
+      }
+      
+      // Wenn ein Mitarbeiter mit dem Namen existiert, das ist OK für Shop-Owner
+      if (existingUser && existingUser.role === 'employee') {
+        console.log(`ℹ️ Mitarbeiter "${username}" existiert, aber Shop-Owner darf gleichen Namen verwenden`);
       }
       
       // Überprüfe, ob die E-Mail bereits verwendet wird
