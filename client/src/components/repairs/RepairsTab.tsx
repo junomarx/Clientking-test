@@ -62,6 +62,9 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
   const [sendEmail, setSendEmail] = useState(false);
   // SMS-Funktionalität wurde entfernt
   const [selectedRepairDetails, setSelectedRepairDetails] = useState<Repair | null>(null);
+  const [showLoanerDeviceWarning, setShowLoanerDeviceWarning] = useState(false);
+  const [loanerDeviceInfo, setLoanerDeviceInfo] = useState<any>(null);
+  const [pendingSignatureRepair, setPendingSignatureRepair] = useState<any>(null);
   const { toast } = useToast();
   const { user } = useAuth();
   
@@ -110,6 +113,44 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
         variant: "destructive",
       });
     }
+  });
+
+  // Mutation für das Zurückgeben von Leihgeräten
+  const returnLoanerDeviceMutation = useMutation({
+    mutationFn: async (repairId: number) => {
+      const response = await apiRequest('POST', `/api/repairs/${repairId}/return-loaner-device`);
+      if (!response.ok) {
+        throw new Error('Fehler beim Zurückgeben des Leihgeräts');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/loaner-devices'] });
+      
+      toast({
+        title: "Leihgerät zurückgegeben",
+        description: "Das Leihgerät wurde erfolgreich zurückgegeben.",
+      });
+      
+      // Jetzt den QR-Code Dialog öffnen
+      if (pendingSignatureRepair) {
+        setSelectedRepairForSignature(pendingSignatureRepair);
+        setShowQRSignatureDialog(true);
+        setPendingSignatureRepair(null);
+      }
+      
+      // Warning Dialog schließen
+      setShowLoanerDeviceWarning(false);
+      setLoanerDeviceInfo(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
   });
   
   // Check for status filter and email action in URL
@@ -438,7 +479,38 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
   };
 
   // QR-Code Unterschrift öffnen
-  const handleOpenQRSignature = (repair: any) => {
+  const handleOpenQRSignature = async (repair: any) => {
+    // Prüfe zuerst, ob die Reparatur Status "fertig" hat und ein Leihgerät zugewiesen ist
+    if (repair.status === 'fertig' && repair.loanerDeviceId) {
+      try {
+        // Lade Leihgerät-Informationen
+        const response = await fetch(`/api/repairs/${repair.id}/loaner-device`);
+        if (response.ok) {
+          const loanerDevice = await response.json();
+          
+          // Speichere die Reparatur-Daten für später
+          setPendingSignatureRepair({
+            id: repair.id,
+            customerName: repair.customerName,
+            device: `${repair.brand} ${repair.model}`,
+            issue: repair.issue,
+            status: repair.status,
+            estimatedCost: repair.estimatedCost,
+            depositAmount: repair.depositAmount,
+            customerId: repair.customerId
+          });
+          
+          // Zeige Warning Dialog
+          setLoanerDeviceInfo(loanerDevice);
+          setShowLoanerDeviceWarning(true);
+          return;
+        }
+      } catch (error) {
+        console.log('Keine Leihgerät-Information verfügbar, öffne QR-Code direkt');
+      }
+    }
+    
+    // Standardverhalten: QR-Code Dialog direkt öffnen
     setSelectedRepairForSignature({
       id: repair.id,
       customerName: repair.customerName,
@@ -1137,6 +1209,62 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
           businessName={businessSettings.businessName}
         />
       )}
+
+      {/* Leihgerät Warning Dialog */}
+      <Dialog open={showLoanerDeviceWarning} onOpenChange={setShowLoanerDeviceWarning}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-orange-500" />
+              Leihgerät noch nicht zurückgegeben
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <div className="text-sm text-muted-foreground mb-4">
+              Der Kunde hat noch ein Leihgerät, das zurückgegeben werden muss bevor der Auftrag als abgeholt markiert werden kann.
+            </div>
+            
+            {loanerDeviceInfo && (
+              <div className="bg-gray-50 rounded-lg p-3 mb-4">
+                <div className="font-medium text-sm">
+                  {loanerDeviceInfo.brand} {loanerDeviceInfo.model}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {loanerDeviceInfo.deviceType === 'smartphone' && 'Smartphone'}
+                  {loanerDeviceInfo.deviceType === 'tablet' && 'Tablet'}
+                  {loanerDeviceInfo.deviceType === 'laptop' && 'Laptop'}
+                  {loanerDeviceInfo.deviceType === 'smartwatch' && 'Smartwatch'}
+                  {loanerDeviceInfo.imei && ` • IMEI: ${loanerDeviceInfo.imei}`}
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter className="gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowLoanerDeviceWarning(false);
+                setLoanerDeviceInfo(null);
+                setPendingSignatureRepair(null);
+              }}
+            >
+              Abbrechen
+            </Button>
+            <Button 
+              onClick={() => {
+                if (pendingSignatureRepair) {
+                  returnLoanerDeviceMutation.mutate(pendingSignatureRepair.id);
+                }
+              }}
+              disabled={returnLoanerDeviceMutation.isPending}
+            >
+              {returnLoanerDeviceMutation.isPending ? 'Wird zurückgegeben...' : 'Leihgerät zurückgegeben'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
