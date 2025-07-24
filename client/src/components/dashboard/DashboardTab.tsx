@@ -475,36 +475,43 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
 
       {/* Leihgeräte Warning Dialog */}
       <Dialog open={showLoanerWarning} onOpenChange={setShowLoanerWarning}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-orange-600" />
+              <AlertCircle className="h-5 w-5 text-orange-500" />
               Leihgerät noch nicht zurückgegeben
             </DialogTitle>
-            <DialogDescription>
-              Der Kunde hat noch ein Leihgerät ausgegeben. Bitte geben Sie das Leihgerät zurück, bevor Sie fortfahren.
-            </DialogDescription>
           </DialogHeader>
           
-          {selectedLoanerDevice && (
-            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-              <div className="text-sm">
-                <div className="font-medium text-orange-800">Ausgegebenes Leihgerät:</div>
-                <div className="text-orange-700">
+          <div className="py-4">
+            <div className="text-sm text-muted-foreground mb-4">
+              Der Kunde hat noch ein Leihgerät, das zurückgegeben werden muss bevor der Auftrag als abgeholt markiert werden kann.
+            </div>
+            
+            {selectedLoanerDevice && (
+              <div className="bg-gray-50 rounded-lg p-3 mb-4">
+                <div className="font-medium text-sm">
                   {selectedLoanerDevice.brand} {selectedLoanerDevice.model}
                 </div>
-                <div className="text-orange-600 text-xs mt-1">
-                  Typ: {selectedLoanerDevice.deviceType}
+                <div className="text-xs text-muted-foreground">
+                  {selectedLoanerDevice.deviceType === 'smartphone' && 'Smartphone'}
+                  {selectedLoanerDevice.deviceType === 'tablet' && 'Tablet'}
+                  {selectedLoanerDevice.deviceType === 'laptop' && 'Laptop'}
+                  {selectedLoanerDevice.deviceType === 'smartwatch' && 'Smartwatch'}
+                  {selectedLoanerDevice.imei && ` - IMEI: ${selectedLoanerDevice.imei}`}
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
           
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-2">
             <Button 
-              onClick={() => setShowLoanerWarning(false)}
-              variant="outline"
-              className="flex-1"
+              variant="outline" 
+              onClick={() => {
+                setShowLoanerWarning(false);
+                setSelectedLoanerDevice(null);
+                setWarningRepairId(null);
+              }}
             >
               Abbrechen
             </Button>
@@ -515,7 +522,6 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
                 }
               }}
               disabled={returnLoanerDeviceMutation.isPending}
-              className="flex-1"
             >
               {returnLoanerDeviceMutation.isPending ? 'Wird zurückgegeben...' : 'Leihgerät zurückgegeben'}
             </Button>
