@@ -141,6 +141,17 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
           <FileText className="h-5 w-5 mr-2" />
           Kostenvoranschläge
         </Button>
+        <Button 
+          variant={activeTab === 'loaner-devices' ? 'default' : 'ghost'}
+          className="w-full justify-start"
+          onClick={() => {
+            onTabChange('loaner-devices');
+            if (isMobile) closeMenu();
+          }}
+        >
+          <Tablet className="h-5 w-5 mr-2" />
+          Leihgeräte
+        </Button>
         {canViewStats && (
           <Button 
             variant={activeTab === 'statistics' ? 'default' : 'ghost'}

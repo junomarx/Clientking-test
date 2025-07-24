@@ -19,8 +19,9 @@ import { PrintSettingsTab } from '@/components/settings/PrintSettingsTab';
 import { SubscriptionSettingsTab } from '@/components/settings/SubscriptionSettingsTab';
 import { UserSettingsTab } from '@/components/settings/UserSettingsTab';
 import EmployeesPage from '@/pages/employees-page';
+import { LoanerDevicesTab } from '@/components/loaner-devices/LoanerDevicesTab';
 
-type Tab = 'dashboard' | 'repairs' | 'orders' | 'customers' | 'statistics' | 'cost-estimates' | 
+type Tab = 'dashboard' | 'repairs' | 'orders' | 'customers' | 'statistics' | 'cost-estimates' | 'loaner-devices' |
           'business-settings' | 'email-settings' | 'print-settings' | 'subscription-settings' | 'user-settings' | 'employees';
 
 export default function Home() {
@@ -47,7 +48,7 @@ export default function Home() {
     // Tab aus URL setzen, wenn vorhanden
     if (tabParam) {
       const validTabs = [
-        'dashboard', 'repairs', 'orders', 'customers', 'statistics', 'cost-estimates',
+        'dashboard', 'repairs', 'orders', 'customers', 'statistics', 'cost-estimates', 'loaner-devices',
         'business-settings', 'email-settings', 'print-settings', 'subscription-settings', 'user-settings', 'employees'
       ];
       if (validTabs.includes(tabParam)) {
@@ -166,6 +167,10 @@ export default function Home() {
               
               {activeTab === 'cost-estimates' && (
                 <CostEstimatesTab onNewCostEstimate={() => console.log('Neuer Kostenvoranschlag erstellen')} />
+              )}
+              
+              {activeTab === 'loaner-devices' && (
+                <LoanerDevicesTab />
               )}
               
               {activeTab === 'business-settings' && (
