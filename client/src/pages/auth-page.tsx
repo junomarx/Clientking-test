@@ -26,12 +26,7 @@ const loginSchema = z.object({
   password: z.string().min(6, "Passwort muss mindestens 6 Zeichen haben."),
 });
 
-// Mitarbeiter Login schema
-const employeeLoginSchema = z.object({
-  shopUsername: z.string().min(3, "Shop-Benutzername ist erforderlich."),
-  employeeEmail: z.string().email("E-Mail-Adresse ist erforderlich."),
-  password: z.string().min(6, "Passwort muss mindestens 6 Zeichen haben."),
-});
+
 
 // Register schema - vereinfacht basierend auf dem gewünschten Design
 const registerSchema = z.object({
@@ -62,14 +57,12 @@ const registerSchema = z.object({
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
-type EmployeeLoginFormValues = z.infer<typeof employeeLoginSchema>;
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
   const { user, isLoading, loginMutation, registerMutation } = useAuth();
   const [location] = useLocation();
   const [isSuperadminLogin, setIsSuperadminLogin] = useState(false);
-  const [isEmployeeLogin, setIsEmployeeLogin] = useState(false);
   
   // State für Dialog und Tab-Steuerung
   const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false);
@@ -84,14 +77,7 @@ export default function AuthPage() {
     },
   });
 
-  const employeeLoginForm = useForm<EmployeeLoginFormValues>({
-    resolver: zodResolver(employeeLoginSchema),
-    defaultValues: {
-      shopUsername: "",
-      employeeEmail: "",
-      password: "",
-    },
-  });
+
 
   const registerForm = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -155,12 +141,7 @@ export default function AuthPage() {
     }, 1000);
   }
 
-  function onEmployeeLoginSubmit(data: EmployeeLoginFormValues) {
-    console.log('Mitarbeiter-Login-Versuch:', data);
-    // Hier würde die spezielle Mitarbeiter-Login-Logik kommen
-    // Für jetzt verwenden wir die normale Login-Mutation mit der Mitarbeiter-E-Mail
-    loginMutation.mutate({ email: data.employeeEmail, password: data.password });
-  }
+
   
   function onRegisterSubmit(data: RegisterFormValues) {
     const { confirmPassword, ...registerData } = data;
@@ -286,154 +267,72 @@ export default function AuthPage() {
                     )}
                   </div>
                   
-                  {/* Mitarbeiter Login Toggle */}
-                  <div className="mb-4">
-                    <Button
-                      type="button"
-                      variant={isEmployeeLogin ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setIsEmployeeLogin(!isEmployeeLogin)}
-                      className="w-full"
-                    >
-                      {isEmployeeLogin ? "✓ Mitarbeiter Login" : "Mitarbeiter Login"}
-                    </Button>
-                  </div>
-
-                  {isEmployeeLogin ? (
-                    <Form {...employeeLoginForm}>
-                      <form onSubmit={employeeLoginForm.handleSubmit(onEmployeeLoginSubmit)} className="space-y-5">
-                        <FormField
-                          control={employeeLoginForm.control}
-                          name="shopUsername"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <Input 
-                                  type="text"
-                                  placeholder="Benutzername *" 
-                                  autoComplete="off"
-                                  {...field} 
-                                  className="h-12 px-4 border-gray-200 focus:border-blue-500"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={employeeLoginForm.control}
-                          name="employeeEmail"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <Input 
-                                  type="text"
-                                  placeholder="Mitarbeiter *" 
-                                  autoComplete="off"
-                                  {...field} 
-                                  className="h-12 px-4 border-gray-200 focus:border-blue-500"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={employeeLoginForm.control}
-                          name="password"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <Input 
-                                  type="password" 
-                                  placeholder="Passwort *" 
-                                  autoComplete="current-password"
-                                  {...field} 
-                                  className="h-12 px-4 border-gray-200 focus:border-blue-500"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </form>
-                    </Form>
-                  ) : (
-                    <Form {...loginForm}>
-                      <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-5">
-                        <FormField
-                          control={loginForm.control}
-                          name="username"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <Input 
-                                  type="text"
-                                  placeholder="Benutzername *" 
-                                  autoComplete="username"
-                                  {...field} 
-                                  className="h-12 px-4 border-gray-200 focus:border-blue-500"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={loginForm.control}
-                          name="password"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <Input 
-                                  type="password" 
-                                  placeholder="Passwort *" 
-                                  autoComplete="current-password"
-                                  {...field} 
-                                  className="h-12 px-4 border-gray-200 focus:border-blue-500"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </form>
-                    </Form>
-                  )}
+                  <Form {...loginForm}>
+                    <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-5">
+                      <FormField
+                        control={loginForm.control}
+                        name="username"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Input 
+                                placeholder="E-Mail oder Benutzername *" 
+                                {...field} 
+                                className="h-12 px-4 border-gray-200 focus:border-blue-500"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                       
-                  
-                  <div className="flex items-center justify-between mt-5">
-                    <div className="flex items-center space-x-2">
-                      <input type="checkbox" id="keep-signed" className="rounded text-blue-500 focus:ring-blue-500" />
-                      <label htmlFor="keep-signed" className="text-sm text-gray-600">Angemeldet bleiben</label>
-                    </div>
-                    <Link href="/forgot-password" className="text-sm text-blue-500 hover:underline">Passwort vergessen?</Link>
-                  </div>
-                  
-                  <Button 
-                    type="button" 
-                    className={`w-full h-12 ${isSuperadminLogin 
-                      ? "bg-red-500 hover:bg-red-600" 
-                      : "bg-blue-500 hover:bg-blue-600"} text-white rounded-full mt-6`}
-                    disabled={loginMutation.isPending}
-                    onClick={isEmployeeLogin ? employeeLoginForm.handleSubmit(onEmployeeLoginSubmit) : loginForm.handleSubmit(onLoginSubmit)}
-                  >
-                    {loginMutation.isPending ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Wird angemeldet...
-                      </>
-                    ) : (
-                      <>
-                        {isSuperadminLogin && <ShieldAlert className="mr-2 h-4 w-4" />}
-                        {isSuperadminLogin ? "Als Superadmin anmelden" : 
-                         isEmployeeLogin ? "Als Mitarbeiter anmelden" : "Anmelden"}
-                      </>
-                    )}
-                  </Button>
+                      <FormField
+                        control={loginForm.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Input 
+                                type="password" 
+                                placeholder="Passwort *" 
+                                {...field} 
+                                className="h-12 px-4 border-gray-200 focus:border-blue-500"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <div className="flex items-center justify-between mt-5">
+                        <div className="flex items-center space-x-2">
+                          <input type="checkbox" id="keep-signed" className="rounded text-blue-500 focus:ring-blue-500" />
+                          <label htmlFor="keep-signed" className="text-sm text-gray-600">Angemeldet bleiben</label>
+                        </div>
+                        <Link href="/forgot-password" className="text-sm text-blue-500 hover:underline">Passwort vergessen?</Link>
+                      </div>
+                      
+                      <Button 
+                        type="submit" 
+                        className={`w-full h-12 ${isSuperadminLogin 
+                          ? "bg-red-500 hover:bg-red-600" 
+                          : "bg-blue-500 hover:bg-blue-600"} text-white rounded-full mt-6`}
+                        disabled={loginMutation.isPending}
+                      >
+                        {loginMutation.isPending ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Wird angemeldet...
+                          </>
+                        ) : (
+                          <>
+                            {isSuperadminLogin && <ShieldAlert className="mr-2 h-4 w-4" />}
+                            {isSuperadminLogin ? "Als Superadmin anmelden" : "Anmelden"}
+                          </>
+                        )}
+                      </Button>
+                    </form>
+                  </Form>
                 </div>
               </TabsContent>
               

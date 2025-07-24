@@ -67,18 +67,21 @@ export function setupAuth(app: Express) {
   app.use(passport.session());
 
   passport.use(
-    new LocalStrategy({ usernameField: 'email' }, async (email, password, done) => {
+    new LocalStrategy({ usernameField: 'email' }, async (emailOrUsername, password, done) => {
       try {
-        // Erst versuchen per E-Mail zu finden (für Mitarbeiter)
-        let user = await storage.getUserByEmail(email);
+        let user = null;
         
-        // Fallback: Falls nicht per E-Mail gefunden, versuche per Benutzername (für bestehende Shop-Owner)
-        if (!user) {
-          user = await storage.getUserByUsername(email);
+        // Automatische Erkennung: Enthält "@" → E-Mail (Mitarbeiter), sonst → Benutzername (Shop-Owner)
+        if (emailOrUsername.includes('@')) {
+          // E-Mail-basierte Anmeldung (Mitarbeiter)
+          user = await storage.getUserByEmail(emailOrUsername);
+        } else {
+          // Benutzername-basierte Anmeldung (Shop-Owner)
+          user = await storage.getUserByUsername(emailOrUsername);
         }
         
         if (!user || !(await comparePasswords(password, user.password))) {
-          return done(null, false, { message: 'Ungültige E-Mail/Benutzername oder Passwort' });
+          return done(null, false, { message: 'Ungültige Anmeldedaten' });
         }
         
         // Überprüfe, ob der Benutzer aktiv ist (es sei denn, es ist ein Superadmin)
