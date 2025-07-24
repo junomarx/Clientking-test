@@ -30,7 +30,6 @@ interface EditEmployeeDialogProps {
 
 export function EditEmployeeDialog({ open, onOpenChange, employee, userRole }: EditEmployeeDialogProps) {
   const [formData, setFormData] = useState({
-    username: '',
     firstName: '',
     lastName: '',
     email: '',
@@ -46,7 +45,6 @@ export function EditEmployeeDialog({ open, onOpenChange, employee, userRole }: E
   useEffect(() => {
     if (employee && open) {
       setFormData({
-        username: employee.username || '',
         firstName: employee.firstName || '',
         lastName: employee.lastName || '',
         email: employee.email || '',
@@ -66,7 +64,6 @@ export function EditEmployeeDialog({ open, onOpenChange, employee, userRole }: E
       // Je nach Benutzerrolle verschiedene Felder erlauben
       if (userRole === 'owner') {
         // Owner kann alles ändern, inklusive Passwort-Reset
-        updateData.username = data.username;
         updateData.firstName = data.firstName;
         updateData.lastName = data.lastName;
         updateData.email = data.email;
@@ -133,7 +130,7 @@ export function EditEmployeeDialog({ open, onOpenChange, employee, userRole }: E
   const handleSubmit = () => {
     if (userRole === 'owner') {
       // Owner muss alle Felder ausfüllen
-      if (!formData.username || !formData.firstName || !formData.lastName || !formData.email) {
+      if (!formData.firstName || !formData.lastName || !formData.email) {
         toast({
           title: "Fehler",
           description: "Bitte füllen Sie alle Felder aus.",
@@ -201,15 +198,7 @@ export function EditEmployeeDialog({ open, onOpenChange, employee, userRole }: E
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="username">Benutzername</Label>
-                <Input
-                  id="username"
-                  value={formData.username}
-                  onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
-                  placeholder="max.mustermann"
-                />
-              </div>
+
               
               <div className="space-y-2">
                 <Label htmlFor="email">E-Mail</Label>
@@ -263,7 +252,6 @@ export function EditEmployeeDialog({ open, onOpenChange, employee, userRole }: E
                 <div className="p-4 bg-muted rounded-lg">
                   <h3 className="font-medium mb-2">Aktuelle Informationen</h3>
                   <p className="text-sm text-muted-foreground">Name: {employee.firstName} {employee.lastName}</p>
-                  <p className="text-sm text-muted-foreground">Benutzername: {employee.username}</p>
                   <p className="text-sm text-muted-foreground">E-Mail: {employee.email}</p>
                   <p className="text-xs text-muted-foreground mt-2">
                     Diese Daten können nur vom Shop-Owner geändert werden.

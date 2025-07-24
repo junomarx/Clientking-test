@@ -26,7 +26,6 @@ interface Employee {
 }
 
 interface NewEmployeeForm {
-  username: string;
   password: string;
   email: string;
   firstName: string;
@@ -38,7 +37,6 @@ export default function EmployeesPage() {
   const [isEditEmployeeDialogOpen, setIsEditEmployeeDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [newEmployeeForm, setNewEmployeeForm] = useState<NewEmployeeForm>({
-    username: '',
     password: '',
     email: '',
     firstName: '',
@@ -71,7 +69,6 @@ export default function EmployeesPage() {
       queryClient.invalidateQueries({ queryKey: ['/api/employees'] });
       setIsNewEmployeeDialogOpen(false);
       setNewEmployeeForm({
-        username: '',
         password: '',
         email: '',
         firstName: '',
@@ -135,7 +132,7 @@ export default function EmployeesPage() {
   });
 
   const handleCreateEmployee = () => {
-    if (!newEmployeeForm.username || !newEmployeeForm.password || !newEmployeeForm.email || !newEmployeeForm.firstName || !newEmployeeForm.lastName) {
+    if (!newEmployeeForm.password || !newEmployeeForm.email || !newEmployeeForm.firstName || !newEmployeeForm.lastName) {
       toast({
         title: "Fehler",
         description: "Bitte füllen Sie alle Felder aus.",
@@ -210,11 +207,7 @@ export default function EmployeesPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <div className="flex items-center space-x-2 text-sm">
-                  <User className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium">Benutzername:</span>
-                  <span>{employee.username}</span>
-                </div>
+
                 <div className="flex items-center space-x-2 text-sm">
                   <Mail className="h-4 w-4 text-muted-foreground" />
                   <span className="font-medium">E-Mail:</span>
@@ -306,15 +299,7 @@ export default function EmployeesPage() {
               </div>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="username">Benutzername</Label>
-              <Input
-                id="username"
-                value={newEmployeeForm.username}
-                onChange={(e) => setNewEmployeeForm(prev => ({ ...prev, username: e.target.value }))}
-                placeholder="max.mustermann"
-              />
-            </div>
+
             
             <div className="space-y-2">
               <Label htmlFor="email">E-Mail</Label>
