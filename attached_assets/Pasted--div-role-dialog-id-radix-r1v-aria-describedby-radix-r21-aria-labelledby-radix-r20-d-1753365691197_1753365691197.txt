@@ -1,0 +1,21 @@
+< <div role="dialog" id="radix-:r1v:" aria-describedby="radix-:r21:" aria-labelledby="radix-:r20:" data-state="open" data-replit-metadata="client/src/components/loaner-devices/LoanerDevicesTab.tsx:258:10" data-component-name="DialogContent" class="fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg max-h-[90vh] overflow-y-auto sm:max-w-md" tabindex="-1" style="pointer-events: auto;">…</div>
+[Log] ❌ Kiosk-Registrierung nicht möglich: – {isKioskMode: false, wsStatus: "connected", hasSendMessage: true, …} (use-kiosk-mode.tsx, line 96)
+{isKioskMode: false, wsStatus: "connected", hasSendMessage: true, hasUserId: true}Object
+[Log] ❌ Kiosk-Registrierung nicht möglich: – {isKioskMode: false, wsStatus: "connected", hasSendMessage: true, …} (use-kiosk-mode.tsx, line 96)
+{isKioskMode: false, wsStatus: "connected", hasSendMessage: true, hasUserId: true}Object
+[Log] ❌ Kiosk-Registrierung nicht möglich: – {isKioskMode: false, wsStatus: "connected", hasSendMessage: true, …} (use-kiosk-mode.tsx, line 96)
+{isKioskMode: false, wsStatus: "connected", hasSendMessage: true, hasUserId: true}Object
+[Log] 💓 Heartbeat bestätigt (use-online-status.tsx, line 107)
+[Error] Failed to load resource: the server responded with a status of 500 (Internal Server Error) (loaner-devices, line 0)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – {isKioskMode: false, wsStatus: "connected", hasSendMessage: true, …} (use-kiosk-mode.tsx, line 96)
+{isKioskMode: false, wsStatus: "connected", hasSendMessage: true, hasUserId: true}Object
+[Log] ❌ Kiosk-Registrierung nicht möglich: – {isKioskMode: false, wsStatus: "connected", hasSendMessage: true, …} (use-kiosk-mode.tsx, line 96)
+{isKioskMode: false, wsStatus: "connected", hasSendMessage: true, hasUserId: true}Object
+[Log] ❌ Kiosk-Registrierung nicht möglich: – {isKioskMode: false, wsStatus: "connected", hasSendMessage: true, …} (use-kiosk-mode.tsx, line 96)
+{isKioskMode: false, wsStatus: "connected", hasSendMessage: true, hasUserId: true}Object
+[Log] ❌ Kiosk-Registrierung nicht möglich: – {isKioskMode: false, wsStatus: "connected", hasSendMessage: true, …} (use-kiosk-mode.tsx, line 96)
+{isKioskMode: false, wsStatus: "connected", hasSendMessage: true, hasUserId: true}Object
+[Log] ❌ Kiosk-Registrierung nicht möglich: – {isKioskMode: false, wsStatus: "connected", hasSendMessage: true, …} (use-kiosk-mode.tsx, line 96)
+{isKioskMode: false, wsStatus: "connected", hasSendMessage: true, hasUserId: true}Object
+[Log] ❌ Kiosk-Registrierung nicht möglich: – {isKioskMode: false, wsStatus: "connected", hasSendMessage: true, …} (use-kiosk-mode.tsx, line 96)
+{isKioskMode: false, wsStatus: "connected", hasSendMessage: true, hasUserId: true}Object

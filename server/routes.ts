@@ -6642,7 +6642,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       console.log('Erstelle Leihgerät mit Daten:', deviceData);
-      const device = await storage.createLoanerDevice(deviceData);
+      console.log('userId in deviceData:', deviceData.userId);
+      
+      // Explizit userId setzen
+      const deviceToInsert = {
+        geraetetyp: deviceData.geraetetyp,
+        hersteller: deviceData.hersteller,
+        modell: deviceData.modell,
+        imei: deviceData.imei || null,
+        zustand: deviceData.zustand,
+        status: deviceData.status,
+        notizen: deviceData.notizen || null,
+        userId: userId, // Explizit setzen
+        shopId: user.shopId || 1
+      };
+      
+      console.log('Final device data für DB:', deviceToInsert);
+      const device = await storage.createLoanerDevice(deviceToInsert);
       res.status(201).json(device);
     } catch (error) {
       console.error("Fehler beim Erstellen des Leihgeräts:", error);
