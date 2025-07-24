@@ -91,6 +91,9 @@ export interface IStorage {
   // User methods (required by template)
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByEmailInShop(email: string, shopId: number): Promise<User | undefined>;
+  getUserByUsernameInShop(username: string, shopId: number): Promise<User | undefined>;
   getUserByShopId(shopId: number): Promise<User | undefined>;
   getUsersByEmail(email: string): Promise<User[]>;
   getAllUsers(): Promise<User[]>;
@@ -3492,6 +3495,38 @@ export class DatabaseStorage implements IStorage {
 
       // Verwende die Hilfsfunktion zur Konvertierung
       return convertToUser(result.rows[0]);
+    }
+  }
+
+  async getUserByEmailInShop(email: string, shopId: number): Promise<User | undefined> {
+    try {
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(and(
+          eq(users.email, email),
+          eq(users.shopId, shopId)
+        ));
+      return user;
+    } catch (error) {
+      console.log(`Fehler beim Abrufen des Benutzers mit Email ${email} in Shop ${shopId}:`, error);
+      return undefined;
+    }
+  }
+
+  async getUserByUsernameInShop(username: string, shopId: number): Promise<User | undefined> {
+    try {
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(and(
+          eq(users.username, username),
+          eq(users.shopId, shopId)
+        ));
+      return user;
+    } catch (error) {
+      console.log(`Fehler beim Abrufen des Benutzers mit Username ${username} in Shop ${shopId}:`, error);
+      return undefined;
     }
   }
 

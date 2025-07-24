@@ -20,10 +20,22 @@ import {
   DialogFooter 
 } from "@/components/ui/dialog";
 
-// Login schema - akzeptiert sowohl E-Mail als auch Benutzername
+// Login schema - unterstützt normalen und Mitarbeiter-Login
 const loginSchema = z.object({
   email: z.string().min(3, "E-Mail oder Benutzername ist erforderlich."),
   password: z.string().min(6, "Passwort muss mindestens 6 Zeichen haben."),
+  isEmployeeLogin: z.boolean().default(false),
+  ownerUsername: z.string().optional(),
+  employeeCredential: z.string().optional(),
+}).refine((data) => {
+  if (data.isEmployeeLogin) {
+    return data.ownerUsername && data.ownerUsername.length >= 3 && 
+           data.employeeCredential && data.employeeCredential.length >= 3;
+  }
+  return true;
+}, {
+  message: "Bei Mitarbeiter-Login sind Owner-Benutzername und Mitarbeiter-Benutzername erforderlich.",
+  path: ["ownerUsername"],
 });
 
 // Register schema - vereinfacht basierend auf dem gewünschten Design
@@ -72,6 +84,9 @@ export default function AuthPage() {
     defaultValues: {
       email: "",
       password: "",
+      isEmployeeLogin: false,
+      ownerUsername: "",
+      employeeCredential: "",
     },
   });
 
@@ -123,8 +138,23 @@ export default function AuthPage() {
   }
   
   function onLoginSubmit(data: LoginFormValues) {
-    console.log('Login-Versuch mit E-Mail/Benutzername:', data.email);
-    loginMutation.mutate(data);
+    if (data.isEmployeeLogin) {
+      // Mitarbeiter-Login: verwende hierarchische Struktur
+      console.log('Mitarbeiter-Login-Versuch für Shop-Owner:', data.ownerUsername, 'Mitarbeiter:', data.employeeCredential);
+      const employeeLoginData = {
+        email: data.employeeCredential || '', // Mitarbeiter-Benutzername/E-Mail
+        password: data.password,
+        ownerUsername: data.ownerUsername // Zusätzliches Feld für Shop-Identifikation
+      };
+      loginMutation.mutate(employeeLoginData);
+    } else {
+      // Normaler Login wie bisher
+      console.log('Standard-Login-Versuch mit E-Mail/Benutzername:', data.email);
+      loginMutation.mutate({
+        email: data.email,
+        password: data.password
+      });
+    }
     
     // Nach der erfolgreichen Anmeldung prüfen wir, ob die userId im localStorage vorhanden ist
     setTimeout(() => {
@@ -297,6 +327,71 @@ export default function AuthPage() {
                           </FormItem>
                         )}
                       />
+                      
+                      {/* Mitarbeiter-Login Checkbox */}
+                      <FormField
+                        control={loginForm.control}
+                        name="isEmployeeLogin"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                            <FormControl>
+                              <input
+                                type="checkbox"
+                                checked={field.value}
+                                onChange={field.onChange}
+                                className="rounded text-blue-500 focus:ring-blue-500"
+                              />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                              <label className="text-sm font-medium">
+                                Mitarbeiter-Login
+                              </label>
+                              <p className="text-xs text-gray-500">
+                                Melden Sie sich als Mitarbeiter eines Shops an
+                              </p>
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+                      
+                      {/* Zusätzliche Felder für Mitarbeiter-Login */}
+                      {loginForm.watch("isEmployeeLogin") && (
+                        <>
+                          <FormField
+                            control={loginForm.control}
+                            name="ownerUsername"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormControl>
+                                  <Input 
+                                    placeholder="Shop-Owner Benutzername *" 
+                                    {...field} 
+                                    className="h-12 px-4 border-gray-200 focus:border-blue-500"
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={loginForm.control}
+                            name="employeeCredential"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormControl>
+                                  <Input 
+                                    placeholder="Ihr Mitarbeiter-Benutzername/E-Mail *" 
+                                    {...field} 
+                                    className="h-12 px-4 border-gray-200 focus:border-blue-500"
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </>
+                      )}
                       
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">

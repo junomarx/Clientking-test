@@ -67,12 +67,49 @@ export function setupAuth(app: Express) {
   app.use(passport.session());
 
   passport.use(
-    new LocalStrategy({ usernameField: 'email' }, async (email, password, done) => {
+    new LocalStrategy({ 
+      usernameField: 'email',
+      passReqToCallback: true 
+    }, async (req, email, password, done) => {
       try {
-        // Erst versuchen per E-Mail zu finden (für Mitarbeiter)
-        let user = await storage.getUserByEmail(email);
+        const { ownerUsername } = req.body;
         
-        // Fallback: Falls nicht per E-Mail gefunden, versuche per Benutzername (für bestehende Shop-Owner)
+        // Hierarchischer Mitarbeiter-Login falls ownerUsername vorhanden
+        if (ownerUsername) {
+          console.log('🔄 Hierarchischer Mitarbeiter-Login für Owner:', ownerUsername, 'Mitarbeiter:', email);
+          
+          // 1. Shop-Owner finden und Shop-ID ermitteln
+          const owner = await storage.getUserByUsername(ownerUsername);
+          if (!owner || owner.role !== 'owner') {
+            return done(null, false, { message: 'Shop-Owner nicht gefunden oder ungültig' });
+          }
+          
+          // 2. Mitarbeiter in diesem Shop suchen
+          let employee = await storage.getUserByEmailInShop(email, owner.shopId);
+          if (!employee) {
+            employee = await storage.getUserByUsernameInShop(email, owner.shopId);
+          }
+          
+          if (!employee || employee.role !== 'employee') {
+            return done(null, false, { message: 'Mitarbeiter nicht in diesem Shop gefunden' });
+          }
+          
+          // 3. Passwort validieren
+          if (!(await comparePasswords(password, employee.password))) {
+            return done(null, false, { message: 'Ungültiges Passwort für Mitarbeiter' });
+          }
+          
+          // 4. Aktivitätsstatus prüfen
+          if (!employee.isActive) {
+            return done(null, false, { message: 'Mitarbeiter-Konto ist nicht aktiviert' });
+          }
+          
+          console.log('✅ Hierarchischer Login erfolgreich für Mitarbeiter:', employee.username, 'in Shop:', owner.shopId);
+          return done(null, employee);
+        }
+        
+        // Standard-Login (wie bisher)
+        let user = await storage.getUserByEmail(email);
         if (!user) {
           user = await storage.getUserByUsername(email);
         }
@@ -81,12 +118,10 @@ export function setupAuth(app: Express) {
           return done(null, false, { message: 'Ungültige E-Mail/Benutzername oder Passwort' });
         }
         
-        // Überprüfe, ob der Benutzer aktiv ist (es sei denn, es ist ein Superadmin)
         if (!user.isActive && !user.isSuperadmin) {
           return done(null, false, { message: 'Konto ist nicht aktiviert. Bitte warten Sie auf die Freischaltung durch einen Superadministrator.' });
         }
         
-        // Aktualisiere den letzten Login-Zeitpunkt
         if (storage.updateUserLastLogin) {
           await storage.updateUserLastLogin(user.id);
         }
