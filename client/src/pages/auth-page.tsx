@@ -120,7 +120,7 @@ export default function AuthPage() {
     
     if (isSuperadmin) {
       // Voreintragen der Superadmin-Zugangsdaten
-      loginForm.setValue('username', 'macnphone');
+      loginForm.setValue('email', 'macnphone');
       // Passwort hier absichtlich nicht vorausgefüllt - aus Sicherheitsgründen
       // loginForm.setValue('password', '...'); 
       
@@ -318,22 +318,41 @@ export default function AuthPage() {
                   <Form {...loginForm}>
                     <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-5">
                       {/* Erstes Feld: Shop-Owner Benutzername (bei Mitarbeiter-Login) oder E-Mail/Benutzername (bei normalem Login) */}
-                      <FormField
-                        control={loginForm.control}
-                        name={isEmployeeLogin ? "ownerUsername" : "email"}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <Input 
-                                placeholder={isEmployeeLogin ? "Shop-Owner Benutzername *" : "E-Mail oder Benutzername *"} 
-                                {...field} 
-                                className="h-12 px-4 border-gray-200 focus:border-blue-500"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                      {isEmployeeLogin ? (
+                        <FormField
+                          control={loginForm.control}
+                          name="ownerUsername"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Input 
+                                  placeholder="Shop-Owner Benutzername *" 
+                                  {...field} 
+                                  className="h-12 px-4 border-gray-200 focus:border-blue-500"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      ) : (
+                        <FormField
+                          control={loginForm.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Input 
+                                  placeholder="E-Mail oder Benutzername *" 
+                                  {...field} 
+                                  className="h-12 px-4 border-gray-200 focus:border-blue-500"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
                       
                       {/* Zweites Feld: Mitarbeiter-Benutzername (nur bei Mitarbeiter-Login) */}
                       {isEmployeeLogin && (
