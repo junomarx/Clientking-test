@@ -38,7 +38,8 @@ import {
   packageFeatures,
   spareParts,
   repairStatusHistory,
-  emailTemplates
+  emailTemplates,
+  loanerDevices
 } from "@shared/schema";
 import { ZodError } from "zod";
 import { setupAuth } from "./auth";
@@ -6556,6 +6557,160 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "Fehler beim Generieren der PDF-Statistik",
         error: error instanceof Error ? error.message : String(error)
       });
+    }
+  });
+
+  // LEIHGERÄTE API ROUTES
+  // Alle Leihgeräte abrufen
+  app.get("/api/loaner-devices", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const devices = await storage.getAllLoanerDevices(userId);
+      res.json(devices);
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Leihgeräte:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Leihgeräte" });
+    }
+  });
+
+  // Einzelnes Leihgerät abrufen
+  app.get("/api/loaner-devices/:id", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userId = (req.user as any).id;
+      
+      const device = await storage.getLoanerDevice(id, userId);
+      if (!device) {
+        return res.status(404).json({ message: "Leihgerät nicht gefunden" });
+      }
+      
+      res.json(device);
+    } catch (error) {
+      console.error("Fehler beim Abrufen des Leihgeräts:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen des Leihgeräts" });
+    }
+  });
+
+  // Verfügbare Leihgeräte abrufen
+  app.get("/api/loaner-devices/available", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const devices = await storage.getAvailableLoanerDevices(userId);
+      res.json(devices);
+    } catch (error) {
+      console.error("Fehler beim Abrufen verfügbarer Leihgeräte:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen verfügbarer Leihgeräte" });
+    }
+  });
+
+  // Neues Leihgerät erstellen
+  app.post("/api/loaner-devices", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(401).json({ message: "Benutzer nicht gefunden" });
+      }
+
+      const deviceData = {
+        ...req.body,
+        shopId: user.shopId || 1,
+        status: 'verfügbar'
+      };
+
+      const device = await storage.createLoanerDevice(deviceData);
+      res.status(201).json(device);
+    } catch (error) {
+      console.error("Fehler beim Erstellen des Leihgeräts:", error);
+      res.status(500).json({ message: "Fehler beim Erstellen des Leihgeräts" });
+    }
+  });
+
+  // Leihgerät aktualisieren
+  app.patch("/api/loaner-devices/:id", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userId = (req.user as any).id;
+      
+      const device = await storage.updateLoanerDevice(id, req.body, userId);
+      if (!device) {
+        return res.status(404).json({ message: "Leihgerät nicht gefunden" });
+      }
+      
+      res.json(device);
+    } catch (error) {
+      console.error("Fehler beim Aktualisieren des Leihgeräts:", error);
+      res.status(500).json({ message: "Fehler beim Aktualisieren des Leihgeräts" });
+    }
+  });
+
+  // Leihgerät löschen
+  app.delete("/api/loaner-devices/:id", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userId = (req.user as any).id;
+      
+      const success = await storage.deleteLoanerDevice(id, userId);
+      if (!success) {
+        return res.status(404).json({ message: "Leihgerät nicht gefunden oder kann nicht gelöscht werden" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Fehler beim Löschen des Leihgeräts:", error);
+      res.status(500).json({ message: "Fehler beim Löschen des Leihgeräts" });
+    }
+  });
+
+  // Leihgerät einer Reparatur zuweisen
+  app.post("/api/repairs/:repairId/assign-loaner/:deviceId", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const repairId = parseInt(req.params.repairId);
+      const deviceId = parseInt(req.params.deviceId);
+      const userId = (req.user as any).id;
+      
+      const success = await storage.assignLoanerDevice(repairId, deviceId, userId);
+      if (!success) {
+        return res.status(400).json({ message: "Leihgerät konnte nicht zugewiesen werden" });
+      }
+      
+      res.json({ success: true, message: "Leihgerät erfolgreich zugewiesen" });
+    } catch (error) {
+      console.error("Fehler beim Zuweisen des Leihgeräts:", error);
+      res.status(500).json({ message: "Fehler beim Zuweisen des Leihgeräts" });
+    }
+  });
+
+  // Leihgerät von einer Reparatur zurückgeben
+  app.post("/api/repairs/:repairId/return-loaner", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const repairId = parseInt(req.params.repairId);
+      const userId = (req.user as any).id;
+      
+      const success = await storage.returnLoanerDevice(repairId, userId);
+      if (!success) {
+        return res.status(400).json({ message: "Leihgerät konnte nicht zurückgegeben werden" });
+      }
+      
+      res.json({ success: true, message: "Leihgerät erfolgreich zurückgegeben" });
+    } catch (error) {
+      console.error("Fehler beim Zurückgeben des Leihgeräts:", error);
+      res.status(500).json({ message: "Fehler beim Zurückgeben des Leihgeräts" });
+    }
+  });
+
+  // Leihgerät für eine Reparatur abrufen
+  app.get("/api/repairs/:repairId/loaner-device", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const repairId = parseInt(req.params.repairId);
+      const userId = (req.user as any).id;
+      
+      const device = await storage.getLoanerDeviceByRepairId(repairId, userId);
+      res.json(device || null);
+    } catch (error) {
+      console.error("Fehler beim Abrufen des Leihgeräts für Reparatur:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen des Leihgeräts" });
     }
   });
 

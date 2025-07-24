@@ -144,6 +144,9 @@ export const repairs = pgTable("repairs", {
   deviceCode: text("device_code"),                 // Verschlüsselter Gerätecode (PIN oder Pattern-Hash)
   deviceCodeType: text("device_code_type"),        // "text", "pattern", oder null wenn übersprungen
   
+  // Leihgeräte-System
+  loanerDeviceId: integer("loaner_device_id").references(() => loanerDevices.id), // Verknüpfung zum zugewiesenen Leihgerät
+  
   // Alte Felder, für Abwärtskompatibilität beibehalten - nur in Drizzle definiert
   // customerSignature: text("customer_signature"),
   // signedAt: timestamp("signed_at"),
@@ -513,8 +516,20 @@ export const emailHistoryRelations = relations(emailHistory, ({ one }) => ({
   }),
 }));
 
-// Beziehungen für repairs zu emailHistory, spareParts und statusHistory
-export const repairsRelations = relations(repairs, ({ many }) => ({
+// Beziehungen für repairs zu emailHistory, spareParts, statusHistory, customer, user und loanerDevice
+export const repairsRelations = relations(repairs, ({ one, many }) => ({
+  customer: one(customers, {
+    fields: [repairs.customerId],
+    references: [customers.id],
+  }),
+  user: one(users, {
+    fields: [repairs.userId],
+    references: [users.id],
+  }),
+  loanerDevice: one(loanerDevices, {
+    fields: [repairs.loanerDeviceId],
+    references: [loanerDevices.id],
+  }),
   emailHistory: many(emailHistory),
   spareParts: many(spareParts),
   statusHistory: many(repairStatusHistory),
@@ -870,3 +885,47 @@ export const accessoriesRelations = relations(accessories, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+// Leihgeräte - Tabelle für das Leihgeräte-Management
+export const loanerDeviceStatuses = z.enum(["verfügbar", "verliehen", "defekt", "wartung"]);
+
+export const loanerDevices = pgTable("loaner_devices", {
+  id: serial("id").primaryKey(),
+  deviceType: text("device_type").notNull(), // z.B. "smartphone", "tablet", "laptop" 
+  brand: text("brand").notNull(), // Hersteller z.B. "Apple", "Samsung"
+  model: text("model").notNull(), // Modell z.B. "iPhone 12", "Galaxy S21"
+  imei: text("imei"), // IMEI-Nummer (optional)
+  condition: text("condition").notNull(), // Zustand z.B. "neu", "gebraucht", "beschädigt"
+  status: text("status").notNull().default("verfügbar"), // verfügbar, verliehen, defekt, wartung
+  notes: text("notes"), // Notizen zum Gerät
+  
+  // Shop-Zugehörigkeit für DSGVO-Isolation
+  userId: integer("user_id").notNull().references(() => users.id),
+  shopId: integer("shop_id").notNull().default(1),
+  
+  // Zeitstempel
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertLoanerDeviceSchema = createInsertSchema(loanerDevices).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  status: loanerDeviceStatuses.optional(),
+});
+
+export type LoanerDevice = typeof loanerDevices.$inferSelect;
+export type InsertLoanerDevice = z.infer<typeof insertLoanerDeviceSchema>;
+
+// Beziehungen zwischen Leihgeräten und Reparaturen
+export const loanerDevicesRelations = relations(loanerDevices, ({ one, many }) => ({
+  user: one(users, {
+    fields: [loanerDevices.userId],
+    references: [users.id],
+  }),
+  repairs: many(repairs), // Ein Leihgerät kann für mehrere Reparaturen verwendet werden (nacheinander)
+}));
+
+

@@ -54,6 +54,9 @@ import {
   accessories,
   type Accessory,
   type InsertAccessory,
+  loanerDevices,
+  type LoanerDevice,
+  type InsertLoanerDevice,
 } from "@shared/schema";
 import crypto from "crypto";
 import { db } from "./db";
@@ -543,6 +546,17 @@ export interface IStorage {
   // Erweiterte Ersatzteil-Verwaltung für neue OrdersTab
   bulkUpdateSparePartStatus(partIds: number[], status: string, userId: number): Promise<boolean>;
   getRepairsWithSpareParts(userId: number): Promise<any[]>;
+
+  // Leihgeräte-Verwaltung
+  getAllLoanerDevices(userId: number): Promise<LoanerDevice[]>;
+  getLoanerDevice(id: number, userId: number): Promise<LoanerDevice | undefined>;
+  createLoanerDevice(device: InsertLoanerDevice): Promise<LoanerDevice>;
+  updateLoanerDevice(id: number, device: Partial<InsertLoanerDevice>, userId: number): Promise<LoanerDevice | undefined>;
+  deleteLoanerDevice(id: number, userId: number): Promise<boolean>;
+  getAvailableLoanerDevices(userId: number): Promise<LoanerDevice[]>;
+  assignLoanerDevice(repairId: number, loanerDeviceId: number, userId: number): Promise<boolean>;
+  returnLoanerDevice(repairId: number, userId: number): Promise<boolean>;
+  getLoanerDeviceByRepairId(repairId: number, userId: number): Promise<LoanerDevice | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -5019,6 +5033,239 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(users)
       .where(eq(users.id, employeeId));
+  }
+
+  // Leihgeräte-Verwaltung Methoden
+  async getAllLoanerDevices(userId: number): Promise<LoanerDevice[]> {
+    try {
+      const user = await this.getUser(userId);
+      if (!user) return [];
+
+      const shopId = user.shopId || 1;
+
+      const devices = await db
+        .select()
+        .from(loanerDevices)
+        .where(eq(loanerDevices.shopId, shopId))
+        .orderBy(desc(loanerDevices.createdAt));
+
+      return devices;
+    } catch (error) {
+      console.error('Fehler beim Abrufen der Leihgeräte:', error);
+      return [];
+    }
+  }
+
+  async getLoanerDevice(id: number, userId: number): Promise<LoanerDevice | undefined> {
+    try {
+      const user = await this.getUser(userId);
+      if (!user) return undefined;
+
+      const shopId = user.shopId || 1;
+
+      const [device] = await db
+        .select()
+        .from(loanerDevices)
+        .where(and(
+          eq(loanerDevices.id, id),
+          eq(loanerDevices.shopId, shopId)
+        ));
+
+      return device;
+    } catch (error) {
+      console.error(`Fehler beim Abrufen des Leihgeräts ${id}:`, error);
+      return undefined;
+    }
+  }
+
+  async createLoanerDevice(device: InsertLoanerDevice): Promise<LoanerDevice> {
+    try {
+      const [newDevice] = await db
+        .insert(loanerDevices)
+        .values({
+          ...device,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .returning();
+
+      return newDevice;
+    } catch (error) {
+      console.error('Fehler beim Erstellen des Leihgeräts:', error);
+      throw error;
+    }
+  }
+
+  async updateLoanerDevice(id: number, device: Partial<InsertLoanerDevice>, userId: number): Promise<LoanerDevice | undefined> {
+    try {
+      const user = await this.getUser(userId);
+      if (!user) return undefined;
+
+      const shopId = user.shopId || 1;
+
+      const [updatedDevice] = await db
+        .update(loanerDevices)
+        .set({
+          ...device,
+          updatedAt: new Date(),
+        })
+        .where(and(
+          eq(loanerDevices.id, id),
+          eq(loanerDevices.shopId, shopId)
+        ))
+        .returning();
+
+      return updatedDevice;
+    } catch (error) {
+      console.error(`Fehler beim Aktualisieren des Leihgeräts ${id}:`, error);
+      return undefined;
+    }
+  }
+
+  async deleteLoanerDevice(id: number, userId: number): Promise<boolean> {
+    try {
+      const user = await this.getUser(userId);
+      if (!user) return false;
+
+      const shopId = user.shopId || 1;
+
+      // Prüfen, ob das Gerät gerade verliehen ist
+      const device = await this.getLoanerDevice(id, userId);
+      if (device?.status === 'verliehen') {
+        throw new Error('Leihgerät kann nicht gelöscht werden - es ist gerade verliehen');
+      }
+
+      await db
+        .delete(loanerDevices)
+        .where(and(
+          eq(loanerDevices.id, id),
+          eq(loanerDevices.shopId, shopId)
+        ));
+
+      return true;
+    } catch (error) {
+      console.error(`Fehler beim Löschen des Leihgeräts ${id}:`, error);
+      return false;
+    }
+  }
+
+  async getAvailableLoanerDevices(userId: number): Promise<LoanerDevice[]> {
+    try {
+      const user = await this.getUser(userId);
+      if (!user) return [];
+
+      const shopId = user.shopId || 1;
+
+      const devices = await db
+        .select()
+        .from(loanerDevices)
+        .where(and(
+          eq(loanerDevices.shopId, shopId),
+          eq(loanerDevices.status, 'verfügbar')
+        ))
+        .orderBy(loanerDevices.deviceType, loanerDevices.brand, loanerDevices.model);
+
+      return devices;
+    } catch (error) {
+      console.error('Fehler beim Abrufen verfügbarer Leihgeräte:', error);
+      return [];
+    }
+  }
+
+  async assignLoanerDevice(repairId: number, loanerDeviceId: number, userId: number): Promise<boolean> {
+    try {
+      const user = await this.getUser(userId);
+      if (!user) return false;
+
+      const shopId = user.shopId || 1;
+
+      // Prüfen, ob das Gerät verfügbar ist
+      const device = await this.getLoanerDevice(loanerDeviceId, userId);
+      if (!device || device.status !== 'verfügbar') {
+        throw new Error('Leihgerät ist nicht verfügbar');
+      }
+
+      // Gerät als "verliehen" markieren
+      await db
+        .update(loanerDevices)
+        .set({
+          status: 'verliehen',
+          updatedAt: new Date(),
+        })
+        .where(eq(loanerDevices.id, loanerDeviceId));
+
+      // Leihgerät der Reparatur zuweisen
+      await db
+        .update(repairs)
+        .set({
+          loanerDeviceId: loanerDeviceId,
+          updatedAt: new Date(),
+        })
+        .where(and(
+          eq(repairs.id, repairId),
+          eq(repairs.shopId, shopId)
+        ));
+
+      return true;
+    } catch (error) {
+      console.error(`Fehler beim Zuweisen des Leihgeräts ${loanerDeviceId} zu Reparatur ${repairId}:`, error);
+      return false;
+    }
+  }
+
+  async returnLoanerDevice(repairId: number, userId: number): Promise<boolean> {
+    try {
+      const user = await this.getUser(userId);
+      if (!user) return false;
+
+      const shopId = user.shopId || 1;
+
+      // Reparatur abrufen
+      const repair = await this.getRepair(repairId, userId);
+      if (!repair || !repair.loanerDeviceId) {
+        return false;
+      }
+
+      // Leihgerät als "verfügbar" markieren
+      await db
+        .update(loanerDevices)
+        .set({
+          status: 'verfügbar',
+          updatedAt: new Date(),
+        })
+        .where(eq(loanerDevices.id, repair.loanerDeviceId));
+
+      // Leihgerät von der Reparatur entfernen
+      await db
+        .update(repairs)
+        .set({
+          loanerDeviceId: null,
+          updatedAt: new Date(),
+        })
+        .where(and(
+          eq(repairs.id, repairId),
+          eq(repairs.shopId, shopId)
+        ));
+
+      return true;
+    } catch (error) {
+      console.error(`Fehler beim Zurückgeben des Leihgeräts für Reparatur ${repairId}:`, error);
+      return false;
+    }
+  }
+
+  async getLoanerDeviceByRepairId(repairId: number, userId: number): Promise<LoanerDevice | undefined> {
+    try {
+      const repair = await this.getRepair(repairId, userId);
+      if (!repair || !repair.loanerDeviceId) {
+        return undefined;
+      }
+
+      return await this.getLoanerDevice(repair.loanerDeviceId, userId);
+    } catch (error) {
+      console.error(`Fehler beim Abrufen des Leihgeräts für Reparatur ${repairId}:`, error);
+      return undefined;
+    }
   }
 }
 
