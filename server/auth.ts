@@ -71,13 +71,27 @@ export function setupAuth(app: Express) {
       try {
         let user = null;
         
-        // Automatische Erkennung: Enthält "@" → E-Mail (Mitarbeiter), sonst → Benutzername (Shop-Owner)
+        // Strikte Regeln: 
+        // - Enthält "@" = Mitarbeiter (role='employee') über E-Mail
+        // - Kein "@" = Shop-Owner (role='owner' oder null/undefined) über Benutzername
         if (emailOrUsername.includes('@')) {
-          // E-Mail-basierte Anmeldung (Mitarbeiter)
+          // E-Mail-basierte Anmeldung nur für Mitarbeiter
           user = await storage.getUserByEmail(emailOrUsername);
+          
+          // Zusätzliche Validierung: Nur Mitarbeiter dürfen sich per E-Mail anmelden
+          if (user && user.role !== 'employee') {
+            console.log(`❌ Login-Verstoß: Benutzer ${user.username} (role: ${user.role}) versuchte E-Mail-Login`);
+            return done(null, false, { message: 'E-Mail-Anmeldung nur für Mitarbeiter möglich' });
+          }
         } else {
-          // Benutzername-basierte Anmeldung (Shop-Owner)
+          // Benutzername-basierte Anmeldung nur für Shop-Owner
           user = await storage.getUserByUsername(emailOrUsername);
+          
+          // Zusätzliche Validierung: Nur Shop-Owner dürfen sich per Benutzername anmelden
+          if (user && user.role === 'employee') {
+            console.log(`❌ Login-Verstoß: Mitarbeiter ${user.username} versuchte Benutzername-Login`);
+            return done(null, false, { message: 'Mitarbeiter müssen sich mit ihrer E-Mail-Adresse anmelden' });
+          }
         }
         
         if (!user || !(await comparePasswords(password, user.password))) {
@@ -88,6 +102,8 @@ export function setupAuth(app: Express) {
         if (!user.isActive && !user.isSuperadmin) {
           return done(null, false, { message: 'Konto ist nicht aktiviert. Bitte warten Sie auf die Freischaltung durch einen Superadministrator.' });
         }
+        
+        console.log(`✅ Login erfolgreich: ${user.username} (role: ${user.role || 'owner'}) via ${emailOrUsername.includes('@') ? 'E-Mail' : 'Benutzername'}`);
         
         // Aktualisiere den letzten Login-Zeitpunkt
         if (storage.updateUserLastLogin) {
