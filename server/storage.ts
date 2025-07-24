@@ -5275,6 +5275,24 @@ export class DatabaseStorage implements IStorage {
           eq(repairs.shopId, shopId)
         ));
 
+      // Status-History-Eintrag für Leihgeräte-Rückgabe erstellen
+      try {
+        await db.insert(repairStatusHistory).values({
+          repairId: repairId,
+          oldStatus: repair.status,
+          newStatus: repair.status, // Status bleibt gleich, nur Leihgerät wird zurückgegeben
+          changedBy: this.getUserDisplayName(user), // Benutzername des aktuellen Users
+          userId: userId,
+          shopId: shopId,
+          notes: "Leihgerät automatisch zurückgegeben"
+        });
+        
+        console.log(`Status-History-Eintrag für Leihgeräte-Rückgabe bei Reparatur ${repairId} erstellt (Benutzer: ${this.getUserDisplayName(user)})`);
+      } catch (historyError) {
+        console.error("Fehler beim Erstellen des Status-History-Eintrags für Leihgeräte-Rückgabe:", historyError);
+        // Fehler nicht weiterwerfen, da die Rückgabe bereits erfolgt ist
+      }
+
       return true;
     } catch (error) {
       console.error(`Fehler beim Zurückgeben des Leihgeräts für Reparatur ${repairId}:`, error);

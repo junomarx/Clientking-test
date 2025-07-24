@@ -634,21 +634,27 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                                 <TooltipProvider>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <div className="cursor-pointer">
+                                      <div className="cursor-pointer touch-manipulation" onClick={(e) => {
+                                        // Mobile: Touch-Event für Tooltip-Anzeige
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                      }}>
                                         {getStatusBadge(entry.newStatus)}
                                       </div>
                                     </TooltipTrigger>
-                                    <TooltipContent>
+                                    <TooltipContent side="top" className="max-w-xs">
                                       <p>Geändert von: {entry.changedByUsername || 'System'}</p>
                                       {entry.notes && <p>Notiz: {entry.notes}</p>}
+                                      <p className="text-xs opacity-75">
+                                        {format(new Date(entry.changedAt), 'dd.MM.yyyy HH:mm', { locale: de })}
+                                      </p>
                                     </TooltipContent>
                                   </Tooltip>
                                 </TooltipProvider>
-                                {entry.changedByUsername && (
-                                  <span className="text-[9px] text-muted-foreground italic">
-                                    von {entry.changedByUsername}
-                                  </span>
-                                )}
+                                {/* Immer Benutzername anzeigen, auch bei automatischen Aktionen */}
+                                <span className="text-[9px] text-muted-foreground italic">
+                                  von {entry.changedByUsername || 'System'}
+                                </span>
                                 {entry.notes && (
                                   <span className="text-[9px] text-muted-foreground ml-1 italic">
                                     ({entry.notes.length > 25 ? entry.notes.substring(0, 25) + '...' : entry.notes})
