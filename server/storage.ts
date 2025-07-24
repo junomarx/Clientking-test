@@ -5043,13 +5043,33 @@ export class DatabaseStorage implements IStorage {
 
       const shopId = user.shopId || 1;
 
+      // Erweiterte Abfrage mit JOIN zu repairs und customers für Zuordnungsinformationen
       const devices = await db
-        .select()
+        .select({
+          id: loanerDevices.id,
+          deviceType: loanerDevices.deviceType,
+          brand: loanerDevices.brand,
+          model: loanerDevices.model,
+          imei: loanerDevices.imei,
+          condition: loanerDevices.condition,
+          status: loanerDevices.status,
+          notes: loanerDevices.notes,
+          shopId: loanerDevices.shopId,
+          userId: loanerDevices.userId,
+          createdAt: loanerDevices.createdAt,
+          updatedAt: loanerDevices.updatedAt,
+          // Zusätzliche Felder für zugewiesene Reparatur
+          assignedRepairId: repairs.id,
+          assignedOrderCode: repairs.orderCode,
+          assignedCustomerName: sql<string>`CONCAT(${customers.firstName}, ' ', ${customers.lastName})`.as('assignedCustomerName')
+        })
         .from(loanerDevices)
+        .leftJoin(repairs, eq(repairs.loanerDeviceId, loanerDevices.id))
+        .leftJoin(customers, eq(customers.id, repairs.customerId))
         .where(eq(loanerDevices.shopId, shopId))
         .orderBy(desc(loanerDevices.createdAt));
 
-      return devices;
+      return devices as any[];
     } catch (error) {
       console.error('Fehler beim Abrufen der Leihgeräte:', error);
       return [];

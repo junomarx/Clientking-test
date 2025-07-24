@@ -40,6 +40,10 @@ interface LoanerDevice {
   shopId: number;
   createdAt: string;
   updatedAt: string;
+  // Erweiterte Felder für Zuordnungsinformationen
+  assignedRepairId?: number;
+  assignedOrderCode?: string;
+  assignedCustomerName?: string;
 }
 
 const deviceTypeLabels = {
@@ -478,6 +482,7 @@ export function LoanerDevicesTab() {
                     <TableHead>IMEI</TableHead>
                     <TableHead>Zustand</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Zugeordnet zu</TableHead>
                     <TableHead>Aktionen</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -495,6 +500,20 @@ export function LoanerDevicesTab() {
                       <TableCell className="font-mono text-sm">{device.imei || '-'}</TableCell>
                       <TableCell>{getConditionBadge(device.condition)}</TableCell>
                       <TableCell>{getStatusBadge(device.status)}</TableCell>
+                      <TableCell>
+                        {device.assignedOrderCode ? (
+                          <div className="space-y-1">
+                            <div className="font-medium text-sm">
+                              #{device.assignedOrderCode}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {device.assignedCustomerName}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">Nicht zugeordnet</span>
+                        )}
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Button
