@@ -474,75 +474,163 @@ export function LoanerDevicesTab() {
               Keine Leihgeräte gefunden.
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Typ</TableHead>
-                    <TableHead>Hersteller</TableHead>
-                    <TableHead>Modell</TableHead>
-                    <TableHead>IMEI</TableHead>
-                    <TableHead>Zustand</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Zugeordnet zu</TableHead>
-                    <TableHead>Aktionen</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredDevices.map((device) => (
-                    <TableRow key={device.id}>
-                      <TableCell>
+            <>
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Typ</TableHead>
+                      <TableHead>Hersteller</TableHead>
+                      <TableHead>Modell</TableHead>
+                      <TableHead>IMEI</TableHead>
+                      <TableHead>Zustand</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Zugeordnet zu</TableHead>
+                      <TableHead>Aktionen</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredDevices.map((device) => (
+                      <TableRow key={device.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {getDeviceIcon(device.deviceType)}
+                            <span>{deviceTypeLabels[device.deviceType as keyof typeof deviceTypeLabels] || device.deviceType}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>{device.brand}</TableCell>
+                        <TableCell>{device.model}</TableCell>
+                        <TableCell className="font-mono text-sm">{device.imei || '-'}</TableCell>
+                        <TableCell>{getConditionBadge(device.condition)}</TableCell>
+                        <TableCell>{getStatusBadge(device.status)}</TableCell>
+                        <TableCell>
+                          {device.assignedOrderCode ? (
+                            <div className="space-y-1">
+                              <div 
+                                className="font-medium text-sm text-blue-600 hover:text-blue-800 cursor-pointer underline"
+                                onClick={() => setSelectedRepairId(device.assignedRepairId!)}
+                              >
+                                #{device.assignedOrderCode}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {device.assignedCustomerName}
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">Nicht zugeordnet</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEdit(device)}
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleDelete(device.id)}
+                              disabled={device.status === 'verliehen'}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile Card View */}
+              <div className="md:hidden space-y-4">
+                {filteredDevices.map((device) => (
+                  <Card key={device.id} className="p-4">
+                    <div className="space-y-3">
+                      {/* Device Header */}
+                      <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           {getDeviceIcon(device.deviceType)}
-                          <span>{deviceTypeLabels[device.deviceType as keyof typeof deviceTypeLabels] || device.deviceType}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{device.brand}</TableCell>
-                      <TableCell>{device.model}</TableCell>
-                      <TableCell className="font-mono text-sm">{device.imei || '-'}</TableCell>
-                      <TableCell>{getConditionBadge(device.condition)}</TableCell>
-                      <TableCell>{getStatusBadge(device.status)}</TableCell>
-                      <TableCell>
-                        {device.assignedOrderCode ? (
-                          <div className="space-y-1">
-                            <div 
-                              className="font-medium text-sm text-blue-600 hover:text-blue-800 cursor-pointer underline"
-                              onClick={() => setSelectedRepairId(device.assignedRepairId!)}
-                            >
-                              #{device.assignedOrderCode}
+                          <div>
+                            <div className="font-medium">
+                              {device.brand} {device.model}
                             </div>
                             <div className="text-xs text-muted-foreground">
-                              {device.assignedCustomerName}
+                              {deviceTypeLabels[device.deviceType as keyof typeof deviceTypeLabels] || device.deviceType}
                             </div>
                           </div>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">Nicht zugeordnet</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEdit(device)}
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDelete(device.id)}
-                            disabled={device.status === 'verliehen'}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                        <div className="flex items-center gap-2">
+                          {getStatusBadge(device.status)}
+                        </div>
+                      </div>
+
+                      {/* Device Details */}
+                      <div className="space-y-2">
+                        {device.imei && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">IMEI:</span>
+                            <span className="font-mono">{device.imei}</span>
+                          </div>
+                        )}
+                        
+                        <div className="flex justify-between text-sm items-center">
+                          <span className="text-muted-foreground">Zustand:</span>
+                          {getConditionBadge(device.condition)}
+                        </div>
+
+                        {/* Assignment Info */}
+                        <div className="flex justify-between text-sm items-start">
+                          <span className="text-muted-foreground">Zugeordnet zu:</span>
+                          <div className="text-right">
+                            {device.assignedOrderCode ? (
+                              <div className="space-y-1">
+                                <div 
+                                  className="font-medium text-sm text-blue-600 hover:text-blue-800 cursor-pointer underline"
+                                  onClick={() => setSelectedRepairId(device.assignedRepairId!)}
+                                >
+                                  #{device.assignedOrderCode}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {device.assignedCustomerName}
+                                </div>
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground text-sm">Nicht zugeordnet</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex justify-end gap-2 pt-2 border-t">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEdit(device)}
+                        >
+                          <Edit className="h-3 w-3 mr-1" />
+                          Bearbeiten
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDelete(device.id)}
+                          disabled={device.status === 'verliehen'}
+                        >
+                          <Trash2 className="h-3 w-3 mr-1" />
+                          Löschen
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
