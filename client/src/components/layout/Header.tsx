@@ -19,7 +19,8 @@ import {
   Printer,
   CreditCard,
   UserCog,
-  Monitor
+  Monitor,
+  Tablet
 } from "lucide-react";
 import { useRef, useState } from "react";
 import ClientKingLogo from "@assets/logo_new.png";
@@ -172,6 +173,17 @@ export function Header({ variant = "landing", activeTab, onTabChange }: HeaderPr
                       <FileText className="h-5 w-5 mr-2" />
                       Kostenvoranschläge
                     </Button>
+                    <Button 
+                      variant={activeTab === 'loaner-devices' ? 'default' : 'ghost'}
+                      className="w-full justify-start"
+                      onClick={() => {
+                        if (onTabChange) onTabChange('loaner-devices');
+                        setMenuOpen(false);
+                      }}
+                    >
+                      <Tablet className="h-5 w-5 mr-2" />
+                      Leihgeräte
+                    </Button>
                     {/* Statistiken nur für Shop-Owner sichtbar */}
                     {user && user.role === 'owner' && (
                       <Button 
@@ -262,6 +274,21 @@ export function Header({ variant = "landing", activeTab, onTabChange }: HeaderPr
                       <UserCog className="h-5 w-5 mr-2" />
                       Benutzerdaten
                     </Button>
+                    
+                    {/* Mitarbeiterverwaltung - nur für Shop-Owner */}
+                    {user && user.role === 'owner' && (
+                      <Button 
+                        variant={activeTab === 'employees' ? 'default' : 'ghost'}
+                        className="w-full justify-start"
+                        onClick={() => {
+                          if (onTabChange) onTabChange('employees');
+                          setMenuOpen(false);
+                        }}
+                      >
+                        <User className="h-5 w-5 mr-2" />
+                        Mitarbeiter
+                      </Button>
+                    )}
                   </nav>
                   
                   <div className="p-4 border-t">
