@@ -252,8 +252,11 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
       });
       setShowLoanerDeviceDialog(false);
       refetchLoanerDevice();
+      // Alle relevanten Cache-Keys invalidieren für sofortige UI-Updates
       queryClient.invalidateQueries({ queryKey: ['/api/loaner-devices/available'] });
       queryClient.invalidateQueries({ queryKey: ['/api/loaner-devices'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/repairs/${repairId}/loaner-device`] });
     },
     onError: (error: any) => {
       toast({
@@ -276,8 +279,11 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
         description: "Das Leihgerät wurde erfolgreich zurückgegeben und ist wieder verfügbar.",
       });
       refetchLoanerDevice();
+      // Alle relevanten Cache-Keys invalidieren für sofortige UI-Updates
       queryClient.invalidateQueries({ queryKey: ['/api/loaner-devices/available'] });
       queryClient.invalidateQueries({ queryKey: ['/api/loaner-devices'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/repairs/${repairId}/loaner-device`] });
     },
     onError: (error: any) => {
       toast({
