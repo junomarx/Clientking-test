@@ -744,10 +744,25 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
 
           {/* Leihgeräte */}
           <div className="bg-slate-50 rounded-lg p-4 shadow-sm border md:col-span-2">
-            <h3 className="text-lg font-medium flex items-center gap-2 mb-3">
-              <Monitor className="h-5 w-5" />
-              Leihgeräte
-            </h3>
+            {/* Header mit Titel und Button (wie bei Ersatzteilen) */}
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-medium flex items-center gap-2">
+                <Monitor className="h-5 w-5" />
+                Leihgeräte
+              </h3>
+              
+              {repair.status !== 'abgeholt' && availableLoanerDevices.length > 0 && !currentLoanerDevice && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowLoanerDeviceDialog(true)}
+                  className="h-8"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Hinzufügen
+                </Button>
+              )}
+            </div>
             
             {currentLoanerDevice ? (
               <div className="space-y-3">
@@ -807,21 +822,11 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                   <div className="text-sm text-muted-foreground">
                     Leihgeräte können nicht an abgeholte Reparaturen vergeben werden
                   </div>
-                ) : availableLoanerDevices.length > 0 ? (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowLoanerDeviceDialog(true)}
-                    className="flex items-center gap-2"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Leihgerät zuweisen
-                  </Button>
-                ) : (
+                ) : availableLoanerDevices.length === 0 ? (
                   <div className="text-sm text-muted-foreground">
                     Keine verfügbaren Leihgeräte vorhanden
                   </div>
-                )}
+                ) : null}
               </div>
             )}
           </div>
