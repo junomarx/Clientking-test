@@ -480,16 +480,29 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
 
   // QR-Code Unterschrift öffnen
   const handleOpenQRSignature = async (repair: any) => {
+    console.log('🔍 QR-Code geklickt für Reparatur:', repair.id, 'Status:', repair.status);
+    
     // Prüfe bei Status "fertig" IMMER, ob ein Leihgerät zugewiesen ist
     if (repair.status === 'fertig') {
       try {
-        // Lade Leihgerät-Informationen über API
-        const response = await fetch(`/api/repairs/${repair.id}/loaner-device`);
+        console.log('🔍 Status ist "fertig" - prüfe Leihgerät für Reparatur', repair.id);
+        
+        // Lade Leihgerät-Informationen über API mit korrekten Headern
+        const response = await fetch(`/api/repairs/${repair.id}/loaner-device`, {
+          headers: {
+            'X-User-ID': user?.id?.toString() || '55',
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        console.log('🔍 API Response Status:', response.status);
+        
         if (response.ok) {
           const loanerDevice = await response.json();
+          console.log('🔍 Leihgerät-Daten erhalten:', loanerDevice);
           
           // Wenn ein Leihgerät zugewiesen ist, zeige Warning Dialog
-          if (loanerDevice) {
+          if (loanerDevice && loanerDevice.id) {
             console.log('🚨 LEIHGERÄT GEFUNDEN - Zeige Warning Dialog:', loanerDevice);
             
             // Speichere die Reparatur-Daten für später
@@ -508,10 +521,14 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
             setLoanerDeviceInfo(loanerDevice);
             setShowLoanerDeviceWarning(true);
             return;
+          } else {
+            console.log('🔍 Antwort erhalten aber kein Leihgerät gefunden');
           }
+        } else {
+          console.log('🔍 API Response nicht OK:', response.status);
         }
       } catch (error) {
-        console.log('Keine Leihgerät-Information verfügbar oder 404 - kein Leihgerät zugewiesen');
+        console.log('🔍 Fehler beim Leihgerät-API Call:', error);
       }
     }
     
