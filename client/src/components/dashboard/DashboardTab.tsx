@@ -28,6 +28,14 @@ import { BusinessDataAlert } from '@/components/common/BusinessDataAlert';
 import { QRSignatureDialog } from '@/components/signature/QRSignatureDialog';
 import { useBusinessSettings } from '@/hooks/use-business-settings';
 import { useToast } from '@/hooks/use-toast';
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { AlertCircle } from 'lucide-react';
 
 
 
@@ -52,6 +60,11 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
   const [showQRSignatureDialog, setShowQRSignatureDialog] = useState(false);
   const [selectedRepairForSignature, setSelectedRepairForSignature] = useState<any>(null);
   
+  // State für Leihgeräte-Warning
+  const [showLoanerWarning, setShowLoanerWarning] = useState(false);
+  const [selectedLoanerDevice, setSelectedLoanerDevice] = useState<any>(null);
+  const [warningRepairId, setWarningRepairId] = useState<number | null>(null);
+  
 
   
 
@@ -64,6 +77,53 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
   
   // Business Settings für QR-Code Unterschriften
   const { settings: businessSettingsData } = useBusinessSettings();
+
+  // Mutation für das Zurückgeben von Leihgeräten
+  const returnLoanerDeviceMutation = useMutation({
+    mutationFn: async (repairId: number) => {
+      const response = await apiRequest('POST', `/api/repairs/${repairId}/return-loaner`);
+      if (!response.ok) {
+        throw new Error('Fehler beim Zurückgeben des Leihgeräts');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/loaner-devices'] });
+      setShowLoanerWarning(false);
+      toast({
+        title: "Erfolg",
+        description: "Leihgerät wurde erfolgreich zurückgegeben",
+      });
+      
+      // Nach erfolgreicher Rückgabe, öffne QR-Code Dialog
+      if (warningRepairId) {
+        const repair = repairs?.find(r => r.id === warningRepairId);
+        const customer = customers?.find(c => c.id === repair?.customerId);
+        
+        if (repair && customer) {
+          setSelectedRepairForSignature({
+            id: repair.id,
+            customerName: `${customer.firstName} ${customer.lastName}`,
+            device: `${repair.brand} ${repair.model}`,
+            issue: repair.issue,
+            status: repair.status,
+            estimatedCost: repair.estimatedCost,
+            depositAmount: repair.depositAmount,
+            customerId: repair.customerId
+          });
+          setShowQRSignatureDialog(true);
+        }
+      }
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler",
+        description: `Leihgerät konnte nicht zurückgegeben werden: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
 
   // Status-Änderung Mutation
   const updateStatusMutation = useMutation<any, Error, { id: number; status: string; sendEmail?: boolean; technicianNote?: string }>({
@@ -125,16 +185,12 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
           const loanerDevice = await response.json();
           console.log('🔍 Dashboard Leihgerät-Daten erhalten:', loanerDevice);
           
-          // Wenn ein Leihgerät zugewiesen ist, zeige Warning
+          // Wenn ein Leihgerät zugewiesen ist, zeige Warning-Dialog
           if (loanerDevice && loanerDevice.id) {
-            console.log('⚠️ Dashboard Leihgerät gefunden, zeige Warning');
-            // TODO: Hier könnte ein separates Dashboard-Warning-Modal implementiert werden
-            // Für jetzt verwenden wir Toast
-            toast({
-              title: "Leihgerät noch nicht zurückgegeben",
-              description: `Der Kunde hat noch ein Leihgerät (${loanerDevice.brand} ${loanerDevice.model}). Bitte zuerst das Leihgerät zurückgeben, bevor QR-Code-Unterschriften erstellt werden.`,
-              variant: "destructive",
-            });
+            console.log('⚠️ Dashboard Leihgerät gefunden, zeige Warning-Dialog');
+            setSelectedLoanerDevice(loanerDevice);
+            setWarningRepairId(repair.id);
+            setShowLoanerWarning(true);
             return;
           }
         }
@@ -417,7 +473,55 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
         />
       )}
 
-
+      {/* Leihgeräte Warning Dialog */}
+      <Dialog open={showLoanerWarning} onOpenChange={setShowLoanerWarning}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-orange-600" />
+              Leihgerät noch nicht zurückgegeben
+            </DialogTitle>
+            <DialogDescription>
+              Der Kunde hat noch ein Leihgerät ausgegeben. Bitte geben Sie das Leihgerät zurück, bevor Sie fortfahren.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedLoanerDevice && (
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+              <div className="text-sm">
+                <div className="font-medium text-orange-800">Ausgegebenes Leihgerät:</div>
+                <div className="text-orange-700">
+                  {selectedLoanerDevice.brand} {selectedLoanerDevice.model}
+                </div>
+                <div className="text-orange-600 text-xs mt-1">
+                  Typ: {selectedLoanerDevice.deviceType}
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <div className="flex gap-3 pt-4">
+            <Button 
+              onClick={() => setShowLoanerWarning(false)}
+              variant="outline"
+              className="flex-1"
+            >
+              Abbrechen
+            </Button>
+            <Button 
+              onClick={() => {
+                if (warningRepairId) {
+                  returnLoanerDeviceMutation.mutate(warningRepairId);
+                }
+              }}
+              disabled={returnLoanerDeviceMutation.isPending}
+              className="flex-1"
+            >
+              {returnLoanerDeviceMutation.isPending ? 'Wird zurückgegeben...' : 'Leihgerät zurückgegeben'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
     </motion.div>
   );
