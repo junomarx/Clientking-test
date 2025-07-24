@@ -72,7 +72,11 @@ import {
   QrCode,
   TestTube,
   Plus,
-  Save
+  Save,
+  Tablet,
+  Laptop,
+  Watch,
+  Monitor
 } from 'lucide-react';
 
 interface RepairDetailsDialogProps {
@@ -110,6 +114,10 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
 
   // Test-E-Mail-Funktionalität
   const [isSendingTestEmail, setIsSendingTestEmail] = useState(false);
+  
+  // Leihgeräte-Zuordnung
+  const [showLoanerDeviceDialog, setShowLoanerDeviceDialog] = useState(false);
+  const [assignedLoanerDevice, setAssignedLoanerDevice] = useState<any>(null);
   
   // QueryClient für Cache-Invalidierung
   const queryClient = useQueryClient();
@@ -213,6 +221,76 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
     enabled: open && repairId !== null,
     staleTime: 0, // Immer frische Daten laden
     cacheTime: 0, // Keine Cache-Zeit
+  });
+
+  // Verfügbare Leihgeräte abrufen
+  const { data: availableLoanerDevices = [] } = useQuery({
+    queryKey: ['/api/loaner-devices/available'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/loaner-devices/available');
+      return response.json();
+    },
+    enabled: open && repairId !== null,
+  });
+
+  // Zugewiesenes Leihgerät abrufen
+  const { data: currentLoanerDevice } = useQuery({
+    queryKey: [`/api/repairs/${repairId}/loaner-device`],
+    queryFn: async () => {
+      if (!repairId) return null;
+      const response = await apiRequest('GET', `/api/repairs/${repairId}/loaner-device`);
+      return response.ok ? response.json() : null;
+    },
+    enabled: open && repairId !== null,
+  });
+
+  // Leihgerät zuweisen
+  const assignLoanerMutation = useMutation({
+    mutationFn: async ({ repairId, deviceId }: { repairId: number; deviceId: number }) => {
+      const response = await apiRequest('POST', `/api/repairs/${repairId}/assign-loaner/${deviceId}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Erfolg',
+        description: 'Leihgerät wurde erfolgreich zugewiesen.',
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/repairs/${repairId}/loaner-device`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/loaner-devices'] });
+      setShowLoanerDeviceDialog(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Fehler',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Leihgerät zurückgeben
+  const returnLoanerMutation = useMutation({
+    mutationFn: async (repairId: number) => {
+      const response = await apiRequest('POST', `/api/repairs/${repairId}/return-loaner`);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Erfolg',
+        description: 'Leihgerät wurde erfolgreich zurückgegeben.',
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/repairs/${repairId}/loaner-device`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/loaner-devices'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Fehler',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
   });
   
   // Fallback: Alle Reparaturen abrufen für den Fall, dass spezifische Abfrage fehlschlägt
@@ -662,6 +740,86 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
           <div className="bg-slate-50 rounded-lg p-4 shadow-sm border md:col-span-2">
             <SparePartsList repairId={repair.id} />
           </div>
+
+          {/* Leihgeräte */}
+          <div className="bg-slate-50 rounded-lg p-4 shadow-sm border md:col-span-2">
+            <h3 className="text-lg font-medium flex items-center gap-2 mb-3">
+              <Monitor className="h-5 w-5" />
+              Leihgeräte
+            </h3>
+            
+            {currentLoanerDevice ? (
+              <div className="space-y-3">
+                <div className="border rounded bg-white p-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {currentLoanerDevice.deviceType === 'smartphone' && <Smartphone className="h-5 w-5" />}
+                      {currentLoanerDevice.deviceType === 'tablet' && <Tablet className="h-5 w-5" />}
+                      {currentLoanerDevice.deviceType === 'laptop' && <Laptop className="h-5 w-5" />}
+                      {currentLoanerDevice.deviceType === 'smartwatch' && <Watch className="h-5 w-5" />}
+                      <div>
+                        <div className="font-medium">{currentLoanerDevice.brand} {currentLoanerDevice.model}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {currentLoanerDevice.deviceType === 'smartphone' && 'Smartphone'}
+                          {currentLoanerDevice.deviceType === 'tablet' && 'Tablet'}
+                          {currentLoanerDevice.deviceType === 'laptop' && 'Laptop'}
+                          {currentLoanerDevice.deviceType === 'smartwatch' && 'Smartwatch'}
+                          {currentLoanerDevice.imei && ` • IMEI: ${currentLoanerDevice.imei}`}
+                        </div>
+                      </div>
+                    </div>
+                    <Badge variant="outline" className="text-orange-600 border-orange-600">
+                      <AlertCircle className="h-3 w-3 mr-1" />
+                      Verliehen
+                    </Badge>
+                  </div>
+                  {currentLoanerDevice.notes && (
+                    <div className="mt-2 text-sm text-muted-foreground">
+                      {currentLoanerDevice.notes}
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex justify-center">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (repair?.id) {
+                        returnLoanerMutation.mutate(repair.id);
+                      }
+                    }}
+                    disabled={returnLoanerMutation.isPending}
+                    className="flex items-center gap-2"
+                  >
+                    <Check className="h-4 w-4" />
+                    {returnLoanerMutation.isPending ? 'Wird zurückgegeben...' : 'Leihgerät zurückgeben'}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <div className="text-muted-foreground mb-3">
+                  Kein Leihgerät zugewiesen
+                </div>
+                {availableLoanerDevices.length > 0 ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowLoanerDeviceDialog(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Leihgerät zuweisen
+                  </Button>
+                ) : (
+                  <div className="text-sm text-muted-foreground">
+                    Keine verfügbaren Leihgeräte vorhanden
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
           
           {/* Unterschriften */}
           <div className="bg-slate-50 rounded-lg p-4 shadow-sm border md:col-span-2">
@@ -971,6 +1129,73 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
           currentCodeType={repair.deviceCodeType || undefined}
         />
       )}
+
+      {/* Leihgeräte zuweisen Dialog */}
+      <Dialog open={showLoanerDeviceDialog} onOpenChange={setShowLoanerDeviceDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Leihgerät zuweisen</DialogTitle>
+            <DialogDescription>
+              Wählen Sie ein verfügbares Leihgerät für diese Reparatur aus.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-3">
+            {availableLoanerDevices.length > 0 ? (
+              availableLoanerDevices.map((device) => (
+                <div
+                  key={device.id}
+                  className="border rounded p-3 hover:bg-gray-50 cursor-pointer"
+                  onClick={() => {
+                    if (repair?.id) {
+                      assignLoanerMutation.mutate({ repairId: repair.id, deviceId: device.id });
+                    }
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    {device.deviceType === 'smartphone' && <Smartphone className="h-5 w-5" />}
+                    {device.deviceType === 'tablet' && <Tablet className="h-5 w-5" />}
+                    {device.deviceType === 'laptop' && <Laptop className="h-5 w-5" />}
+                    {device.deviceType === 'smartwatch' && <Watch className="h-5 w-5" />}
+                    <div className="flex-1">
+                      <div className="font-medium">{device.brand} {device.model}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {device.deviceType === 'smartphone' && 'Smartphone'}
+                        {device.deviceType === 'tablet' && 'Tablet'}
+                        {device.deviceType === 'laptop' && 'Laptop'}
+                        {device.deviceType === 'smartwatch' && 'Smartwatch'}
+                        {device.imei && ` • IMEI: ${device.imei}`}
+                      </div>
+                      {device.notes && (
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {device.notes}
+                        </div>
+                      )}
+                    </div>
+                    <Badge variant="outline" className="text-green-600 border-green-600">
+                      <Check className="h-3 w-3 mr-1" />
+                      Verfügbar
+                    </Badge>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                Keine verfügbaren Leihgeräte vorhanden
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowLoanerDeviceDialog(false)}
+            >
+              Abbrechen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }

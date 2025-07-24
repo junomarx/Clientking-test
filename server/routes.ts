@@ -6751,6 +6751,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Verfügbare Leihgeräte abrufen (für Zuordnung in RepairDetailsDialog)
+  app.get("/api/loaner-devices/available", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const availableDevices = await storage.getAvailableLoanerDevices(userId);
+      res.json(availableDevices);
+    } catch (error) {
+      console.error("Fehler beim Abrufen verfügbarer Leihgeräte:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen verfügbarer Leihgeräte" });
+    }
+  });
+
+  // Zugewiesenes Leihgerät für eine Reparatur abrufen
+  app.get("/api/repairs/:repairId/loaner-device", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const repairId = parseInt(req.params.repairId);
+      const userId = (req.user as any).id;
+      
+      const loanerDevice = await storage.getLoanerDeviceByRepairId(repairId, userId);
+      if (!loanerDevice) {
+        return res.status(404).json({ message: "Kein Leihgerät zugewiesen" });
+      }
+      
+      res.json(loanerDevice);
+    } catch (error) {
+      console.error("Fehler beim Abrufen des zugewiesenen Leihgeräts:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen des zugewiesenen Leihgeräts" });
+    }
+  });
+
   // Leihgerät für eine Reparatur abrufen
   app.get("/api/repairs/:repairId/loaner-device", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
     try {

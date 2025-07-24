@@ -472,7 +472,6 @@ export function LoanerDevicesTab() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Gerät</TableHead>
                     <TableHead>Typ</TableHead>
                     <TableHead>Hersteller</TableHead>
                     <TableHead>Modell</TableHead>
@@ -488,11 +487,8 @@ export function LoanerDevicesTab() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           {getDeviceIcon(device.deviceType)}
-                          <span className="font-medium">#{device.id}</span>
+                          <span>{deviceTypeLabels[device.deviceType as keyof typeof deviceTypeLabels] || device.deviceType}</span>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        {deviceTypeLabels[device.deviceType as keyof typeof deviceTypeLabels] || device.deviceType}
                       </TableCell>
                       <TableCell>{device.brand}</TableCell>
                       <TableCell>{device.model}</TableCell>
