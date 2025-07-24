@@ -37,6 +37,7 @@ export function EditEmployeeDialog({ open, onOpenChange, employee, userRole }: E
     password: '', // Nur für Passwort-Änderungen
   });
   const [isPasswordChange, setIsPasswordChange] = useState(false);
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -53,6 +54,7 @@ export function EditEmployeeDialog({ open, onOpenChange, employee, userRole }: E
         password: '',
       });
       setIsPasswordChange(false);
+      setShowPasswordReset(false);
     }
   }, [employee, open]);
 
@@ -65,11 +67,16 @@ export function EditEmployeeDialog({ open, onOpenChange, employee, userRole }: E
       
       // Je nach Benutzerrolle verschiedene Felder erlauben
       if (userRole === 'owner') {
-        // Owner kann alles außer Passwort ändern
+        // Owner kann alles ändern, inklusive Passwort-Reset
         updateData.username = data.username;
         updateData.firstName = data.firstName;
         updateData.lastName = data.lastName;
         updateData.email = data.email;
+        
+        // Wenn Passwort-Reset aktiviert ist, neues Passwort setzen
+        if (showPasswordReset && data.password) {
+          updateData.password = data.password;
+        }
       } else {
         // Mitarbeiter kann nur Passwort ändern
         if (isPasswordChange && data.password) {
@@ -96,16 +103,26 @@ export function EditEmployeeDialog({ open, onOpenChange, employee, userRole }: E
       return response.json();
     },
     onSuccess: () => {
+      let description = "";
+      if (userRole === 'owner') {
+        if (showPasswordReset) {
+          description = "Die Mitarbeiterdaten wurden aktualisiert und ein neues Passwort wurde vergeben.";
+        } else {
+          description = "Die Mitarbeiterdaten wurden erfolgreich aktualisiert.";
+        }
+      } else {
+        description = "Ihr Passwort wurde erfolgreich geändert.";
+      }
+      
       toast({
         title: "Mitarbeiter aktualisiert",
-        description: userRole === 'owner' 
-          ? "Die Mitarbeiterdaten wurden erfolgreich aktualisiert."
-          : "Ihr Passwort wurde erfolgreich geändert.",
+        description: description,
       });
       queryClient.invalidateQueries({ queryKey: ['/api/employees'] });
       onOpenChange(false);
       setFormData(prev => ({ ...prev, password: '' }));
       setIsPasswordChange(false);
+      setShowPasswordReset(false);
     },
     onError: (error) => {
       toast({
@@ -118,11 +135,21 @@ export function EditEmployeeDialog({ open, onOpenChange, employee, userRole }: E
 
   const handleSubmit = () => {
     if (userRole === 'owner') {
-      // Owner muss alle Felder ausfüllen (außer Passwort)
+      // Owner muss alle Felder ausfüllen
       if (!formData.username || !formData.firstName || !formData.lastName || !formData.email) {
         toast({
           title: "Fehler",
           description: "Bitte füllen Sie alle Felder aus.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Wenn Passwort-Reset aktiviert ist, muss auch ein Passwort eingegeben werden
+      if (showPasswordReset && !formData.password) {
+        toast({
+          title: "Fehler",
+          description: "Bitte geben Sie ein neues Passwort ein.",
           variant: "destructive",
         });
         return;
@@ -146,6 +173,7 @@ export function EditEmployeeDialog({ open, onOpenChange, employee, userRole }: E
     onOpenChange(false);
     setFormData(prev => ({ ...prev, password: '' }));
     setIsPasswordChange(false);
+    setShowPasswordReset(false);
   };
 
   if (!open || !employee) return null;
@@ -204,6 +232,47 @@ export function EditEmployeeDialog({ open, onOpenChange, employee, userRole }: E
                   onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                   placeholder="max.mustermann@example.com"
                 />
+              </div>
+
+              {/* Passwort-Reset-Bereich für Shop-Owner */}
+              <div className="border-t pt-4 mt-4">
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="passwordReset"
+                      checked={showPasswordReset}
+                      onChange={(e) => {
+                        setShowPasswordReset(e.target.checked);
+                        if (!e.target.checked) {
+                          setFormData(prev => ({ ...prev, password: '' }));
+                        }
+                      }}
+                    />
+                    <Label htmlFor="passwordReset" className="text-sm font-medium">
+                      Neues Passwort für Mitarbeiter vergeben
+                    </Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Aktivieren Sie diese Option, wenn der Mitarbeiter sein Passwort vergessen hat.
+                  </p>
+                  
+                  {showPasswordReset && (
+                    <div className="space-y-2">
+                      <Label htmlFor="newPassword">Neues Passwort</Label>
+                      <Input
+                        id="newPassword"
+                        type="password"
+                        value={formData.password}
+                        onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                        placeholder="Neues Passwort eingeben"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Das neue Passwort wird sofort aktiv. Teilen Sie es dem Mitarbeiter sicher mit.
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="flex justify-between pt-4">
