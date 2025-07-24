@@ -1724,6 +1724,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
+      // Spezielle Validierung für Status "abgeholt"
+      if (status === 'abgeholt') {
+        const loanerDevice = await storage.getLoanerDeviceByRepairId(id, userId);
+        if (loanerDevice) {
+          return res.status(400).json({ 
+            message: "Der Status kann nicht auf 'abgeholt' geändert werden, solange noch ein Leihgerät zugewiesen ist. Bitte geben Sie das Leihgerät zuerst zurück." 
+          });
+        }
+      }
+      
       // E-Mail-Versandvariablen initialisieren
       let emailSent = false;
       let emailError = '';
@@ -6720,6 +6730,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const repairId = parseInt(req.params.repairId);
       const { deviceId } = req.body;
       const userId = (req.user as any).id;
+      
+      // Prüfe den Status der Reparatur vor der Zuweisung
+      const repair = await storage.getRepair(repairId, userId);
+      if (!repair) {
+        return res.status(404).json({ message: "Reparatur nicht gefunden" });
+      }
+      
+      if (repair.status === 'abgeholt') {
+        return res.status(400).json({ 
+          message: "Leihgeräte können nicht an bereits abgeholte Reparaturen vergeben werden" 
+        });
+      }
       
       const success = await storage.assignLoanerDevice(repairId, deviceId, userId);
       if (!success) {

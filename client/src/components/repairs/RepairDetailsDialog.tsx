@@ -803,7 +803,11 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                 <div className="text-muted-foreground mb-3">
                   Kein Leihgerät zugewiesen
                 </div>
-                {availableLoanerDevices.length > 0 ? (
+                {repair.status === 'abgeholt' ? (
+                  <div className="text-sm text-muted-foreground">
+                    Leihgeräte können nicht an abgeholte Reparaturen vergeben werden
+                  </div>
+                ) : availableLoanerDevices.length > 0 ? (
                   <Button
                     variant="outline"
                     size="sm"
