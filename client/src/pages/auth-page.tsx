@@ -20,23 +20,10 @@ import {
   DialogFooter 
 } from "@/components/ui/dialog";
 
-// Login schema - unterstützt normalen und Mitarbeiter-Login
+// Login schema - akzeptiert sowohl E-Mail als auch Benutzername
 const loginSchema = z.object({
-  email: z.string().default(""),
+  email: z.string().min(3, "E-Mail oder Benutzername ist erforderlich."),
   password: z.string().min(6, "Passwort muss mindestens 6 Zeichen haben."),
-  isEmployeeLogin: z.boolean().default(false),
-  ownerUsername: z.string().default(""),
-  employeeCredential: z.string().default(""),
-}).refine((data) => {
-  if (data.isEmployeeLogin) {
-    return data.ownerUsername && data.ownerUsername.length >= 3 && 
-           data.employeeCredential && data.employeeCredential.length >= 3;
-  } else {
-    return data.email && data.email.length >= 3;
-  }
-}, {
-  message: "Bitte alle erforderlichen Felder ausfüllen.",
-  path: ["email"],
 });
 
 // Register schema - vereinfacht basierend auf dem gewünschten Design
@@ -80,16 +67,11 @@ export default function AuthPage() {
   const [activeTab, setActiveTab] = useState("login");
   const tabsRef = useRef<HTMLDivElement>(null);
   
-  const [isEmployeeLogin, setIsEmployeeLogin] = useState(false);
-  
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: "",
       password: "",
-      isEmployeeLogin: false,
-      ownerUsername: "",
-      employeeCredential: "",
     },
   });
 
@@ -121,7 +103,7 @@ export default function AuthPage() {
     
     if (isSuperadmin) {
       // Voreintragen der Superadmin-Zugangsdaten
-      loginForm.setValue('email', 'macnphone');
+      loginForm.setValue('username', 'macnphone');
       // Passwort hier absichtlich nicht vorausgefüllt - aus Sicherheitsgründen
       // loginForm.setValue('password', '...'); 
       
@@ -141,23 +123,8 @@ export default function AuthPage() {
   }
   
   function onLoginSubmit(data: LoginFormValues) {
-    if (isEmployeeLogin) {
-      // Mitarbeiter-Login: verwende hierarchische Struktur
-      console.log('Mitarbeiter-Login-Versuch für Shop-Owner:', data.ownerUsername, 'Mitarbeiter:', data.employeeCredential);
-      const employeeLoginData = {
-        email: data.employeeCredential || '', // Mitarbeiter-Benutzername/E-Mail
-        password: data.password,
-        ownerUsername: data.ownerUsername // Zusätzliches Feld für Shop-Identifikation
-      };
-      loginMutation.mutate(employeeLoginData);
-    } else {
-      // Normaler Login wie bisher
-      console.log('Standard-Login-Versuch mit E-Mail/Benutzername:', data.email);
-      loginMutation.mutate({
-        email: data.email,
-        password: data.password
-      });
-    }
+    console.log('Login-Versuch mit E-Mail/Benutzername:', data.email);
+    loginMutation.mutate(data);
     
     // Nach der erfolgreichen Anmeldung prüfen wir, ob die userId im localStorage vorhanden ist
     setTimeout(() => {
@@ -294,91 +261,25 @@ export default function AuthPage() {
                     )}
                   </div>
                   
-                  {/* Mitarbeiter-Login Toggle Button */}
-                  <div className="mb-6">
-                    <Button
-                      type="button"
-                      variant={isEmployeeLogin ? "default" : "outline"}
-                      onClick={() => {
-                        const newEmployeeMode = !isEmployeeLogin;
-                        setIsEmployeeLogin(newEmployeeMode);
-                        // Formular zurücksetzen beim Wechsel - NUR die Felder löschen
-                        loginForm.setValue("email", "");
-                        loginForm.setValue("password", "");
-                        loginForm.setValue("ownerUsername", "");
-                        loginForm.setValue("employeeCredential", "");
-                        loginForm.setValue("isEmployeeLogin", newEmployeeMode);
-                      }}
-                      className="w-full h-12 mb-4"
-                    >
-                      {isEmployeeLogin ? "Als Shop-Owner anmelden" : "Als Mitarbeiter anmelden"}
-                    </Button>
-                  </div>
-
                   <Form {...loginForm}>
                     <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-5">
-                      {/* Erstes Feld: Shop-Owner Benutzername (bei Mitarbeiter-Login) oder E-Mail/Benutzername (bei normalem Login) */}
-                      {isEmployeeLogin ? (
-                        <FormField
-                          control={loginForm.control}
-                          name="ownerUsername"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <Input 
-                                  placeholder="Shop-Owner Benutzername *" 
-                                  value={field.value || ""}
-                                  onChange={(e) => {
-                                    console.log('Owner Username Input:', e.target.value);
-                                    field.onChange(e.target.value);
-                                  }}
-                                  className="h-12 px-4 border-gray-200 focus:border-blue-500"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      ) : (
-                        <FormField
-                          control={loginForm.control}
-                          name="email"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <Input 
-                                  placeholder="E-Mail oder Benutzername *" 
-                                  {...field} 
-                                  className="h-12 px-4 border-gray-200 focus:border-blue-500"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      )}
+                      <FormField
+                        control={loginForm.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Input 
+                                placeholder="E-Mail oder Benutzername *" 
+                                {...field} 
+                                className="h-12 px-4 border-gray-200 focus:border-blue-500"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                       
-                      {/* Zweites Feld: Mitarbeiter-Benutzername (nur bei Mitarbeiter-Login) */}
-                      {isEmployeeLogin && (
-                        <FormField
-                          control={loginForm.control}
-                          name="employeeCredential"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <Input 
-                                  placeholder="Mitarbeiter E-Mail oder Benutzername *" 
-                                  {...field} 
-                                  className="h-12 px-4 border-gray-200 focus:border-blue-500"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      )}
-                      
-                      {/* Drittes Feld: Passwort */}
                       <FormField
                         control={loginForm.control}
                         name="password"
@@ -387,7 +288,7 @@ export default function AuthPage() {
                             <FormControl>
                               <Input 
                                 type="password" 
-                                placeholder={isEmployeeLogin ? "Mitarbeiter-Passwort *" : "Passwort *"} 
+                                placeholder="Passwort *" 
                                 {...field} 
                                 className="h-12 px-4 border-gray-200 focus:border-blue-500"
                               />
