@@ -255,7 +255,8 @@ export default function AuthPage() {
                       <>
                         <h2 className="text-2xl font-semibold text-gray-800">Login Account</h2>
                         <p className="text-gray-500 text-sm mt-2">
-                          Melden Sie sich mit Ihren Zugangsdaten an, um auf Ihr Konto zuzugreifen.
+                          <strong>Shop-Owner:</strong> Benutzername verwenden<br/>
+                          <strong>Mitarbeiter:</strong> E-Mail-Adresse verwenden
                         </p>
                       </>
                     )}
