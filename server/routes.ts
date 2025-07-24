@@ -591,10 +591,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (repairDetailsResult.rows.length > 0) {
           const shopId = repairDetailsResult.rows[0].shop_id;
           
-          // History-Eintrag mit System-Referenz (changedBy = null für automatische Änderungen)
+          // Ermittle userId aus temporärer Unterschrift für korrekte changedBy-Attribution
+          let changedBy = 'System';
+          let userId = null;
+          
+          if (tempSignatureResult.rows.length > 0) {
+            const tempId = tempSignatureResult.rows[0].temp_id;
+            const tempDataResult = await pool.query(
+              'SELECT user_id FROM temp_signatures WHERE temp_id = $1',
+              [tempId]
+            );
+            
+            if (tempDataResult.rows.length > 0) {
+              userId = tempDataResult.rows[0].user_id;
+              
+              // Benutzer-Daten abrufen für changedBy
+              const user = await storage.getUser(userId);
+              if (user) {
+                changedBy = storage.getUserDisplayName(user);
+              }
+            }
+          }
+          
+          // History-Eintrag mit korrektem Benutzer erstellen
           await pool.query(
-            'INSERT INTO repair_status_history (repair_id, old_status, new_status, changed_at, changed_by, notes, shop_id) VALUES ($1, $2, $3, NOW(), NULL, $4, $5)',
-            [repairId, 'fertig', 'abgeholt', 'Automatisch nach Pickup-Unterschrift im Kiosk-Modus', shopId]
+            'INSERT INTO repair_status_history (repair_id, old_status, new_status, changed_at, changed_by, notes, shop_id, user_id) VALUES ($1, $2, $3, NOW(), $4, $5, $6, $7)',
+            [repairId, 'fertig', 'abgeholt', changedBy, 'Automatisch nach Pickup-Unterschrift im Kiosk-Modus', shopId, userId]
           );
         }
         
@@ -5377,9 +5399,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
               // Status-History-Eintrag für automatische Änderung erstellen
               const shopId = tempSignature.shopId;
               
+              // Benutzer-Daten abrufen für korrekte changedBy-Attribution
+              const user = await storage.getUser(userId);
+              const changedBy = user ? storage.getUserDisplayName(user) : 'System';
+              
               await pool.query(
-                'INSERT INTO repair_status_history (repair_id, old_status, new_status, changed_at, changed_by, notes, shop_id) VALUES ($1, $2, $3, NOW(), NULL, $4, $5)',
-                [repairId, 'fertig', 'abgeholt', 'Automatisch nach QR-Code Pickup-Unterschrift', shopId]
+                'INSERT INTO repair_status_history (repair_id, old_status, new_status, changed_at, changed_by, notes, shop_id, user_id) VALUES ($1, $2, $3, NOW(), $4, $5, $6, $7)',
+                [repairId, 'fertig', 'abgeholt', changedBy, 'Automatisch nach QR-Code Pickup-Unterschrift', shopId, userId]
               );
               
               console.log(`✅ QR-Code Status-Änderung erfolgreich: ${repairId} fertig → abgeholt`);
