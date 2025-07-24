@@ -604,17 +604,40 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className="cursor-pointer">
+                          <div className="cursor-pointer touch-manipulation" onClick={(e) => {
+                            // Mobile: Touch-Event für Tooltip-Anzeige
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }}>
                             {getStatusBadge(repair.status)}
                           </div>
                         </TooltipTrigger>
-                        <TooltipContent>
+                        <TooltipContent side="top" className="max-w-xs">
                           <p>Aktueller Status: {getStatusText(repair.status)}</p>
                           <p>Zuletzt geändert: {format(new Date(repair.updatedAt), 'dd.MM.yyyy HH:mm', { locale: de })}</p>
-                          <p>Status: {repair.status}</p>
+                          {(() => {
+                            // Finde den neuesten Eintrag für den aktuellen Status
+                            const currentStatusEntry = statusHistoryData?.find(entry => entry.newStatus === repair.status);
+                            if (currentStatusEntry && currentStatusEntry.changedByUsername) {
+                              return <p>Geändert von: {currentStatusEntry.changedByUsername}</p>;
+                            }
+                            return <p>Geändert von: System</p>;
+                          })()}
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
+                    
+                    {/* Benutzer auch direkt neben dem Status anzeigen */}
+                    {(() => {
+                      const currentStatusEntry = statusHistoryData?.find(entry => entry.newStatus === repair.status);
+                      const userName = currentStatusEntry?.changedByUsername || 'System';
+                      return (
+                        <span className="text-[9px] text-muted-foreground italic">
+                          von {userName}
+                        </span>
+                      );
+                    })()}
+                    
                     <div className="text-xs text-muted-foreground">
                       {format(new Date(repair.updatedAt), 'dd.MM.yyyy HH:mm', { locale: de })}
                     </div>
