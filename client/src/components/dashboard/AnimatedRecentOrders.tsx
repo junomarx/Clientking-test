@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Printer, Info, QrCode, RefreshCw } from 'lucide-react';
+import { Printer, Info, QrCode, RefreshCw, Smartphone } from 'lucide-react';
 import { getStatusBadge } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -11,6 +11,7 @@ interface RepairWithCustomer {
   model: string;
   status: string;
   createdAt: string;
+  loanerDeviceId?: number | null;
 }
 
 interface AnimatedRecentOrdersProps {
@@ -113,7 +114,20 @@ export function AnimatedRecentOrders({
                       {new Date(repair.createdAt).toLocaleDateString('de-DE')}
                     </td>
                     <td className="py-3 px-4">
-                      <div className="flex space-x-2">
+                      <div className="flex space-x-2 items-center">
+                        {/* Leihgeräte-Indikator */}
+                        {repair.loanerDeviceId && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="text-orange-600 p-1">
+                                <Smartphone className="h-4 w-4" />
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Leihgerät ausgegeben</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <motion.button 
@@ -222,6 +236,19 @@ export function AnimatedRecentOrders({
                 </div>
               </div>
               <div className="flex justify-center gap-6 p-2 border-t">
+                {/* Leihgeräte-Indikator für mobile Ansicht */}
+                {repair.loanerDeviceId && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="text-orange-600 p-2">
+                        <Smartphone className="h-5 w-5" />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Leihgerät ausgegeben</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <motion.button 

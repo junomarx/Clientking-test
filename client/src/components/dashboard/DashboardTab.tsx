@@ -13,7 +13,8 @@ import {
   Clock,
   CheckCircle,
   FileText,
-  Download
+  Download,
+  Smartphone
 } from 'lucide-react';
 import { usePrintManager } from '@/components/repairs/PrintOptionsManager';
 import { AnimatedStatCard } from './AnimatedStatCard';
@@ -26,6 +27,7 @@ import { ChangeStatusDialog } from '../repairs/ChangeStatusDialog';
 import { BusinessDataAlert } from '@/components/common/BusinessDataAlert';
 import { QRSignatureDialog } from '@/components/signature/QRSignatureDialog';
 import { useBusinessSettings } from '@/hooks/use-business-settings';
+import { useToast } from '@/hooks/use-toast';
 
 
 
@@ -38,6 +40,7 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
   // Statt zu einer neuen Seite zu navigieren, wechseln wir zum Repairs-Tab
   // und setzen den Status-Filter über URL-Parameter
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
   
   // State für Status- und Bearbeitungsdialoge
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -95,25 +98,63 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
     setShowEditDialog(true);
   };
   
-  // Handler für QR-Unterschrift öffnen
-  const handleOpenQRSignature = (repairId: number) => {
+  // Handler für QR-Unterschrift öffnen mit Leihgeräte-Prüfung
+  const handleOpenQRSignature = async (repairId: number) => {
     // Finde die Reparatur und den Kunden
     const repair = repairs?.find(r => r.id === repairId);
     const customer = customers?.find(c => c.id === repair?.customerId);
     
-    if (repair && customer) {
-      setSelectedRepairForSignature({
-        id: repair.id,
-        customerName: `${customer.firstName} ${customer.lastName}`,
-        device: `${repair.brand} ${repair.model}`,
-        issue: repair.issue,
-        status: repair.status,
-        estimatedCost: repair.estimatedCost,
-        depositAmount: repair.depositAmount,
-        customerId: repair.customerId
-      });
-      setShowQRSignatureDialog(true);
+    if (!repair || !customer) return;
+
+    console.log('🔍 Dashboard QR-Code geklickt für Reparatur:', repair.id, 'Status:', repair.status);
+    
+    // Prüfe bei Status "fertig" IMMER, ob ein Leihgerät zugewiesen ist
+    if (repair.status === 'fertig') {
+      try {
+        console.log('🔍 Dashboard Status ist "fertig" - prüfe Leihgerät für Reparatur', repair.id);
+        
+        const response = await fetch(`/api/repairs/${repair.id}/loaner-device`, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        console.log('🔍 Dashboard API Response Status:', response.status);
+        
+        if (response.ok) {
+          const loanerDevice = await response.json();
+          console.log('🔍 Dashboard Leihgerät-Daten erhalten:', loanerDevice);
+          
+          // Wenn ein Leihgerät zugewiesen ist, zeige Warning
+          if (loanerDevice && loanerDevice.id) {
+            console.log('⚠️ Dashboard Leihgerät gefunden, zeige Warning');
+            // TODO: Hier könnte ein separates Dashboard-Warning-Modal implementiert werden
+            // Für jetzt verwenden wir Toast
+            toast({
+              title: "Leihgerät noch nicht zurückgegeben",
+              description: `Der Kunde hat noch ein Leihgerät (${loanerDevice.brand} ${loanerDevice.model}). Bitte zuerst das Leihgerät zurückgeben, bevor QR-Code-Unterschriften erstellt werden.`,
+              variant: "destructive",
+            });
+            return;
+          }
+        }
+      } catch (error) {
+        console.log('🔍 Dashboard Keine Leihgerät-Info verfügbar, öffne QR-Code normal');
+      }
     }
+
+    // Normaler QR-Code-Dialog ohne Leihgerät
+    setSelectedRepairForSignature({
+      id: repair.id,
+      customerName: `${customer.firstName} ${customer.lastName}`,
+      device: `${repair.brand} ${repair.model}`,
+      issue: repair.issue,
+      status: repair.status,
+      estimatedCost: repair.estimatedCost,
+      depositAmount: repair.depositAmount,
+      customerId: repair.customerId
+    });
+    setShowQRSignatureDialog(true);
   };
   
   const { data: stats, isLoading: statsLoading } = useQuery<{
@@ -165,6 +206,7 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
       model: string;
       status: string;
       createdAt: string;
+      loanerDeviceId?: number | null;
     };
     
     return repairs
@@ -178,7 +220,8 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
           customerName: customer ? `${customer.firstName} ${customer.lastName}` : 'Unknown',
           model: repair.model,
           status: repair.status,
-          createdAt: repair.createdAt.toString()
+          createdAt: repair.createdAt.toString(),
+          loanerDeviceId: repair.loanerDeviceId
         };
         return dashboardRepair;
       });
