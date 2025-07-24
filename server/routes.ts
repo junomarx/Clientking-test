@@ -6715,10 +6715,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Leihgerät einer Reparatur zuweisen
-  app.post("/api/repairs/:repairId/assign-loaner/:deviceId", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
+  app.post("/api/repairs/:repairId/assign-loaner", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
     try {
       const repairId = parseInt(req.params.repairId);
-      const deviceId = parseInt(req.params.deviceId);
+      const { deviceId } = req.body;
       const userId = (req.user as any).id;
       
       const success = await storage.assignLoanerDevice(repairId, deviceId, userId);

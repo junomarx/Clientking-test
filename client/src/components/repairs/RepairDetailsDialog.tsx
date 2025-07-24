@@ -78,6 +78,8 @@ import {
   Watch,
   Monitor
 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
 interface RepairDetailsDialogProps {
   open: boolean;
@@ -1133,45 +1135,40 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-3">
+          <div className="space-y-4">
             {availableLoanerDevices.length > 0 ? (
-              availableLoanerDevices.map((device) => (
-                <div
-                  key={device.id}
-                  className="border rounded p-3 hover:bg-gray-50 cursor-pointer"
-                  onClick={() => {
-                    if (repair?.id) {
-                      assignLoanerMutation.mutate({ repairId: repair.id, deviceId: device.id });
-                    }
-                  }}
-                >
-                  <div className="flex items-center gap-3">
-                    {device.deviceType === 'smartphone' && <Smartphone className="h-5 w-5" />}
-                    {device.deviceType === 'tablet' && <Tablet className="h-5 w-5" />}
-                    {device.deviceType === 'laptop' && <Laptop className="h-5 w-5" />}
-                    {device.deviceType === 'smartwatch' && <Watch className="h-5 w-5" />}
-                    <div className="flex-1">
-                      <div className="font-medium">{device.brand} {device.model}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {device.deviceType === 'smartphone' && 'Smartphone'}
-                        {device.deviceType === 'tablet' && 'Tablet'}
-                        {device.deviceType === 'laptop' && 'Laptop'}
-                        {device.deviceType === 'smartwatch' && 'Smartwatch'}
-                        {device.imei && ` • IMEI: ${device.imei}`}
-                      </div>
-                      {device.notes && (
-                        <div className="text-xs text-muted-foreground mt-1">
-                          {device.notes}
+              <div className="space-y-3">
+                <Label>Verfügbare Leihgeräte</Label>
+                <Select onValueChange={(value) => {
+                  const deviceId = parseInt(value);
+                  if (repair?.id && deviceId) {
+                    assignLoanerMutation.mutate({ repairId: repair.id, deviceId });
+                  }
+                }}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Leihgerät auswählen..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableLoanerDevices.map((device) => (
+                      <SelectItem key={device.id} value={device.id.toString()}>
+                        <div className="flex items-center gap-2">
+                          {device.deviceType === 'smartphone' && <Smartphone className="h-4 w-4" />}
+                          {device.deviceType === 'tablet' && <Tablet className="h-4 w-4" />}
+                          {device.deviceType === 'laptop' && <Laptop className="h-4 w-4" />}
+                          {device.deviceType === 'smartwatch' && <Watch className="h-4 w-4" />}
+                          <span className="font-medium">{device.brand} {device.model}</span>
+                          {device.imei && <span className="text-xs text-muted-foreground">• {device.imei}</span>}
                         </div>
-                      )}
-                    </div>
-                    <Badge variant="outline" className="text-green-600 border-green-600">
-                      <Check className="h-3 w-3 mr-1" />
-                      Verfügbar
-                    </Badge>
-                  </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                
+                {/* Informationsbereich für ausgewähltes Gerät */}
+                <div className="text-sm text-muted-foreground">
+                  {availableLoanerDevices.length} verfügbare{availableLoanerDevices.length === 1 ? 's' : ''} Leihgerät{availableLoanerDevices.length === 1 ? '' : 'e'}
                 </div>
-              ))
+              </div>
             ) : (
               <div className="text-center py-8 text-muted-foreground">
                 Keine verfügbaren Leihgeräte vorhanden
