@@ -192,7 +192,8 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
         notes: repair.notes,
         createdAt: repair.createdAt.toString(),
         updatedAt: repair.updatedAt.toString(),
-        reviewRequestSent: repair.reviewRequestSent || false
+        reviewRequestSent: repair.reviewRequestSent || false,
+        loanerDeviceId: repair.loanerDeviceId || null
       };
       return convertedRepair;
     });
@@ -462,7 +463,13 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
   // Debug: Log alle Reparaturen mit loanerDeviceId  
   React.useEffect(() => {
     if (paginatedRepairs) {
+      console.log('🔍 DEBUG: Alle paginatedRepairs:', paginatedRepairs.length);
       paginatedRepairs.forEach(repair => {
+        console.log(`🔍 DEBUG: Repair ${repair.orderCode}:`, {
+          id: repair.id,
+          loanerDeviceId: repair.loanerDeviceId,
+          hasLoanerDeviceId: !!repair.loanerDeviceId
+        });
         if (repair.loanerDeviceId) {
           console.log(`✅ Repair ${repair.orderCode} has loanerDeviceId:`, repair.loanerDeviceId);
         }

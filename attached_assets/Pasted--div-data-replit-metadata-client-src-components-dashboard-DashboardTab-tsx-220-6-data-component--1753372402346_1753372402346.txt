@@ -1,0 +1,53 @@
+< <div data-replit-metadata="client/src/components/dashboard/DashboardTab.tsx:220:6" data-component-name="motion.div" class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4" style="opacity: 1; transform: none;">…</div>
+[Log] ❌ Kiosk-Registrierung nicht möglich: – {isKioskMode: false, wsStatus: "connected", hasSendMessage: true, …} (use-kiosk-mode.tsx, line 96)
+{isKioskMode: false, wsStatus: "connected", hasSendMessage: true, hasUserId: true}Object
+[Log] ❌ Kiosk-Registrierung nicht möglich: – {isKioskMode: false, wsStatus: "connected", hasSendMessage: true, …} (use-kiosk-mode.tsx, line 96)
+{isKioskMode: false, wsStatus: "connected", hasSendMessage: true, hasUserId: true}Object
+[Log] RepairDetailsDialog geöffnet: – false – "repairId:" – null (RepairDetailsDialog.tsx, line 80)
+[Log] 🔍 DEBUG: useEffect für E-Mail-Historie ausgeführt. emailHistoryData: – undefined (RepairDetailsDialog.tsx, line 304)
+[Log] 🔍 DEBUG: Keine emailHistoryData vorhanden, Historie wird geleert (RepairDetailsDialog.tsx, line 309)
+[Log] RepairDetailsDialog geöffnet: – false – "repairId:" – null (RepairDetailsDialog.tsx, line 80)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – {isKioskMode: false, wsStatus: "connected", hasSendMessage: true, …} (use-kiosk-mode.tsx, line 96)
+{isKioskMode: false, wsStatus: "connected", hasSendMessage: true, hasUserId: true}Object
+[Log] EditRepairDialog geöffnet: – false – "repair:" – 753 (EditRepairDialog.tsx, line 65)
+[Log] RepairDetailsDialog geöffnet: – true – "repairId:" – 753 (RepairDetailsDialog.tsx, line 80)
+[Log] 🔍 DEBUG: E-Mail-Historie wird abgerufen für repairId: – 753 (RepairDetailsDialog.tsx, line 257)
+[Log] 🔍 Status-History abfragen für Reparatur ID: – 753 (RepairDetailsDialog.tsx, line 269)
+[Log] 🔍 Gefundene Reparatur: – {id: 753, orderCode: "SS257229", customerId: 308, …} (RepairDetailsDialog.tsx, line 290)
+{id: 753, orderCode: "SS257229", customerId: 308, deviceType: "smartphone", brand: "Samsung", …}Object
+[Log] 🔍 Status der gefundenen Reparatur: – "eingegangen" (RepairDetailsDialog.tsx, line 291)
+[Log] EditRepairDialog geöffnet: – false – "repair:" – 753 (EditRepairDialog.tsx, line 65)
+[Log] RepairDetailsDialog geöffnet: – true – "repairId:" – 753 (RepairDetailsDialog.tsx, line 80)
+[Log] RepairDetailsDialog geöffnet: – true – "repairId:" – 753 (RepairDetailsDialog.tsx, line 80)
+[Log] 🔍 Status-History-Daten erhalten: – [Object] (1) (RepairDetailsDialog.tsx, line 277)
+[Object]Array (1)
+[Log] 🔍 Aktueller Repair-Status aus Repair-Objekt: – undefined (RepairDetailsDialog.tsx, line 278)
+[Log] RepairDetailsDialog geöffnet: – true – "repairId:" – 753 (RepairDetailsDialog.tsx, line 80)
+[Log] 🔍 Gefundene Reparatur: – {id: 753, orderCode: "SS257229", customerId: 308, …} (RepairDetailsDialog.tsx, line 290)
+{id: 753, orderCode: "SS257229", customerId: 308, deviceType: "smartphone", brand: "Samsung", …}Object
+[Log] 🔍 Status der gefundenen Reparatur: – "eingegangen" (RepairDetailsDialog.tsx, line 291)
+[Log] 🔍 Status-History abfragen für Reparatur ID: – 753 (RepairDetailsDialog.tsx, line 269)
+[Log] RepairDetailsDialog geöffnet: – true – "repairId:" – 753 (RepairDetailsDialog.tsx, line 80)
+[Log] RepairDetailsDialog geöffnet: – true – "repairId:" – 753 (RepairDetailsDialog.tsx, line 80)
+[Log] 🔍 DEBUG: E-Mail-Historie-Daten erhalten: – [] (0) (RepairDetailsDialog.tsx, line 260)
+[Log] RepairDetailsDialog geöffnet: – true – "repairId:" – 753 (RepairDetailsDialog.tsx, line 80)
+[Log] 🔍 DEBUG: useEffect für E-Mail-Historie ausgeführt. emailHistoryData: – [] (0) (RepairDetailsDialog.tsx, line 304)
+[Log] 🔍 DEBUG: E-Mail-Historie wird gesetzt: – [] (0) (RepairDetailsDialog.tsx, line 306)
+[Log] RepairDetailsDialog geöffnet: – true – "repairId:" – 753 (RepairDetailsDialog.tsx, line 80)
+[Log] 🔍 Status-History-Daten erhalten: – [Object] (1) (RepairDetailsDialog.tsx, line 277)
+[Object]Array (1)
+[Log] 🔍 Aktueller Repair-Status aus Repair-Objekt: – "eingegangen" (RepairDetailsDialog.tsx, line 278)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – {isKioskMode: false, wsStatus: "connected", hasSendMessage: true, …} (use-kiosk-mode.tsx, line 96)
+{isKioskMode: false, wsStatus: "connected", hasSendMessage: true, hasUserId: true}Object
+[Log] ❌ Kiosk-Registrierung nicht möglich: – {isKioskMode: false, wsStatus: "connected", hasSendMessage: true, …} (use-kiosk-mode.tsx, line 96)
+{isKioskMode: false, wsStatus: "connected", hasSendMessage: true, hasUserId: true}Object
+[Log] EditRepairDialog geöffnet: – false – "repair:" – 753 (EditRepairDialog.tsx, line 65)
+[Log] RepairDetailsDialog geöffnet: – true – "repairId:" – 753 (RepairDetailsDialog.tsx, line 80)
+[Log] MODAL CLOSED - Resetting state (NewOrderModal.tsx, line 143)
+[Log] Keine Fehlereinträge für den ausgewählten Gerätetyp gefunden, verwende Standardliste (NewOrderModal.tsx, line 484)
+[Error] Failed to load resource: the server responded with a status of 401 (Unauthorized) (can-view-detailed-stats, line 0)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – {isKioskMode: false, wsStatus: "connected", hasSendMessage: true, …} (use-kiosk-mode.tsx, line 96)
+{isKioskMode: false, wsStatus: "connected", hasSendMessage: true, hasUserId: true}Object
+[Log] 💓 Heartbeat bestätigt (use-online-status.tsx, line 107)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – {isKioskMode: false, wsStatus: "connected", hasSendMessage: true, …} (use-kiosk-mode.tsx, line 96)
+{isKioskMode: false, wsStatus: "connected", hasSendMessage: true, hasUserId: true}Object
