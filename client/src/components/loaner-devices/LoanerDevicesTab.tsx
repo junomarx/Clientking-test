@@ -15,6 +15,7 @@ import { z } from 'zod';
 import { Tablet, Plus, Edit, Trash2, CheckCircle, AlertCircle, Smartphone, Laptop, Watch } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
+import { RepairDetailsDialog } from '@/components/repairs/RepairDetailsDialog';
 
 // Schema für Leihgeräte-Formulare
 const loanerDeviceSchema = z.object({
@@ -107,6 +108,7 @@ export function LoanerDevicesTab() {
   const [editingDevice, setEditingDevice] = useState<LoanerDevice | null>(null);
   const [filterStatus, setFilterStatus] = useState<'all' | 'verfügbar' | 'verliehen'>('all');
   const [filterDeviceType, setFilterDeviceType] = useState<'all' | 'smartphone' | 'tablet' | 'laptop' | 'smartwatch'>('all');
+  const [selectedRepairId, setSelectedRepairId] = useState<number | null>(null);
 
   // Leihgeräte abrufen
   const { data: loanerDevices = [], isLoading } = useQuery<LoanerDevice[]>({
@@ -428,7 +430,7 @@ export function LoanerDevicesTab() {
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <label className="text-sm font-medium mb-2 block">Status</label>
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <Select value={filterStatus} onValueChange={(value) => setFilterStatus(value as 'all' | 'verfügbar' | 'verliehen')}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -442,7 +444,7 @@ export function LoanerDevicesTab() {
             
             <div className="flex-1">
               <label className="text-sm font-medium mb-2 block">Gerätetyp</label>
-              <Select value={filterDeviceType} onValueChange={setFilterDeviceType}>
+              <Select value={filterDeviceType} onValueChange={(value) => setFilterDeviceType(value as 'all' | 'smartphone' | 'tablet' | 'laptop' | 'smartwatch')}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -503,7 +505,10 @@ export function LoanerDevicesTab() {
                       <TableCell>
                         {device.assignedOrderCode ? (
                           <div className="space-y-1">
-                            <div className="font-medium text-sm">
+                            <div 
+                              className="font-medium text-sm text-blue-600 hover:text-blue-800 cursor-pointer underline"
+                              onClick={() => setSelectedRepairId(device.assignedRepairId!)}
+                            >
                               #{device.assignedOrderCode}
                             </div>
                             <div className="text-xs text-muted-foreground">
@@ -666,6 +671,15 @@ export function LoanerDevicesTab() {
           </Form>
         </DialogContent>
       </Dialog>
+
+      {/* RepairDetailsDialog für Auftrag-Links */}
+      {selectedRepairId && (
+        <RepairDetailsDialog
+          repairId={selectedRepairId}
+          open={!!selectedRepairId}
+          onClose={() => setSelectedRepairId(null)}
+        />
+      )}
     </div>
   );
 }
