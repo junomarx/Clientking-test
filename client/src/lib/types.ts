@@ -50,6 +50,9 @@ export interface Repair {
   // Gerätecode-Funktionalität für 2-Schritt Unterschriftsprozess
   deviceCode?: string | null; // Verschlüsselter Gerätecode (PIN oder Pattern-Hash)
   deviceCodeType?: string | null; // "text", "pattern", oder null wenn übersprungen
+  
+  // Leihgeräte-System
+  loanerDeviceId?: number | null; // Verknüpfung zum zugewiesenen Leihgerät
 }
 
 // Extended repair with customer name for display
