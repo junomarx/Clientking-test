@@ -795,16 +795,7 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
                               className="text-blue-600 hover:text-blue-800 p-1 transform hover:scale-110 transition-all" 
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setSelectedRepairForSignature({
-                                  id: repair.id,
-                                  customerName: repair.customerName,
-                                  device: `${repair.brand} ${repair.model}`,
-                                  issue: repair.issue,
-                                  status: repair.status,
-                                  estimatedCost: repair.estimatedCost,
-                                  depositAmount: repair.depositAmount
-                                });
-                                setShowQRSignatureDialog(true);
+                                handleOpenQRSignature(repair);
                               }}
                             >
                               <QrCode className="h-4 w-4" />
