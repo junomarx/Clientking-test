@@ -118,7 +118,7 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
   // Mutation für das Zurückgeben von Leihgeräten
   const returnLoanerDeviceMutation = useMutation({
     mutationFn: async (repairId: number) => {
-      const response = await apiRequest('POST', `/api/repairs/${repairId}/return-loaner-device`);
+      const response = await apiRequest('POST', `/api/repairs/${repairId}/return-loaner`);
       if (!response.ok) {
         throw new Error('Fehler beim Zurückgeben des Leihgeräts');
       }
