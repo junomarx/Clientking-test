@@ -449,14 +449,28 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                 {customer.phone && (
                   <div className="flex items-start gap-2">
                     <Phone className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
-                    <div>{customer.phone}</div>
+                    <div>
+                      <a 
+                        href={`tel:${customer.phone}`}
+                        className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                      >
+                        {customer.phone}
+                      </a>
+                    </div>
                   </div>
                 )}
                 
                 {customer.email && (
                   <div className="flex items-start gap-2">
                     <Mail className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
-                    <div>{customer.email}</div>
+                    <div>
+                      <a 
+                        href={`mailto:${customer.email}`}
+                        className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                      >
+                        {customer.email}
+                      </a>
+                    </div>
                   </div>
                 )}
                 
