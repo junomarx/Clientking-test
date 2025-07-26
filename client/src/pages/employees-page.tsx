@@ -59,6 +59,15 @@ export default function EmployeesPage() {
     }
   });
 
+  // Geschäftseinstellungen für Mitarbeiterlimit abrufen
+  const { data: businessSettings } = useQuery<any>({
+    queryKey: ['/api/business-settings'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/business-settings');
+      return response.json();
+    }
+  });
+
   // Neuen Mitarbeiter erstellen
   const createEmployeeMutation = useMutation({
     mutationFn: async (employeeData: NewEmployeeForm) => {
@@ -182,10 +191,16 @@ export default function EmployeesPage() {
           <p className="text-muted-foreground text-sm md:text-base">
             Verwalten Sie die Mitarbeiter Ihres Geschäfts
           </p>
+          {businessSettings && (
+            <p className="text-sm text-gray-600 mt-1">
+              Sie können noch {Math.max(0, (businessSettings.maxEmployees || 2) - employees.length)} Mitarbeiter hinzufügen
+            </p>
+          )}
         </div>
         <Button 
           onClick={() => setIsNewEmployeeDialogOpen(true)}
           className="w-full sm:w-auto"
+          disabled={businessSettings && employees.length >= (businessSettings.maxEmployees || 2)}
         >
           <Plus className="h-4 w-4 mr-2" />
           Neuer Mitarbeiter

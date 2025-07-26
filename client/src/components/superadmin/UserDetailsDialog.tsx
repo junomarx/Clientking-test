@@ -1,6 +1,6 @@
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { queryClient } from '@/lib/queryClient';
+import React, { useState } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { queryClient, apiRequest } from '@/lib/queryClient';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 
@@ -13,6 +13,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
 import {
   User,
   Mail,
@@ -61,6 +63,7 @@ interface UserWithBusinessSettings {
     taxId: string;
     website: string;
     vatNumber: string;
+    maxEmployees: number;
   };
 }
 
@@ -315,6 +318,16 @@ export function UserDetailsDialog({ open, onClose, userId, onEdit, onToggleActiv
                     <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Website:</span>
                     <p className="text-sm">{settings.website || "Nicht angegeben"}</p>
                   </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Max. Mitarbeiter:</span>
+                    <MaxEmployeesInput 
+                      shopId={user.shopId} 
+                      currentValue={settings.maxEmployees || 2}
+                      onUpdate={() => {
+                        queryClient.invalidateQueries({ queryKey: [`/api/superadmin/user-business-settings/${userId}`] });
+                      }}
+                    />
+                  </div>
                 </div>
               ) : (
                 <p className="text-sm text-gray-500">Keine Geschäftsinformationen verfügbar</p>
@@ -344,5 +357,116 @@ export function UserDetailsDialog({ open, onClose, userId, onEdit, onToggleActiv
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+// MaxEmployeesInput-Komponente für Superadmin
+interface MaxEmployeesInputProps {
+  shopId: number | null;
+  currentValue: number;
+  onUpdate: () => void;
+}
+
+function MaxEmployeesInput({ shopId, currentValue, onUpdate }: MaxEmployeesInputProps) {
+  const [value, setValue] = useState(currentValue.toString());
+  const [isEditing, setIsEditing] = useState(false);
+  const { toast } = useToast();
+
+  const updateMutation = useMutation({
+    mutationFn: async (maxEmployees: number) => {
+      const response = await apiRequest('PATCH', `/api/superadmin/shops/${shopId}/max-employees`, {
+        maxEmployees
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Erfolgreich",
+        description: "Mitarbeiterlimit wurde aktualisiert",
+      });
+      setIsEditing(false);
+      onUpdate();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Fehler",
+        description: error.message || "Fehler beim Aktualisieren des Mitarbeiterlimits",
+        variant: "destructive",
+      });
+      setValue(currentValue.toString());
+    },
+  });
+
+  const handleSave = () => {
+    const numValue = parseInt(value);
+    if (isNaN(numValue) || numValue < 0 || numValue > 100) {
+      toast({
+        title: "Ungültiger Wert",
+        description: "Bitte geben Sie eine Zahl zwischen 0 und 100 ein",
+        variant: "destructive",
+      });
+      setValue(currentValue.toString());
+      return;
+    }
+    updateMutation.mutate(numValue);
+  };
+
+  const handleCancel = () => {
+    setValue(currentValue.toString());
+    setIsEditing(false);
+  };
+
+  if (!isEditing) {
+    return (
+      <div className="flex items-center gap-2">
+        <span className="text-sm">{currentValue}</span>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsEditing(true)}
+          className="h-6 px-2 text-xs"
+        >
+          Bearbeiten
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <Input
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        className="w-20 h-8 text-sm"
+        type="number"
+        min="0"
+        max="100"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            handleSave();
+          } else if (e.key === 'Escape') {
+            handleCancel();
+          }
+        }}
+        autoFocus
+      />
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={handleSave}
+        disabled={updateMutation.isPending}
+        className="h-8 px-2 text-xs"
+      >
+        {updateMutation.isPending ? "..." : "Speichern"}
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={handleCancel}
+        className="h-8 px-2 text-xs"
+      >
+        Abbrechen
+      </Button>
+    </div>
   );
 }

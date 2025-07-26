@@ -315,6 +315,9 @@ export const businessSettings = pgTable("business_settings", {
   // Reparaturbedingungen für Kiosk-Unterschrift
   repairTerms: text("repair_terms"),
   
+  // Maximale Anzahl Mitarbeiter pro Shop (Standard: 2)
+  maxEmployees: integer("max_employees").default(2).notNull(),
+  
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   // Jede Geschäftseinstellung gehört zu einem bestimmten Benutzer
   userId: integer("user_id").references(() => users.id),

@@ -4354,4 +4354,39 @@ export function registerSuperadminRoutes(app: Express) {
       res.status(500).json({ message: "Fehler beim Abrufen der Geschäftseinstellungen" });
     }
   });
+
+  // Mitarbeiterlimit pro Shop aktualisieren
+  app.patch("/api/superadmin/shops/:shopId/max-employees", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const shopId = parseInt(req.params.shopId);
+      const { maxEmployees } = req.body;
+
+      if (isNaN(shopId)) {
+        return res.status(400).json({ message: "Ungültige Shop-ID" });
+      }
+
+      if (typeof maxEmployees !== 'number' || maxEmployees < 0 || maxEmployees > 100) {
+        return res.status(400).json({ message: "Ungültiger Wert für maxEmployees (0-100)" });
+      }
+
+      console.log(`Superadmin aktualisiert Mitarbeiterlimit für Shop ${shopId} auf ${maxEmployees}`);
+
+      // Geschäftseinstellungen für den Shop aktualisieren
+      const [updatedSettings] = await db
+        .update(businessSettings)
+        .set({ maxEmployees })
+        .where(eq(businessSettings.shopId, shopId))
+        .returning();
+
+      if (!updatedSettings) {
+        return res.status(404).json({ message: "Shop-Einstellungen nicht gefunden" });
+      }
+
+      console.log(`✅ Mitarbeiterlimit für Shop ${shopId} erfolgreich auf ${maxEmployees} gesetzt`);
+      res.json(updatedSettings);
+    } catch (error) {
+      console.error("Fehler beim Aktualisieren des Mitarbeiterlimits:", error);
+      res.status(500).json({ message: "Fehler beim Aktualisieren des Mitarbeiterlimits" });
+    }
+  });
 }

@@ -228,6 +228,8 @@ export interface IStorage {
   
   // Employee Management
   getEmployeesByShopOwner(ownerId: number): Promise<User[]>;
+  getEmployeeCountForShop(shopId: number): Promise<number>;
+  getMaxEmployeesForShop(shopId: number): Promise<number>;
   createEmployee(employeeData: Partial<User>): Promise<User>;
   updateEmployee(employeeId: number, updateData: Partial<User>, userId: number): Promise<User>;
   updateEmployeeStatus(employeeId: number, isActive: boolean): Promise<User>;
@@ -4985,7 +4987,44 @@ export class DatabaseStorage implements IStorage {
     return employees;
   }
 
+  async getEmployeeCountForShop(shopId: number): Promise<number> {
+    const result = await db
+      .select({ count: count() })
+      .from(users)
+      .where(and(
+        eq(users.shopId, shopId),
+        eq(users.role, 'employee'),
+        eq(users.isActive, true)
+      ));
+
+    return result[0]?.count || 0;
+  }
+
+  async getMaxEmployeesForShop(shopId: number): Promise<number> {
+    const result = await db
+      .select({ maxEmployees: businessSettings.maxEmployees })
+      .from(businessSettings)
+      .where(eq(businessSettings.shopId, shopId))
+      .limit(1);
+
+    return result[0]?.maxEmployees || 2; // Standard: 2 Mitarbeiter
+  }
+
   async createEmployee(employeeData: Partial<User>): Promise<User> {
+    // Prüfe Mitarbeiter-Limit bevor ein neuer Mitarbeiter erstellt wird
+    const parentUserId = employeeData.parentUserId;
+    if (parentUserId) {
+      const shopOwner = await this.getUser(parentUserId);
+      if (shopOwner?.shopId) {
+        const currentCount = await this.getEmployeeCountForShop(shopOwner.shopId);
+        const maxEmployees = await this.getMaxEmployeesForShop(shopOwner.shopId);
+        
+        if (currentCount >= maxEmployees) {
+          throw new Error(`Mitarbeiterlimit erreicht. Maximal ${maxEmployees} Mitarbeiter erlaubt.`);
+        }
+      }
+    }
+
     const [employee] = await db
       .insert(users)
       .values({
