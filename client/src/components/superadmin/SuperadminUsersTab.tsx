@@ -67,6 +67,7 @@ interface User {
   email: string;
   isActive: boolean;
   isAdmin: boolean;
+  role: string | null;
   shopId: number | null;
   companyName: string | null;
   companyAddress: string | null;
@@ -196,14 +197,17 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
   const filteredUsers = useMemo(() => {
     if (!users) return [];
     
+    // Filtere Mitarbeiter heraus - nur Shop-Owner und Admins anzeigen
+    const ownersAndAdmins = users.filter(user => user.role !== 'employee');
+    
     // Filtere nach Suchbegriff
     const filtered = searchQuery 
-      ? users.filter(user => 
+      ? ownersAndAdmins.filter(user => 
           user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
           user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
           (user.companyName && user.companyName.toLowerCase().includes(searchQuery.toLowerCase())) ||
           user.id.toString().includes(searchQuery))
-      : users;
+      : ownersAndAdmins;
     
     // Sortiere nach letztem Login (neueste zuerst, dann nach Benutzername)
     return [...filtered].sort((a, b) => {
