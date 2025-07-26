@@ -630,7 +630,13 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
                       }}
                     >
                       <TableCell>{user.id}</TableCell>
-                      <TableCell>{user.username}</TableCell>
+                      <TableCell>
+                        {user.username || (
+                          <span className="text-muted-foreground italic">
+                            {user.role === 'employee' ? 'Mitarbeiter' : 'Kein Benutzername'}
+                          </span>
+                        )}
+                      </TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell>{user.shopId || '-'}</TableCell>
                       <TableCell>
@@ -649,9 +655,13 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
                           <Badge variant="secondary">
                             <UserCog className="h-3 w-3 mr-1" /> Admin
                           </Badge>
+                        ) : user.role === 'employee' ? (
+                          <Badge variant="outline" className="bg-blue-100 text-blue-700">
+                            <CircleUserRound className="h-3 w-3 mr-1" /> Mitarbeiter
+                          </Badge>
                         ) : (
                           <Badge variant="outline">
-                            <CircleUserRound className="h-3 w-3 mr-1" /> Benutzer
+                            <CircleUserRound className="h-3 w-3 mr-1" /> Shop-Owner
                           </Badge>
                         )}
                       </TableCell>
@@ -706,7 +716,13 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
                 >
                   <div className="flex justify-between items-start">
                     <div>
-                      <div className="font-medium text-lg">{user.username}</div>
+                      <div className="font-medium text-lg">
+                        {user.username || (
+                          <span className="text-muted-foreground italic">
+                            {user.role === 'employee' ? 'Mitarbeiter' : 'Kein Benutzername'}
+                          </span>
+                        )}
+                      </div>
                       <div className="text-sm text-muted-foreground">{user.email}</div>
                     </div>
                     <div className="flex space-x-1">
@@ -750,9 +766,13 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
                       <Badge variant="secondary">
                         <UserCog className="h-3 w-3 mr-1" /> Admin
                       </Badge>
+                    ) : user.role === 'employee' ? (
+                      <Badge variant="outline" className="bg-blue-100 text-blue-700">
+                        <CircleUserRound className="h-3 w-3 mr-1" /> Mitarbeiter
+                      </Badge>
                     ) : (
                       <Badge variant="outline">
-                        <CircleUserRound className="h-3 w-3 mr-1" /> Benutzer
+                        <CircleUserRound className="h-3 w-3 mr-1" /> Shop-Owner
                       </Badge>
                     )}
                     
