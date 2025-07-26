@@ -74,23 +74,23 @@ export function setupEmployeeRoutes(app: Express) {
       return res.status(403).json({ message: "Keine Berechtigung" });
     }
 
-    const { username, password, email, firstName, lastName } = req.body;
+    const { password, email, firstName, lastName } = req.body;
 
-    if (!username || !password || !email || !firstName || !lastName) {
+    if (!password || !email || !firstName || !lastName) {
       return res.status(400).json({ message: "Alle Felder sind erforderlich" });
     }
 
     try {
-      // Prüfen ob Benutzername bereits existiert
-      const existingUser = await storage.getUserByUsername(username);
-      if (existingUser) {
-        return res.status(400).json({ message: "Benutzername bereits vergeben" });
+      // Prüfen ob E-Mail bereits existiert
+      const existingEmail = await storage.getUserByEmail(email);
+      if (existingEmail) {
+        return res.status(400).json({ message: "E-Mail bereits vergeben" });
       }
 
       // Neuen Mitarbeiter erstellen
       const hashedPassword = await hashPassword(password);
       const newEmployee = await storage.createEmployee({
-        username,
+        username: null, // Mitarbeiter haben keinen Benutzernamen
         password: hashedPassword,
         email,
         firstName,
