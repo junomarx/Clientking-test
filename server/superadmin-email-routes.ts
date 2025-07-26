@@ -940,7 +940,44 @@ export function registerSuperadminEmailRoutes(app: Express) {
     }
   });
 
-  // Die Superadmin-Test-E-Mail-Route wurde entfernt und in die allgemeine Test-E-Mail-Route integriert
+  // Test-E-Mail senden (Superadmin)
+  app.post('/api/superadmin/email/test', async (req, res) => {
+    try {
+      if (!isSuperadmin(req)) {
+        return res.status(403).json({ message: 'Zugriff verweigert' });
+      }
+
+      const { email } = req.body;
+      if (!email) {
+        return res.status(400).json({ message: 'E-Mail-Adresse ist erforderlich' });
+      }
+
+      // Prüfe ob der SMTP-Server Beschränkungen hat
+      const superadminConfig = await storage.getSuperadminEmailConfig();
+      if (superadminConfig && superadminConfig.smtpHost?.includes('world4you')) {
+        // Bei world4you SMTP - prüfe ob Empfänger-E-Mail-Adresse @clientking.at ist
+        if (!email.endsWith('@clientking.at')) {
+          return res.status(400).json({ 
+            message: 'SMTP-Server-Beschränkung: Dieser SMTP-Server (world4you.com) erlaubt nur das Senden an @clientking.at Adressen. Bitte verwenden Sie eine @clientking.at E-Mail-Adresse für den Test oder konfigurieren Sie einen anderen SMTP-Server.'
+          });
+        }
+      }
+
+      // Verwende die Superadmin-E-Mail-Konfiguration
+      await sendTestEmail(email);
+      
+      res.json({ 
+        success: true, 
+        message: 'Test-E-Mail erfolgreich gesendet' 
+      });
+    } catch (error) {
+      console.error('Fehler beim Senden der Test-E-Mail:', error);
+      res.status(500).json({ 
+        message: 'Fehler beim Senden der Test-E-Mail',
+        error: error instanceof Error ? error.message : 'Unbekannter Fehler'
+      });
+    }
+  });
   
   /**
    * Test-E-Mail mit einer bestimmten Vorlage senden

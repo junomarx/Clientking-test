@@ -917,6 +917,14 @@ export default function SuperadminEmailTab() {
                 <strong>Test-Inhalt:</strong> Es wird eine einfache Bestätigungs-E-Mail mit den aktuellen SMTP-Einstellungen versendet.
               </p>
             </div>
+
+            {emailSettings.smtpHost?.includes('world4you') && (
+              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-sm text-yellow-800">
+                  <strong>Hinweis:</strong> Ihr SMTP-Server (world4you.com) erlaubt nur das Senden an @clientking.at Adressen. Verwenden Sie eine @clientking.at E-Mail-Adresse für den Test.
+                </p>
+              </div>
+            )}
           </div>
           
           <DialogFooter>
