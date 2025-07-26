@@ -236,10 +236,19 @@ export function UserDetailsDialog({ open, onClose, userId, onEdit, onToggleActiv
               {/* Mitarbeiter-Bereich (nur für Shop-Owner) */}
               {user.shopId && !user.isAdmin && (
                 <div className="bg-yellow-50 dark:bg-yellow-950 p-4 rounded-lg">
-                  <h3 className="font-semibold mb-3 flex items-center gap-2">
-                    <Users className="h-4 w-4 text-yellow-600" />
-                    Mitarbeiter ({employees.length})
-                  </h3>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold flex items-center gap-2">
+                      <Users className="h-4 w-4 text-yellow-600" />
+                      Mitarbeiter ({employees.length})
+                    </h3>
+                    <MaxEmployeesInput 
+                      shopId={user.shopId} 
+                      currentValue={settings?.maxEmployees || 2}
+                      onUpdate={() => {
+                        queryClient.invalidateQueries({ queryKey: [`/api/superadmin/user-business-settings/${userId}`] });
+                      }}
+                    />
+                  </div>
                   {employees.length > 0 ? (
                     <div className="space-y-3">
                       {employees.map((employee) => (
@@ -318,16 +327,7 @@ export function UserDetailsDialog({ open, onClose, userId, onEdit, onToggleActiv
                     <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Website:</span>
                     <p className="text-sm">{settings.website || "Nicht angegeben"}</p>
                   </div>
-                  <div>
-                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Max. Mitarbeiter:</span>
-                    <MaxEmployeesInput 
-                      shopId={user.shopId} 
-                      currentValue={settings.maxEmployees || 2}
-                      onUpdate={() => {
-                        queryClient.invalidateQueries({ queryKey: [`/api/superadmin/user-business-settings/${userId}`] });
-                      }}
-                    />
-                  </div>
+
                 </div>
               ) : (
                 <p className="text-sm text-gray-500">Keine Geschäftsinformationen verfügbar</p>
