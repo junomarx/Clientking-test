@@ -663,7 +663,7 @@ async function sendPasswordResetEmail(to: string, subject: string, html: string,
     const smtpUser = process.env.SMTP_USER;
     const smtpPassword = process.env.SMTP_PASSWORD;
     const smtpSenderName = process.env.SMTP_SENDER_NAME || "Handyshop Verwaltung";
-    const smtpSenderEmail = process.env.SMTP_SENDER_EMAIL || process.env.SMTP_USER || "no-reply@example.com";
+    const smtpSenderEmail = process.env.SMTP_SENDER_EMAIL || process.env.SMTP_USER;
     
     if (!smtpHost || !smtpPort || !smtpUser || !smtpPassword) {
       console.error("Globale SMTP-Einstellungen fehlen - Passwort-Zurücksetzungs-E-Mail kann nicht gesendet werden");

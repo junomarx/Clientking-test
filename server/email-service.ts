@@ -312,7 +312,7 @@ export class EmailService {
       }
 
       // Verwende die Superadmin-E-Mail-Konfiguration statt hardcodierter Umgebungsvariablen
-      const senderEmail = this.superadminEmailConfig?.smtpSenderEmail || this.superadminEmailConfig?.smtpUser || 'system@handyshop.app';
+      const senderEmail = this.superadminEmailConfig?.smtpSenderEmail || this.superadminEmailConfig?.smtpUser;
       const senderName = this.superadminEmailConfig?.smtpSenderName || 'Handyshop System';
       
       const mailOptions = {
@@ -535,7 +535,7 @@ export class EmailService {
       
       // Verwende die Superadmin-E-Mail-Konfiguration für Test-E-Mails
       const senderName = this.superadminEmailConfig?.smtpSenderName || 'Handyshop Verwaltung';
-      const senderEmail = this.superadminEmailConfig?.smtpSenderEmail || this.superadminEmailConfig?.smtpUser || 'no-reply@example.com';
+      const senderEmail = this.superadminEmailConfig?.smtpSenderEmail || this.superadminEmailConfig?.smtpUser;
       
       console.log(`Sende shop-spezifische Test-E-Mail von: "${senderName}" <${senderEmail}> an: ${to}`);
       
@@ -801,12 +801,12 @@ export class EmailService {
             if (this.smtpTransporter && this.superadminEmailConfig) {
               transporter = this.smtpTransporter;
               senderName = this.superadminEmailConfig.smtpSenderName || 'Handyshop Verwaltung';
-              senderEmail = this.superadminEmailConfig.smtpSenderEmail || this.superadminEmailConfig.smtpUser || 'system@handyshop.app';
+              senderEmail = this.superadminEmailConfig.smtpSenderEmail || this.superadminEmailConfig.smtpUser;
             } else if (this.superadminEmailConfig) {
               // Wenn kein Shop-Transporter vorhanden ist, versuche den Superadmin-Transporter
               transporter = this.smtpTransporter!;
               senderName = this.superadminEmailConfig.smtpSenderName || 'Handyshop System';
-              senderEmail = this.superadminEmailConfig.smtpSenderEmail || 'no-reply@example.com';
+              senderEmail = this.superadminEmailConfig.smtpSenderEmail || this.superadminEmailConfig.smtpUser;
             } else {
               // Keine SMTP-Konfiguration vorhanden
               throw new Error(`Keine SMTP-Einstellungen verfügbar für Benutzer ${forceUserId}`);
@@ -819,7 +819,7 @@ export class EmailService {
             console.warn(`Fallback auf System-SMTP für Benutzer ${forceUserId}`);
             transporter = this.smtpTransporter;
             senderName = this.superadminEmailConfig.smtpSenderName || 'Handyshop Verwaltung';
-            senderEmail = this.superadminEmailConfig.smtpSenderEmail || this.superadminEmailConfig.smtpUser || 'system@handyshop.app';
+            senderEmail = this.superadminEmailConfig.smtpSenderEmail || this.superadminEmailConfig.smtpUser;
           } else {
             throw new Error(`Keine SMTP-Einstellungen verfügbar für Benutzer ${forceUserId}`);
           }
@@ -832,7 +832,7 @@ export class EmailService {
         
         transporter = this.smtpTransporter;
         senderName = this.superadminEmailConfig.smtpSenderName || 'Handyshop System';
-        senderEmail = this.superadminEmailConfig.smtpSenderEmail || 'no-reply@example.com';
+        senderEmail = this.superadminEmailConfig.smtpSenderEmail || this.superadminEmailConfig.smtpUser;
         
         console.log(`Sende System-E-Mail mit Vorlage "${templateName}" über zentrale SMTP-Konfiguration`);
       } else {
@@ -847,7 +847,7 @@ export class EmailService {
         
         transporter = this.smtpTransporter;
         senderName = this.superadminEmailConfig.smtpSenderName || 'Handyshop Verwaltung';
-        senderEmail = this.superadminEmailConfig.smtpSenderEmail || this.superadminEmailConfig.smtpUser || 'system@handyshop.app';
+        senderEmail = this.superadminEmailConfig.smtpSenderEmail || this.superadminEmailConfig.smtpUser;
         
         console.log(`Sende Kunden-E-Mail mit Vorlage "${templateName}" über shop-spezifische SMTP-Konfiguration`);
       }
@@ -856,11 +856,7 @@ export class EmailService {
       
       // Erstelle E-Mail-Optionen mit den ausgewählten SMTP-Einstellungen
       
-      // SPEZIALFALL FÜR BENUTZER MURAT (ID 4): Erzwinge E-Mail-Adresse macandphonedoc.at
-      if (forceUserId === 4) {
-        senderEmail = "office@macandphonedoc.at";
-        console.log("🔒 WICHTIG: Erzwinge E-Mail-Adresse 'office@macandphonedoc.at' für Benutzer murat (ID 4)");
-      }
+      // Verwende ausschließlich die in der Superadmin-Konfiguration festgelegte E-Mail-Adresse
       
       const mailOptions = {
         from: `"${senderName}" <${senderEmail}>`,
@@ -1316,7 +1312,7 @@ export class EmailService {
       console.log(`📧 Sende E-Mail an ${customer.email} mit Betreff: ${subject}`);
       
       // Sende die E-Mail mit shop-spezifischen SMTP-Einstellungen
-      const fromAddress = variables.businessSettings?.smtpUser || 'info@handyshop.com';
+      const fromAddress = variables.businessSettings?.smtpUser;
       const fromName = variables.businessSettings?.smtpSenderName || 
                       variables.businessSettings?.businessName || 
                       'Handyshop';

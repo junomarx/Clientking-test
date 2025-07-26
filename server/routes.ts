@@ -3555,7 +3555,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // E-Mail-Absender-Informationen aus Geschäftseinstellungen verwenden
       const senderName = businessSettings?.businessName || 'Handyshop Verwaltung';
-      const senderEmail = businessSettings?.email || businessSettings?.smtpUser || 'office@example.com';
+      const senderEmail = businessSettings?.email || businessSettings?.smtpUser;
       
       const subject = `Reparaturauftrag ${orderCode || repair.orderCode}`;
       
@@ -4799,7 +4799,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // E-Mail-Absender-Informationen festlegen
       const senderName = businessSettings?.businessName || 'Handyshop Verwaltung';
-      const senderEmail = businessSettings?.businessEmail || process.env.SMTP_USER || 'no-reply@example.com';
+      const senderEmail = businessSettings?.businessEmail || businessSettings?.smtpUser;
       
       // E-Mail mit PDF-Anhang senden
       const emailSent = await storage.sendEmailWithAttachment({
@@ -4898,7 +4898,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         const emailSent = await storage.sendEmailWithAttachment({
           to: recipient,
-          from: `${businessSettings?.businessName || 'Handyshop'} <${businessSettings?.email || businessSettings?.smtpUser || 'office@example.com'}>`,
+          from: `${businessSettings?.businessName || 'Handyshop'} <${businessSettings?.email || businessSettings?.smtpUser}>`,
           subject: `Reparaturauftrag ${correctOrderCode}`,
           htmlBody: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">

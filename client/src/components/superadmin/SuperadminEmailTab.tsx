@@ -49,8 +49,8 @@ export default function SuperadminEmailTab() {
     smtpPort: '587',
     smtpUser: '',
     smtpPassword: '',
-    smtpSenderName: 'Handyshop Verwaltung',
-    smtpSenderEmail: 'noreply@phonerepair.at'
+    smtpSenderName: 'Handyshop System',
+    smtpSenderEmail: ''
   });
   
   // States für E-Mail-Vorlagen
@@ -425,12 +425,28 @@ export default function SuperadminEmailTab() {
                 SMTP-Server-Konfiguration
               </CardTitle>
               <CardDescription>
-                Diese Einstellungen werden für <strong>alle E-Mails</strong> verwendet, die vom System versendet werden, 
-                einschließlich systemrelevanter E-Mails wie Passwort-Zurücksetzungen und Benutzerbenachrichtigungen.
-                Benutzer können in ihren Einstellungen auch eigene SMTP-Server für ihre Shop-E-Mails konfigurieren.
+                Diese zentrale SMTP-Konfiguration ist die EINZIGE Quelle für alle System-E-Mails.
+                Keine hardcodierten E-Mail-Adressen oder Umgebungsvariablen werden mehr verwendet.
+                Shops können zusätzlich eigene SMTP-Server für Kunden-E-Mails konfigurieren.
               </CardDescription>
             </CardHeader>
             <CardContent>
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h4 className="font-semibold text-blue-900 mb-2">⚡ Zentrale E-Mail-Verwaltung</h4>
+                <p className="text-sm text-blue-800">
+                  <strong>Alle System-E-Mails</strong> werden über diese zentrale SMTP-Konfiguration versendet:
+                </p>
+                <ul className="text-sm text-blue-800 mt-2 ml-4 list-disc">
+                  <li>Benutzer-Registrierungsbenachrichtigungen</li>
+                  <li>Passwort-Zurücksetzungen</li>
+                  <li>System-Benachrichtigungen und Fehlerberichte</li>
+                  <li>Administrative E-Mails</li>
+                </ul>
+                <p className="text-sm text-blue-800 mt-2">
+                  <strong>Wichtig:</strong> Einzelne Shops können zusätzlich eigene SMTP-Server für ihre Kunden-E-Mails konfigurieren.
+                </p>
+              </div>
+              
               {isLoadingConfig ? (
                 <div className="flex justify-center py-8">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
