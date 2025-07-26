@@ -95,8 +95,10 @@ export function UserDetailsDialog({ open, onClose, userId, onEdit, onToggleActiv
   });
 
   // Mitarbeiter für diesen Shop filtern
+  // Alle Benutzer mit gleicher Shop ID (außer dem Shop-Owner selbst)
   const employees = allUsers?.filter(u => 
-    u.role === 'employee' && u.shopId === user?.shopId
+    u.shopId === user?.shopId && u.id !== user?.id && 
+    (u.role === 'employee' || !u.username) // Mitarbeiter oder Benutzer ohne Benutzername
   ) || [];
 
   const handleClose = () => {

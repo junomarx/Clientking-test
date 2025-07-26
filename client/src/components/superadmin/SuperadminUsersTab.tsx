@@ -198,7 +198,10 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
     if (!users) return [];
     
     // Filtere Mitarbeiter heraus - nur Shop-Owner und Admins anzeigen
-    const ownersAndAdmins = users.filter(user => user.role !== 'employee');
+    // Benutzer ohne Benutzername sind meist Mitarbeiter und sollen auch herausgefiltert werden
+    const ownersAndAdmins = users.filter(user => 
+      user.role !== 'employee' && user.username // Nur Benutzer mit Benutzername
+    );
     
     // Filtere nach Suchbegriff
     const filtered = searchQuery 
