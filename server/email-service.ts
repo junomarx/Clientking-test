@@ -311,8 +311,12 @@ export class EmailService {
         return false;
       }
 
+      // Verwende die Superadmin-E-Mail-Konfiguration statt hardcodierter Umgebungsvariablen
+      const senderEmail = this.superadminEmailConfig?.smtpSenderEmail || this.superadminEmailConfig?.smtpUser || 'system@handyshop.app';
+      const senderName = this.superadminEmailConfig?.smtpSenderName || 'Handyshop System';
+      
       const mailOptions = {
-        from: options.from || process.env.SMTP_USER,
+        from: options.from || `"${senderName}" <${senderEmail}>`,
         to: options.to,
         subject: options.subject,
         html: options.html,
@@ -529,9 +533,9 @@ export class EmailService {
         throw new Error('Kein shop-spezifischer SMTP-Transporter konfiguriert');
       }
       
-      // Für World4You muss die Absender-E-Mail mit dem SMTP-Benutzer übereinstimmen
-      const senderName = process.env.SMTP_SENDER_NAME || 'Handyshop Verwaltung';
-      const senderEmail = process.env.SMTP_USER || 'no-reply@example.com';
+      // Verwende die Superadmin-E-Mail-Konfiguration für Test-E-Mails
+      const senderName = this.superadminEmailConfig?.smtpSenderName || 'Handyshop Verwaltung';
+      const senderEmail = this.superadminEmailConfig?.smtpSenderEmail || this.superadminEmailConfig?.smtpUser || 'no-reply@example.com';
       
       console.log(`Sende shop-spezifische Test-E-Mail von: "${senderName}" <${senderEmail}> an: ${to}`);
       
@@ -794,10 +798,10 @@ export class EmailService {
             // Fallback auf System-SMTP, wenn keine benutzer-spezifischen Einstellungen vorhanden sind
             console.warn(`Benutzer ${forceUserId} hat keine vollständigen SMTP-Einstellungen. Verwende System-Einstellungen.`);
             
-            if (this.smtpTransporter && process.env.SMTP_USER) {
+            if (this.smtpTransporter && this.superadminEmailConfig) {
               transporter = this.smtpTransporter;
-              senderName = process.env.SMTP_SENDER_NAME || 'Handyshop Verwaltung';
-              senderEmail = process.env.SMTP_USER;
+              senderName = this.superadminEmailConfig.smtpSenderName || 'Handyshop Verwaltung';
+              senderEmail = this.superadminEmailConfig.smtpSenderEmail || this.superadminEmailConfig.smtpUser || 'system@handyshop.app';
             } else if (this.superadminEmailConfig) {
               // Wenn kein Shop-Transporter vorhanden ist, versuche den Superadmin-Transporter
               transporter = this.smtpTransporter!;
@@ -811,11 +815,11 @@ export class EmailService {
         } catch (error) {
           console.error(`Fehler beim Laden oder Prüfen der SMTP-Einstellungen für Benutzer ${forceUserId}:`, error);
           // Wir versuchen trotzdem den System-SMTP zu verwenden
-          if (this.smtpTransporter && process.env.SMTP_USER) {
+          if (this.smtpTransporter && this.superadminEmailConfig) {
             console.warn(`Fallback auf System-SMTP für Benutzer ${forceUserId}`);
             transporter = this.smtpTransporter;
-            senderName = process.env.SMTP_SENDER_NAME || 'Handyshop Verwaltung';
-            senderEmail = process.env.SMTP_USER;
+            senderName = this.superadminEmailConfig.smtpSenderName || 'Handyshop Verwaltung';
+            senderEmail = this.superadminEmailConfig.smtpSenderEmail || this.superadminEmailConfig.smtpUser || 'system@handyshop.app';
           } else {
             throw new Error(`Keine SMTP-Einstellungen verfügbar für Benutzer ${forceUserId}`);
           }
@@ -837,13 +841,13 @@ export class EmailService {
           throw new Error("Shop-spezifischer SMTP-Transporter nicht konfiguriert");
         }
         
-        if (!process.env.SMTP_USER) {
-          throw new Error("SMTP_USER für Shop-Transporter nicht konfiguriert");
+        if (!this.superadminEmailConfig) {
+          throw new Error("Superadmin-E-Mail-Konfiguration für Shop-Transporter nicht konfiguriert");
         }
         
         transporter = this.smtpTransporter;
-        senderName = process.env.SMTP_SENDER_NAME || 'Handyshop Verwaltung';
-        senderEmail = process.env.SMTP_USER;
+        senderName = this.superadminEmailConfig.smtpSenderName || 'Handyshop Verwaltung';
+        senderEmail = this.superadminEmailConfig.smtpSenderEmail || this.superadminEmailConfig.smtpUser || 'system@handyshop.app';
         
         console.log(`Sende Kunden-E-Mail mit Vorlage "${templateName}" über shop-spezifische SMTP-Konfiguration`);
       }
