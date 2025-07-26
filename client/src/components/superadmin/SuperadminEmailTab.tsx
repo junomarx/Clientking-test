@@ -284,17 +284,20 @@ export default function SuperadminEmailTab() {
     saveSmtpConfigMutation.mutate(emailSettings);
   };
   
+  // Test-E-Mail Dialog State
+  const [isTestEmailDialogOpen, setIsTestEmailDialogOpen] = useState(false);
+  const [testEmailAddress, setTestEmailAddress] = useState('');
+
   // Test-E-Mail senden (eine zentrale Funktion für alle Test-Emails)
   const handleSendTestEmail = () => {
-    // Verwende die E-Mail-Adresse aus dem Dialog
-    if (templateTestEmail) {
-      sendTestEmailMutation.mutate(templateTestEmail);
-    } else {
-      toast({
-        variant: 'destructive',
-        title: 'Keine E-Mail-Adresse',
-        description: 'Bitte geben Sie eine E-Mail-Adresse ein.'
-      });
+    setIsTestEmailDialogOpen(true);
+  };
+
+  const sendSmtpTestEmail = () => {
+    if (testEmailAddress && testEmailAddress.includes('@')) {
+      sendTestEmailMutation.mutate(testEmailAddress);
+      setIsTestEmailDialogOpen(false);
+      setTestEmailAddress('');
     }
   };
   
@@ -480,10 +483,13 @@ export default function SuperadminEmailTab() {
                     <Input
                       id="smtpUser"
                       name="smtpUser"
-                      placeholder="info@ihredomain.de"
+                      placeholder="net@connect7.at"
                       value={emailSettings.smtpUser}
                       onChange={handleSmtpChange}
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Der Benutzername für die SMTP-Anmeldung (oft eine E-Mail-Adresse)
+                    </p>
                   </div>
                   
                   <div className="space-y-2">
@@ -507,6 +513,9 @@ export default function SuperadminEmailTab() {
                       value={emailSettings.smtpSenderName}
                       onChange={handleSmtpChange}
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Der Name, der in E-Mails als Absender angezeigt wird (z.B. "Handyshop Support")
+                    </p>
                   </div>
                   
                   <div className="space-y-2">
@@ -514,10 +523,14 @@ export default function SuperadminEmailTab() {
                     <Input
                       id="smtpSenderEmail"
                       name="smtpSenderEmail"
+                      type="email"
                       placeholder="info@ihredomain.de"
                       value={emailSettings.smtpSenderEmail}
                       onChange={handleSmtpChange}
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Die E-Mail-Adresse, die als Absender angezeigt wird. Kann sich vom SMTP-Benutzernamen unterscheiden.
+                    </p>
                   </div>
                 </div>
               )}
@@ -877,6 +890,59 @@ export default function SuperadminEmailTab() {
         </DialogContent>
       </Dialog>
       
+      {/* Dialog für SMTP-Test-E-Mail */}
+      <Dialog open={isTestEmailDialogOpen} onOpenChange={setIsTestEmailDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>SMTP-Test-E-Mail senden</DialogTitle>
+            <DialogDescription>
+              Geben Sie eine E-Mail-Adresse ein, um die SMTP-Konfiguration zu testen. Eine einfache Test-E-Mail wird mit den konfigurierten Einstellungen versendet.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="smtp-test-email">E-Mail-Adresse</Label>
+              <Input
+                id="smtp-test-email"
+                type="email"
+                placeholder="test@example.com"
+                value={testEmailAddress}
+                onChange={(e) => setTestEmailAddress(e.target.value)}
+              />
+            </div>
+            
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-800">
+                <strong>Test-Inhalt:</strong> Es wird eine einfache Bestätigungs-E-Mail mit den aktuellen SMTP-Einstellungen versendet.
+              </p>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsTestEmailDialogOpen(false)}>
+              Abbrechen
+            </Button>
+            <Button 
+              onClick={sendSmtpTestEmail} 
+              disabled={!testEmailAddress || !testEmailAddress.includes('@') || sendTestEmailMutation.isPending}
+            >
+              {sendTestEmailMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Sende Test-E-Mail...
+                </>
+              ) : (
+                <>
+                  <Send className="mr-2 h-4 w-4" />
+                  Test-E-Mail senden
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Dialog für Vorlage-Test-E-Mail */}
       <Dialog open={templateTestDialogOpen} onOpenChange={setTemplateTestDialogOpen}>
         <DialogContent>
