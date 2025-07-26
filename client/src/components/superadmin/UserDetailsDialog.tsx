@@ -229,6 +229,50 @@ export function UserDetailsDialog({ open, onClose, userId, onEdit, onToggleActiv
                   </div>
                 </div>
               </div>
+              
+              {/* Mitarbeiter-Bereich (nur für Shop-Owner) */}
+              {user.shopId && !user.isAdmin && (
+                <div className="bg-yellow-50 dark:bg-yellow-950 p-4 rounded-lg">
+                  <h3 className="font-semibold mb-3 flex items-center gap-2">
+                    <Users className="h-4 w-4 text-yellow-600" />
+                    Mitarbeiter ({employees.length})
+                  </h3>
+                  {employees.length > 0 ? (
+                    <div className="space-y-3">
+                      {employees.map((employee) => (
+                        <div key={employee.id} className="flex items-center justify-between p-2 bg-white dark:bg-gray-800 rounded border">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                              <User className="h-4 w-4 text-blue-600" />
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium">
+                                {employee.username || (
+                                  <span className="text-muted-foreground italic">Mitarbeiter</span>
+                                )}
+                              </div>
+                              <div className="text-xs text-gray-500">{employee.email}</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge 
+                              variant="outline" 
+                              className={employee.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}
+                            >
+                              {employee.isActive ? "Aktiv" : "Inaktiv"}
+                            </Badge>
+                            <div className="text-xs text-gray-500">
+                              ID: {employee.id}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500">Keine Mitarbeiter registriert</p>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Geschäftsinformationen */}
@@ -277,50 +321,6 @@ export function UserDetailsDialog({ open, onClose, userId, onEdit, onToggleActiv
               )}
             </div>
           </div>
-
-          {/* Mitarbeiter-Bereich (nur für Shop-Owner) */}
-          {user.shopId && !user.isAdmin && (
-            <div className="bg-yellow-50 dark:bg-yellow-950 p-4 rounded-lg">
-              <h3 className="font-semibold mb-3 flex items-center gap-2">
-                <Users className="h-4 w-4 text-yellow-600" />
-                Mitarbeiter ({employees.length})
-              </h3>
-              {employees.length > 0 ? (
-                <div className="space-y-3">
-                  {employees.map((employee) => (
-                    <div key={employee.id} className="flex items-center justify-between p-2 bg-white dark:bg-gray-800 rounded border">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                          <User className="h-4 w-4 text-blue-600" />
-                        </div>
-                        <div>
-                          <div className="text-sm font-medium">
-                            {employee.username || (
-                              <span className="text-muted-foreground italic">Mitarbeiter</span>
-                            )}
-                          </div>
-                          <div className="text-xs text-gray-500">{employee.email}</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge 
-                          variant="outline" 
-                          className={employee.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}
-                        >
-                          {employee.isActive ? "Aktiv" : "Inaktiv"}
-                        </Badge>
-                        <div className="text-xs text-gray-500">
-                          ID: {employee.id}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500">Keine Mitarbeiter registriert</p>
-              )}
-            </div>
-          )}
 
           {/* Action Buttons */}
           <div className="flex justify-end gap-2 pt-4 border-t">

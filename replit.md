@@ -114,6 +114,7 @@ The Handyshop Verwaltung is a comprehensive phone repair shop management system 
 
 ## Changelog
 
+- July 26, 2025: UI-LAYOUT MITARBEITER-BEREICH HARMONISIERT - Mitarbeiter-Sektion in UserDetailsDialog jetzt korrekt in linker Spalte mit gleicher Breite wie Benutzerinformationen positioniert, einheitliches Grid-Layout für bessere Übersichtlichkeit implementiert
 - July 26, 2025: MITARBEITER-BENUTZERNAME-VALIDIERUNG ENTFERNT - Backend-Validierung korrigiert: Mitarbeiter-Erstellung benötigt keinen Benutzernamen mehr, "Alle Felder sind erforderlich" Fehler behoben, E-Mail-Eindeutigkeit weiterhin gewährleistet, neue Mitarbeiter werden mit username=null erstellt entsprechend dem System-Design
 - July 26, 2025: MITARBEITER-ORGANISATION VOLLSTÄNDIG ÜBERARBEITET - Mitarbeiter aus Hauptbenutzerliste entfernt für bessere Übersichtlichkeit, Mitarbeiter werden jetzt im UserDetailsDialog des jeweiligen Shop-Owners angezeigt, Shop-spezifische Mitarbeiterübersicht mit Anzahl und Details implementiert, bessere Organisation: nur Shop-Owner und Admins in Hauptliste, Mitarbeiter pro Shop im Detail-Dialog gruppiert
 - July 26, 2025: BENUTZERLISTE-ANZEIGE FÜR MITARBEITER REPARIERT - Mitarbeiter-Accounts ohne Benutzernamen werden jetzt korrekt als "Mitarbeiter" angezeigt statt "null", rollenbasierte Badge-Unterscheidung implementiert (Mitarbeiter in Blau, Shop-Owner separat), sowohl Desktop-Tabelle als auch mobile Kartenansicht repariert, bessere Benutzererfahrung in der Superadmin-Benutzerverwaltung
