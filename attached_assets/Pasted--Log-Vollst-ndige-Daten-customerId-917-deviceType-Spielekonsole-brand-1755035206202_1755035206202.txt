@@ -1,0 +1,81 @@
+[Log] Vollständige Daten: – "{↵  \"customerId\": 917,↵  \"deviceType\": \"Spielekonsole\",↵  \"brand\": \"Sony\",↵  \"modelSeries\": null,↵  \"model\": \"PlayStation 5\",↵…" (NewOrderModal.tsx, line 789)
+"{
+  \"customerId\": 917,
+  \"deviceType\": \"Spielekonsole\",
+  \"brand\": \"Sony\",
+  \"modelSeries\": null,
+  \"model\": \"PlayStation 5\",
+  \"serialNumber\": null,
+  \"issue\": \"Display defekt\",
+  \"estimatedCost\": \"100\",
+  \"depositAmount\": null,
+  \"status\": \"eingegangen\",
+  \"notes\": null
+}"
+[Log] Alle Validierungen bestanden, sende Daten... (NewOrderModal.tsx, line 810)
+[Log] Neue Reparatur erstellt und Cache aktualisiert (NewOrderModal.tsx, line 658)
+[Log] localStorage nach Auftragserstellung gelöscht (NewOrderModal.tsx, line 660)
+[Log] Formular wird jetzt vollständig zurückgesetzt... (NewOrderModal.tsx, line 661)
+[Log] NewOrderModal wird geschlossen - selectedCustomerId wird zurückgesetzt (Home.tsx, line 255)
+[Log] NewOrderModal (createRepairMutation): onSuccess-Callback aufrufen – Object (NewOrderModal.tsx, line 698)
+Object
+[Log] NewOrderModal (createRepairMutation): onSuccess() wird aufgerufen (NewOrderModal.tsx, line 700)
+[Log] Home: handleOrderCreated wird aufgerufen - wechsle zu repairs (Home.tsx, line 90)
+[Log] Keine Fehlereinträge für den ausgewählten Gerätetyp gefunden, verwende Standardliste (NewOrderModal.tsx, line 486)
+[Log] RepairDetailsDialog geöffnet: – false – "repairId:" – null (RepairDetailsDialog.tsx, line 80)
+[Log] 🔍 DEBUG: useEffect für E-Mail-Historie ausgeführt. emailHistoryData: – undefined (RepairDetailsDialog.tsx, line 304)
+[Log] 🔍 DEBUG: Keine emailHistoryData vorhanden, Historie wird geleert (RepairDetailsDialog.tsx, line 309)
+[Log] 🔍 DEBUG: Alle paginatedRepairs: – 8 (RepairsTab.tsx, line 448)
+[Log] 🔍 DEBUG: Repair AL258720: – Object (RepairsTab.tsx, line 450)
+Object
+[Log] 🔍 DEBUG: Repair SS256391: – Object (RepairsTab.tsx, line 450)
+Object
+[Log] 🔍 DEBUG: Repair AS250189: – Object (RepairsTab.tsx, line 450)
+Object
+[Log] 🔍 DEBUG: Repair NS251219: – Object (RepairsTab.tsx, line 450)
+Object
+[Log] 🔍 DEBUG: Repair HS252449: – Object (RepairsTab.tsx, line 450)
+Object
+[Log] 🔍 DEBUG: Repair IS258607: – Object (RepairsTab.tsx, line 450)
+Object
+[Log] 🔍 DEBUG: Repair SS257229: – Object (RepairsTab.tsx, line 450)
+Object
+[Log] 🔍 DEBUG: Repair AS258084: – Object (RepairsTab.tsx, line 450)
+Object
+[Log] ✅ Repair AS258084 has loanerDeviceId: – 13 (RepairsTab.tsx, line 456)
+[Log] MODAL CLOSED - Resetting state (NewOrderModal.tsx, line 145)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 96)
+Object
+[Log] RepairDetailsDialog geöffnet: – false – "repairId:" – null (RepairDetailsDialog.tsx, line 80)
+[Log] RepairDetailsDialog geöffnet: – false – "repairId:" – null (RepairDetailsDialog.tsx, line 80)
+[Log] 🔍 DEBUG: Alle paginatedRepairs: – 9 (RepairsTab.tsx, line 448)
+[Log] 🔍 DEBUG: Repair SS252125: – Object (RepairsTab.tsx, line 450)
+Object
+[Log] 🔍 DEBUG: Repair AL258720: – Object (RepairsTab.tsx, line 450)
+Object
+[Log] 🔍 DEBUG: Repair SS256391: – Object (RepairsTab.tsx, line 450)
+Object
+[Log] 🔍 DEBUG: Repair AS250189: – Object (RepairsTab.tsx, line 450)
+Object
+[Log] 🔍 DEBUG: Repair NS251219: – Object (RepairsTab.tsx, line 450)
+Object
+[Log] 🔍 DEBUG: Repair HS252449: – Object (RepairsTab.tsx, line 450)
+Object
+[Log] 🔍 DEBUG: Repair IS258607: – Object (RepairsTab.tsx, line 450)
+Object
+[Log] 🔍 DEBUG: Repair SS257229: – Object (RepairsTab.tsx, line 450)
+Object
+[Log] 🔍 DEBUG: Repair AS258084: – Object (RepairsTab.tsx, line 450)
+Object
+[Log] ✅ Repair AS258084 has loanerDeviceId: – 13 (RepairsTab.tsx, line 456)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 96)
+Object
+[Log] 💓 Heartbeat bestätigt (use-online-status.tsx, line 107)
+[Log] RepairDetailsDialog geöffnet: – false – "repairId:" – null (RepairDetailsDialog.tsx, line 80)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 96)
+Object
+[Log] RepairDetailsDialog geöffnet: – false – "repairId:" – null (RepairDetailsDialog.tsx, line 80)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 96)
+Object
+> Ausgewähltes Element
+< <div data-replit-metadata="client/src/components/repairs/RepairsTab.tsx:652:6" data-component-name="div" class="flex justify-between items-center p-6">…</div>flex

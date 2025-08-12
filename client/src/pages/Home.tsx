@@ -80,7 +80,6 @@ export default function Home() {
 
   const handleOrderCreated = () => {
     // Navigation zur Reparaturen-Seite nach erfolgreichem Erstellen eines Auftrags
-    console.log("Home: handleOrderCreated wird aufgerufen - wechsle zu repairs");
     setActiveTab('repairs');
   };
   
