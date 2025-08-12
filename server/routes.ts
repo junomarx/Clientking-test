@@ -10,7 +10,7 @@ import { hasAccess, hasAccessAsync } from './permissions';
 import { checkTrialExpiry } from './middleware/check-trial-expiry';
 import { format } from 'date-fns';
 import { db, pool } from './db';
-import { eq, desc, and, sql, gte, lte, isNotNull, or } from 'drizzle-orm';
+import { eq, desc, and, sql, gte, lte, lt, isNotNull, or } from 'drizzle-orm';
 import { 
   insertCustomerSchema, 
   insertRepairSchema,
