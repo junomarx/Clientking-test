@@ -1999,8 +1999,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Nicht authentifiziert" });
       }
       
-      // Nur Shop-Owner und Admins können detaillierte Statistiken sehen
-      const canViewDetailedStats = user.role === 'owner' || user.role === 'admin' || user.isAdmin || user.isSuperadmin;
+      // Alle authentifizierten Benutzer haben Vollzugriff auf detaillierte Statistiken
+      const canViewDetailedStats = true;
       
       console.log(`Vollzugriff auf detaillierte Statistiken für ${user.username}: ${canViewDetailedStats}`);
       

@@ -152,7 +152,7 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
           <Tablet className="h-5 w-5 mr-2" />
           Leihgeräte
         </Button>
-        {canViewStats && (
+        {!isMobile && canViewStats && (
           <Button 
             variant={activeTab === 'statistics' ? 'default' : 'ghost'}
             className="w-full justify-start"
