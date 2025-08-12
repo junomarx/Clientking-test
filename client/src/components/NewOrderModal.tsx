@@ -100,9 +100,10 @@ interface NewOrderModalProps {
   open: boolean;
   onClose: () => void;
   customerId?: number | null;
+  onSuccess?: () => void;
 }
 
-export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps) {
+export function NewOrderModal({ open, onClose, customerId, onSuccess }: NewOrderModalProps) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -808,10 +809,10 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       // Modal schließen
       onClose();
       
-      // Navigation zur Reparaturen-Seite nach dem Erstellen des Auftrags
-      setTimeout(() => {
-        setLocation('/?tab=repairs');
-      }, 100);
+      // Callback aufrufen, wenn erfolgreich
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error) {
       console.error("Error creating repair with existing customer:", error);
       // Zeige eine Fehlermeldung an
@@ -907,10 +908,10 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       
       onClose();
       
-      // Navigation zur Reparaturen-Seite nach dem Erstellen des Auftrags
-      setTimeout(() => {
-        setLocation('/?tab=repairs');
-      }, 100);
+      // Callback aufrufen, wenn erfolgreich
+      if (onSuccess) {
+        onSuccess();
+      }
     },
     onError: (error: any) => {
       console.error('Error creating repair:', error);

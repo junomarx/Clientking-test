@@ -77,6 +77,11 @@ export default function Home() {
     setSelectedCustomerId(customerId || null);
     setIsNewOrderModalOpen(true);
   };
+
+  const handleOrderCreated = () => {
+    // Navigation zur Reparaturen-Seite nach erfolgreichem Erstellen eines Auftrags
+    setActiveTab('repairs');
+  };
   
   // Event-Listener für das Öffnen der Reparaturdetails
   useEffect(() => {
@@ -210,6 +215,7 @@ export default function Home() {
           setSelectedCustomerId(null);
         }}
         customerId={selectedCustomerId}
+        onSuccess={handleOrderCreated}
       />
     </div>
   );
