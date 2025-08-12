@@ -1991,30 +1991,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // API-Endpunkt, um zu prüfen, ob der User detaillierte Statistiken sehen darf
   // Im neuen System haben alle authentifizierten Benutzer Vollzugriff
-  app.get("/api/can-view-detailed-stats", async (req: Request, res: Response) => {
+  app.get("/api/can-view-detailed-stats", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      // Prüfe Token-Authentifizierung
-      const authHeader = req.headers.authorization;
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      const user = req.user as any;
+      
+      if (!user) {
         return res.status(401).json({ message: "Nicht authentifiziert" });
       }
       
-      const token = authHeader.split(' ')[1];
-      const tokenData = Buffer.from(token, 'base64').toString().split(':');
-      
-      if (tokenData.length < 2) {
-        return res.status(401).json({ message: "Ungültiges Token" });
-      }
-      
-      const userId = parseInt(tokenData[0]);
-      const user = await storage.getUser(userId);
-      
-      if (!user || (!user.isActive && !user.isSuperadmin)) {
-        return res.status(401).json({ message: "Benutzer nicht gefunden oder inaktiv" });
-      }
-      
-      // Alle authentifizierten Benutzer haben Vollzugriff auf detaillierte Statistiken
-      const canViewDetailedStats = true;
+      // Nur Shop-Owner und Admins können detaillierte Statistiken sehen
+      const canViewDetailedStats = user.role === 'owner' || user.role === 'admin' || user.isAdmin || user.isSuperadmin;
       
       console.log(`Vollzugriff auf detaillierte Statistiken für ${user.username}: ${canViewDetailedStats}`);
       
