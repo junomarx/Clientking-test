@@ -1,5 +1,6 @@
 /* Import responsive styles */
 @import "./styles/responsive.css";
+/* Force refresh - Statistics removed from mobile menu */
 
 @tailwind base;
 @tailwind components;
