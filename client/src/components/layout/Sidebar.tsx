@@ -84,8 +84,8 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
         Neuer Auftrag
       </Button>
       
-      {/* Hauptnavigation */}
-      <div className="space-y-1">
+      {/* Hauptnavigation - Statistiken komplett entfernt */}
+      <div className="space-y-1" data-stats-removed="true">
         <Button 
           variant={activeTab === 'dashboard' ? 'default' : 'ghost'}
           className="w-full justify-start"
@@ -152,7 +152,7 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
           <Tablet className="h-5 w-5 mr-2" />
           Leihgeräte
         </Button>
-        {/* Statistiken wurden komplett entfernt */}
+        {/* STATISTIKEN KOMPLETT ENTFERNT - CACHE REFRESH ERZWUNGEN v2 */}
       </div>
       
       {/* Einstellungen Kategorie */}
