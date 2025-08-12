@@ -152,19 +152,7 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
           <Tablet className="h-5 w-5 mr-2" />
           Leihgeräte
         </Button>
-        {!isMobile && canViewStats && (
-          <Button 
-            variant={activeTab === 'statistics' ? 'default' : 'ghost'}
-            className="w-full justify-start"
-            onClick={() => {
-              onTabChange('statistics');
-              if (isMobile) closeMenu();
-            }}
-          >
-            <BarChart2 className="h-5 w-5 mr-2" />
-            Statistiken
-          </Button>
-        )}
+
       </div>
       
       {/* Einstellungen Kategorie */}
