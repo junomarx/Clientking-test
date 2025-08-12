@@ -308,7 +308,7 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
                       >
                         <div className="font-medium text-sm md:text-base break-words hover:text-blue-600">{repair.brand} {repair.model}</div>
                         <div className="text-xs md:text-sm text-muted-foreground break-words">{repair.issue}</div>
-                        <div className="text-xs text-muted-foreground">{formatDate(repair.createdAt)}</div>
+                        <div className="text-xs text-muted-foreground">{formatDate(repair.createdAt.toString())}</div>
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
                         {getStatusBadge(repair.status)}
@@ -379,7 +379,7 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
                         <div>
                           <div className="font-medium">{estimate.brand} {estimate.model}</div>
                           <div className="text-sm text-muted-foreground">{estimate.issue}</div>
-                          <div className="text-xs text-muted-foreground">{formatDate(estimate.createdAt)}</div>
+                          <div className="text-xs text-muted-foreground">{formatDate(estimate.createdAt.toString())}</div>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
@@ -411,11 +411,17 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
       </DialogContent>
 
       {/* Edit Customer Dialog */}
-      {showEditDialog && (
+      {showEditDialog && customerId && (
         <EditCustomerDialog
           open={showEditDialog}
-          onClose={() => setShowEditDialog(false)}
-          customer={customer}
+          onOpenChange={(open) => {
+            setShowEditDialog(open);
+            if (!open) {
+              // Refresh customer data after edit
+              queryClient.invalidateQueries({ queryKey: [`/api/customers/${customerId}`] });
+            }
+          }}
+          customerId={customerId}
         />
       )}
 
@@ -429,7 +435,7 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
             firstName: customer.firstName,
             lastName: customer.lastName,
             phone: customer.phone,
-            email: customer.email,
+            email: customer.email || undefined,
             address: customer.address,
             zipCode: customer.zipCode,
             city: customer.city
@@ -460,8 +466,8 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
           onConfirm={() => deleteRepairMutation.mutate(repairToDelete)}
           title="Reparatur löschen"
           description="Möchten Sie diese Reparatur wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
-          confirmText="Löschen"
-          isLoading={deleteRepairMutation.isPending}
+
+          isDeleting={deleteRepairMutation.isPending}
         />
       )}
     </Dialog>
