@@ -810,7 +810,9 @@ export function NewOrderModal({ open, onClose, customerId, onSuccess }: NewOrder
       onClose();
       
       // Callback aufrufen, wenn erfolgreich
+      console.log("NewOrderModal (createRepairWithExistingCustomer): onSuccess-Callback aufrufen", { onSuccess: !!onSuccess });
       if (onSuccess) {
+        console.log("NewOrderModal (createRepairWithExistingCustomer): onSuccess() wird aufgerufen");
         onSuccess();
       }
     } catch (error) {
@@ -909,7 +911,9 @@ export function NewOrderModal({ open, onClose, customerId, onSuccess }: NewOrder
       onClose();
       
       // Callback aufrufen, wenn erfolgreich
+      console.log("NewOrderModal (createRepairMutation): onSuccess-Callback aufrufen", { onSuccess: !!onSuccess });
       if (onSuccess) {
+        console.log("NewOrderModal (createRepairMutation): onSuccess() wird aufgerufen");
         onSuccess();
       }
     },
