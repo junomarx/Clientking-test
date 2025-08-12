@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
+import { useLocation } from 'wouter';
 import type { Customer } from '@/lib/types';
 // Alte Geräteauswahl-Hooks werden nicht mehr verwendet
 // Stattdessen wird die GlobalDeviceSelector-Komponente verwendet
@@ -105,6 +106,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { user } = useAuth();
+  const [, setLocation] = useLocation();
   
   // States für die Formularfelder und UI
   const [availableIssues, setAvailableIssues] = useState<string[]>([]);
@@ -805,6 +807,11 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       
       // Modal schließen
       onClose();
+      
+      // Navigation zur Reparaturen-Seite nach dem Erstellen des Auftrags
+      setTimeout(() => {
+        setLocation('/?tab=repairs');
+      }, 100);
     } catch (error) {
       console.error("Error creating repair with existing customer:", error);
       // Zeige eine Fehlermeldung an
@@ -899,6 +906,11 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       setMatchingCustomers([]);
       
       onClose();
+      
+      // Navigation zur Reparaturen-Seite nach dem Erstellen des Auftrags
+      setTimeout(() => {
+        setLocation('/?tab=repairs');
+      }, 100);
     },
     onError: (error: any) => {
       console.error('Error creating repair:', error);
