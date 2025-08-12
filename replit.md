@@ -2,192 +2,55 @@
 
 ## Overview
 
-The Handyshop Verwaltung is a comprehensive phone repair shop management system built with modern web technologies. It features both a web application and desktop application variants, designed to handle repair workflows, customer management, cost estimates, device management, and email communications for phone repair businesses.
-
-## System Architecture
-
-### Frontend Architecture
-- **Framework**: React with TypeScript
-- **Build Tool**: Vite
-- **UI Components**: Radix UI with custom styling
-- **Styling**: Tailwind CSS with custom theming
-- **State Management**: TanStack React Query for server state
-- **Form Handling**: React Hook Form with Zod validation
-- **Desktop Support**: Electron for native desktop applications
-
-### Backend Architecture
-- **Runtime**: Node.js with TypeScript (ESM modules)
-- **Framework**: Express.js for REST API
-- **Database ORM**: Drizzle ORM
-- **Database**: PostgreSQL (Neon serverless)
-- **Authentication**: Session-based with express-session
-- **Email Service**: Brevo (formerly SendinBlue) SMTP integration
-- **File Uploads**: Express-fileupload middleware
-
-### Database Design
-- **Multi-tenant Architecture**: Shop-based isolation using shopId
-- **User Management**: Role-based access with admin/user distinctions
-- **Device Management**: Hierarchical structure (Types → Brands → Models)
-- **Repair Tracking**: Complete workflow from intake to completion
-- **Email Templates**: Customizable templates with variable substitution
-
-## Key Components
-
-### User Management & Authentication
-- Session-based authentication with secure password hashing
-- Multi-shop isolation ensuring GDPR compliance
-- **Rollenbasierte Authentifizierung**:
-  - Shop-Owner: Anmeldung per Benutzername (role='owner' oder null)
-  - Mitarbeiter: Anmeldung per E-Mail-Adresse (role='employee')
-  - Mitarbeiter-Benutzernamen dienen nur shopinternen Audit-Trail-Zwecken
-- User registration with email verification
-
-### Customer & Repair Management
-- Customer information with contact details
-- Repair tracking with status updates
-- Device categorization (smartphones, tablets, laptops, watches)
-- Issue tracking and resolution
-
-### Cost Estimation System
-- Dynamic cost estimate generation
-- PDF export functionality
-- Item-based pricing with descriptions
-- Customer approval tracking
-
-### Email Communication
-- Template-based email system
-- Variable substitution (customer names, device info, etc.)
-- Email history tracking
-- Automated notifications for repair status updates
-
-### Device Management
-- Hierarchical device organization
-- Brand and model management
-- Issue categorization per device type
-- Spare parts tracking
-
-## Data Flow
-
-1. **User Registration**: New shops register → Email notification to admin → Manual activation
-2. **Repair Intake**: Customer info → Device details → Issue description → Cost estimate
-3. **Repair Process**: Status updates → Email notifications → Parts management
-4. **Completion**: Final notification → Customer pickup → Archive
-
-## External Dependencies
-
-### Core Dependencies
-- **@neondatabase/serverless**: PostgreSQL serverless database
-- **drizzle-orm**: Type-safe database operations
-- **@radix-ui/react-\***: UI component primitives
-- **@tanstack/react-query**: Server state management
-- **nodemailer**: Email sending functionality
-
-### Development Tools
-- **vite**: Build tool and dev server
-- **typescript**: Type safety
-- **tailwindcss**: Utility-first CSS
-- **electron**: Desktop app wrapper
-- **esbuild**: Server bundling
-
-### Email Services
-- **SMTP**: User-configurable SMTP settings per business
-- **Configuration**: Business-specific SMTP settings stored in database
-
-## Deployment Strategy
-
-### Web Application Deployment
-- **Build Process**: Vite builds client, esbuild bundles server
-- **Production Server**: Node.js with PM2 process management
-- **Database**: Neon PostgreSQL serverless
-- **Environment**: Configurable via .env files
-
-### Desktop Application
-- **Electron Builder**: Automated builds for macOS and Windows
-- **Distribution**: DMG files for macOS, EXE installers for Windows
-- **Local Data**: SQLite database for offline operation
-- **License Validation**: Online subscription verification
-
-### Database Migrations
-- **Drizzle Kit**: Schema management and migrations
-- **Manual Scripts**: Custom migration scripts for complex changes
-- **GDPR Compliance**: Shop isolation enforcement scripts
-
-## Changelog
-
-- July 26, 2025: SUPERADMIN MITARBEITER-LIMIT DIREKT BEIM TITEL POSITIONIERT - MaxEmployeesInput-Feld wurde vom separaten Geschäftsinformations-Bereich direkt neben den "Mitarbeiter (X)" Titel verschoben, kompakte flex-Layout-Anzeige für bessere Übersichtlichkeit und direkten Zugriff auf Limit-Einstellung, vollständiges Employee-Limit-System mit Backend-Validierung und Frontend-Anzeige abgeschlossen
-- July 26, 2025: UI-LAYOUT MITARBEITER-BEREICH HARMONISIERT - Mitarbeiter-Sektion in UserDetailsDialog jetzt korrekt in linker Spalte mit gleicher Breite wie Benutzerinformationen positioniert, einheitliches Grid-Layout für bessere Übersichtlichkeit implementiert
-- July 26, 2025: MITARBEITER-BENUTZERNAME-VALIDIERUNG ENTFERNT - Backend-Validierung korrigiert: Mitarbeiter-Erstellung benötigt keinen Benutzernamen mehr, "Alle Felder sind erforderlich" Fehler behoben, E-Mail-Eindeutigkeit weiterhin gewährleistet, neue Mitarbeiter werden mit username=null erstellt entsprechend dem System-Design
-- July 26, 2025: MITARBEITER-ORGANISATION VOLLSTÄNDIG ÜBERARBEITET - Mitarbeiter aus Hauptbenutzerliste entfernt für bessere Übersichtlichkeit, Mitarbeiter werden jetzt im UserDetailsDialog des jeweiligen Shop-Owners angezeigt, Shop-spezifische Mitarbeiterübersicht mit Anzahl und Details implementiert, bessere Organisation: nur Shop-Owner und Admins in Hauptliste, Mitarbeiter pro Shop im Detail-Dialog gruppiert
-- July 26, 2025: BENUTZERLISTE-ANZEIGE FÜR MITARBEITER REPARIERT - Mitarbeiter-Accounts ohne Benutzernamen werden jetzt korrekt als "Mitarbeiter" angezeigt statt "null", rollenbasierte Badge-Unterscheidung implementiert (Mitarbeiter in Blau, Shop-Owner separat), sowohl Desktop-Tabelle als auch mobile Kartenansicht repariert, bessere Benutzererfahrung in der Superadmin-Benutzerverwaltung
-- July 26, 2025: SMTP-SERVER-PROBLEM VOLLSTÄNDIG BEHOBEN - Korrekte SMTP-Anmeldedaten (no-reply@clientking.at) in Datenbank gespeichert und E-Mail-Service neu gestartet, Test-E-Mail-Funktionalität funktioniert jetzt einwandfrei mit world4you SMTP-Server, automatische Konfigurationsreloadung nach Server-Neustart implementiert
-- July 26, 2025: SUPERADMIN-SMTP-INTERFACE VOLLSTÄNDIG ÜBERARBEITET - Professioneller Dialog für SMTP-Test-E-Mails mit E-Mail-Validierung und Status-Feedback implementiert, Hilfstexte für alle SMTP-Felder hinzugefügt (erklärt Unterschied zwischen SMTP-Benutzername und Absender-E-Mail), verbesserte Benutzeroberfläche mit klaren Erklärungen der zentralen E-Mail-Verwaltung, Test-Funktionalität mit eigenständigem Dialog statt prompt() für professionelle Bedienung
-- July 26, 2025: VOLLSTÄNDIGE HARDCODIERTE E-MAIL-ELIMINIERUNG ABGESCHLOSSEN - Alle hardcodierten E-Mail-Adressen systematisch aus dem gesamten Codebase entfernt: server/email-service.ts, server/routes.ts und server/auth.ts bereinigt von 'no-reply@example.com', 'system@handyshop.app', 'office@example.com' Fallbacks, Spezialfall für Benutzer ID 4 (office@macandphonedoc.at) entfernt, SuperadminEmailTab.tsx komplett überarbeitet mit erweitertem Informationsbereich über zentrale E-Mail-Verwaltung, System verwendet jetzt AUSSCHLIESSLICH Superadmin-SMTP-Konfiguration für alle System-E-Mails ohne jegliche hardcodierte Fallbacks
-- July 26, 2025: SUPERADMIN-E-MAIL-KONFIGURATION VOLLSTÄNDIG REPARIERT - Kritischer Fix im email-service.ts: Alle Referenzen auf hardcodierte process.env.SMTP_USER durch Superadmin-E-Mail-Konfiguration ersetzt, sendSystemEmail(), sendTestEmail() und sendRawEmail() verwenden jetzt konsequent superadminEmailConfig statt Umgebungsvariablen, hierarchisches E-Mail-System korrekt implementiert (shop-spezifisch > superadmin > fallback), alle LSP-Diagnostics behoben - System verwendet ausschließlich konfigurierte E-Mail-Einstellungen
-- July 25, 2025: KLICKBARE KONTAKTDATEN IMPLEMENTIERT - Telefonnummer und E-Mail-Adresse im RepairDetailsDialog sind jetzt klickbar: Telefonnummer öffnet tel:-Link für direkten Anruf, E-Mail-Adresse öffnet mailto:-Link für direktes E-Mail senden, beide Links mit blauer Farbe und Hover-Effekt gestaltet
-- July 24, 2025: BENUTZER-NACHVERFOLGUNG IN STATUS-VERLAUF VOLLSTÄNDIG IMPLEMENTIERT - Automatische Statuswechsel (Leihgeräte-Rückgabe + QR-Code-Pickup) zeigen jetzt Benutzername im Status-Verlauf, erweiterte mobile Unterstützung mit Touch-Events für Tooltip-Anzeige, alle automatischen Aktionen werden mit ausführendem Benutzer dokumentiert statt anonyme "System"-Einträge, Status-History-Einträge für Leihgeräte-Operationen und QR-Code-Workflows mit korrekter Benutzer-Attribution, aktueller Status zeigt auch Benutzername direkt neben dem Status-Badge
-- July 24, 2025: VOLLSTÄNDIGE SYSTEM-VEREINHEITLICHUNG LEIHGERÄTE-WORKFLOWS ABGESCHLOSSEN - Dashboard QR-Code, ChangeStatusDialog und RepairsTab verwenden jetzt identische Warning-Popup-Dialoge statt unterschiedlicher Toast-Nachrichten, einheitliche Mutation für Leihgeräte-Rückgabe mit nachfolgendem QR-Code-Dialog, orange Smartphone-Icons in Dashboard-Tabelle (Desktop + Mobile) für sofortige Leihgeräte-Erkennung, konsistente Geschäftslogik verhindert Status "abgeholt" bei aktiven Leihgeräten systemweit - komplette UX-Harmonisierung erreicht
-- July 24, 2025: QR-CODE LEIHGERÄTE-WORKFLOW VOLLSTÄNDIG IMPLEMENTIERT - Intelligentes QR-Code System für Pickup-Signatures mit Leihgeräte-Prüfung: Wenn Reparatur Status "fertig" hat und Leihgerät zugewiesen ist, öffnet sich Warning-Dialog statt direktem QR-Code, Dialog bietet "Leihgerät zurückgegeben" und "Abbrechen" Optionen, automatische Leihgeräte-Rückgabe über API mit nachfolgendem QR-Code Dialog, kompletter Workflow verhindert fehlerhafte Abholung während Leihgeräte noch ausgegeben sind - nahtlose Integration von Leihgeräte-Management und Unterschriften-Workflow
-- July 24, 2025: LEIHGERÄTE-BUTTON DESIGN-HARMONISIERUNG ABGESCHLOSSEN - "Hinzufügen" Button für Leihgeräte-Zuweisung einheitlich wie bei Ersatzteilen rechts oben im Header platziert, konsistentes Design-Schema zwischen allen Dialog-Bereichen, Button wird nur bei verfügbaren Geräten und erlaubtem Status angezeigt, vollständige Business-Logik-Validierung verhindert Leihgeräte-Zuweisung an abgeholte Reparaturen sowohl Frontend als auch Backend - UI-Einheitlichkeit und robuste Geschäftslogik erfolgreich implementiert
-- July 24, 2025: HANDY-ICON LEIHGERÄTE-INDIKATOR VOLLSTÄNDIG IMPLEMENTIERT - Orange Smartphone-Icon erscheint in Reparaturenliste (Desktop + Mobile) wenn Leihgerät ausgegeben wurde, Tooltip zeigt "Leihgerät ausgegeben", Icons vor Action-Buttons platziert für optimale Sichtbarkeit, Cache-Invalidierung korrigiert für sofortige UI-Updates nach Leihgeräte-Rückgabe - visueller Indikator macht aktive Leihgeräte auf einen Blick erkennbar
-- July 24, 2025: LEIHGERÄTE BUSINESS-LOGIK UND UX-VERBESSERUNG KOMPLETT - Dropdown-Interface statt Kartenliste für bessere Übersicht bei vielen Geräten, API-Endpunkt für Leihgeräte-Zuweisung korrigiert (deviceId im Body), kritische Geschäftslogik implementiert: System verhindert Status-Änderung auf "abgeholt" wenn Kunde noch Leihgerät hat mit klarer Fehlermeldung, Validierung sowohl in RepairsTab als auch ChangeStatusDialog, alle Toast-Nachrichten und API-Calls korrekt implementiert
-- July 24, 2025: REPAIRDETAILSDIALOG LEIHGERÄTE-INTEGRATION VOLLSTÄNDIG ABGESCHLOSSEN - Verfügbare Leihgeräte werden korrekt im RepairDetailsDialog angezeigt, Zuordnung zu Reparaturen funktioniert, "Leihgerät zurückgeben" Button implementiert, Mutations für assign/return mit Toast-Benachrichtigungen, API-Endpunkte /api/loaner-devices/available und /api/repairs/{id}/loaner-device integriert - System vollständig end-to-end funktionsfähig für Leihgeräte-Verwaltung
-- July 24, 2025: LEIHGERÄTE-SYSTEM VOLLSTÄNDIG ABGESCHLOSSEN - Komplette Leihgeräte-Verwaltung implementiert: Backend mit IStorage-Interface, DatabaseStorage CRUD-Methoden, vollständige API-Routes, Frontend mit Sidebar-Menüpunkt "Leihgeräte", LoanerDevicesTab-Komponente mit Tabelle/Filter/CRUD-Dialogen, userId-Bug im Backend behoben - System vollständig funktionsfähig end-to-end
-- July 24, 2025: BENUTZERNAME-FELDER VOLLSTÄNDIG AUS MITARBEITERVERWALTUNG ENTFERNT - Alle Benutzername-Eingabefelder und -Anzeigen aus EditEmployeeDialog und employees-page entfernt, Mitarbeiter haben nur noch E-Mail-Adressen für Anmeldung, Formularvalidierung entsprechend angepasst, UI zeigt nur noch Name und E-Mail für Mitarbeiter
-- July 24, 2025: ROLLENBASIERTE AUTHENTIFIZIERUNG VOLLSTÄNDIG IMPLEMENTIERT - Strikte Trennung zwischen Shop-Owner (Benutzername-Login) und Mitarbeiter (E-Mail-Login) implementiert, UNIQUE constraint auf username entfernt um Shop-Owner und Mitarbeiter mit gleichem Namen zu erlauben, Mitarbeiter-Benutzername dient ausschließlich shopinternen Audit-Trail-Zwecken (nicht für Authentifizierung), System blockiert rollenbasierte Login-Verstöße mit klaren Fehlermeldungen
-- July 24, 2025: PASSWORT-RESET-VEREINFACHUNG IMPLEMENTIERT - Passwort-Eingabefeld für Mitarbeiterbearbeitung vereinfacht: Checkbox und Infotexte entfernt, Passwort-Feld immer aktiv wie andere Eingabefelder, optional nutzbar (nur bei Eingabe wird Passwort geändert), Shop-Owner können direkt vergessene Mitarbeiterpasswörter zurücksetzen ohne umständliche UI-Elemente
-- July 23, 2025: ROLLENBASIERTE UI-BERECHTIGUNGEN VOLLSTÄNDIG IMPLEMENTIERT - Geschäfts-, E-Mail-Einstellungen und Statistiken für Mitarbeiter ausgeblendet in Header.tsx, Backend API-Endpunkte mit rollenbasierten Berechtigungen geschützt (nur role='owner' hat Zugriff), Frontend und Backend arbeiten synchron für maximale Sicherheit, Mitarbeiter können nur Kernfunktionen nutzen (Reparaturen, Kunden, Kostenvoranschläge)
-- July 23, 2025: E-MAIL-BASIERTE ANMELDUNG FÜR MITARBEITER IMPLEMENTIERT - Backend LocalStrategy für E-Mail-Login konfiguriert, Fallback auf Benutzernamen für bestehende Shop-Owner, Frontend Login-Formular akzeptiert E-Mail oder Benutzername, getUserByEmail Methode im Storage verfügbar, doppelte Validierung entfernt, System unterstützt sowohl E-Mail- als auch Benutzernamen-Anmeldung für bessere Flexibilität
-- July 23, 2025: MITARBEITER-BEARBEITUNG UND STATUS-MANAGEMENT VOLLSTÄNDIG IMPLEMENTIERT - EditEmployeeDialog mit rollenbasierten Berechtigungen fertiggestellt (Shop-Owner kann alle Daten bearbeiten, Mitarbeiter nur Passwort), Mitarbeiter-Deaktivierung über korrekte API-Route `/api/employees/:id/status` repariert, TypeScript-Fehler behoben, Status-Updates funktionieren fehlerfrei
-- July 23, 2025: AUDIT-TRAIL SYSTEM UND BERECHTIGUNGEN VOLLSTÄNDIG IMPLEMENTIERT - "Erstellt von" Feld in RepairDetailsDialog und Reparaturenliste angezeigt (Desktop + Mobile), Status-Verlauf zeigt wer Änderungen vorgenommen hat, Mitarbeiter können keine Aufträge oder Kunden löschen (nur Shop-Owner), rollenbasierte Berechtigungen für alle Lösch-Funktionen implementiert
-- July 23, 2025: MITARBEITER-SYSTEM CONSTRAINT-PROBLEM ENDGÜLTIG BEHOBEN - UNIQUE constraint auf shop_id entfernt damit mehrere Mitarbeiter gleiche Shop-ID haben können, Employee-API mit Header-basierter Authentifizierung für Tests erweitert, Port-Konflikte durch Process-Cleanup behoben, App läuft stabil mit vollständig funktionalem Employee-Management-System - bereits 2 Test-Mitarbeiter erfolgreich angelegt und über API abrufbar
-- July 23, 2025: MITARBEITER-SYSTEM VOLLSTÄNDIG IMPLEMENTIERT - Komplettes Employee-Management-System mit rollenbasierten Berechtigungen implementiert, Shop-Owner können Mitarbeiter über Sidebar verwalten, alle CRUD-Funktionen verfügbar, Datenbank-Schema korrigiert mit text-basierten Audit-Trails statt Foreign-Key-Referenzen, App läuft stabil auf Port 5000 mit vollständiger API-Funktionalität
-- July 23, 2025: ORIGINALES CLIENTKING-LOGO VOLLSTÄNDIG IMPLEMENTIERT - Originales SVG-Logo von http://www.phonerepair.at/uploads/Clientking_Logo.svg korrekt heruntergeladen und als App-Icon konfiguriert, störende PNG-Logo-Dateien aus public/assets/ entfernt die falsches Design zeigten, Favicon und PWA-Icons verwenden jetzt ausschließlich das originale ClientKing-Logo, Browser-Cache-Clearing implementiert für sofortige Anzeige, komplexe blaue SVG-Grafik mit charakteristischem Design jetzt in allen Icon-Größen verfügbar
-- July 18, 2025: QR-CODE UNTERSCHRIFTEN VOLLSTÄNDIG OPTIMIERT - Alle QR-Code-Scans springen sofort zum Querformat-Unterschrifts-Modus ohne Terms/Device-Code-Schritte, automatische Status-Änderung "fertig" → "abgeholt" für Pickup-Unterschriften funktioniert korrekt mit aktuellem Datenbank-Status (nicht veraltete tempSignature-Daten), Unterschriften werden erfolgreich zur Reparatur übertragen (Dropoff/Pickup), Server-seitige Validierung und Logging implementiert, Status-History-Einträge korrekt erstellt, Frontend Status-Verlauf zeigt nur neuen Status (nicht "alt → neu")
-- July 18, 2025: KIOSK-MODE PICKUP-WORKFLOW OPTIMIERT - Direkter Sprung zur Unterschrift bei Status "fertig" implementiert (überspringt Bedingungen/Code-Schritte), automatische Status-Änderung "fertig" → "abgeholt" nach Pickup-Unterschrift ohne E-Mail-Benachrichtigung, Status-History-Eintrag für automatische Änderungen erstellt, "Zurück"-Button bei direktem Unterschrifts-Sprung entfernt
-- July 18, 2025: DIREKTE NOTIZ-FUNKTIONALITÄT IMPLEMENTIERT - Plus-Button neben "Auftragsinformationen" Titel hinzugefügt, vollständiger Dialog für Notiz-Eingabe mit Zeitstempel-Funktion erstellt, automatische Formatierung mit [DD.MM.YYYY HH:mm] Zeitstempel, Vorschau vorhandener Notizen im Dialog, erfolgreiche Integration mit PATCH /api/repairs/{id} Endpunkt für Notiz-Updates
-- July 18, 2025: EDIT KUNDENDATEN BUTTON HINZUGEFÜGT - Bleistift-Symbol neben "Kundendaten" Titel im RepairDetailsDialog integriert, öffnet existierenden EditCustomerDialog, ermöglicht direkte Bearbeitung von Kundendaten ohne umständlichen Workflow
-- July 18, 2025: A4-E-MAIL-PROBLEM ENDGÜLTIG BEHOBEN - Kritischer SMTP-Absender-Adress-Bug in routes.ts und email-service.ts gefixt: hardcodierte office@connect7.at Referenzen durch businessSettings.email/smtpUser ersetzt, sendRawEmail-Methode korrigiert um konfigurierte SMTP-Absender-Adresse zu verwenden, "Abgeholt ausblenden" Filter erfolgreich implementiert - A4-Reparaturaufträge funktionieren jetzt vollständig per E-Mail
-- July 17, 2025: BREVO SMTP UND SENDGRID API KOMPLETT ENTFERNT - Alle veralteten E-Mail-Service-Referenzen aus dem gesamten Codebase entfernt: @sendgrid/mail Package deinstalliert, Brevo SMTP Konfigurationen aus deployment_guide.md und .env.example entfernt, initDefaultSmtpTransporter-Funktion aus email-service.ts gelöscht, Testdateien server/test-mail.js und server/api-user-smtp-test.ts entfernt, README.deployment.md bereinigt - System verwendet jetzt ausschließlich individuell konfigurierte SMTP-Einstellungen pro Geschäft
-- July 14, 2025: WEBSOCKET-KIOSK-KOMMUNIKATION VOLLSTÄNDIG REPARIERT - Kritisches Problem behoben: Kiosk-Registrierung funktioniert jetzt korrekt, wsStatus wird ordnungsgemäß auf "connected" gesetzt, erweiterte Debug-Ausgaben für vollständige Nachverfolgung implementiert, Unterschrifts-Anfragen werden erfolgreich an registrierte Kiosk-Geräte gesendet, System funktioniert komplett zwischen Admin-Interface und Kiosk-Display
-- July 14, 2025: KIOSK-MODE DESIGN VOLLSTÄNDIG ÜBERARBEITET - Neues HTML/CSS Layout nach Vorgaben implementiert mit grauem Hintergrund und weißem Container, dynamisches Logo-System für alle Benutzer aktiviert (business_settings Logo statt hardcodierte Benutzer), Logo-Größenbeschränkungen auf 220px Höhe und 460px Breite gesetzt, Vollbild-Layout ohne Schatten für echte Kiosk-Darstellung, "Zur Unterschrift" Button repariert
-- July 13, 2025: ORDERS-DIALOG DESIGN VOLLSTÄNDIG HARMONISIERT - Alle bunten Status-Buttons durch subtile Dropdown-Menüs ersetzt, Status-Badges auf outline/secondary Varianten angepasst, mobiler Schließen-Button für OrdersTab hinzugefügt, einheitliches Design mit RepairDetailsDialog erreicht - alle Dialoge verwenden jetzt konsistente Farbschemas
-- July 13, 2025: KRITISCHER CRASH-BUG ENDGÜLTIG BEHOBEN - Validierung vor Dialog-Öffnung implementiert: prüft ob Reparaturen mit Status "eingegangen" existieren, zeigt klare Toast-Fehlermeldung statt App-Crash, SparePartsManagementDialog zusätzlich abgesichert mit umfassenden Null-Checks, sichere Array-Mapping implementiert - App crasht garantiert nicht mehr
-- July 13, 2025: ORDERS-DIALOG MOBILE-OPTIMIERUNG ABGESCHLOSSEN - SparePartsManagementDialog vollständig responsive mit mobiler Card-Ansicht statt Desktop-Tabellen, mobile-only Schließen-Button im Header hinzugefügt, alle Buttons und Formulare für mobile Geräte optimiert mit full-width Layouts
-- July 13, 2025: VOLLSTÄNDIGE MOBILE-OPTIMIERUNG BESTELLUNGEN ABGESCHLOSSEN - Bestellungen-Seite komplett responsive mit adaptiven Card-Layouts für mobile Geräte, responsive Bulk-Aktionen mit verkürzten Button-Labels, beide Tabs (Ersatzteile + Zubehör) vollständig mobile-optimiert, alle Funktionen (Checkboxes, Dropdown-Menüs, Status-Updates) funktionieren in mobiler Ansicht
-- July 13, 2025: ERSATZTEIL-PERSISTENZ KORRIGIERT - Ersatzteile werden bei Status "eingetroffen" NICHT mehr aus Datenbank gelöscht, bleiben im RepairDetailsDialog sichtbar, werden nur aus Bestellungen-Liste gefiltert, manuelle Löschung nur über RepairDetailsDialog möglich, Reparatur-Status korrekt auf "ersatzteil_eingetroffen" gesetzt
-- July 12, 2025: UI-BEREINIGUNG ABGESCHLOSSEN - Test-Auto-Delete Button und "Bestellungen PDF" Button aus Header der Bestellungen-Seite entfernt, Interface fokussiert auf Kernfunktionen (Ersatzteil/Zubehör hinzufügen), PDF-Export weiterhin im Filter-Bereich verfügbar
-- July 12, 2025: BEARBEITEN-INTERFACE OPTIMIERT - "Bearbeiten" Option aus Aktionen-Spalte entfernt, Bearbeiten-Funktionalität nur noch im Detail-Modal verfügbar bei Klick auf Zeile, kollapsible Toggle-Button-System im Modal mit Ein-/Ausklapp-Funktion, sauberere Tabellen-Optik durch Fokus auf Status-Aktionen
-- July 12, 2025: KRITISCHER AUTO-DELETE BUG ENDGÜLTIG BEHOBEN - Server-seitige Auto-Delete-Logik in storage.ts implementiert: bulkUpdateAccessoryStatus und updateAccessory löschen Artikel automatisch bei Status "erledigt" statt sie zu aktualisieren, funktioniert für alle Dropdown-Änderungen und Bulk-Operationen, Client-Side-Löschlogik entfernt da Server jetzt alles handled
-- July 11, 2025: VOLLSTÄNDIGE BESTELLFUNKTIONEN REPARIERT - PDF Export Button ersetzt Excel Button, automatisches Löschen bei Status "eingetroffen" (Ersatzteile) und "erledigt" (Zubehör) implementiert, "Bearbeiten" Button für Zubehör mit temporärer Prompt-Funktionalität repariert, nur noch ein PDF Export Button der gefiltert nur "bestellen" Status exportiert, Test-Button für Auto-Delete-Funktionalität hinzugefügt
-- July 11, 2025: KRITISCHE LOGIK-FEHLER BEHOBEN - Status-Problem für neue Zubehör-Artikel korrigiert: Standard-Status von "bestellt" auf "bestellen" geändert in Schema und AddAccessoryDialog, "Bearbeiten" Button in Zubehör-Tabelle funktionsfähig gemacht mit onClick-Handler und singleAccessoryUpdateMutation
-- July 11, 2025: Dialog-Interface komplett überarbeitet - Karteikarten-Design entfernt, kompakte Grid-Ansicht mit direkten Eingabefeldern implementiert, Dialog scrollbar gemacht, "Erstellen" Button repariert mit direkter onSubmit-Funktion und Console-Logging für Debugging
-- July 11, 2025: Multi-Artikel Interface für "Auf Lager" Zubehör-Bestellungen implementiert - Benutzer kann mehrere Artikel mit Stückzahl gleichzeitig hinzufügen über dynamische +/- Buttons, keine Preiseingabe erforderlich, vereinfachte Benutzerführung für Lager-Artikel
-- July 11, 2025: Bestellungen-Seite UI-Fix - Vollständige Interface bleibt immer sichtbar auch ohne Ersatzteile, Zubehör-Tab und alle Buttons zugänglich, Empty-State nur innerhalb Ersatzteile-Tabelle angezeigt
-- July 11, 2025: KRITISCHER BUGFIX BEHOBEN - Frontend Routing-Fehler korrigiert: bulkUpdateMutation und singlePartUpdateMutation verwenden jetzt korrekte Header-basierte Endpunkte (/api/orders/spare-parts-bulk-update statt /api/spare-parts/bulk-update), "Ungültige Ersatzteil-ID" Fehler vollständig behoben, alle Status-Änderungen funktionieren wieder ordnungsgemäß
-- July 11, 2025: ALLE BESTELLFUNKTIONEN VOLLSTÄNDIG REPARIERT - Einzelne Status-Änderungen verwenden jetzt korrekte Einzelupdate-Funktionen statt Bulk-Operationen, Status-Auswahl durch Dropdown-Menüs statt automatischer Progression, PDF-Export inkludiert sowohl Ersatzteile als auch Zubehör-Daten, Bulk-Operationen nutzen korrekte Endpunkte mit ID-Validierung, Status-Aktions-Buttons für Zubehör mit vollständigen Dropdown-Menüs implementiert
-- July 11, 2025: Tabellenspalten für Bestellungen erfolgreich angepasst zu: "Auftrag, Ersatzteil, Lieferant, Erstellt, Status, Aktionen" - Kosten-Spalte entfernt und Spaltenreihenfolge entsprechend Benutzeranforderungen geändert
-- July 11, 2025: KRITISCHER BUGFIX - Zubehör-Dialog komplett überarbeitet: "Auf Lager" Checkbox für Geschäftsbestellungen ohne Kundendaten, Autofilter-Eingabefeld für Kundensuche, vereinfachter 2-Schritte-Prozess mit direkter Artikel-Eingabe (z.B. "iPhone 8 Hülle schwarz") und Stückzahl-Eingabe, API-Fehler getUserDeviceTypes behoben
-- July 11, 2025: KRITISCHER BUGFIX - Bestellungen-Seite komplett repariert: JavaScript-Fehler "error is not defined" behoben, API-Routing-Konflikte mit Middleware gelöst durch Platzierung der /api/orders/spare-parts Route am Anfang der registerRoutes Funktion, Header-basierte Authentifizierung ohne Middleware implementiert - Bestellungen-Seite funktioniert jetzt vollständig
-- July 11, 2025: Test-E-Mail-Funktionalität implementiert - Test-E-Mail-Button im RepairDetailsDialog (Kundendaten-Bereich) sendet professionelle Auftragsbestätigungs-E-Mails mit vollständigen Reparatur- und Firmendetails, HTML-Design-Vorlage für einheitliches Layout erstellt
-- July 11, 2025: Added quick status change icon (RefreshCw) to repairs table - Red circular arrow icon placed after QR-Code button allows direct status updates without opening RepairDetailsDialog, available in both desktop and mobile views
-- July 11, 2025: Fixed preselectedCustomer functionality in NewCostEstimateDialog - Customer data now automatically pre-fills when creating cost estimates from CustomerDetailDialog
-- July 11, 2025: Mobile optimization completed for CustomerDetailDialog - Responsive design matches RepairDetailsDialog with optimized buttons, icons, and layout for small screens
-- July 8, 2025: Enhanced Kiosk Mode - Added custom business logo support for user "jahuu.eu" alongside existing "bugi" user, replacing default ClientKing logo with individual business branding
-- July 8, 2025: Improved customer list functionality - New customers from Kiosk Mode now appear at the top with visual "NEU" indicators and green highlighting for easier identification
-- July 8, 2025: Added compact "Zur Unterschrift" button in Kiosk Mode for manual page refresh to better detect signature requests
-- June 30, 2025: PDF statistics FINAL VERSION completed and ready for deployment - added total count row to device type table and optimized "Außer Haus" table layout with 15% brand column and date display
-- June 30, 2025: CRITICAL DSGVO fix implemented and VERIFIED - Shop isolation in statistics completely repaired for /api/stats/detailed endpoint and storage.ts getDetailedRepairStats method - USER CONFIRMED WORKING
-- June 30, 2025: Enhanced statistics implementation with revenue tracking - Added comprehensive "Umsätze" (revenue) section showing total revenue (abgeholt) and pending revenue (abholbereit)  
-- June 30, 2025: PDF statistics finalized with "Außer Haus" focus - shows only out-of-house repairs with device details and optimized column widths (20%/25%/45%/10%)
-- June 30, 2025: Complete routes.ts file cleanup - removed all corrupted PDF code fragments and rebuilt DSGVO-compliant statistics endpoint
-- June 30, 2025: Statistics functionality enhanced with proper revenue calculation and historical repair tracking
-- June 30, 2025: Frontend statistics confirmed working correctly for all users - deployment ready
-- June 29, 2025: Robust kiosk PIN system implemented - Master-PIN (678910) and normal shop PINs work even during session timeouts
-- June 29, 2025: PDF table 3 column widths optimized - Modell column expanded to 105px for better display of longer device names
-- June 29, 2025: PDF export functionality successfully moved from dashboard to statistics section next to CSV export button
-- June 29, 2025: PDF export redesigned to match user's HTML template with structured tables and professional formatting
-- June 29, 2025: Initial setup
+The Handyshop Verwaltung is a comprehensive phone repair shop management system designed to streamline workflows for repair businesses. It offers both web and desktop applications to manage customer relations, device repairs, cost estimations, and email communications. The system aims to enhance efficiency, improve customer service, and support the business vision of modernizing repair shop operations.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+
+## System Architecture
+
+### Frontend Architecture
+- **Framework**: React with TypeScript, using Vite for building.
+- **UI Components**: Radix UI with custom Tailwind CSS styling.
+- **State Management**: TanStack React Query for server state and React Hook Form with Zod for form handling and validation.
+- **Desktop Support**: Electron for native desktop applications.
+
+### Backend Architecture
+- **Runtime**: Node.js with TypeScript (ESM modules).
+- **Framework**: Express.js for REST API.
+- **Database**: PostgreSQL (Neon serverless) managed via Drizzle ORM.
+- **Authentication**: Session-based with `express-session`, supporting role-based access for shop owners and employees. Employees authenticate via email, owners via username.
+- **Email Service**: Integrated SMTP for customizable, template-based email communications via Brevo.
+- **File Uploads**: `express-fileupload` middleware.
+
+### Database Design
+- **Multi-tenant Architecture**: Data isolation per shop using `shopId`.
+- **User Management**: Role-based access (admin/owner/employee). Employee usernames are for internal audit trails, not authentication.
+- **Device Management**: Hierarchical categorization (Types → Brands → Models).
+- **Repair Tracking**: Comprehensive workflow from intake to completion, including loaner device management and audit trails for status changes.
+- **Email Templates**: Customizable with variable substitution.
+
+### Key Features & Technical Implementations
+- **User & Authentication**: Secure session-based authentication, multi-shop isolation, and role-based access control. Employees have limited access to core functions (repairs, customers, estimates), while shop owners have full management capabilities.
+- **Customer & Repair Management**: Detailed customer information, status-driven repair tracking, device categorization, issue tracking, and automated notifications. Includes QR-code based signature for drop-off and pickup, with loaner device management integrated into the repair workflow.
+- **Cost Estimation**: Dynamic estimate generation with PDF export.
+- **Email Communication**: Template-based system with variable substitution and email history. System-wide emails use superadmin-configured SMTP settings.
+- **Device Management**: Hierarchical organization and spare parts tracking.
+- **UI/UX Decisions**: Consistent design language across web and desktop applications. Utilizes compact layouts, subtle dropdowns for status changes, and mobile-optimized interfaces for tables and dialogs. Kiosk mode is designed for clear, full-screen interaction with dynamic logo support.
+- **Audit Trail**: Tracks user actions for status changes, loaner device operations, and QR-code workflows. Records "created by" information for repairs and prevents unauthorized deletions by employees.
+
+## External Dependencies
+
+- **@neondatabase/serverless**: Serverless PostgreSQL database.
+- **drizzle-orm**: ORM for type-safe database interactions.
+- **@radix-ui/react-\***: Primitives for UI components.
+- **@tanstack/react-query**: Server state management library.
+- **nodemailer**: Library for sending emails.
+- **vite**: Frontend build tool.
+- **typescript**: Language for type safety.
+- **tailwindcss**: Utility-first CSS framework.
+- **electron**: Framework for building desktop applications.
+- **esbuild**: Bundler for server-side code.
+- **Brevo (formerly SendinBlue)**: SMTP service integration for email delivery.
+```
