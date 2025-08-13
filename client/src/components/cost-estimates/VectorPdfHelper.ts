@@ -134,7 +134,7 @@ export async function createVectorPdf({
   const businessNameWidth = pdf.getTextWidth(businessName);
   pdf.text(businessName, pageWidth - marginRight - businessNameWidth, companyInfoStartY);
 
-  let companyYPos = companyInfoStartY + (7 * pxToMm); // margin-Abstand
+  let companyYPos = companyInfoStartY + (12 * pxToMm); // Größerer Abstand zur Vermeidung von Kollisionen
 
   // Company Details (.company-info p: font-size: 13px, margin: 2px 0)
   pdf.setFont('helvetica', 'normal');
