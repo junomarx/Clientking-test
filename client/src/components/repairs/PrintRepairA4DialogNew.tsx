@@ -8,9 +8,10 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, FileDown, Mail, Printer } from 'lucide-react';
+import { Loader2, FileDown, Mail, Printer, FileText } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { createVectorRepairPdf } from './VectorRepairPdfHelper';
+import { PdfActionDialog } from './PdfActionDialog';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { apiRequest } from '@/lib/queryClient';
@@ -27,6 +28,7 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
   const [printReady, setPrintReady] = useState(false);
   const [showActionDialog, setShowActionDialog] = useState(false);
   const [generatedPdf, setGeneratedPdf] = useState<any | null>(null);
+  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
 
   // Daten für die Reparatur laden
   const { data: repair, isLoading, error } = useQuery<any>({
@@ -60,6 +62,12 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
     setIsGeneratingPdf(true);
     
     try {
+      console.log("🔄 Starte PDF-Generierung mit den Daten:", {
+        repair: repair.orderCode,
+        customer: `${customer.firstName} ${customer.lastName}`,
+        businessName: businessSettings.businessName
+      });
+      
       const pdf = await createVectorRepairPdf({
         repair,
         customer,
@@ -67,16 +75,16 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
         logoUrl: businessSettings.logoImage
       });
       
-      // PDF DIREKT herunterladen ohne Dialog
-      const filename = repair?.orderCode || `Reparaturauftrag_${repairId}`;
-      pdf.save(`${filename}.pdf`);
+      setGeneratedPdf(pdf);
       
-      toast({
-        title: "Vector-PDF erfolgreich erstellt!",
-        description: "Das hochqualitative PDF wurde heruntergeladen.",
-      });
+      // PDF als Blob speichern für weitere Aktionen
+      const pdfBlob = pdf.output('blob');
+      setPdfBlob(pdfBlob);
       
-      onClose();
+      console.log("✅ PDF erfolgreich generiert");
+      
+      // Action Dialog öffnen statt direkter Download
+      setShowActionDialog(true);
       
     } catch (err) {
       console.error('Fehler beim Erstellen des Vector-PDFs:', err);
@@ -240,7 +248,21 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
     );
   }
 
-  // Aktions-Dialog für PDF-Optionen
+  // Aktions-Dialog für PDF-Optionen  
+  if (showActionDialog && pdfBlob && repair && customer && businessSettings) {
+    return (
+      <PdfActionDialog
+        isOpen={showActionDialog}
+        onClose={() => setShowActionDialog(false)}
+        repair={repair}
+        customer={customer}
+        businessSettings={businessSettings}
+        pdfBlob={pdfBlob}
+      />
+    );
+  }
+
+  // Legacy fallback für alten Aktions-Dialog
   if (showActionDialog && generatedPdf) {
     return (
       <Dialog open={showActionDialog} onOpenChange={() => setShowActionDialog(false)}>
@@ -486,12 +508,12 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
                 {isGeneratingPdf ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Vector-PDF wird erstellt...
+                    PDF wird erstellt...
                   </>
                 ) : (
                   <>
-                    <FileDown className="mr-2 h-4 w-4" />
-                    Vector-PDF herunterladen
+                    <FileText className="mr-2 h-4 w-4" />
+                    PDF erstellen
                   </>
                 )}
               </Button>
