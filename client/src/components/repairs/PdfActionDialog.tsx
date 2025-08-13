@@ -3,7 +3,7 @@ import { useMutation } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Printer, Download, Mail, Loader2 } from 'lucide-react';
+import { Download, Mail, Loader2 } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import type { Repair, Customer, BusinessSettings } from '@shared/schema';
 
@@ -40,23 +40,11 @@ export function PdfActionDialog({
       }
       const base64 = btoa(binary);
       
-      const response = await apiRequest('POST', '/api/send-email-with-template', {
-        templateName: 'Auftragsbestätigung',
-        recipientEmail: customer.email,
-        data: {
-          customerName: `${customer.firstName} ${customer.lastName}`,
-          orderCode: repair.orderCode,
-          businessName: businessSettings.businessName || 'Reparaturshop',
-          deviceInfo: `${repair.deviceType} ${repair.brand} ${repair.model}`,
-          problem: repair.problem,
-          estimatedCost: repair.estimatedCost ? `€${repair.estimatedCost}` : 'Auf Anfrage'
-        },
-        attachments: [{
-          filename: `Reparaturauftrag_${repair.orderCode}.pdf`,
-          content: base64,
-          encoding: 'base64',
-          contentType: 'application/pdf'
-        }]
+      const response = await apiRequest('POST', '/api/send-repair-pdf-email', {
+        repairId: repair.id,
+        customerEmail: customer.email,
+        pdfData: base64,
+        pdfFilename: `Reparaturauftrag_${repair.orderCode}.pdf`
       });
       
       return response.json();
@@ -96,30 +84,7 @@ export function PdfActionDialog({
     onClose();
   };
 
-  const handlePrint = () => {
-    if (!pdfBlob) return;
-    
-    const url = URL.createObjectURL(pdfBlob);
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    iframe.src = url;
-    
-    iframe.onload = () => {
-      iframe.contentWindow?.print();
-      setTimeout(() => {
-        document.body.removeChild(iframe);
-        URL.revokeObjectURL(url);
-      }, 1000);
-    };
-    
-    document.body.appendChild(iframe);
-    
-    toast({
-      title: "Druckdialog geöffnet",
-      description: "Das PDF wird zum Drucken vorbereitet."
-    });
-    onClose();
-  };
+
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -132,16 +97,6 @@ export function PdfActionDialog({
         </DialogHeader>
         
         <div className="flex flex-col gap-3 mt-4">
-          <Button
-            onClick={handlePrint}
-            className="flex items-center gap-2 h-12"
-            variant="outline"
-            disabled={!pdfBlob}
-          >
-            <Printer className="h-4 w-4" />
-            Drucken
-          </Button>
-          
           <Button
             onClick={handleDownload}
             className="flex items-center gap-2 h-12"
