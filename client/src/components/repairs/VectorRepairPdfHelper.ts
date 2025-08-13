@@ -148,14 +148,19 @@ export async function createVectorRepairPdf(props: RepairPdfProps): Promise<jsPD
   pdf.text(`${customer.firstName} ${customer.lastName}`, leftMargin, currentY);
   currentY += 5;
   
-  pdf.setFontSize(9);
+  // Kundenkontaktdaten
+  pdf.setFontSize(8);
   pdf.setFont('helvetica', 'normal');
-  if (customer.street) {
-    pdf.text(customer.street, leftMargin, currentY);
+  if (customer.phone) {
+    pdf.text(`Telefon: ${customer.phone}`, leftMargin, currentY);
     currentY += 4;
   }
-  if (customer.zipCode || customer.city) {
-    pdf.text(`${customer.zipCode || ''} ${customer.city || ''}`.trim(), leftMargin, currentY);
+  if (customer.email) {
+    pdf.text(`E-Mail: ${customer.email}`, leftMargin, currentY);
+    currentY += 4;
+  }
+  if (customer.address) {
+    pdf.text(`Adresse: ${customer.address}`, leftMargin, currentY);
     currentY += 4;
   }
   
@@ -171,9 +176,9 @@ export async function createVectorRepairPdf(props: RepairPdfProps): Promise<jsPD
   pdf.text(repair.orderCode, pageWidth / 2, currentY, { align: 'center' });
   currentY += 15;
 
-  // Gerätedaten & Reparaturdetails Box
+  // Gerätedaten & Reparaturdetails Box - kompakter
   const boxY = currentY;
-  const boxHeight = 35;
+  const boxHeight = 28;
   const boxWidth = contentWidth;
   
   // Grauer Hintergrund
@@ -209,8 +214,6 @@ export async function createVectorRepairPdf(props: RepairPdfProps): Promise<jsPD
   addDeviceDataLine('Gerätetyp', repair.deviceType);
   addDeviceDataLine('Marke', repair.brand);
   addDeviceDataLine('Modell', repair.model);
-  addDeviceDataLine('Telefon', customer.phone || 'k.A.');
-  addDeviceDataLine('E-Mail', customer.email || 'k.A.');
   
   // Rechte Spalte: Reparaturdetails
   const rightColumnX = leftMargin + (boxWidth / 2) + 8;
@@ -234,7 +237,6 @@ export async function createVectorRepairPdf(props: RepairPdfProps): Promise<jsPD
   };
   
   addRepairDataLine('Problem', repair.issue);
-  addRepairDataLine('Status', repair.status);
   addRepairDataLine('Abgegeben am', formatDate(repair.createdAt));
   if (repair.estimatedCost) {
     addRepairDataLine('Kostenvoranschlag', `€${repair.estimatedCost}`);
@@ -267,22 +269,13 @@ export async function createVectorRepairPdf(props: RepairPdfProps): Promise<jsPD
 
   // Reparaturbedingungen (falls vorhanden)
   if (businessSettings.repairTerms) {
-    // Prüfen ob noch genug Platz auf der Seite ist, sonst neue Seite
-    const remainingSpace = pageHeight - currentY - 80; // 80mm für Unterschriften reserviert
-    const estimatedTermsHeight = businessSettings.repairTerms.length * 0.1; // Grobe Schätzung
-    
-    if (remainingSpace < Math.max(40, estimatedTermsHeight)) {
-      pdf.addPage();
-      currentY = topMargin;
-    }
-    
     pdf.setFontSize(9);
     pdf.setFont('helvetica', 'bold');
     pdf.text('Reparaturbedingungen', leftMargin, currentY);
     currentY += 6;
     
-    // Reparaturbedingungen-Box
-    const termsHeight = Math.max(25, Math.min(40, estimatedTermsHeight));
+    // Reparaturbedingungen-Box - kompakter
+    const termsHeight = 25; // Feste, kompakte Höhe
     pdf.setDrawColor(200, 200, 200);
     pdf.setFillColor(250, 250, 250);
     pdf.roundedRect(leftMargin, currentY, contentWidth, termsHeight, 1, 1, 'FD');
@@ -294,18 +287,18 @@ export async function createVectorRepairPdf(props: RepairPdfProps): Promise<jsPD
     const termsLines = pdf.splitTextToSize(businessSettings.repairTerms, contentWidth - 6);
     pdf.text(termsLines, leftMargin + 3, currentY + 4);
     
-    currentY += termsHeight + 8;
+    currentY += termsHeight + 6;
     
-    // Bestätigungstext
+    // Bestätigungstext - kompakter
     pdf.setFontSize(8);
     pdf.setFont('helvetica', 'bold');
     pdf.text('Mit meiner Unterschrift bestätige ich, dass ich die Reparaturbedingungen gelesen und akzeptiert habe.', 
              pageWidth / 2, currentY, { align: 'center' });
-    currentY += 8;
+    currentY += 6;
   }
 
-  // Unterschriftenbereich (am Ende der Seite)
-  const signatureY = pageHeight - 70;
+  // Unterschriftenbereich - dynamisch positioniert
+  const signatureY = Math.max(currentY + 10, pageHeight - 70);
   
   // Trennlinie
   pdf.setDrawColor(100, 100, 100);

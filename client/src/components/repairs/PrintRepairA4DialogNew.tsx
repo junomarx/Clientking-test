@@ -353,8 +353,11 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
               <div className="mb-8">
                 <div className="text-sm mb-2 font-bold">Kundeninformationen</div>
                 <p className="text-base font-bold">{customer.firstName} {customer.lastName}</p>
-                <p>{customer.street || ''}</p>
-                <p>{customer.zipCode || ''} {customer.city || ''}</p>
+                <div className="text-sm mt-2 space-y-1">
+                  <div><span className="font-medium">Telefon:</span> {customer.phone || 'k.A.'}</div>
+                  <div><span className="font-medium">E-Mail:</span> {customer.email || 'k.A.'}</div>
+                  {customer.address && <div><span className="font-medium">Adresse:</span> {customer.address}</div>}
+                </div>
               </div>
               
               {/* Dokumententitel und Auftragsnummer */}
@@ -371,8 +374,6 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
                     <div><span className="font-medium">Gerätetyp:</span> {repair.deviceType}</div>
                     <div><span className="font-medium">Marke:</span> {repair.brand}</div>
                     <div><span className="font-medium">Modell:</span> {repair.model}</div>
-                    <div><span className="font-medium">Telefon:</span> {customer.phone || 'k.A.'}</div>
-                    <div><span className="font-medium">E-Mail:</span> {customer.email || 'k.A.'}</div>
                   </div>
                 </div>
                 
@@ -380,7 +381,6 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
                   <div className="text-sm font-bold mb-3">Reparaturdetails</div>
                   <div className="space-y-2 text-sm">
                     <div><span className="font-medium">Problem:</span> {repair.issue}</div>
-                    <div><span className="font-medium">Status:</span> {repair.status}</div>
                     <div><span className="font-medium">Abgegeben am:</span> {formatDate(repair.createdAt)}</div>
                     {repair.estimatedCost && (
                       <div><span className="font-medium">Kostenvoranschlag:</span> €{repair.estimatedCost}</div>
