@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Printer, FileDown, Mail } from "lucide-react";
-import { printDocument, exportAsPdf } from "./PrintHelper";
+import { Printer, FileDown, Mail, Zap } from "lucide-react";
+import { printDocument, exportAsPdf, exportVectorPdf } from "./PrintHelper";
 import { generatePrintHtml } from "./PrintTemplate";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -48,7 +48,45 @@ export function PrintButtons({
     printDocument(printContent);
   };
   
-  // Generiere den PDF-Export
+  // NEUE: Vektorbasierte PDF-Erstellung
+  const handleExportVectorPdf = async () => {
+    try {
+      toast({
+        title: "Vektor-PDF wird erstellt...",
+        description: "Optimierte Qualität und kleinere Dateigröße.",
+      });
+      
+      // Dateiname generieren
+      const filename = `Kostenvoranschlag_${estimate.reference_number || 'Export'}`;
+      
+      // Direkte vektorbasierte PDF-Erstellung ohne HTML2Canvas
+      await exportVectorPdf({
+        estimate,
+        customer,
+        items,
+        businessName,
+        businessAddress,
+        businessZipCity,
+        businessPhone,
+        businessEmail,
+        logoUrl
+      }, filename);
+      
+      toast({
+        title: "Vektor-PDF erstellt",
+        description: "Optimierte PDF mit besserer Qualität heruntergeladen.",
+      });
+    } catch (error) {
+      console.error('Fehler bei Vektor-PDF:', error);
+      toast({
+        title: "Fehler",
+        description: "Das Vektor-PDF konnte nicht erstellt werden.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // ALTE: Bild-basierte PDF-Erstellung (Fallback)
   const handleExportPdf = async () => {
     try {
       toast({
@@ -249,14 +287,18 @@ export function PrintButtons({
   };
   
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-2 flex-wrap">
       <Button variant="outline" size="sm" onClick={handlePrint}>
         <Printer className="h-4 w-4 mr-2" />
         Drucken
       </Button>
+      <Button variant="outline" size="sm" onClick={handleExportVectorPdf}>
+        <Zap className="h-4 w-4 mr-2" />
+        Vektor-PDF
+      </Button>
       <Button variant="outline" size="sm" onClick={handleExportPdf}>
         <FileDown className="h-4 w-4 mr-2" />
-        Als PDF
+        Als PDF (Alt)
       </Button>
       <Button variant="outline" size="sm" onClick={handleSendEmail}>
         <Mail className="h-4 w-4 mr-2" />

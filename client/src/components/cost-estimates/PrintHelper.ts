@@ -1,5 +1,6 @@
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { createVectorPdf } from './VectorPdfHelper';
 
 /**
  * Hilfsfunktionen für den Druck von Kostenvoranschlägen
@@ -29,7 +30,31 @@ export function printDocument(content: string, title: string = 'Kostenvoranschla
 }
 
 /**
- * Echte PDF-Erstellung mit HTML-to-Canvas für A4-Format
+ * NEUE: Vektorbasierte PDF-Erstellung (empfohlen)
+ * Erstellt echte vektorbasierte PDFs ohne html2canvas
+ */
+export async function exportVectorPdf(props: {
+  estimate: any;
+  customer: any;
+  items: any[];
+  businessName: string;
+  businessAddress: string;
+  businessZipCity: string;
+  businessPhone: string;
+  businessEmail: string;
+  logoUrl?: string;
+}, filename: string = 'Kostenvoranschlag'): Promise<void> {
+  try {
+    const pdf = await createVectorPdf(props);
+    pdf.save(`${filename}.pdf`);
+  } catch (error) {
+    console.error('Fehler beim Erstellen der vektorbasierten PDF:', error);
+    throw error;
+  }
+}
+
+/**
+ * ALTE: HTML-to-Canvas PDF-Erstellung (wird ersetzt)
  * Optimiert für Dateigröße unter 5MB
  */
 export async function exportAsPdf(content: string, filename: string = 'Kostenvoranschlag'): Promise<void> {
