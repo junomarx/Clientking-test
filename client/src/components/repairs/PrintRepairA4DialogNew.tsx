@@ -10,8 +10,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, FileDown, Mail, Printer } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
+import { createVectorRepairPdf } from './VectorRepairPdfHelper';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { apiRequest } from '@/lib/queryClient';
@@ -27,7 +26,7 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [printReady, setPrintReady] = useState(false);
   const [showActionDialog, setShowActionDialog] = useState(false);
-  const [generatedPdf, setGeneratedPdf] = useState<jsPDF | null>(null);
+  const [generatedPdf, setGeneratedPdf] = useState<any | null>(null);
 
   // Daten für die Reparatur laden
   const { data: repair, isLoading, error } = useQuery<any>({
@@ -47,44 +46,26 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
     enabled: open,
   });
 
-  // PDF erstellen und Aktions-Dialog öffnen
+  // PDF mit Vector-Technologie erstellen
   const handleCreatePdf = async () => {
-    if (!document.getElementById('a4-print-content')) return;
+    if (!repair || !customer || !businessSettings) {
+      toast({
+        title: "Fehler",
+        description: "Nicht alle Daten sind verfügbar.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setIsGeneratingPdf(true);
     
     try {
-      const content = document.getElementById('a4-print-content');
-      if (!content) throw new Error('Druckinhalt konnte nicht gefunden werden');
-      
-      const canvas = await html2canvas(content, {
-        scale: 2,
-        logging: false,
-        useCORS: true,
-        allowTaint: true,
-        height: content.scrollHeight,
-        windowHeight: content.scrollHeight,
-        onclone: (document, element) => {
-          element.style.maxHeight = 'none';
-          element.style.height = 'auto';
-          element.style.overflow = 'visible';
-        }
+      const pdf = await createVectorRepairPdf({
+        repair,
+        customer,
+        businessSettings,
+        logoUrl: businessSettings.logoImage
       });
-      
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-      });
-      
-      const margin = 10;
-      const pageWidth = 210;
-      const pageHeight = 297;
-      const imgWidth = pageWidth - (2 * margin);
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
-      pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, imgHeight);
       
       // PDF speichern und Aktions-Dialog öffnen
       setGeneratedPdf(pdf);
@@ -338,8 +319,8 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
 
         {printReady ? (
           <div className="space-y-4">
-            {/* A4 Druckinhalt */}
-            <div id="a4-print-content" className="bg-white text-black p-8 sm:p-10 md:p-12 rounded-md">
+            {/* Vorschau-Bereich (bleibt für Benutzer-Preview) */}
+            <div className="bg-white text-black p-8 sm:p-10 md:p-12 rounded-md">
               <style dangerouslySetInnerHTML={{ __html: `
                 @media print {
                   body {
@@ -507,12 +488,12 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
                 {isGeneratingPdf ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    PDF wird erstellt...
+                    Vector-PDF wird erstellt...
                   </>
                 ) : (
                   <>
                     <FileDown className="mr-2 h-4 w-4" />
-                    PDF erstellen
+                    PDF erstellen (Vector)
                   </>
                 )}
               </Button>
