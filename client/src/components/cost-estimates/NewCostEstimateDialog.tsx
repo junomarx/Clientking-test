@@ -81,7 +81,7 @@ interface NewCostEstimateDialogProps {
     phone: string;
     email?: string;
     address?: string;
-    zipCode?: string;
+    postalCode?: string;
     city?: string;
   };
 }
@@ -172,7 +172,7 @@ export function NewCostEstimateDialog({
         phone: preselectedCustomer.phone,
         email: preselectedCustomer.email || '',
         address: preselectedCustomer.address || '',
-        postalCode: preselectedCustomer.zipCode || '',
+        postalCode: preselectedCustomer.postalCode || '',
         city: preselectedCustomer.city || '',
         deviceType: '',
         brand: '',

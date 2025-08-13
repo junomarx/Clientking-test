@@ -437,7 +437,7 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
             phone: customer.phone,
             email: customer.email || undefined,
             address: customer.address,
-            zipCode: customer.zipCode,
+            postalCode: customer.zipCode,
             city: customer.city
           }}
         />
