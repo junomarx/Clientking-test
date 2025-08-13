@@ -396,7 +396,8 @@ export async function createVectorPdf({
   pdf.text(totalLabel, totalsStartX, yPosition);
   pdf.text(totalAmountText, totalsStartX + totalsWidth - totalAmountWidth, yPosition);
   
-  yPosition += (40 * pxToMm); // margin-top: 40px (.note)
+  // BESSERE SEITENAUFTEILUNG - Mehr Platz zwischen Tabelle und Abschluss
+  yPosition += (80 * pxToMm); // Deutlich mehr Abstand für harmonische Verteilung
 
   // HINWEISE (.note: font-size: 12px, color: #777)
   pdf.setFont('helvetica', 'normal');
@@ -406,7 +407,7 @@ export async function createVectorPdf({
   const noteText = `Dieser Kostenvoranschlag ist unverbindlich und ${estimate.validUntil ? `gültig bis zum ${validUntilFormatted}` : 'gültig für 14 Tage'}.`;
   const noteLines = pdf.splitTextToSize(noteText, contentWidth);
   pdf.text(noteLines, marginLeft, yPosition);
-  yPosition += (noteLines.length * 12 * pxToMm * 1.2) + (20 * pxToMm); // line-height + margin
+  yPosition += (noteLines.length * 12 * pxToMm * 1.2) + (30 * pxToMm); // Mehr Abstand
 
   // CONDITIONS (ol: font-size: 0.9em, color: #555, margin-top: 20px, padding-left: 20px)
   pdf.setFontSize(pxToPdfSize(12 * 0.9)); // 0.9em
@@ -424,18 +425,24 @@ export async function createVectorPdf({
     const maxWidth = contentWidth - (20 * pxToMm); // padding-left: 20px
     const lines = pdf.splitTextToSize(conditionText, maxWidth);
     pdf.text(lines, marginLeft + (20 * pxToMm), yPosition);
-    yPosition += (lines.length * 12 * 0.9 * pxToMm * 1.2) + (3 * pxToMm);
+    yPosition += (lines.length * 12 * 0.9 * pxToMm * 1.2) + (5 * pxToMm); // Etwas mehr Zeilenabstand
   });
 
-  yPosition += (50 * pxToMm); // margin-top: 50px
+  // Dynamische Positionierung für Abschlussgrüße - nutze verfügbaren Platz bis Seitenende
+  const remainingSpace = pageHeight - marginTop - yPosition - (40 * pxToMm); // Reserve für Abschluss
+  if (remainingSpace > 30 * pxToMm) {
+    yPosition += remainingSpace * 0.7; // Nutze 70% des verfügbaren Platzes
+  } else {
+    yPosition += (30 * pxToMm); // Mindestabstand
+  }
 
-  // ABSCHLUSS
+  // ABSCHLUSS - Optimal im unteren Bereich positioniert
   pdf.setFontSize(pxToPdfSize(12));
   pdf.setTextColor(...textColor);
   pdf.setFont('helvetica', 'normal');
   
   pdf.text('Mit freundlichen Grüßen,', marginLeft, yPosition);
-  yPosition += (12 * pxToMm * 1.2);
+  yPosition += (12 * pxToMm * 1.2) + (5 * pxToMm); // Etwas mehr Abstand
   pdf.text(businessName, marginLeft, yPosition);
 
   return pdf;
