@@ -272,21 +272,26 @@ export async function createVectorPdf({
   // Table Header (th: background-color: #f8f8f8, font-weight: bold, font-size: 11px, padding: 6px 8px)
   const tableHeaders = ['Position', 'Beschreibung', 'Menge', 'Einzelpreis (brutto)', 'Gesamtpreis (brutto)'];
   
-  // KORRIGIERTE Spaltenbreiten für bessere Ausrichtung mit Totals
-  // Die letzte Spalte (Gesamtpreis) muss mit der Totals-Sektion übereinstimmen
+  // PRÄZISE Spalten-Alignment - Totals-Sektion definiert die Ausrichtung
   const totalsWidthPx = 300;
   const totalsWidth = totalsWidthPx * pxToMm; // ≈ 79.4mm
   const totalsStartX = pageWidth - marginRight - totalsWidth;
   
-  // Tabellen-Spalten neu berechnen damit Gesamtpreis-Spalte mit Totals übereinstimmt
-  const gesamtpreisColumnWidth = totalsWidth / 2; // Hälfte der Totals-Breite
+  // EXAKTE Berechnung: Die Gesamtpreis-Spalte muss genau mit der Totals-Sektion übereinstimmen
+  // Totals hat zwei Spalten: Label (links) und Betrag (rechts)
+  // Der Betrag in Totals ist rechtsbündig in der gesamten Totals-Breite
+  const totalsAmountColumnWidth = totalsWidth * 0.4; // 40% für Betrag-Spalte in Totals
+  
   const columnWidths = [
-    25, // Position (25mm)
-    contentWidth - 25 - 25 - 35 - gesamtpreisColumnWidth, // Beschreibung (Rest)
-    25, // Menge (25mm)
-    35, // Einzelpreis (35mm)
-    gesamtpreisColumnWidth // Gesamtpreis - ALIGNED mit Totals
+    20, // Position (kompakter)
+    contentWidth - 20 - 20 - 40 - totalsAmountColumnWidth, // Beschreibung (angepasst)
+    20, // Menge (kompakter)
+    40, // Einzelpreis (etwas breiter)
+    totalsAmountColumnWidth // Gesamtpreis - EXAKT wie Totals-Betrag-Spalte
   ];
+  
+  // Die Gesamtpreis-Spalte startet an der gleichen X-Position wie die Totals-Betrag-Spalte
+  const gesamtpreisStartX = totalsStartX + (totalsWidth - totalsAmountColumnWidth);
   
   const tableStartX = marginLeft;
   const headerHeight = (6 * 2 + 11) * pxToMm; // padding top/bottom + font-size
@@ -302,14 +307,19 @@ export async function createVectorPdf({
   
   let currentX = tableStartX;
   tableHeaders.forEach((header, index) => {
-    const textX = currentX + (8 * pxToMm); // padding-left: 8px
     const textY = yPosition + (6 * pxToMm); // padding-top: 6px
     
     if (index >= 2) {
       // Rechtsausrichtung für numerische Spalten (.text-right)
       const headerWidth = pdf.getTextWidth(header);
-      pdf.text(header, currentX + columnWidths[index] - headerWidth - (8 * pxToMm), textY);
+      if (index === 4) {
+        // Gesamtpreis-Header: Exakt an der gleichen Position wie Totals
+        pdf.text(header, gesamtpreisStartX + totalsAmountColumnWidth - headerWidth - (8 * pxToMm), textY);
+      } else {
+        pdf.text(header, currentX + columnWidths[index] - headerWidth - (8 * pxToMm), textY);
+      }
     } else {
+      const textX = currentX + (8 * pxToMm); // padding-left: 8px
       pdf.text(header, textX, textY);
     }
     currentX += columnWidths[index];
@@ -338,19 +348,25 @@ export async function createVectorPdf({
     ];
     
     rowData.forEach((data, colIndex) => {
-      const textX = currentX + (8 * pxToMm); // padding-left
       const textY = yPosition + (6 * pxToMm) + (12 * pxToMm * 0.8); // padding-top + baseline
       
       if (colIndex >= 2) {
-        // Rechtsausrichtung
+        // Rechtsausrichtung für numerische Spalten
         const dataWidth = pdf.getTextWidth(data);
-        pdf.text(data, currentX + columnWidths[colIndex] - dataWidth - (8 * pxToMm), textY);
+        if (colIndex === 4) {
+          // Gesamtpreis-Daten: Exakt an der gleichen Position wie Totals-Beträge
+          pdf.text(data, gesamtpreisStartX + totalsAmountColumnWidth - dataWidth - (8 * pxToMm), textY);
+        } else {
+          pdf.text(data, currentX + columnWidths[colIndex] - dataWidth - (8 * pxToMm), textY);
+        }
       } else if (colIndex === 1) {
         // Textumbruch für Beschreibung
+        const textX = currentX + (8 * pxToMm); // padding-left
         const maxWidth = columnWidths[colIndex] - (16 * pxToMm); // padding left + right
         const lines = pdf.splitTextToSize(data, maxWidth);
         pdf.text(lines, textX, textY);
       } else {
+        const textX = currentX + (8 * pxToMm); // padding-left
         pdf.text(data, textX, textY);
       }
       currentX += columnWidths[colIndex];
@@ -371,17 +387,18 @@ export async function createVectorPdf({
   pdf.setFontSize(pxToPdfSize(12));
   pdf.setTextColor(...textColor);
   
-  // MwSt.-Zeile (.totals table td: padding: 5px)
+  // MwSt.-Zeile - EXAKTE Position für perfektes Alignment
   const taxLabel = `enthaltene MwSt. (${taxRate}%):`;
   const taxAmountText = `€ ${Number(taxAmount.replace(',', '.')).toFixed(2).replace('.', ',')}`;
   const taxAmountWidth = pdf.getTextWidth(taxAmountText);
   
   pdf.text(taxLabel, totalsStartX, yPosition);
-  pdf.text(taxAmountText, totalsStartX + totalsWidth - taxAmountWidth, yPosition);
+  // MwSt-Betrag: Genau an derselben X-Position wie Gesamtpreis-Spalte
+  pdf.text(taxAmountText, gesamtpreisStartX + totalsAmountColumnWidth - taxAmountWidth - (8 * pxToMm), yPosition);
   
   yPosition += (5 * 2 + 12) * pxToMm; // padding + font-size
 
-  // Gesamtbetrag (.totals .total: font-weight: bold, font-size: 1.1em, border-top: 1px solid #eee)
+  // Gesamtbetrag - EXAKTE Position für perfektes Alignment
   const totalBorderY = yPosition - (5 * pxToMm);
   pdf.setDrawColor(...borderGray);
   pdf.line(totalsStartX, totalBorderY, totalsStartX + totalsWidth, totalBorderY);
@@ -394,7 +411,8 @@ export async function createVectorPdf({
   const totalAmountWidth = pdf.getTextWidth(totalAmountText);
   
   pdf.text(totalLabel, totalsStartX, yPosition);
-  pdf.text(totalAmountText, totalsStartX + totalsWidth - totalAmountWidth, yPosition);
+  // Gesamtbetrag: Genau an derselben X-Position wie Gesamtpreis-Spalte
+  pdf.text(totalAmountText, gesamtpreisStartX + totalsAmountColumnWidth - totalAmountWidth - (8 * pxToMm), yPosition);
   
   // BESSERE SEITENAUFTEILUNG - Mehr Platz zwischen Tabelle und Abschluss
   yPosition += (80 * pxToMm); // Deutlich mehr Abstand für harmonische Verteilung
