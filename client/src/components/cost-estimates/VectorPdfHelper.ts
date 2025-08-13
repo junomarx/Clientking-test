@@ -106,11 +106,21 @@ export async function createVectorPdf({
   let logoActualHeight = 0;
   if (logoUrl && logoUrl.trim() !== '') {
     try {
-      // Logo implementierung für später - reserviere Platz
+      // Logo als Base64-Image implementiert
+      const logoImg = new Image();
+      logoImg.src = logoUrl;
+      
+      // Logo hinzufügen mit korrekten Dimensionen
+      pdf.addImage(logoUrl, 'JPEG', marginLeft, marginTop, logoAreaWidth, logoAreaHeight);
       logoActualHeight = logoAreaHeight;
-      yPosition += logoActualHeight;
     } catch (error) {
       console.warn('Logo konnte nicht geladen werden:', error);
+      // Fallback: Logo-Text
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(pxToPdfSize(16));
+      pdf.setTextColor(...textColor);
+      pdf.text(businessName.split(' ')[0] || 'Logo', marginLeft, marginTop + 15);
+      logoActualHeight = 20;
     }
   }
 
@@ -151,11 +161,12 @@ export async function createVectorPdf({
   });
 
   // Y-Position für nächste Sektion (.header: margin-bottom: 40px)
-  yPosition = Math.max(yPosition, companyYPos) + (40 * pxToMm);
+  // Stelle sicher, dass es keine Kollisionen gibt
+  yPosition = Math.max(logoActualHeight + marginTop + (20 * pxToMm), companyYPos) + (40 * pxToMm);
 
   // KUNDENINFORMATIONEN - Exakt wie HTML (.customer-info)
-  // margin-top: -25px wird berücksichtigt
-  yPosition -= (25 * pxToMm);
+  // KEINE negative margin - das verursachte die Kollisionen
+  // yPosition -= (25 * pxToMm); // ENTFERNT - verursachte Überlappungen
 
   // Section Title (.section-title)
   pdf.setFont('helvetica', 'bold');
@@ -260,8 +271,23 @@ export async function createVectorPdf({
 
   // Table Header (th: background-color: #f8f8f8, font-weight: bold, font-size: 11px, padding: 6px 8px)
   const tableHeaders = ['Position', 'Beschreibung', 'Menge', 'Einzelpreis (brutto)', 'Gesamtpreis (brutto)'];
-  const columnWidthsPx = [60, 220, 60, 120, 120]; // Pixel basiert auf HTML
-  const columnWidths = columnWidthsPx.map(w => w * pxToMm); // zu mm
+  
+  // KORRIGIERTE Spaltenbreiten für bessere Ausrichtung mit Totals
+  // Die letzte Spalte (Gesamtpreis) muss mit der Totals-Sektion übereinstimmen
+  const totalsWidthPx = 300;
+  const totalsWidth = totalsWidthPx * pxToMm; // ≈ 79.4mm
+  const totalsStartX = pageWidth - marginRight - totalsWidth;
+  
+  // Tabellen-Spalten neu berechnen damit Gesamtpreis-Spalte mit Totals übereinstimmt
+  const gesamtpreisColumnWidth = totalsWidth / 2; // Hälfte der Totals-Breite
+  const columnWidths = [
+    25, // Position (25mm)
+    contentWidth - 25 - 25 - 35 - gesamtpreisColumnWidth, // Beschreibung (Rest)
+    25, // Menge (25mm)
+    35, // Einzelpreis (35mm)
+    gesamtpreisColumnWidth // Gesamtpreis - ALIGNED mit Totals
+  ];
+  
   const tableStartX = marginLeft;
   const headerHeight = (6 * 2 + 11) * pxToMm; // padding top/bottom + font-size
   
@@ -339,9 +365,7 @@ export async function createVectorPdf({
   yPosition += (20 * pxToMm); // table: margin-bottom: 20px
 
   // TOTALS SECTION (.totals: margin-left: auto, width: 300px)
-  const totalsWidthPx = 300;
-  const totalsWidth = totalsWidthPx * pxToMm; // ≈ 79.4mm
-  const totalsStartX = pageWidth - marginRight - totalsWidth;
+  // totalsWidth und totalsStartX wurden bereits oben definiert für Spalten-Alignment
   
   pdf.setFont('helvetica', 'normal');
   pdf.setFontSize(pxToPdfSize(12));
