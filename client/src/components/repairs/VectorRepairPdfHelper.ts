@@ -274,31 +274,33 @@ export async function createVectorRepairPdf(props: RepairPdfProps): Promise<jsPD
     pdf.text('Reparaturbedingungen', leftMargin, currentY);
     currentY += 6;
     
-    // Reparaturbedingungen-Box - kompakter
-    const termsHeight = 25; // Feste, kompakte Höhe
-    pdf.setDrawColor(200, 200, 200);
-    pdf.setFillColor(250, 250, 250);
-    pdf.roundedRect(leftMargin, currentY, contentWidth, termsHeight, 1, 1, 'FD');
-    
+    // Berechne die benötigte Höhe für den Text
     pdf.setFontSize(7);
     pdf.setFont('helvetica', 'normal');
+    const termsLines = pdf.splitTextToSize(businessSettings.repairTerms, contentWidth - 6);
+    const calculatedHeight = Math.max(35, termsLines.length * 2.5 + 8); // Dynamische Höhe basierend auf Textlänge
+    
+    // Reparaturbedingungen-Box mit angemessener Höhe
+    pdf.setDrawColor(200, 200, 200);
+    pdf.setFillColor(250, 250, 250);
+    pdf.roundedRect(leftMargin, currentY, contentWidth, calculatedHeight, 1, 1, 'FD');
     
     // Text in der Box (mit automatischem Zeilenumbruch)
-    const termsLines = pdf.splitTextToSize(businessSettings.repairTerms, contentWidth - 6);
     pdf.text(termsLines, leftMargin + 3, currentY + 4);
     
-    currentY += termsHeight + 6;
+    currentY += calculatedHeight + 8;
     
-    // Bestätigungstext - kompakter
+    // Bestätigungstext mit mehr Abstand
     pdf.setFontSize(8);
     pdf.setFont('helvetica', 'bold');
-    pdf.text('Mit meiner Unterschrift bestätige ich, dass ich die Reparaturbedingungen gelesen und akzeptiert habe.', 
-             pageWidth / 2, currentY, { align: 'center' });
-    currentY += 6;
+    const confirmationText = 'Mit meiner Unterschrift bestätige ich, dass ich die Reparaturbedingungen gelesen und akzeptiert habe.';
+    const confirmationLines = pdf.splitTextToSize(confirmationText, contentWidth);
+    pdf.text(confirmationLines, pageWidth / 2, currentY, { align: 'center' });
+    currentY += confirmationLines.length * 4 + 10; // Mehr Abstand nach dem Text
   }
 
-  // Unterschriftenbereich - mehr Abstand von Reparaturbedingungen
-  currentY += 15; // Extra Abstand zu den Reparaturbedingungen
+  // Unterschriftenbereich - optimierter Abstand für A4-Nutzung
+  currentY += 20; // Ausreichend Abstand zu den Reparaturbedingungen
   
   // Unterschriften nebeneinander (OHNE Trennlinie oben)
   const signatureWidth = contentWidth / 2 - 10;

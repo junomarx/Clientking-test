@@ -401,12 +401,12 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
 
               {/* Reparaturbedingungen */}
               {businessSettings?.repairTerms && (
-                <div className="mb-8">
+                <div className="mb-10">
                   <div className="text-sm font-bold mb-2">Reparaturbedingungen</div>
-                  <div className="border border-gray-300 rounded p-3 min-h-[60px] bg-gray-50 text-xs leading-tight">
+                  <div className="border border-gray-300 rounded p-3 bg-gray-50 text-xs leading-tight" style={{minHeight: '80px'}}>
                     {businessSettings.repairTerms}
                   </div>
-                  <div className="text-center mt-3 text-xs font-semibold">
+                  <div className="text-center mt-4 text-xs font-semibold leading-tight px-4">
                     Mit meiner Unterschrift bestätige ich, dass ich die Reparaturbedingungen gelesen und akzeptiert habe.
                   </div>
                 </div>
