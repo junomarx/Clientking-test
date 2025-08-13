@@ -60,11 +60,11 @@ export async function createVectorPdf({
   const pxToPdfSize = (px: number) => px * pxToMm * mmToPt;
 
   // EXAKTE Farben (identisch zum HTML-Template)
-  const primaryColor = [42, 83, 169]; // #2a53a9
-  const textColor = [51, 51, 51]; // #333
-  const lightGray = [119, 119, 119]; // #777
-  const borderGray = [238, 238, 238]; // #eee
-  const tableHeaderBg = [248, 248, 248]; // #f8f8f8
+  const primaryColor = [42, 83, 169] as const; // #2a53a9
+  const textColor = [51, 51, 51] as const; // #333
+  const lightGray = [119, 119, 119] as const; // #777
+  const borderGray = [238, 238, 238] as const; // #eee
+  const tableHeaderBg = [248, 248, 248] as const; // #f8f8f8
 
   // Datumsformatierung (identisch zum HTML-Template)
   const createdDate = estimate.created_at || estimate.createdAt;
