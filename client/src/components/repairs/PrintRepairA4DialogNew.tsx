@@ -46,7 +46,7 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
     enabled: open,
   });
 
-  // PDF mit Vector-Technologie erstellen
+  // PDF mit Vector-Technologie erstellen - DIREKT HERUNTERLADEN
   const handleCreatePdf = async () => {
     if (!repair || !customer || !businessSettings) {
       toast({
@@ -67,15 +67,22 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
         logoUrl: businessSettings.logoImage
       });
       
-      // PDF speichern und Aktions-Dialog öffnen
-      setGeneratedPdf(pdf);
-      setShowActionDialog(true);
+      // PDF DIREKT herunterladen ohne Dialog
+      const filename = repair?.orderCode || `Reparaturauftrag_${repairId}`;
+      pdf.save(`${filename}.pdf`);
+      
+      toast({
+        title: "Vector-PDF erfolgreich erstellt!",
+        description: "Das hochqualitative PDF wurde heruntergeladen.",
+      });
+      
+      onClose();
       
     } catch (err) {
-      console.error('Fehler beim Erstellen des PDFs:', err);
+      console.error('Fehler beim Erstellen des Vector-PDFs:', err);
       toast({
         title: "Fehler",
-        description: "Das PDF konnte nicht erstellt werden.",
+        description: "Das Vector-PDF konnte nicht erstellt werden.",
         variant: "destructive",
       });
     } finally {
@@ -484,7 +491,7 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
                 ) : (
                   <>
                     <FileDown className="mr-2 h-4 w-4" />
-                    PDF erstellen (Vector)
+                    Vector-PDF herunterladen
                   </>
                 )}
               </Button>
