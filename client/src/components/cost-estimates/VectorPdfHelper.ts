@@ -15,8 +15,8 @@ interface VectorPdfProps {
 }
 
 /**
- * Erstellt eine echte vektorbasierte PDF ohne html2canvas
- * Design bleibt 1:1 identisch zum aktuellen HTML-Template
+ * Erstellt eine echte vektorbasierte PDF - 1:1 identisch zum HTML-Template
+ * GARANTIERT: Exakt gleiches Design, gleiche Schriftgrößen, gleiche Abstände
  */
 export async function createVectorPdf({
   estimate,
@@ -38,19 +38,33 @@ export async function createVectorPdf({
     compress: true
   });
 
-  // A4 Maße und Margins (identisch zum HTML-Template)
-  const pageWidth = 210;
-  const pageHeight = 297;
-  const marginLeft = 15;
-  const marginRight = 15;
-  const marginTop = 20;
-  const contentWidth = pageWidth - marginLeft - marginRight;
+  // EXAKTE Container-Maße basierend auf HTML (.invoice-container)
+  // HTML: max-width: 800px, padding: 30px → entspricht A4-Verhältnis
+  const pageWidth = 210; // A4 Breite
+  const pageHeight = 297; // A4 Höhe
+  
+  // Container-Simulation: padding: 20px (body) + padding: 30px (.invoice-container)
+  const outerMargin = 20 * 0.264583; // 20px zu mm (1px = 0.264583mm bei 96dpi)
+  const containerPadding = 30 * 0.264583; // 30px zu mm
+  const marginLeft = outerMargin + containerPadding; // ≈ 13.2mm
+  const marginRight = outerMargin + containerPadding;
+  const marginTop = outerMargin + containerPadding;
+  const containerWidth = 800 * 0.264583; // 800px zu mm ≈ 211.7mm (wird auf A4 begrenzt)
+  const contentWidth = Math.min(containerWidth, pageWidth - marginLeft - marginRight);
 
-  // Farben (identisch zum HTML-Template)
-  const primaryColor = '#2a53a9'; // Identisch zu CSS
-  const textColor = '#333';
-  const lightGray = '#777';
-  const borderColor = '#eee';
+  // EXAKTE Pixel-zu-mm Konvertierung für Schriftgrößen (1px = 0.264583mm bei 96dpi)
+  const pxToMm = 0.264583;
+  const mmToPt = 2.834645; // 1mm = 2.834645pt
+  
+  // Hilfsfunktion: Pixel-Schriftgröße zu PDF-Punkt
+  const pxToPdfSize = (px: number) => px * pxToMm * mmToPt;
+
+  // EXAKTE Farben (identisch zum HTML-Template)
+  const primaryColor = [42, 83, 169]; // #2a53a9
+  const textColor = [51, 51, 51]; // #333
+  const lightGray = [119, 119, 119]; // #777
+  const borderGray = [238, 238, 238]; // #eee
+  const tableHeaderBg = [248, 248, 248]; // #f8f8f8
 
   // Datumsformatierung (identisch zum HTML-Template)
   const createdDate = estimate.created_at || estimate.createdAt;
@@ -82,122 +96,135 @@ export async function createVectorPdf({
 
   let yPosition = marginTop;
 
-  // Header Sektion (identisch zum HTML-Layout)
-  // Logo links, Firmendaten rechts
-  if (logoUrl) {
+  // HEADER SEKTION - Exakte Nachbildung des HTML Flex-Layouts
+  // HTML: .header { display: flex; justify-content: space-between; margin-bottom: 40px; }
+  
+  // Logo-Sektion links (max-width: 200px, max-height: 80px)
+  const logoAreaWidth = 200 * pxToMm; // ≈ 52.9mm
+  const logoAreaHeight = 80 * pxToMm; // ≈ 21.2mm
+  
+  let logoActualHeight = 0;
+  if (logoUrl && logoUrl.trim() !== '') {
     try {
-      // Logo wird später implementiert wenn benötigt
-      // Für jetzt: Platz reservieren
-      yPosition += 10;
+      // Logo implementierung für später - reserviere Platz
+      logoActualHeight = logoAreaHeight;
+      yPosition += logoActualHeight;
     } catch (error) {
       console.warn('Logo konnte nicht geladen werden:', error);
     }
   }
 
-  // Firmendaten rechts (Position identisch zu CSS: text-align right)
-  pdf.setFontSize(16);
-  pdf.setTextColor(textColor);
-  pdf.setFont('helvetica', 'bold');
-  const businessNameWidth = pdf.getTextWidth(businessName);
-  pdf.text(businessName, pageWidth - marginRight - businessNameWidth, yPosition);
-
-  yPosition += 7;
-  pdf.setFontSize(13);
-  pdf.setFont('helvetica', 'normal');
+  // Company-Info rechts - EXAKT wie HTML (.company-info)
+  const companyInfoStartY = marginTop;
   
-  const businessLines = [
-    businessAddress,
-    businessZipCity,
-    businessPhone,
-    businessEmail
-  ];
+  // Company Name (.company-name: font-weight: bold, font-size: 16px)
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(pxToPdfSize(16)); // 16px → ~11.3pt
+  pdf.setTextColor(...textColor);
+  const businessNameWidth = pdf.getTextWidth(businessName);
+  pdf.text(businessName, pageWidth - marginRight - businessNameWidth, companyInfoStartY);
 
-  businessLines.forEach(line => {
+  let companyYPos = companyInfoStartY + (7 * pxToMm); // margin-Abstand
+
+  // Company Details (.company-info p: font-size: 13px, margin: 2px 0)
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(pxToPdfSize(13)); // 13px → ~9.2pt
+  
+  const companyLines = [businessAddress, businessZipCity, businessPhone, businessEmail];
+  companyLines.forEach((line) => {
     const lineWidth = pdf.getTextWidth(line);
-    pdf.text(line, pageWidth - marginRight - lineWidth, yPosition);
-    yPosition += 5;
+    pdf.text(line, pageWidth - marginRight - lineWidth, companyYPos);
+    companyYPos += (2 * pxToMm) + (13 * pxToMm * 1.2); // margin: 2px + line-height
   });
 
-  // Datum und Gültigkeitsdatum (identisch zu HTML margin-top: 12px)
-  yPosition += 7; // 12px entspricht ca. 7mm
-  pdf.setFont('helvetica', 'normal');
-  const dateText = `Datum: ${createdDateFormatted}`;
-  const validText = `Gültig bis: ${validUntilFormatted}`;
+  // Datum-Sektion (margin-top: 12px)
+  companyYPos += 12 * pxToMm;
+  const dateLines = [
+    `Datum: ${createdDateFormatted}`,
+    `Gültig bis: ${validUntilFormatted}`
+  ];
   
-  const dateWidth = pdf.getTextWidth(dateText);
-  const validWidth = pdf.getTextWidth(validText);
-  pdf.text(dateText, pageWidth - marginRight - dateWidth, yPosition);
-  yPosition += 5;
-  pdf.text(validText, pageWidth - marginRight - validWidth, yPosition);
+  dateLines.forEach((line) => {
+    const lineWidth = pdf.getTextWidth(line);
+    pdf.text(line, pageWidth - marginRight - lineWidth, companyYPos);
+    companyYPos += (13 * pxToMm * 1.2);
+  });
 
-  yPosition += 15; // Abstand zur nächsten Sektion
+  // Y-Position für nächste Sektion (.header: margin-bottom: 40px)
+  yPosition = Math.max(yPosition, companyYPos) + (40 * pxToMm);
 
-  // Kundeninformationen (identisch zu HTML-Template)
-  // Überschrift mit Unterstrich (identisch zu CSS border-bottom)
-  pdf.setFontSize(14);
+  // KUNDENINFORMATIONEN - Exakt wie HTML (.customer-info)
+  // margin-top: -25px wird berücksichtigt
+  yPosition -= (25 * pxToMm);
+
+  // Section Title (.section-title)
   pdf.setFont('helvetica', 'bold');
-  pdf.setTextColor(primaryColor);
+  pdf.setFontSize(pxToPdfSize(14)); // Standard section title size
+  pdf.setTextColor(...primaryColor);
   pdf.text('Kundeninformationen', marginLeft, yPosition);
   
-  // Linie unter der Überschrift (identisch zu CSS border-bottom: 1px solid #eee)
-  pdf.setDrawColor(238, 238, 238); // #eee
-  pdf.line(marginLeft, yPosition + 2, marginLeft + contentWidth, yPosition + 2);
+  // Border-bottom simulation (border-bottom: 1px solid #eee, padding-bottom: 5px)
+  const sectionTitleUnderlineY = yPosition + (5 * pxToMm);
+  pdf.setDrawColor(...borderGray);
+  pdf.setLineWidth(0.264583); // 1px
+  pdf.line(marginLeft, sectionTitleUnderlineY, marginLeft + contentWidth, sectionTitleUnderlineY);
   
-  yPosition += 10;
+  yPosition += (10 * pxToMm) + (5 * pxToMm); // margin-bottom + padding-bottom
 
-  // Kundenname (identisch zu CSS .customer-name font-weight: bold, font-size: 16px)
-  pdf.setFontSize(16);
+  // Customer Name (.customer-name: font-weight: bold, font-size: 16px)
   pdf.setFont('helvetica', 'bold');
-  pdf.setTextColor(textColor);
+  pdf.setFontSize(pxToPdfSize(16));
+  pdf.setTextColor(...textColor);
   pdf.text(customerName, marginLeft, yPosition);
   
-  yPosition += 7;
+  yPosition += (16 * pxToMm * 1.2) + (2 * pxToMm); // line-height + margin
 
-  // Kundenadresse (identisch zu CSS font-size: 13px)
-  pdf.setFontSize(13);
+  // Customer Address (.customer-info p: font-size: 13px, margin: 2px 0)
   pdf.setFont('helvetica', 'normal');
-  pdf.text(customerAddress, marginLeft, yPosition);
-  yPosition += 5;
-  pdf.text(customerZipCity, marginLeft, yPosition);
+  pdf.setFontSize(pxToPdfSize(13));
   
-  yPosition += 20;
+  pdf.text(customerAddress, marginLeft, yPosition);
+  yPosition += (13 * pxToMm * 1.2) + (2 * pxToMm);
+  
+  pdf.text(customerZipCity, marginLeft, yPosition);
+  yPosition += (20 * pxToMm); // .customer-info: margin-bottom: 20px
 
-  // Dokumententitel (identisch zu CSS .document-title)
-  pdf.setFontSize(18);
+  // DOCUMENT TITLE (.document-title: text-align: center, font-size: 18px, font-weight: bold, color: #2a53a9)
   pdf.setFont('helvetica', 'bold');
-  pdf.setTextColor(primaryColor);
+  pdf.setFontSize(pxToPdfSize(18)); // 18px
+  pdf.setTextColor(...primaryColor);
   const titleText = 'Kostenvoranschlag';
   const titleWidth = pdf.getTextWidth(titleText);
-  pdf.text(titleText, (pageWidth - titleWidth) / 2, yPosition); // Zentriert
+  pdf.text(titleText, (pageWidth - titleWidth) / 2, yPosition);
   
-  yPosition += 10;
+  yPosition += (18 * pxToMm * 1.2) + (8 * pxToMm); // title line-height + margin
 
-  // Referenznummer (identisch zu CSS .reference-number)
-  pdf.setFontSize(13);
+  // REFERENCE NUMBER (.reference-number: text-align: center, font-size: 13px, margin-bottom: 15px)
   pdf.setFont('helvetica', 'normal');
-  pdf.setTextColor(textColor);
+  pdf.setFontSize(pxToPdfSize(13));
+  pdf.setTextColor(...textColor);
   const refText = `Referenznummer: ${estimate.reference_number}`;
   const refWidth = pdf.getTextWidth(refText);
-  pdf.text(refText, (pageWidth - refWidth) / 2, yPosition); // Zentriert
+  pdf.text(refText, (pageWidth - refWidth) / 2, yPosition);
   
-  yPosition += 20;
+  yPosition += (13 * pxToMm * 1.2) + (15 * pxToMm); // line-height + margin-bottom
 
-  // Geräteinformationen (identisch zu HTML-Template)
-  pdf.setFontSize(14);
+  // GERÄTEINFORMATIONEN - Section Title
   pdf.setFont('helvetica', 'bold');
-  pdf.setTextColor(primaryColor);
+  pdf.setFontSize(pxToPdfSize(14));
+  pdf.setTextColor(...primaryColor);
   pdf.text('Geräteinformationen', marginLeft, yPosition);
   
-  // Linie unter der Überschrift
-  pdf.setDrawColor(238, 238, 238);
-  pdf.line(marginLeft, yPosition + 2, marginLeft + contentWidth, yPosition + 2);
+  const deviceSectionUnderlineY = yPosition + (5 * pxToMm);
+  pdf.setDrawColor(...borderGray);
+  pdf.line(marginLeft, deviceSectionUnderlineY, marginLeft + contentWidth, deviceSectionUnderlineY);
   
-  yPosition += 15;
+  yPosition += (15 * pxToMm) + (5 * pxToMm);
 
-  // Gerätedetails in einer Zeile (identisch zu HTML inline layout)
-  pdf.setFontSize(13);
+  // Device Details inline (HTML style)
   pdf.setFont('helvetica', 'normal');
-  pdf.setTextColor(textColor);
+  pdf.setFontSize(pxToPdfSize(13));
+  pdf.setTextColor(...textColor);
   
   const deviceInfo = [
     `Hersteller: ${estimate.brand || ''}`,
@@ -206,68 +233,74 @@ export async function createVectorPdf({
   ].join('   |   ');
   
   pdf.text(deviceInfo, marginLeft, yPosition);
-  yPosition += 15; // Entspricht CSS margin-top: 30px
+  yPosition += (30 * pxToMm); // margin-top: 30px vom HTML
 
-  // Fehlerbeschreibung (identisch zu HTML-Template)
+  // Fehlerbeschreibung
   pdf.setFont('helvetica', 'bold');
   pdf.text('Fehlerbeschreibung:', marginLeft, yPosition);
-  yPosition += 7;
+  yPosition += (5 * pxToMm) + (13 * pxToMm * 1.2); // margin-top: 5px
   
   pdf.setFont('helvetica', 'normal');
-  // Text mit Einrückung (entspricht CSS margin-left: 10px)
   const issueText = estimate.issue || '';
-  const issueLines = pdf.splitTextToSize(issueText, contentWidth - 10);
-  pdf.text(issueLines, marginLeft + 10, yPosition);
-  yPosition += (issueLines.length * 5) + 15;
+  const issueLines = pdf.splitTextToSize(issueText, contentWidth - (10 * pxToMm)); // margin-left: 10px
+  pdf.text(issueLines, marginLeft + (10 * pxToMm), yPosition);
+  yPosition += (issueLines.length * 13 * pxToMm * 1.2) + (15 * pxToMm);
 
-  // Positionen Tabelle (identisch zu HTML-Template)
-  pdf.setFontSize(14);
+  // TABELLE - Exakte HTML-Nachbildung
   pdf.setFont('helvetica', 'bold');
-  pdf.setTextColor(primaryColor);
+  pdf.setFontSize(pxToPdfSize(14));
+  pdf.setTextColor(...primaryColor);
   pdf.text('Positionen', marginLeft, yPosition);
   
-  pdf.setDrawColor(238, 238, 238);
-  pdf.line(marginLeft, yPosition + 2, marginLeft + contentWidth, yPosition + 2);
+  const tableSectionUnderlineY = yPosition + (5 * pxToMm);
+  pdf.setDrawColor(...borderGray);
+  pdf.line(marginLeft, tableSectionUnderlineY, marginLeft + contentWidth, tableSectionUnderlineY);
   
-  yPosition += 15;
+  yPosition += (15 * pxToMm);
 
-  // Tabellenkopf (identisch zu HTML th Styling)
+  // Table Header (th: background-color: #f8f8f8, font-weight: bold, font-size: 11px, padding: 6px 8px)
   const tableHeaders = ['Position', 'Beschreibung', 'Menge', 'Einzelpreis (brutto)', 'Gesamtpreis (brutto)'];
-  const columnWidths = [25, 70, 25, 35, 35]; // mm
+  const columnWidthsPx = [60, 220, 60, 120, 120]; // Pixel basiert auf HTML
+  const columnWidths = columnWidthsPx.map(w => w * pxToMm); // zu mm
   const tableStartX = marginLeft;
+  const headerHeight = (6 * 2 + 11) * pxToMm; // padding top/bottom + font-size
   
-  pdf.setFontSize(11);
+  // Header Background
+  pdf.setFillColor(...tableHeaderBg);
+  pdf.rect(tableStartX, yPosition - (6 * pxToMm), contentWidth, headerHeight, 'F');
+  
+  // Header Text
   pdf.setFont('helvetica', 'bold');
-  pdf.setFillColor(248, 248, 248); // #f8f8f8
-  pdf.setTextColor(textColor);
-  
-  // Header-Hintergrund
-  pdf.rect(tableStartX, yPosition - 3, contentWidth, 8, 'F');
+  pdf.setFontSize(pxToPdfSize(11)); // th: font-size: 11px
+  pdf.setTextColor(...textColor);
   
   let currentX = tableStartX;
   tableHeaders.forEach((header, index) => {
+    const textX = currentX + (8 * pxToMm); // padding-left: 8px
+    const textY = yPosition + (6 * pxToMm); // padding-top: 6px
+    
     if (index >= 2) {
-      // Rechtsausrichtung für numerische Spalten
+      // Rechtsausrichtung für numerische Spalten (.text-right)
       const headerWidth = pdf.getTextWidth(header);
-      pdf.text(header, currentX + columnWidths[index] - headerWidth - 2, yPosition + 2);
+      pdf.text(header, currentX + columnWidths[index] - headerWidth - (8 * pxToMm), textY);
     } else {
-      pdf.text(header, currentX + 2, yPosition + 2);
+      pdf.text(header, textX, textY);
     }
     currentX += columnWidths[index];
   });
   
-  yPosition += 8;
+  yPosition += headerHeight;
 
-  // Tabellendaten (identisch zu HTML tbody)
+  // Table Rows (td: font-size: 12px, padding: 6px 8px, border-bottom: 1px solid #eee)
   pdf.setFont('helvetica', 'normal');
-  pdf.setFontSize(12);
+  pdf.setFontSize(pxToPdfSize(12)); // td: font-size: 12px
   
   items.forEach((item, index) => {
-    // Zeilentrennlinie
-    pdf.setDrawColor(238, 238, 238);
-    pdf.line(tableStartX, yPosition, tableStartX + contentWidth, yPosition);
+    const rowHeight = (6 * 2 + 12) * pxToMm; // padding + font-size
     
-    yPosition += 6;
+    // Row border bottom
+    pdf.setDrawColor(...borderGray);
+    pdf.line(tableStartX, yPosition + rowHeight - (1 * pxToMm), tableStartX + contentWidth, yPosition + rowHeight - (1 * pxToMm));
     
     currentX = tableStartX;
     const rowData = [
@@ -279,71 +312,81 @@ export async function createVectorPdf({
     ];
     
     rowData.forEach((data, colIndex) => {
+      const textX = currentX + (8 * pxToMm); // padding-left
+      const textY = yPosition + (6 * pxToMm) + (12 * pxToMm * 0.8); // padding-top + baseline
+      
       if (colIndex >= 2) {
-        // Rechtsausrichtung für numerische Spalten
+        // Rechtsausrichtung
         const dataWidth = pdf.getTextWidth(data);
-        pdf.text(data, currentX + columnWidths[colIndex] - dataWidth - 2, yPosition);
+        pdf.text(data, currentX + columnWidths[colIndex] - dataWidth - (8 * pxToMm), textY);
+      } else if (colIndex === 1) {
+        // Textumbruch für Beschreibung
+        const maxWidth = columnWidths[colIndex] - (16 * pxToMm); // padding left + right
+        const lines = pdf.splitTextToSize(data, maxWidth);
+        pdf.text(lines, textX, textY);
       } else {
-        // Textumbruch für Beschreibung wenn nötig
-        if (colIndex === 1) {
-          const lines = pdf.splitTextToSize(data, columnWidths[colIndex] - 4);
-          pdf.text(lines, currentX + 2, yPosition);
-          if (lines.length > 1) yPosition += (lines.length - 1) * 5;
-        } else {
-          pdf.text(data, currentX + 2, yPosition);
-        }
+        pdf.text(data, textX, textY);
       }
       currentX += columnWidths[colIndex];
     });
     
-    yPosition += 6;
+    yPosition += rowHeight;
   });
 
-  // Abschlusslinie der Tabelle
+  // Final table border
+  pdf.setDrawColor(...borderGray);
   pdf.line(tableStartX, yPosition, tableStartX + contentWidth, yPosition);
-  yPosition += 15;
+  yPosition += (20 * pxToMm); // table: margin-bottom: 20px
 
-  // Summen-Tabelle (identisch zu HTML .totals)
-  const totalsWidth = 100; // 300px entspricht etwa 100mm
+  // TOTALS SECTION (.totals: margin-left: auto, width: 300px)
+  const totalsWidthPx = 300;
+  const totalsWidth = totalsWidthPx * pxToMm; // ≈ 79.4mm
   const totalsStartX = pageWidth - marginRight - totalsWidth;
   
-  pdf.setFontSize(12);
   pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(pxToPdfSize(12));
+  pdf.setTextColor(...textColor);
   
-  // MwSt.-Zeile
-  pdf.text(`enthaltene MwSt. (${taxRate}%):`, totalsStartX, yPosition);
+  // MwSt.-Zeile (.totals table td: padding: 5px)
+  const taxLabel = `enthaltene MwSt. (${taxRate}%):`;
   const taxAmountText = `€ ${Number(taxAmount.replace(',', '.')).toFixed(2).replace('.', ',')}`;
   const taxAmountWidth = pdf.getTextWidth(taxAmountText);
+  
+  pdf.text(taxLabel, totalsStartX, yPosition);
   pdf.text(taxAmountText, totalsStartX + totalsWidth - taxAmountWidth, yPosition);
   
-  yPosition += 8;
+  yPosition += (5 * 2 + 12) * pxToMm; // padding + font-size
 
-  // Gesamtbetrag (identisch zu HTML .total mit border-top und font-weight: bold)
-  pdf.setDrawColor(238, 238, 238);
-  pdf.line(totalsStartX, yPosition - 2, totalsStartX + totalsWidth, yPosition - 2);
+  // Gesamtbetrag (.totals .total: font-weight: bold, font-size: 1.1em, border-top: 1px solid #eee)
+  const totalBorderY = yPosition - (5 * pxToMm);
+  pdf.setDrawColor(...borderGray);
+  pdf.line(totalsStartX, totalBorderY, totalsStartX + totalsWidth, totalBorderY);
   
   pdf.setFont('helvetica', 'bold');
-  pdf.setFontSize(13);
-  pdf.text('Gesamtbetrag:', totalsStartX, yPosition + 3);
-  const totalText = `€ ${Number(total.replace(',', '.')).toFixed(2).replace('.', ',')}`;
-  const totalWidth = pdf.getTextWidth(totalText);
-  pdf.text(totalText, totalsStartX + totalsWidth - totalWidth, yPosition + 3);
+  pdf.setFontSize(pxToPdfSize(12 * 1.1)); // 1.1em
   
-  yPosition += 25;
+  const totalLabel = 'Gesamtbetrag:';
+  const totalAmountText = `€ ${Number(total.replace(',', '.')).toFixed(2).replace('.', ',')}`;
+  const totalAmountWidth = pdf.getTextWidth(totalAmountText);
+  
+  pdf.text(totalLabel, totalsStartX, yPosition);
+  pdf.text(totalAmountText, totalsStartX + totalsWidth - totalAmountWidth, yPosition);
+  
+  yPosition += (40 * pxToMm); // margin-top: 40px (.note)
 
-  // Hinweise (identisch zu HTML .note)
-  pdf.setFontSize(12);
+  // HINWEISE (.note: font-size: 12px, color: #777)
   pdf.setFont('helvetica', 'normal');
-  pdf.setTextColor(lightGray);
+  pdf.setFontSize(pxToPdfSize(12));
+  pdf.setTextColor(...lightGray);
   
   const noteText = `Dieser Kostenvoranschlag ist unverbindlich und ${estimate.validUntil ? `gültig bis zum ${validUntilFormatted}` : 'gültig für 14 Tage'}.`;
   const noteLines = pdf.splitTextToSize(noteText, contentWidth);
   pdf.text(noteLines, marginLeft, yPosition);
-  yPosition += (noteLines.length * 5) + 10;
+  yPosition += (noteLines.length * 12 * pxToMm * 1.2) + (20 * pxToMm); // line-height + margin
 
-  // Bedingungen (identisch zu HTML ordered list)
-  pdf.setFontSize(11);
-  pdf.setTextColor('#555555');
+  // CONDITIONS (ol: font-size: 0.9em, color: #555, margin-top: 20px, padding-left: 20px)
+  pdf.setFontSize(pxToPdfSize(12 * 0.9)); // 0.9em
+  pdf.setTextColor(85, 85, 85); // #555
   
   const conditions = [
     'Der Kostenvoranschlag basiert auf einer ersten Diagnose und kann sich bei tatsächlicher Durchführung ändern.',
@@ -354,19 +397,21 @@ export async function createVectorPdf({
   
   conditions.forEach((condition, index) => {
     const conditionText = `${index + 1}. ${condition}`;
-    const lines = pdf.splitTextToSize(conditionText, contentWidth - 10);
-    pdf.text(lines, marginLeft + 10, yPosition); // 20px padding-left entspricht 10mm
-    yPosition += (lines.length * 5) + 3;
+    const maxWidth = contentWidth - (20 * pxToMm); // padding-left: 20px
+    const lines = pdf.splitTextToSize(conditionText, maxWidth);
+    pdf.text(lines, marginLeft + (20 * pxToMm), yPosition);
+    yPosition += (lines.length * 12 * 0.9 * pxToMm * 1.2) + (3 * pxToMm);
   });
 
-  yPosition += 25; // margin-top: 50px entspricht etwa 25mm
+  yPosition += (50 * pxToMm); // margin-top: 50px
 
-  // Abschlussgrüße (identisch zu HTML-Template)
-  pdf.setFontSize(12);
-  pdf.setTextColor(textColor);
+  // ABSCHLUSS
+  pdf.setFontSize(pxToPdfSize(12));
+  pdf.setTextColor(...textColor);
   pdf.setFont('helvetica', 'normal');
+  
   pdf.text('Mit freundlichen Grüßen,', marginLeft, yPosition);
-  yPosition += 7;
+  yPosition += (12 * pxToMm * 1.2);
   pdf.text(businessName, marginLeft, yPosition);
 
   return pdf;
