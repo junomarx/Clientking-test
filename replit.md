@@ -7,6 +7,8 @@ The Handyshop Verwaltung is a comprehensive phone repair shop management system 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+Detail-oriented: User requires pixel-perfect alignment and precision, especially for PDF layouts and visual elements.
+Quality focus: Prefers comprehensive solutions that address all edge cases rather than quick fixes.
 
 ## System Architecture
 
@@ -34,7 +36,7 @@ Preferred communication style: Simple, everyday language.
 ### Key Features & Technical Implementations
 - **User & Authentication**: Secure session-based authentication, multi-shop isolation, and role-based access control. Employees have limited access to core functions (repairs, customers, estimates), while shop owners have full management capabilities.
 - **Customer & Repair Management**: Detailed customer information, status-driven repair tracking, device categorization, issue tracking, and automated notifications. Includes QR-code based signature for drop-off and pickup, with loaner device management integrated into the repair workflow.
-- **Cost Estimation**: Dynamic estimate generation with PDF export.
+- **Cost Estimation**: Dynamic estimate generation with vector-based PDF export. Implemented precision-aligned PDF generation using jsPDF with pixel-perfect column alignment, logo support via Base64 encoding, and harmonious A4 page utilization (August 2025).
 - **Email Communication**: Template-based system with variable substitution and email history. System-wide emails use superadmin-configured SMTP settings.
 - **Device Management**: Hierarchical organization and spare parts tracking.
 - **UI/UX Decisions**: Consistent design language across web and desktop applications. Utilizes compact layouts, subtle dropdowns for status changes, and mobile-optimized interfaces for tables and dialogs. Kiosk mode is designed for clear, full-screen interaction with dynamic logo support.
