@@ -414,8 +414,21 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
                 </div>
               )}
 
+              {/* Reparaturbedingungen */}
+              {businessSettings?.repairTerms && (
+                <div className="mb-8">
+                  <div className="text-sm font-bold mb-2">Reparaturbedingungen</div>
+                  <div className="border border-gray-300 rounded p-3 min-h-[60px] bg-gray-50 text-xs leading-tight">
+                    {businessSettings.repairTerms}
+                  </div>
+                  <div className="text-center mt-3 text-xs font-semibold">
+                    Mit meiner Unterschrift bestätige ich, dass ich die Reparaturbedingungen gelesen und akzeptiert habe.
+                  </div>
+                </div>
+              )}
+
               {/* Unterschriftenbereich */}
-              <div className="border-t-2 border-gray-300 pt-8 mt-16">
+              <div className="border-t-2 border-gray-300 pt-8 mt-8">
                 <div className="flex justify-between gap-16">
                   <div className="flex-1 text-center">
                     <p className="font-bold mb-4">Gerät abgegeben</p>

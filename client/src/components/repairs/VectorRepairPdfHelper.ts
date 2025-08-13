@@ -37,6 +37,7 @@ interface BusinessSettings {
   phone: string;
   email: string;
   logoImage?: string;
+  repairTerms?: string;
 }
 
 interface RepairPdfProps {
@@ -262,6 +263,45 @@ export async function createVectorRepairPdf(props: RepairPdfProps): Promise<jsPD
     pdf.text(lines, leftMargin + 3, currentY + 5);
     
     currentY += descHeight + 12;
+  }
+
+  // Reparaturbedingungen (falls vorhanden)
+  if (businessSettings.repairTerms) {
+    // Prüfen ob noch genug Platz auf der Seite ist, sonst neue Seite
+    const remainingSpace = pageHeight - currentY - 80; // 80mm für Unterschriften reserviert
+    const estimatedTermsHeight = businessSettings.repairTerms.length * 0.1; // Grobe Schätzung
+    
+    if (remainingSpace < Math.max(40, estimatedTermsHeight)) {
+      pdf.addPage();
+      currentY = topMargin;
+    }
+    
+    pdf.setFontSize(9);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Reparaturbedingungen', leftMargin, currentY);
+    currentY += 6;
+    
+    // Reparaturbedingungen-Box
+    const termsHeight = Math.max(25, Math.min(40, estimatedTermsHeight));
+    pdf.setDrawColor(200, 200, 200);
+    pdf.setFillColor(250, 250, 250);
+    pdf.roundedRect(leftMargin, currentY, contentWidth, termsHeight, 1, 1, 'FD');
+    
+    pdf.setFontSize(7);
+    pdf.setFont('helvetica', 'normal');
+    
+    // Text in der Box (mit automatischem Zeilenumbruch)
+    const termsLines = pdf.splitTextToSize(businessSettings.repairTerms, contentWidth - 6);
+    pdf.text(termsLines, leftMargin + 3, currentY + 4);
+    
+    currentY += termsHeight + 8;
+    
+    // Bestätigungstext
+    pdf.setFontSize(8);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Mit meiner Unterschrift bestätige ich, dass ich die Reparaturbedingungen gelesen und akzeptiert habe.', 
+             pageWidth / 2, currentY, { align: 'center' });
+    currentY += 8;
   }
 
   // Unterschriftenbereich (am Ende der Seite)
