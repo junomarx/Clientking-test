@@ -356,7 +356,7 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
                 <div className="text-sm mt-2 space-y-1">
                   <div><span className="font-medium">Telefon:</span> {customer.phone || 'k.A.'}</div>
                   <div><span className="font-medium">E-Mail:</span> {customer.email || 'k.A.'}</div>
-                  {customer.address && <div><span className="font-medium">Adresse:</span> {customer.address}</div>}
+                  {customer.street && <div><span className="font-medium">Adresse:</span> {customer.street}</div>}
                 </div>
               </div>
               
@@ -413,7 +413,7 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
               )}
 
               {/* Unterschriftenbereich */}
-              <div className="border-t-2 border-gray-300 pt-8 mt-8">
+              <div className="pt-8 mt-8">
                 <div className="flex justify-between gap-16">
                   <div className="flex-1 text-center">
                     <p className="font-bold mb-4">Gerät abgegeben</p>
@@ -429,7 +429,7 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
                         <div className="border-t border-gray-900 mt-2"></div>
                         <div className="text-sm mt-2">{customer.firstName} {customer.lastName}</div>
                         <div className="text-xs text-gray-600 mt-1">
-                          {repair.dropoffSignedAt && formatDate(repair.dropoffSignedAt)}
+                          {formatDate(repair.createdAt)}
                         </div>
                       </>
                     ) : (

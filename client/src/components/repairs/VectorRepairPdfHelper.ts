@@ -159,8 +159,8 @@ export async function createVectorRepairPdf(props: RepairPdfProps): Promise<jsPD
     pdf.text(`E-Mail: ${customer.email}`, leftMargin, currentY);
     currentY += 4;
   }
-  if (customer.address) {
-    pdf.text(`Adresse: ${customer.address}`, leftMargin, currentY);
+  if (customer.street) {
+    pdf.text(`Adresse: ${customer.street}`, leftMargin, currentY);
     currentY += 4;
   }
   
@@ -297,75 +297,74 @@ export async function createVectorRepairPdf(props: RepairPdfProps): Promise<jsPD
     currentY += 6;
   }
 
-  // Unterschriftenbereich - dynamisch positioniert
-  const signatureY = Math.max(currentY + 10, pageHeight - 70);
+  // Unterschriftenbereich - mehr Abstand von Reparaturbedingungen
+  currentY += 15; // Extra Abstand zu den Reparaturbedingungen
   
-  // Trennlinie
-  pdf.setDrawColor(100, 100, 100);
-  pdf.setLineWidth(1);
-  pdf.line(leftMargin, signatureY, pageWidth - rightMargin, signatureY);
-  
-  let sigY = signatureY + 10;
-  
-  // Unterschriften nebeneinander
-  const signatureWidth = contentWidth / 2 - 20;
+  // Unterschriften nebeneinander (OHNE Trennlinie oben)
+  const signatureWidth = contentWidth / 2 - 10;
   
   // Linke Unterschrift: Gerät abgegeben
   pdf.setFontSize(10);
   pdf.setFont('helvetica', 'bold');
-  pdf.text('Gerät abgegeben', leftMargin + signatureWidth / 2, sigY, { align: 'center' });
-  sigY += 8;
+  pdf.text('Gerät abgegeben', leftMargin + signatureWidth / 2, currentY, { align: 'center' });
   
-  // Unterschrift-Bild oder Platzhalter
+  let leftSigY = currentY + 8;
+  
+  // Unterschrift-Bild oder Platzhalter links
   if (repair.dropoffSignature) {
     try {
-      pdf.addImage(repair.dropoffSignature, 'PNG', leftMargin + 10, sigY, signatureWidth - 20, 15);
+      pdf.addImage(repair.dropoffSignature, 'PNG', leftMargin + 10, leftSigY, signatureWidth - 20, 15);
+      leftSigY += 20;
     } catch (error) {
       console.warn('Abgabe-Unterschrift konnte nicht hinzugefügt werden:', error);
+      leftSigY += 15; // Platz für fehlende Unterschrift
     }
-  }
-  
-  // QR-Code für Abgabe (falls vorhanden)
-  if (repair.dropoffQrCode) {
-    try {
-      pdf.addImage(repair.dropoffQrCode, 'PNG', leftMargin + signatureWidth - 20, sigY + 20, 15, 15);
-    } catch (error) {
-      console.warn('Abgabe-QR-Code konnte nicht hinzugefügt werden:', error);
-    }
+  } else {
+    leftSigY += 15; // Platz für fehlende Unterschrift
   }
   
   // Unterschriftslinie links
-  const lineY = sigY + 20;
   pdf.setDrawColor(50, 50, 50);
   pdf.setLineWidth(0.5);
-  pdf.line(leftMargin + 10, lineY, leftMargin + signatureWidth - 10, lineY);
+  pdf.line(leftMargin + 10, leftSigY, leftMargin + signatureWidth - 10, leftSigY);
+  
+  // Kundenname und Datum links
+  pdf.setFontSize(8);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text(`${customer.firstName} ${customer.lastName}`, leftMargin + signatureWidth / 2, leftSigY + 5, { align: 'center' });
+  pdf.setFontSize(7);
+  pdf.text(formatDate(repair.createdAt), leftMargin + signatureWidth / 2, leftSigY + 9, { align: 'center' });
   
   // Rechte Unterschrift: Gerät abgeholt
-  const rightSigX = leftMargin + signatureWidth + 40;
+  const rightSigX = leftMargin + signatureWidth + 20;
   pdf.setFontSize(10);
   pdf.setFont('helvetica', 'bold');
-  pdf.text('Gerät abgeholt', rightSigX + signatureWidth / 2, sigY - 8, { align: 'center' });
+  pdf.text('Gerät abgeholt', rightSigX + signatureWidth / 2, currentY, { align: 'center' });
   
-  // Unterschrift-Bild oder Platzhalter
+  let rightSigY = currentY + 8;
+  
+  // Unterschrift-Bild oder Platzhalter rechts
   if (repair.pickupSignature) {
     try {
-      pdf.addImage(repair.pickupSignature, 'PNG', rightSigX + 10, sigY, signatureWidth - 20, 15);
+      pdf.addImage(repair.pickupSignature, 'PNG', rightSigX + 10, rightSigY, signatureWidth - 20, 15);
+      rightSigY += 20;
     } catch (error) {
       console.warn('Abholung-Unterschrift konnte nicht hinzugefügt werden:', error);
+      rightSigY += 15; // Platz für fehlende Unterschrift
     }
-  }
-  
-  // QR-Code für Abholung (falls vorhanden)
-  if (repair.pickupQrCode) {
-    try {
-      pdf.addImage(repair.pickupQrCode, 'PNG', rightSigX + signatureWidth - 20, sigY + 20, 15, 15);
-    } catch (error) {
-      console.warn('Abholung-QR-Code konnte nicht hinzugefügt werden:', error);
-    }
+  } else {
+    rightSigY += 15; // Platz für fehlende Unterschrift
   }
   
   // Unterschriftslinie rechts
-  pdf.line(rightSigX + 10, lineY, rightSigX + signatureWidth - 10, lineY);
+  pdf.line(rightSigX + 10, rightSigY, rightSigX + signatureWidth - 10, rightSigY);
+  
+  // Kundenname und Datum rechts
+  pdf.setFontSize(8);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text(`${customer.firstName} ${customer.lastName}`, rightSigX + signatureWidth / 2, rightSigY + 5, { align: 'center' });
+  pdf.setFontSize(7);
+  pdf.text('', rightSigX + signatureWidth / 2, rightSigY + 9, { align: 'center' }); // Leeres Datum für Abholung
   
   return pdf;
 }
