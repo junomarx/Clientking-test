@@ -99,7 +99,7 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
     onClose();
   };
 
-  // E-Mail-Versand mit optimierter PDF-Größe
+  // E-Mail-Versand mit Vector PDF
   const handleSendEmail = async () => {
     if (!customer?.email) {
       toast({
@@ -121,19 +121,13 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
 
     // Sofort Feedback geben
     toast({
-      title: "📧 E-Mail wird gesendet...",
-      description: "Das PDF wird gerade an den Kunden gesendet. Dies kann bis zu 10 Sekunden dauern.",
+      title: "E-Mail wird gesendet...",
+      description: "Das Vector-PDF wird gerade an den Kunden gesendet.",
     });
     
     try {
-      // Vereinfachte E-Mail mit bereits generiertem PDF
+      // PDF als Base64 für E-Mail-Versand
       const pdfBase64 = generatedPdf.output('datauristring').split(',')[1];
-      
-      console.log('Sende E-Mail für Reparatur:', repair.id, 'an:', customer.email);
-      
-      // Timeout für längere E-Mail-Operationen erhöhen
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 Sekunden Timeout
       
       const response = await fetch('/api/send-repair-email', {
         method: 'POST',
@@ -141,7 +135,6 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        signal: controller.signal,
         body: JSON.stringify({
           repairId: repair.id,
           recipient: customer.email,
@@ -150,21 +143,15 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
         })
       });
 
-      clearTimeout(timeoutId);
-      console.log('Response status:', response.status);
-      
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Server error:', errorText);
         throw new Error(`Server-Fehler: ${response.status}`);
       }
 
       const result = await response.json();
-      console.log('E-Mail Result:', result);
       
       if (result.success) {
         toast({
-          title: "✅ E-Mail erfolgreich gesendet!",
+          title: "E-Mail erfolgreich gesendet!",
           description: `Das Reparaturauftrag-PDF wurde erfolgreich an ${customer.email} gesendet.`,
         });
       } else {
@@ -173,20 +160,11 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
       
     } catch (err: any) {
       console.error('Fehler beim E-Mail-Versand:', err);
-      
-      if (err.name === 'AbortError') {
-        toast({
-          title: "E-Mail-Timeout",
-          description: "Die E-Mail-Sendung dauert länger als erwartet. Sie wird im Hintergrund fortgesetzt.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "E-Mail-Fehler",
-          description: `Fehler beim E-Mail-Versand: ${err.message}`,
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "E-Mail-Fehler",
+        description: `Fehler beim E-Mail-Versand: ${err.message}`,
+        variant: "destructive",
+      });
     }
     
     setShowActionDialog(false);
