@@ -28,7 +28,10 @@ interface PrintTemplate {
 
 // Schema für die Bon-Einstellungen
 const receiptSettingsSchema = z.object({
-  receiptWidth: z.enum(["58mm", "80mm"])
+  receiptWidth: z.enum(["58mm", "80mm"]),
+  labelFormat: z.enum(["portrait", "landscape"]),
+  labelWidth: z.number(),
+  labelHeight: z.number()
 });
 
 type ReceiptSettingsFormValues = z.infer<typeof receiptSettingsSchema>;
@@ -57,6 +60,9 @@ export function PrintSettingsTab() {
     resolver: zodResolver(receiptSettingsSchema),
     defaultValues: {
       receiptWidth: "80mm",
+      labelFormat: "portrait",
+      labelWidth: 32,
+      labelHeight: 57,
     },
   });
 
@@ -67,7 +73,12 @@ export function PrintSettingsTab() {
         ? settings.receiptWidth as "58mm" | "80mm" 
         : "80mm" as const;
       
-      receiptForm.reset({ receiptWidth });
+      receiptForm.reset({ 
+        receiptWidth,
+        labelFormat: (settings.labelFormat === "landscape" ? "landscape" : "portrait") as "portrait" | "landscape",
+        labelWidth: settings.labelWidth || 32,
+        labelHeight: settings.labelHeight || 57
+      });
     }
   }, [settings, receiptForm]);
   
@@ -87,14 +98,14 @@ export function PrintSettingsTab() {
       queryClient.invalidateQueries({ queryKey: ["/api/business-settings"] });
       toast({
         title: "Erfolg!",
-        description: "Die Bon-Einstellungen wurden gespeichert.",
+        description: "Die Druckeinstellungen wurden gespeichert.",
         duration: 2000,
       });
     },
     onError: (error) => {
       toast({
         title: "Fehler!",
-        description: `Die Bon-Einstellungen konnten nicht gespeichert werden: ${error.message}`,
+        description: `Die Druckeinstellungen konnten nicht gespeichert werden: ${error.message}`,
         variant: "destructive",
         duration: 3000,
       });
@@ -161,7 +172,7 @@ export function PrintSettingsTab() {
       <Card className="mb-6">
         <CardHeader className="p-4 md:p-6 pb-2 md:pb-3">
           <CardTitle className="text-base md:text-lg font-semibold">Bon-Einstellungen</CardTitle>
-          <CardDescription className="text-xs md:text-sm">Konfigurieren Sie Ihre Bon-Ausgabe</CardDescription>
+          <CardDescription className="text-xs md:text-sm">Konfigurieren Sie Ihre Bon-Ausgabe und Etikett-Formate</CardDescription>
         </CardHeader>
         <CardContent className="p-4 md:p-6 pt-2 md:pt-3">
           <Form {...receiptForm}>
@@ -184,6 +195,32 @@ export function PrintSettingsTab() {
                         <SelectContent>
                           <SelectItem value="58mm">58mm (Thermo-Drucker)</SelectItem>
                           <SelectItem value="80mm">80mm (Standard-Drucker)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={receiptForm.control}
+                name="labelFormat"
+                render={({ field }) => (
+                  <FormItem className="w-full">
+                    <FormLabel className="text-sm">Etikett-Format</FormLabel>
+                    <FormControl>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        value={field.value}
+                        defaultValue={field.value}
+                      >
+                        <SelectTrigger className="w-full h-9 text-sm">
+                          <SelectValue placeholder="Etikett-Format wählen" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="portrait">Hochformat (32mm x 57mm)</SelectItem>
+                          <SelectItem value="landscape">Querformat (57mm x 32mm)</SelectItem>
                         </SelectContent>
                       </Select>
                     </FormControl>
