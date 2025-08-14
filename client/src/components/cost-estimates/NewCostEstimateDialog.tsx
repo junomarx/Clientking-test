@@ -84,13 +84,28 @@ interface NewCostEstimateDialogProps {
     postalCode?: string;
     city?: string;
   };
+  editMode?: {
+    id: number;
+    title: string;
+    deviceType: string;
+    brand: string;
+    model: string;
+    serialNumber?: string;
+    issueDescription: string;
+    subtotal: string;
+    taxRate: string;
+    taxAmount: string;
+    totalPrice: string;
+    items: any[];
+  };
 }
 
 export function NewCostEstimateDialog({ 
   open, 
   onClose,
   onCreateCostEstimate,
-  preselectedCustomer 
+  preselectedCustomer,
+  editMode
 }: NewCostEstimateDialogProps) {
   const { toast } = useToast();
   
@@ -112,8 +127,8 @@ export function NewCostEstimateDialog({
   const [selectedBrandIndex, setSelectedBrandIndex] = useState(-1);
   const [selectedModelIndex, setSelectedModelIndex] = useState(-1);
   
-  // Positionen-Stati
-  const [items, setItems] = useState<CostEstimateItem[]>([]);
+  // Positionen-Stati - mit EditMode-Unterstützung
+  const [items, setItems] = useState<CostEstimateItem[]>(editMode?.items || []);
   const [showAddItemForm, setShowAddItemForm] = useState<boolean>(false);
   const [newItem, setNewItem] = useState<CostEstimateItem>({
     description: "",
@@ -166,7 +181,7 @@ export function NewCostEstimateDialog({
       // Reset form with new default values including customer data
       const resetValues = {
         customerId: preselectedCustomer.id,
-        title: 'Kostenvoranschlag',
+        title: editMode?.title || 'Kostenvoranschlag',
         firstName: preselectedCustomer.firstName,
         lastName: preselectedCustomer.lastName,
         phone: preselectedCustomer.phone,
@@ -683,9 +698,14 @@ export function NewCostEstimateDialog({
     <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Kostenvoranschlag erstellen</DialogTitle>
+          <DialogTitle className="text-xl font-bold">
+            {editMode ? "Kostenvoranschlag bearbeiten" : "Kostenvoranschlag erstellen"}
+          </DialogTitle>
           <DialogDescription>
-            Geben Sie die Details für den neuen Kostenvoranschlag ein.
+            {editMode 
+              ? "Bearbeiten Sie die Details des Kostenvoranschlags." 
+              : "Geben Sie die Details für den neuen Kostenvoranschlag ein."
+            }
           </DialogDescription>
         </DialogHeader>
         

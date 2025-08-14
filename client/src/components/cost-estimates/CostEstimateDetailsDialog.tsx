@@ -32,6 +32,7 @@ import { formatDistanceToNow, format } from "date-fns";
 import { de } from "date-fns/locale";
 import { PrintButtons } from "./PrintButtons";
 import { generatePrintHtml } from "./PrintTemplate";
+import { NewCostEstimateDialog } from "./NewCostEstimateDialog";
 
 interface CostEstimateDetailsDialogProps {
   open: boolean;
@@ -91,6 +92,7 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
   const [activeTab, setActiveTab] = useState("details");
   const [showAddItemForm, setShowAddItemForm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const [newItem, setNewItem] = useState<{
     description: string;
     quantity: number;
@@ -381,6 +383,44 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
   const handleDelete = () => {
     if (!estimateId) return;
     deleteMutation.mutate(estimateId);
+  };
+
+  // Funktion zum Bearbeiten eines Kostenvoranschlags
+  const handleEdit = () => {
+    setShowEditDialog(true);
+  };
+
+  // Mutation für Kostenvoranschlag-Aktualisierung
+  const updateCostEstimateMutation = useMutation({
+    mutationFn: async (data: any) => {
+      console.log("Aktualisiere Kostenvoranschlag:", estimateId, data);
+      const response = await apiRequest('PUT', `/api/cost-estimates/${estimateId}`, data);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      console.log("Kostenvoranschlag erfolgreich aktualisiert:", data);
+      toast({
+        title: "Kostenvoranschlag aktualisiert",
+        description: `Änderungen wurden erfolgreich gespeichert`,
+      });
+      // Cache aktualisieren
+      queryClient.invalidateQueries({ queryKey: ['/api/cost-estimates'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/cost-estimates', estimateId] });
+      setShowEditDialog(false);
+    },
+    onError: (error: any) => {
+      console.error("Fehler beim Aktualisieren des Kostenvoranschlags:", error);
+      toast({
+        title: "Fehler",
+        description: error.message || "Kostenvoranschlag konnte nicht aktualisiert werden",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleUpdateCostEstimate = (data: any) => {
+    console.log("CostEstimateDetailsDialog: handleUpdateCostEstimate aufgerufen mit:", data);
+    updateCostEstimateMutation.mutate(data);
   };
 
   // Status-Anzeige formatieren
@@ -739,6 +779,18 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                   </Button>
                   
                   <div className="flex flex-wrap items-center gap-2">
+                    {/* Bearbeiten Button - nur wenn nicht konvertiert und nicht abgelehnt */}
+                    {!estimate.convertedToRepair && estimate.status !== 'abgelehnt' && (
+                      <Button 
+                        onClick={handleEdit}
+                        variant="outline"
+                        disabled={updateCostEstimateMutation.isPending}
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Bearbeiten
+                      </Button>
+                    )}
+                    
                     {estimate.status === 'offen' && (
                       <>
                         <Button 
@@ -795,6 +847,49 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
           ) : null}
         </DialogContent>
       </Dialog>
+
+      {/* Edit Cost Estimate Dialog */}
+      {showEditDialog && estimate && (
+        <NewCostEstimateDialog
+          open={showEditDialog}
+          onClose={() => setShowEditDialog(false)}
+          onCreateCostEstimate={handleUpdateCostEstimate}
+          preselectedCustomer={customer ? {
+            id: customer.id,
+            firstName: customer.firstName,
+            lastName: customer.lastName,
+            phone: customer.phone,
+            email: customer.email || undefined,
+            address: customer.address,
+            postalCode: customer.zipCode,
+            city: customer.city
+          } : {
+            id: estimate.customer_id || 0,
+            firstName: estimate.firstname || "",
+            lastName: estimate.lastname || "",
+            phone: estimate.phone || "",
+            email: estimate.email || undefined,
+            address: "",
+            postalCode: "",
+            city: ""
+          }}
+          // Vorausgefüllte Daten für Bearbeitung
+          editMode={{
+            id: estimate.id,
+            title: estimate.title || "Kostenvoranschlag",
+            deviceType: estimate.deviceType,
+            brand: estimate.brand,
+            model: estimate.model,
+            serialNumber: estimate.serial_number || "",
+            issueDescription: estimate.issue || estimate.description || "",
+            subtotal: estimate.subtotal || "0,00",
+            taxRate: estimate.tax_rate || "20",
+            taxAmount: estimate.tax_amount || "0,00",
+            totalPrice: estimate.total || "0,00",
+            items: items || []
+          }}
+        />
+      )}
     </div>
   );
 }
