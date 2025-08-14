@@ -163,28 +163,39 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
               height: ${labelHeight - 4}mm;
               display: flex;
               flex-direction: ${labelFormat === 'landscape' ? 'row' : 'column'};
-              align-items: center;
+              align-items: ${labelFormat === 'landscape' ? 'stretch' : 'center'};
               justify-content: ${labelFormat === 'landscape' ? 'space-between' : 'space-between'};
+              gap: ${labelFormat === 'landscape' ? '2mm' : '0'};
             }
-            /* Format-spezifische Container */
+            /* Querformat-spezifische Container */
+            ${labelFormat === 'landscape' ? `
             .left-section {
               display: flex;
               flex-direction: column;
               align-items: center;
-              justify-content: ${labelFormat === 'landscape' ? 'space-between' : 'center'};
-              width: ${labelFormat === 'landscape' ? '35%' : '100%'};
+              justify-content: space-between;
+              width: 18mm;
               height: 100%;
-              ${labelFormat === 'landscape' ? 'padding: 1mm 0;' : ''}
+              padding: 1mm 0;
+              flex-shrink: 0;
             }
             .right-section {
               display: flex;
               flex-direction: column;
-              justify-content: ${labelFormat === 'landscape' ? 'flex-start' : 'center'};
-              width: ${labelFormat === 'landscape' ? '65%' : '100%'};
+              justify-content: flex-start;
+              flex: 1;
               height: 100%;
-              ${labelFormat === 'landscape' ? 'padding: 1mm 0 1mm 2mm;' : ''}
-              gap: ${labelFormat === 'landscape' ? '0.5mm' : '1mm'};
+              padding: 1mm 0 1mm 2mm;
+              gap: 0.3mm;
             }
+            ` : `
+            .left-section {
+              width: 100%;
+            }
+            .right-section {
+              width: 100%;
+            }
+            `}
             
             /* Element-Stile - formatabhängig */
             .repair-number {
