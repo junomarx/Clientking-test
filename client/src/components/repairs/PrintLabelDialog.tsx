@@ -131,94 +131,84 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
           <meta charset="UTF-8">
           <style>
             @page {
-              size: 57mm 32mm;
+              size: 32mm 57mm;
               margin: 0;
             }
             html, body {
               margin: 0;
               padding: 0;
-              width: 57mm;
-              height: 32mm;
+              width: 32mm;
+              height: 57mm;
               overflow: hidden;
               font-family: Arial, sans-serif;
             }
             .label {
-              width: 57mm;
-              height: 32mm;
+              width: 32mm;
+              height: 57mm;
               box-sizing: border-box;
-              padding: 2mm;
+              padding: 3mm;
               background-color: white;
               display: flex;
-              flex-direction: row;
+              flex-direction: column;
               align-items: center;
-              justify-content: space-between;
             }
             .print-area {
-              width: 53mm;
-              height: 28mm;
+              width: 26mm;
+              height: 51mm;
               display: flex;
-              flex-direction: row;
+              flex-direction: column;
               align-items: center;
               justify-content: space-between;
             }
-            .left-section {
-              flex: 1;
-              display: flex;
-              flex-direction: column;
-              justify-content: center;
-              padding-right: 2mm;
-            }
-            .right-section {
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: center;
-            }
             .repair-number {
-              font-size: 12px;
+              text-align: center;
+              font-size: 14px;
               font-weight: bold;
-              margin-bottom: 1mm;
+              margin-bottom: 0.2mm;
             }
             .customer-name {
-              font-size: 9px;
+              text-align: center;
+              font-size: 10px;
               font-weight: bold;
-              margin-bottom: 0.5mm;
+              margin-bottom: 0.3mm;
             }
             .customer-phone {
-              font-size: 7px;
-              margin-bottom: 0.5mm;
-              color: #333;
-            }
-            .model {
+              text-align: center;
               font-size: 8px;
-              font-weight: bold;
               margin-bottom: 0.5mm;
-            }
-            .device-code {
-              font-size: 7px;
-              font-weight: bold;
               color: #333;
-              border: 1px solid #666;
-              padding: 0.5mm 1mm;
-              background-color: #f0f0f0;
-              border-radius: 1mm;
-              display: inline-block;
-              margin-bottom: 0.5mm;
-            }
-            .issue {
-              font-size: 7px;
-              white-space: nowrap;
-              overflow: hidden;
-              text-overflow: ellipsis;
-              max-width: 25mm;
             }
             .qr-code {
-              width: 20mm;
-              height: 20mm;
+              margin-bottom: 1.5mm;
+              width: 17mm;
+              height: 17mm;
             }
             .qr-code svg {
               width: 100%;
               height: 100%;
+            }
+            .device-code {
+              font-size: 8px;
+              margin-bottom: 1.5mm;
+              font-weight: bold;
+              color: #333;
+              border: 1px solid #666;
+              padding: 1mm;
+              background-color: #f0f0f0;
+              border-radius: 1mm;
+              display: inline-block;
+              text-align: center;
+            }
+            .model {
+              text-align: center;
+              font-size: 9px;
+              font-weight: bold;
+              margin-bottom: 1mm;
+            }
+            .issue {
+              text-align: center;
+              font-size: 8px;
+              white-space: pre-wrap;
             }
           </style>
         </head>
