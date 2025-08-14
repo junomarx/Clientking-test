@@ -173,49 +173,50 @@ export function NewCostEstimateDialog({
     city: watchedValues.city
   });
   
-  // useEffect to populate form with preselected customer data
+  // useEffect to populate form with preselected customer data AND editMode data
   useEffect(() => {
-    if (preselectedCustomer && open) {
+    if ((preselectedCustomer || editMode) && open) {
       console.log('Setting preselected customer data:', preselectedCustomer);
+      console.log('Setting editMode data:', editMode);
       
-      // Reset form with new default values including customer data
+      // Reset form with new default values including customer data AND edit data
       const resetValues = {
-        customerId: preselectedCustomer.id,
+        customerId: preselectedCustomer?.id || editMode?.customerId,
         title: editMode?.title || 'Kostenvoranschlag',
-        firstName: preselectedCustomer.firstName,
-        lastName: preselectedCustomer.lastName,
-        phone: preselectedCustomer.phone,
-        email: preselectedCustomer.email || '',
-        address: preselectedCustomer.address || '',
-        postalCode: preselectedCustomer.postalCode || '',
-        city: preselectedCustomer.city || '',
-        deviceType: '',
-        brand: '',
-        model: '',
-        serialNumber: '',
-        issueDescription: '',
-        subtotal: '0,00',
-        taxRate: '20',
-        taxAmount: '0,00',
-        totalPrice: '0,00'
+        firstName: preselectedCustomer?.firstName || "",
+        lastName: preselectedCustomer?.lastName || "",
+        phone: preselectedCustomer?.phone || "",
+        email: preselectedCustomer?.email || '',
+        address: preselectedCustomer?.address || '',
+        postalCode: preselectedCustomer?.postalCode || '',
+        city: preselectedCustomer?.city || '',
+        deviceType: editMode?.deviceType || '',
+        brand: editMode?.brand || '',
+        model: editMode?.model || '',
+        serialNumber: editMode?.serialNumber || '',
+        issueDescription: editMode?.issue || '',
+        subtotal: editMode?.subtotal || '0,00',
+        taxRate: editMode?.taxRate || '20',
+        taxAmount: editMode?.taxAmount || '0,00',
+        totalPrice: editMode?.totalPrice || '0,00'
       };
       
       console.log('Resetting form with values:', resetValues);
       form.reset(resetValues);
       
       // Set customer ID for future reference
-      setSelectedCustomerId(preselectedCustomer.id);
+      setSelectedCustomerId(preselectedCustomer?.id || editMode?.customerId || null);
       
       // Force re-render by triggering form validation
       setTimeout(() => {
         console.log('Form values after reset:', form.getValues());
       }, 100);
-    } else if (open && !preselectedCustomer) {
-      // Reset form when opening without preselected customer
+    } else if (open && !preselectedCustomer && !editMode) {
+      // Reset form when opening without preselected customer or editMode
       form.reset();
       setSelectedCustomerId(null);
     }
-  }, [preselectedCustomer, open, form]);
+  }, [preselectedCustomer, editMode, open, form]);
   
   // Vereinfachter Ansatz für Kostenvoranschläge - ohne Kundendatenbank-Zugriff
   const checkForExistingCustomer = async (firstName: string, lastName: string) => {
