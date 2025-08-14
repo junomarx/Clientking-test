@@ -166,68 +166,83 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
               align-items: center;
               justify-content: ${labelFormat === 'landscape' ? 'space-between' : 'space-between'};
             }
-            /* Querformat-spezifische Container */
+            /* Format-spezifische Container */
             .left-section {
               display: flex;
               flex-direction: column;
               align-items: center;
-              justify-content: center;
-              width: 40%;
+              justify-content: ${labelFormat === 'landscape' ? 'space-between' : 'center'};
+              width: ${labelFormat === 'landscape' ? '35%' : '100%'};
               height: 100%;
+              ${labelFormat === 'landscape' ? 'padding: 1mm 0;' : ''}
             }
             .right-section {
               display: flex;
               flex-direction: column;
-              justify-content: center;
-              width: 60%;
+              justify-content: ${labelFormat === 'landscape' ? 'flex-start' : 'center'};
+              width: ${labelFormat === 'landscape' ? '65%' : '100%'};
               height: 100%;
-              padding-left: 2mm;
+              ${labelFormat === 'landscape' ? 'padding: 1mm 0 1mm 2mm;' : ''}
+              gap: ${labelFormat === 'landscape' ? '0.5mm' : '1mm'};
             }
             
-            /* Allgemeine Element-Stile */
+            /* Element-Stile - formatabhängig */
             .repair-number {
-              font-size: 14px;
+              font-size: ${labelFormat === 'landscape' ? '11px' : '14px'};
               font-weight: bold;
-              margin-bottom: 0.2mm;
+              margin-bottom: ${labelFormat === 'landscape' ? '1mm' : '0.2mm'};
+              line-height: 1;
             }
             .customer-name {
-              font-size: 10px;
+              font-size: ${labelFormat === 'landscape' ? '11px' : '10px'};
               font-weight: bold;
-              margin-bottom: 0.3mm;
+              margin-bottom: ${labelFormat === 'landscape' ? '0.2mm' : '0.3mm'};
+              line-height: 1.1;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
             }
             .customer-phone {
-              font-size: 8px;
-              margin-bottom: 0.5mm;
+              font-size: ${labelFormat === 'landscape' ? '9px' : '8px'};
+              margin-bottom: ${labelFormat === 'landscape' ? '0.2mm' : '0.5mm'};
               color: #333;
+              line-height: 1;
             }
             .qr-code {
-              margin-bottom: 1.5mm;
-              width: 17mm;
-              height: 17mm;
+              margin-bottom: ${labelFormat === 'landscape' ? '0' : '1.5mm'};
+              width: ${labelFormat === 'landscape' ? '12mm' : '17mm'};
+              height: ${labelFormat === 'landscape' ? '12mm' : '17mm'};
             }
             .qr-code svg {
               width: 100%;
               height: 100%;
             }
             .device-code {
-              font-size: 8px;
-              margin-bottom: 1.5mm;
+              font-size: ${labelFormat === 'landscape' ? '7px' : '8px'};
+              margin-bottom: ${labelFormat === 'landscape' ? '0.2mm' : '1.5mm'};
               font-weight: bold;
               color: #333;
               border: 1px solid #666;
-              padding: 1mm;
+              padding: ${labelFormat === 'landscape' ? '0.5mm' : '1mm'};
               background-color: #f0f0f0;
               border-radius: 1mm;
               display: inline-block;
+              line-height: 1;
             }
             .model {
-              font-size: 9px;
+              font-size: ${labelFormat === 'landscape' ? '10px' : '9px'};
               font-weight: bold;
-              margin-bottom: 1mm;
+              margin-bottom: ${labelFormat === 'landscape' ? '0.2mm' : '1mm'};
+              line-height: 1.1;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
             }
             .issue {
-              font-size: 8px;
-              white-space: pre-wrap;
+              font-size: ${labelFormat === 'landscape' ? '8px' : '8px'};
+              white-space: ${labelFormat === 'landscape' ? 'normal' : 'pre-wrap'};
+              line-height: 1.1;
+              ${labelFormat === 'landscape' ? 'overflow: hidden; text-overflow: ellipsis; max-height: 3.2em;' : ''}
             }
             
             /* Text-Ausrichtung basierend auf Layout */
