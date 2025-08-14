@@ -244,7 +244,7 @@ export function SettingsPageContent() {
       website: "",
       logoImage: "",
       receiptWidth: "80mm",
-      labelFormat: "portrait",
+      labelFormat: "portrait" as const,
       labelWidth: 32,
       labelHeight: 57,
       // SMTP-Einstellungen
@@ -331,6 +331,9 @@ export function SettingsPageContent() {
         website: settings.website === null ? undefined : settings.website,
         logoImage: settings.logoImage === null ? undefined : settings.logoImage,
         receiptWidth,
+        labelFormat: (settings.labelFormat === "landscape" ? "landscape" : "portrait") as "portrait" | "landscape",
+        labelWidth: settings.labelWidth || 32,
+        labelHeight: settings.labelHeight || 57,
         smtpHost: settings.smtpHost === null ? undefined : settings.smtpHost,
         smtpPort: settings.smtpPort === null ? undefined : settings.smtpPort,
         smtpUser: settings.smtpUser === null ? undefined : settings.smtpUser,
