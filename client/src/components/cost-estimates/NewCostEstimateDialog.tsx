@@ -662,8 +662,53 @@ export function NewCostEstimateDialog({
     
     console.log("Finale Formular-Daten für API:", formData);
     
-    // Kostenvoranschlag erstellen
-    if (onCreateCostEstimate) {
+    // EditMode: Kostenvoranschlag aktualisieren
+    if (editMode && editMode.id) {
+      try {
+        // PUT-Request für Update
+        const updateData = {
+          ...formData,
+          serialNumber: data.serialNumber || null // Explizit übertragen
+        };
+        
+        console.log("UPDATE-Daten für EditMode:", updateData);
+        
+        // API-Request für Update
+        apiRequest('PUT', `/api/cost-estimates/${editMode.id}`, updateData)
+          .then(() => {
+            toast({
+              title: "Kostenvoranschlag aktualisiert",
+              description: `Änderungen gespeichert für ${data.firstName} ${data.lastName}`,
+            });
+            
+            // Dialog schließen
+            onClose();
+            
+            // Cache invalidieren, damit die Änderungen sichtbar werden
+            import('@/lib/queryClient').then(({ queryClient }) => {
+              queryClient.invalidateQueries({ queryKey: ['/api/cost-estimates'] });
+              queryClient.invalidateQueries({ queryKey: ['/api/cost-estimates', editMode.id] });
+            });
+          })
+          .catch((error) => {
+            console.error("Fehler beim Aktualisieren:", error);
+            toast({
+              title: "Fehler beim Aktualisieren",
+              description: "Der Kostenvoranschlag konnte nicht aktualisiert werden",
+              variant: "destructive",
+            });
+          });
+      } catch (error) {
+        console.error("Fehler beim Aktualisieren des Kostenvoranschlags:", error);
+        toast({
+          title: "Fehler beim Aktualisieren",
+          description: "Der Kostenvoranschlag konnte nicht aktualisiert werden",
+          variant: "destructive",
+        });
+      }
+    }
+    // Erstellen: Kostenvoranschlag neu erstellen
+    else if (onCreateCostEstimate) {
       try {
         onCreateCostEstimate(formData);
         
