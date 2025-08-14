@@ -183,17 +183,17 @@ export function NewCostEstimateDialog({
       const resetValues = {
         customerId: preselectedCustomer?.id || editMode?.customerId,
         title: editMode?.title || 'Kostenvoranschlag',
-        firstName: preselectedCustomer?.firstName || "",
-        lastName: preselectedCustomer?.lastName || "",
-        phone: preselectedCustomer?.phone || "",
-        email: preselectedCustomer?.email || '',
-        address: preselectedCustomer?.address || '',
-        postalCode: preselectedCustomer?.postalCode || '',
-        city: preselectedCustomer?.city || '',
+        firstName: preselectedCustomer?.firstName || editMode?.firstName || "",
+        lastName: preselectedCustomer?.lastName || editMode?.lastName || "",
+        phone: preselectedCustomer?.phone || editMode?.phone || "",
+        email: preselectedCustomer?.email || editMode?.email || '',
+        address: preselectedCustomer?.address || editMode?.address || '',
+        postalCode: preselectedCustomer?.postalCode || editMode?.postalCode || '',
+        city: preselectedCustomer?.city || editMode?.city || '',
         deviceType: editMode?.deviceType || '',
         brand: editMode?.brand || '',
         model: editMode?.model || '',
-        serialNumber: editMode?.serialNumber || '',
+        serialNumber: editMode?.serial_number || '',
         issueDescription: editMode?.issue || '',
         subtotal: editMode?.subtotal || '0,00',
         taxRate: editMode?.taxRate || '20',
@@ -665,10 +665,14 @@ export function NewCostEstimateDialog({
     // EditMode: Kostenvoranschlag aktualisieren
     if (editMode && editMode.id) {
       try {
-        // PUT-Request für Update
+        // PUT-Request für Update - alle Felder explizit übertragen
         const updateData = {
           ...formData,
-          serialNumber: data.serialNumber || null // Explizit übertragen
+          serial_number: data.serialNumber || null, // Backend erwartet snake_case
+          deviceType: data.deviceType,
+          brand: data.brand,
+          model: data.model,
+          issue: data.issueDescription // Mapping von issueDescription zu issue
         };
         
         console.log("UPDATE-Daten für EditMode:", updateData);
