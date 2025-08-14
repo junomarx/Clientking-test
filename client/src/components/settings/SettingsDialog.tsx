@@ -74,6 +74,9 @@ const businessSettingsSchema = z.object({
   website: z.string().optional(),
   colorTheme: z.enum(["blue", "green", "purple", "red", "orange"]).default("blue"),
   receiptWidth: z.enum(["58mm", "80mm"]).default("80mm"),
+  labelFormat: z.enum(["portrait", "landscape"]).default("portrait"),
+  labelWidth: z.number().min(10).max(200).optional(),
+  labelHeight: z.number().min(10).max(200).optional(),
   
   // E-Mail-SMTP-Einstellungen
   smtpSenderName: z.string().optional(),

@@ -318,6 +318,11 @@ export const businessSettings = pgTable("business_settings", {
   // Maximale Anzahl Mitarbeiter pro Shop (Standard: 2)
   maxEmployees: integer("max_employees").default(2).notNull(),
   
+  // Etikett-Druck-Einstellungen
+  labelFormat: text("label_format").default("portrait").notNull(), // portrait oder landscape
+  labelWidth: integer("label_width").default(32), // Etikett-Breite in mm (Standard: 32mm)
+  labelHeight: integer("label_height").default(57), // Etikett-Höhe in mm (Standard: 57mm)
+  
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   // Jede Geschäftseinstellung gehört zu einem bestimmten Benutzer
   userId: integer("user_id").references(() => users.id),

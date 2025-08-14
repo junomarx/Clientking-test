@@ -122,6 +122,11 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
     console.log('deviceCode truthy:', !!deviceCode);
     console.log('repair?.deviceCodeType:', repair?.deviceCodeType);
     
+    // Dynamische Größen basierend auf Settings
+    const labelFormat = settings?.labelFormat || 'portrait';
+    const labelWidth = settings?.labelWidth || 32;
+    const labelHeight = settings?.labelHeight || 57;
+    
     // Fülle das Druckfenster mit Inhalten
     printWindow.document.write(`
       <!DOCTYPE html>
@@ -131,49 +136,66 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
           <meta charset="UTF-8">
           <style>
             @page {
-              size: 32mm 57mm;
+              size: ${labelWidth}mm ${labelHeight}mm;
               margin: 0;
             }
             html, body {
               margin: 0;
               padding: 0;
-              width: 32mm;
-              height: 57mm;
+              width: ${labelWidth}mm;
+              height: ${labelHeight}mm;
               overflow: hidden;
               font-family: Arial, sans-serif;
             }
             .label {
-              width: 32mm;
-              height: 57mm;
+              width: ${labelWidth}mm;
+              height: ${labelHeight}mm;
               box-sizing: border-box;
-              padding: 3mm;
+              padding: 2mm;
               background-color: white;
               display: flex;
-              flex-direction: column;
+              flex-direction: ${labelFormat === 'landscape' ? 'row' : 'column'};
               align-items: center;
+              justify-content: ${labelFormat === 'landscape' ? 'space-between' : 'flex-start'};
             }
             .print-area {
-              width: 26mm;
-              height: 51mm;
+              width: ${labelWidth - 4}mm;
+              height: ${labelHeight - 4}mm;
+              display: flex;
+              flex-direction: ${labelFormat === 'landscape' ? 'row' : 'column'};
+              align-items: center;
+              justify-content: ${labelFormat === 'landscape' ? 'space-between' : 'space-between'};
+            }
+            /* Querformat-spezifische Container */
+            .left-section {
               display: flex;
               flex-direction: column;
               align-items: center;
-              justify-content: space-between;
+              justify-content: center;
+              width: 40%;
+              height: 100%;
             }
+            .right-section {
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+              width: 60%;
+              height: 100%;
+              padding-left: 2mm;
+            }
+            
+            /* Allgemeine Element-Stile */
             .repair-number {
-              text-align: center;
               font-size: 14px;
               font-weight: bold;
               margin-bottom: 0.2mm;
             }
             .customer-name {
-              text-align: center;
               font-size: 10px;
               font-weight: bold;
               margin-bottom: 0.3mm;
             }
             .customer-phone {
-              text-align: center;
               font-size: 8px;
               margin-bottom: 0.5mm;
               color: #333;
@@ -197,37 +219,63 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
               background-color: #f0f0f0;
               border-radius: 1mm;
               display: inline-block;
-              text-align: center;
             }
             .model {
-              text-align: center;
               font-size: 9px;
               font-weight: bold;
               margin-bottom: 1mm;
             }
             .issue {
-              text-align: center;
               font-size: 8px;
               white-space: pre-wrap;
             }
+            
+            /* Text-Ausrichtung basierend auf Layout */
+            ${labelFormat === 'portrait' ? `
+            .repair-number, .customer-name, .customer-phone, 
+            .device-code, .model, .issue {
+              text-align: center;
+            }
+            ` : `
+            .left-section .repair-number {
+              text-align: center;
+            }
+            .right-section .customer-name, 
+            .right-section .customer-phone,
+            .right-section .model, 
+            .right-section .device-code,
+            .right-section .issue {
+              text-align: left;
+            }
+            `}
           </style>
         </head>
         <body>
           <div class="label">
             <div class="print-area">
-              <div class="repair-number">${orderCode}</div>
-              
-              <div class="customer-name">${firstName} ${lastName}</div>
-              
-              ${customerPhone ? `<div class="customer-phone">${customerPhone}</div>` : ''}
-              
-              <div class="qr-code">${qrCode}</div>
-              
-              ${deviceCode ? `<div class="device-code">${deviceCode}</div>` : `<!-- Kein Device-Code: deviceCodeData=${JSON.stringify(deviceCodeData)}, deviceCode='${deviceCode}' -->`}
-              
-              <div class="model">${model}</div>
-              
-              <div class="issue">${repairIssue ? repairIssue.split(',').join('\n') : ''}</div>
+              ${labelFormat === 'landscape' ? `
+                <!-- Querformat Layout: Links QR + Order, Rechts Daten -->
+                <div class="left-section">
+                  <div class="repair-number">${orderCode}</div>
+                  <div class="qr-code">${qrCode}</div>
+                </div>
+                <div class="right-section">
+                  <div class="customer-name">${firstName} ${lastName}</div>
+                  ${customerPhone ? `<div class="customer-phone">${customerPhone}</div>` : ''}
+                  <div class="model">${model}</div>
+                  ${deviceCode ? `<div class="device-code">${deviceCode}</div>` : ''}
+                  <div class="issue">${repairIssue ? repairIssue.substring(0, 30) + (repairIssue.length > 30 ? '...' : '') : ''}</div>
+                </div>
+              ` : `
+                <!-- Hochformat Layout: Vertikal gestapelt -->
+                <div class="repair-number">${orderCode}</div>
+                <div class="customer-name">${firstName} ${lastName}</div>
+                ${customerPhone ? `<div class="customer-phone">${customerPhone}</div>` : ''}
+                <div class="qr-code">${qrCode}</div>
+                ${deviceCode ? `<div class="device-code">${deviceCode}</div>` : ''}
+                <div class="model">${model}</div>
+                <div class="issue">${repairIssue ? repairIssue.split(',').join('\\n') : ''}</div>
+              `}
             </div>
           </div>
           <script>

@@ -35,6 +35,9 @@ const businessSettingsSchema = z.object({
   email: z.string().optional(),
   website: z.string().optional(),
   receiptWidth: z.enum(["58mm", "80mm"]),
+  labelFormat: z.enum(["portrait", "landscape"]).default("portrait"),
+  labelWidth: z.number().min(10).max(200).optional(),
+  labelHeight: z.number().min(10).max(200).optional(),
   // SMTP-Einstellungen
   smtpSenderName: z.string().optional(),
   smtpHost: z.string().optional(),
@@ -241,6 +244,9 @@ export function SettingsPageContent() {
       website: "",
       logoImage: "",
       receiptWidth: "80mm",
+      labelFormat: "portrait",
+      labelWidth: 32,
+      labelHeight: 57,
       // SMTP-Einstellungen
       smtpSenderName: "",
       smtpHost: "",
@@ -792,6 +798,28 @@ export function SettingsPageContent() {
                             <SelectContent>
                               <SelectItem value="58mm">58mm (kleiner Bondrucker)</SelectItem>
                               <SelectItem value="80mm">80mm (Standard-Bondrucker)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="labelFormat"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Etikett-Format</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Etikett-Format auswählen" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="portrait">Hochformat (32mm x 57mm)</SelectItem>
+                              <SelectItem value="landscape">Querformat (57mm x 32mm)</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
