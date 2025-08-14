@@ -116,6 +116,38 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
     queryClient.invalidateQueries({ queryKey: ['/api/cost-estimates'] });
   };
 
+  // Mutation für Kostenvoranschlag-Erstellung
+  const createCostEstimateMutation = useMutation({
+    mutationFn: async (data: any) => {
+      console.log("CustomerDetailsDialog: Erstelle Kostenvoranschlag:", data);
+      const response = await apiRequest('POST', '/api/cost-estimates', data);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      console.log("Kostenvoranschlag erfolgreich erstellt:", data);
+      toast({
+        title: "Kostenvoranschlag erstellt",
+        description: `Erfolgreich für ${data.firstname} ${data.lastname} erstellt`,
+      });
+      // Cache aktualisieren
+      queryClient.invalidateQueries({ queryKey: ['/api/cost-estimates'] });
+      setShowNewCostEstimateDialog(false);
+    },
+    onError: (error: any) => {
+      console.error("Fehler beim Erstellen des Kostenvoranschlags:", error);
+      toast({
+        title: "Fehler",
+        description: error.message || "Kostenvoranschlag konnte nicht erstellt werden",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleCreateCostEstimate = (data: any) => {
+    console.log("CustomerDetailsDialog: handleCreateCostEstimate aufgerufen mit:", data);
+    createCostEstimateMutation.mutate(data);
+  };
+
   const handleRepairClick = (repairId: number) => {
     setSelectedRepairId(repairId);
     setShowRepairDetailsDialog(true);
@@ -430,6 +462,7 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
         <NewCostEstimateDialog
           open={showNewCostEstimateDialog}
           onClose={handleCloseNewCostEstimate}
+          onCreateCostEstimate={handleCreateCostEstimate}
           preselectedCustomer={{
             id: customer.id,
             firstName: customer.firstName,
