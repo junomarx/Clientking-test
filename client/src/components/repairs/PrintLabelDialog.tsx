@@ -163,135 +163,75 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
               height: ${labelHeight - 4}mm;
               display: flex;
               flex-direction: ${labelFormat === 'landscape' ? 'row' : 'column'};
-              align-items: ${labelFormat === 'landscape' ? 'stretch' : 'center'};
-              justify-content: ${labelFormat === 'landscape' ? 'space-between' : 'space-between'};
-              gap: ${labelFormat === 'landscape' ? '2mm' : '0'};
-            }
-            /* Querformat-spezifische Container */
-            ${labelFormat === 'landscape' ? `
-            .left-section {
-              display: flex;
-              flex-direction: column;
               align-items: center;
               justify-content: space-between;
-              width: 18mm;
-              height: 100%;
-              padding: 1mm 0;
-              flex-shrink: 0;
             }
-            .right-section {
-              display: flex;
-              flex-direction: column;
-              justify-content: flex-start;
-              flex: 1;
-              height: 100%;
-              padding: 1mm 0 1mm 2mm;
-              gap: 0.3mm;
-            }
-            ` : `
-            .left-section {
-              width: 100%;
-            }
-            .right-section {
-              width: 100%;
-            }
-            `}
             
-            /* Element-Stile - formatabhängig */
+            /* Allgemeine Element-Stile */
             .repair-number {
-              font-size: ${labelFormat === 'landscape' ? '11px' : '14px'};
+              font-size: 14px;
               font-weight: bold;
-              margin-bottom: ${labelFormat === 'landscape' ? '1mm' : '0.2mm'};
-              line-height: 1;
+              margin-bottom: 0.2mm;
+              text-align: center;
             }
             .customer-name {
-              font-size: ${labelFormat === 'landscape' ? '11px' : '10px'};
+              font-size: 10px;
               font-weight: bold;
-              margin-bottom: ${labelFormat === 'landscape' ? '0.2mm' : '0.3mm'};
-              line-height: 1.1;
-              white-space: nowrap;
-              overflow: hidden;
-              text-overflow: ellipsis;
+              margin-bottom: 0.3mm;
+              text-align: center;
             }
             .customer-phone {
-              font-size: ${labelFormat === 'landscape' ? '9px' : '8px'};
-              margin-bottom: ${labelFormat === 'landscape' ? '0.2mm' : '0.5mm'};
+              font-size: 8px;
+              margin-bottom: 0.5mm;
               color: #333;
-              line-height: 1;
+              text-align: center;
             }
             .qr-code {
-              margin-bottom: ${labelFormat === 'landscape' ? '0' : '1.5mm'};
-              width: ${labelFormat === 'landscape' ? '12mm' : '17mm'};
-              height: ${labelFormat === 'landscape' ? '12mm' : '17mm'};
+              margin-bottom: 1.5mm;
+              width: 17mm;
+              height: 17mm;
             }
             .qr-code svg {
               width: 100%;
               height: 100%;
             }
             .device-code {
-              font-size: ${labelFormat === 'landscape' ? '7px' : '8px'};
-              margin-bottom: ${labelFormat === 'landscape' ? '0.2mm' : '1.5mm'};
+              font-size: 8px;
+              margin-bottom: 1.5mm;
               font-weight: bold;
               color: #333;
               border: 1px solid #666;
-              padding: ${labelFormat === 'landscape' ? '0.5mm' : '1mm'};
+              padding: 1mm;
               background-color: #f0f0f0;
               border-radius: 1mm;
               display: inline-block;
-              line-height: 1;
+              text-align: center;
             }
             .model {
-              font-size: ${labelFormat === 'landscape' ? '10px' : '9px'};
+              font-size: 9px;
               font-weight: bold;
-              margin-bottom: ${labelFormat === 'landscape' ? '0.2mm' : '1mm'};
-              line-height: 1.1;
-              white-space: nowrap;
-              overflow: hidden;
-              text-overflow: ellipsis;
+              margin-bottom: 1mm;
+              text-align: center;
             }
             .issue {
-              font-size: ${labelFormat === 'landscape' ? '8px' : '8px'};
-              white-space: ${labelFormat === 'landscape' ? 'normal' : 'pre-wrap'};
-              line-height: 1.1;
-              ${labelFormat === 'landscape' ? 'overflow: hidden; text-overflow: ellipsis; max-height: 3.2em;' : ''}
-            }
-            
-            /* Text-Ausrichtung basierend auf Layout */
-            ${labelFormat === 'portrait' ? `
-            .repair-number, .customer-name, .customer-phone, 
-            .device-code, .model, .issue {
+              font-size: 8px;
+              white-space: pre-wrap;
               text-align: center;
             }
-            ` : `
-            .left-section .repair-number {
-              text-align: center;
-            }
-            .right-section .customer-name, 
-            .right-section .customer-phone,
-            .right-section .model, 
-            .right-section .device-code,
-            .right-section .issue {
-              text-align: left;
-            }
-            `}
           </style>
         </head>
         <body>
           <div class="label">
             <div class="print-area">
               ${labelFormat === 'landscape' ? `
-                <!-- Querformat Layout: Links QR + Order, Rechts Daten -->
-                <div class="left-section">
-                  <div class="repair-number">${orderCode}</div>
-                  <div class="qr-code">${qrCode}</div>
-                </div>
-                <div class="right-section">
-                  <div class="customer-name">${firstName} ${lastName}</div>
-                  ${customerPhone ? `<div class="customer-phone">${customerPhone}</div>` : ''}
-                  <div class="model">${model}</div>
-                  ${deviceCode ? `<div class="device-code">${deviceCode}</div>` : ''}
-                  <div class="issue">${repairIssue ? repairIssue.substring(0, 30) + (repairIssue.length > 30 ? '...' : '') : ''}</div>
-                </div>
+                <!-- Querformat Layout: Einfache horizontale Anordnung wie Hochformat -->
+                <div class="repair-number">${orderCode}</div>
+                <div class="customer-name">${firstName} ${lastName}</div>
+                ${customerPhone ? `<div class="customer-phone">${customerPhone}</div>` : ''}
+                <div class="qr-code">${qrCode}</div>
+                ${deviceCode ? `<div class="device-code">${deviceCode}</div>` : ''}
+                <div class="model">${model}</div>
+                <div class="issue">${repairIssue ? repairIssue.split(',').join('\\n') : ''}</div>
               ` : `
                 <!-- Hochformat Layout: Vertikal gestapelt -->
                 <div class="repair-number">${orderCode}</div>
