@@ -385,10 +385,6 @@ export async function createVectorPdf({
   yPosition += (5 * 2 + 12) * pxToMm; // padding + font-size
 
   // Gesamtbetrag - EXAKTE Position für perfektes Alignment
-  const totalBorderY = yPosition - (5 * pxToMm);
-  pdf.setDrawColor(...borderGray);
-  pdf.line(totalsStartX, totalBorderY, totalsStartX + totalsWidth, totalBorderY);
-  
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(pxToPdfSize(12 * 1.1)); // 1.1em
   
@@ -400,8 +396,8 @@ export async function createVectorPdf({
   // Gesamtbetrag: Genau an derselben X-Position wie Gesamtpreis-Spalte
   pdf.text(totalAmountText, gesamtpreisStartX + totalsAmountColumnWidth - totalAmountWidth - (8 * pxToMm), yPosition);
   
-  // BESSERE SEITENAUFTEILUNG - Mehr Platz zwischen Tabelle und Abschluss
-  yPosition += (40 * pxToMm); // Größerer Abstand für harmonische Verteilung
+  // BESSERE SEITENAUFTEILUNG - Mehr Platz zwischen Totals und Info-Text
+  yPosition += (60 * pxToMm); // Noch größerer Abstand zwischen Gesamtbetrag und Info-Text
 
   // HINWEISE (.note: font-size: 12px, color: #777)
   pdf.setFont('helvetica', 'normal');
