@@ -163,11 +163,88 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
               height: ${labelHeight - 4}mm;
               display: flex;
               flex-direction: ${labelFormat === 'landscape' ? 'row' : 'column'};
-              align-items: center;
+              align-items: ${labelFormat === 'landscape' ? 'flex-start' : 'center'};
               justify-content: space-between;
+              ${labelFormat === 'landscape' ? 'gap: 3mm;' : ''}
             }
             
-            /* Allgemeine Element-Stile */
+            /* QUERFORMAT: Exakte Kopie der funktionierenden Vorschau */
+            ${labelFormat === 'landscape' ? `
+            .left-section {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              width: 24mm;
+              height: 100%;
+              justify-content: space-between;
+            }
+            .right-section {
+              display: flex;
+              flex-direction: column;
+              width: 32mm;
+              height: 100%;
+              justify-content: flex-start;
+              gap: 1mm;
+            }
+            .repair-number {
+              font-size: 11px;
+              font-weight: bold;
+              margin-bottom: 1mm;
+              text-align: center;
+            }
+            .customer-name {
+              font-size: 11px;
+              font-weight: bold;
+              margin-bottom: 1mm;
+              text-align: left;
+              line-height: 1.1;
+            }
+            .customer-phone {
+              font-size: 8px;
+              margin-bottom: 1mm;
+              color: #666;
+              text-align: left;
+              line-height: 1.1;
+            }
+            .qr-code {
+              width: 16mm;
+              height: 16mm;
+              flex-grow: 1;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+            .qr-code svg {
+              width: 100%;
+              height: 100%;
+            }
+            .model {
+              font-size: 11px;
+              font-weight: bold;
+              margin-bottom: 0.5mm;
+              text-align: left;
+              line-height: 1.1;
+            }
+            .device-code {
+              font-size: 8px;
+              font-weight: bold;
+              color: #333;
+              border: 1px solid #ccc;
+              padding: 0.5mm 1mm;
+              background-color: #f5f5f5;
+              border-radius: 1mm;
+              display: inline-block;
+              text-align: center;
+              margin-bottom: 1mm;
+            }
+            .issue {
+              font-size: 8px;
+              text-align: left;
+              line-height: 1.1;
+              margin-top: auto;
+            }
+            ` : `
+            /* HOCHFORMAT: Original Styling */
             .repair-number {
               font-size: 14px;
               font-weight: bold;
@@ -218,20 +295,25 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
               white-space: pre-wrap;
               text-align: center;
             }
+            `}
           </style>
         </head>
         <body>
           <div class="label">
             <div class="print-area">
               ${labelFormat === 'landscape' ? `
-                <!-- Querformat Layout: Einfache horizontale Anordnung wie Hochformat -->
-                <div class="repair-number">${orderCode}</div>
-                <div class="customer-name">${firstName} ${lastName}</div>
-                ${customerPhone ? `<div class="customer-phone">${customerPhone}</div>` : ''}
-                <div class="qr-code">${qrCode}</div>
-                ${deviceCode ? `<div class="device-code">${deviceCode}</div>` : ''}
-                <div class="model">${model}</div>
-                <div class="issue">${repairIssue ? repairIssue.split(',').join('\\n') : ''}</div>
+                <!-- Querformat Layout: EXAKTE KOPIE der funktionierenden Vorschau -->
+                <div class="left-section">
+                  <div class="repair-number">${orderCode}</div>
+                  <div class="qr-code">${qrCode}</div>
+                </div>
+                <div class="right-section">
+                  <div class="customer-name">${firstName} ${lastName}</div>
+                  ${customerPhone ? `<div class="customer-phone">${customerPhone}</div>` : ''}
+                  <div class="model">${model}</div>
+                  ${deviceCode ? `<div class="device-code">${deviceCode}</div>` : ''}
+                  <div class="issue">${repairIssue || ''}</div>
+                </div>
               ` : `
                 <!-- Hochformat Layout: Vertikal gestapelt -->
                 <div class="repair-number">${orderCode}</div>
