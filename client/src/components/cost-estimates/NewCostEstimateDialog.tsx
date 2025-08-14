@@ -178,6 +178,8 @@ export function NewCostEstimateDialog({
     if ((preselectedCustomer || editMode) && open) {
       console.log('Setting preselected customer data:', preselectedCustomer);
       console.log('Setting editMode data:', editMode);
+      console.log('🔍 EDIT MODE SERIAL NUMBER:', editMode?.serial_number);
+      console.log('🔍 EDIT MODE ISSUE:', editMode?.issue);
       
       // Reset form with new default values including customer data AND edit data
       const resetValues = {

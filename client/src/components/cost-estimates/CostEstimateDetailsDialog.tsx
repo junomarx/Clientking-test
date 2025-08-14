@@ -880,13 +880,19 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
             deviceType: estimate.deviceType,
             brand: estimate.brand,
             model: estimate.model,
-            serialNumber: estimate.serial_number || "",
-            issueDescription: estimate.issue || estimate.description || "",
+            serial_number: estimate.serial_number || "", // Backend-Feldname für korrektes Mapping
+            issue: estimate.issue || "", // Backend-Feldname für korrektes Mapping
             subtotal: estimate.subtotal || "0,00",
             taxRate: estimate.tax_rate || "20",
             taxAmount: estimate.tax_amount || "0,00",
             totalPrice: estimate.total || "0,00",
-            items: items || []
+            items: items || [],
+            // Kundendaten für EditMode
+            customerId: estimate.customer_id,
+            firstName: estimate.firstname || "",
+            lastName: estimate.lastname || "",
+            phone: estimate.phone || "",
+            email: estimate.email || ""
           }}
         />
       )}
