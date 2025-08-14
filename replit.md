@@ -9,6 +9,7 @@ The Handyshop Verwaltung is a comprehensive phone repair shop management system 
 Preferred communication style: Simple, everyday language.
 Detail-oriented: User requires pixel-perfect alignment and precision, especially for PDF layouts and visual elements.
 Quality focus: Prefers comprehensive solutions that address all edge cases rather than quick fixes.
+Implementation Control: Only implement changes when explicitly commanded with "Ok leg los" - otherwise stay in advisory/brainstorming mode.
 
 ## System Architecture
 
