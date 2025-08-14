@@ -322,68 +322,74 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
                       // Querformat-Vorschau
                       return (
                         <div style={{ 
-                          width: '40mm', 
-                          height: '24mm', 
+                          width: '220px', 
+                          height: '120px', 
                           margin: '0 auto', 
                           display: 'flex', 
                           flexDirection: 'row', 
-                          alignItems: 'center', 
-                          gap: '3mm',
+                          alignItems: 'flex-start', 
+                          gap: '12px',
                           border: '1px solid #e5e5e5',
-                          padding: '2mm'
+                          padding: '8px',
+                          backgroundColor: 'white'
                         }}>
-                          {/* Linke Sektion: QR-Code + Auftragsnummer */}
+                          {/* Linke Sektion: Auftragsnummer oben, QR-Code unten */}
                           <div style={{ 
                             display: 'flex', 
                             flexDirection: 'column', 
                             alignItems: 'center', 
-                            width: '40%',
-                            gap: '1mm'
+                            width: '90px',
+                            height: '100%',
+                            justifyContent: 'space-between'
                           }}>
-                            <div className="text-center">
+                            <div className="text-center" style={{ marginBottom: '4px' }}>
                               <p className="text-sm font-bold">{repair?.orderCode || `#${repair?.id}`}</p>
                             </div>
-                            <QRCodeSVG 
-                              value={`${window.location.origin}/repairs/${repair?.orderCode || repair?.id}`} 
-                              size={48} 
-                              level="M"
-                            />
+                            <div style={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
+                              <QRCodeSVG 
+                                value={`${window.location.origin}/repairs/${repair?.orderCode || repair?.id}`} 
+                                size={60} 
+                                level="M"
+                              />
+                            </div>
                           </div>
                           
-                          {/* Rechte Sektion: Kundendaten */}
+                          {/* Rechte Sektion: Kundendaten vertikal angeordnet */}
                           <div style={{ 
                             display: 'flex', 
                             flexDirection: 'column', 
-                            width: '60%',
-                            gap: '0.5mm'
+                            width: '120px',
+                            height: '100%',
+                            justifyContent: 'flex-start',
+                            gap: '4px'
                           }}>
                             <div>
-                              <p className="text-xs font-bold">
+                              <p className="text-sm font-bold leading-tight">
                                 {customer?.firstName || 'Kunde'} {customer?.lastName || ''}
                               </p>
                             </div>
                             
                             {customer?.phone && (
                               <div>
-                                <p className="text-xs text-gray-600">{customer.phone}</p>
+                                <p className="text-xs text-gray-600 leading-tight">{customer.phone}</p>
                               </div>
                             )}
                             
                             <div>
-                              <p className="text-xs font-bold">{repair?.model}</p>
+                              <p className="text-sm font-bold leading-tight">{repair?.model}</p>
                             </div>
                             
                             {deviceCodeData && formatDeviceCodeForLabel(deviceCodeData) && (
-                              <div>
-                                <div className="text-xs font-bold bg-gray-100 border border-gray-300 rounded px-1 py-0.5 inline-block">
+                              <div style={{ marginTop: '2px' }}>
+                                <div className="text-xs font-bold bg-gray-100 border border-gray-300 rounded px-2 py-1 inline-block">
                                   {formatDeviceCodeForLabel(deviceCodeData) as string}
                                 </div>
                               </div>
                             )}
                             
-                            <div>
-                              <p className="text-xs">
-                                {repair?.issue ? (repair.issue.length > 25 ? repair.issue.substring(0, 25) + '...' : repair.issue) : ''}
+                            <div style={{ marginTop: 'auto' }}>
+                              <p className="text-xs leading-tight">
+                                {repair?.issue ? (repair.issue.length > 35 ? repair.issue.substring(0, 35) + '...' : repair.issue) : ''}
                               </p>
                             </div>
                           </div>
