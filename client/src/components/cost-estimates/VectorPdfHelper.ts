@@ -174,13 +174,7 @@ export async function createVectorPdf({
   pdf.setTextColor(...primaryColor);
   pdf.text('Kundeninformationen', marginLeft, yPosition);
   
-  // Border-bottom simulation (border-bottom: 1px solid #eee, padding-bottom: 5px)
-  const sectionTitleUnderlineY = yPosition + (5 * pxToMm);
-  pdf.setDrawColor(...borderGray);
-  pdf.setLineWidth(0.264583); // 1px
-  pdf.line(marginLeft, sectionTitleUnderlineY, marginLeft + contentWidth, sectionTitleUnderlineY);
-  
-  yPosition += (10 * pxToMm) + (5 * pxToMm); // margin-bottom + padding-bottom
+  yPosition += (25 * pxToMm); // Größerer Abstand zwischen Titel und Inhalt
 
   // Customer Name (.customer-name: font-weight: bold, font-size: 16px)
   pdf.setFont('helvetica', 'bold');
@@ -198,7 +192,7 @@ export async function createVectorPdf({
   yPosition += (13 * pxToMm * 1.2) + (2 * pxToMm);
   
   pdf.text(customerZipCity, marginLeft, yPosition);
-  yPosition += (20 * pxToMm); // .customer-info: margin-bottom: 20px
+  yPosition += (35 * pxToMm); // Größerer Abstand zur nächsten Sektion
 
   // DOCUMENT TITLE (.document-title: text-align: center, font-size: 18px, font-weight: bold, color: #2a53a9)
   pdf.setFont('helvetica', 'bold');
@@ -208,7 +202,7 @@ export async function createVectorPdf({
   const titleWidth = pdf.getTextWidth(titleText);
   pdf.text(titleText, (pageWidth - titleWidth) / 2, yPosition);
   
-  yPosition += (18 * pxToMm * 1.2) + (8 * pxToMm); // title line-height + margin
+  yPosition += (18 * pxToMm * 1.2) + (20 * pxToMm); // title line-height + größerer Abstand
 
   // REFERENCE NUMBER (.reference-number: text-align: center, font-size: 13px, margin-bottom: 15px)
   pdf.setFont('helvetica', 'normal');
@@ -218,7 +212,7 @@ export async function createVectorPdf({
   const refWidth = pdf.getTextWidth(refText);
   pdf.text(refText, (pageWidth - refWidth) / 2, yPosition);
   
-  yPosition += (13 * pxToMm * 1.2) + (15 * pxToMm); // line-height + margin-bottom
+  yPosition += (13 * pxToMm * 1.2) + (30 * pxToMm); // line-height + größerer Abstand zur nächsten Sektion
 
   // GERÄTEINFORMATIONEN - Section Title
   pdf.setFont('helvetica', 'bold');
@@ -226,11 +220,7 @@ export async function createVectorPdf({
   pdf.setTextColor(...primaryColor);
   pdf.text('Geräteinformationen', marginLeft, yPosition);
   
-  const deviceSectionUnderlineY = yPosition + (5 * pxToMm);
-  pdf.setDrawColor(...borderGray);
-  pdf.line(marginLeft, deviceSectionUnderlineY, marginLeft + contentWidth, deviceSectionUnderlineY);
-  
-  yPosition += (15 * pxToMm) + (5 * pxToMm);
+  yPosition += (25 * pxToMm); // Größerer Abstand zwischen Titel und Inhalt
 
   // Device Details inline (HTML style)
   pdf.setFont('helvetica', 'normal');
@@ -255,7 +245,7 @@ export async function createVectorPdf({
   const issueText = estimate.issue || '';
   const issueLines = pdf.splitTextToSize(issueText, contentWidth - (10 * pxToMm)); // margin-left: 10px
   pdf.text(issueLines, marginLeft + (10 * pxToMm), yPosition);
-  yPosition += (issueLines.length * 13 * pxToMm * 1.2) + (15 * pxToMm);
+  yPosition += (issueLines.length * 13 * pxToMm * 1.2) + (30 * pxToMm); // Größerer Abstand zur nächsten Sektion
 
   // TABELLE - Exakte HTML-Nachbildung
   pdf.setFont('helvetica', 'bold');
@@ -263,11 +253,7 @@ export async function createVectorPdf({
   pdf.setTextColor(...primaryColor);
   pdf.text('Positionen', marginLeft, yPosition);
   
-  const tableSectionUnderlineY = yPosition + (5 * pxToMm);
-  pdf.setDrawColor(...borderGray);
-  pdf.line(marginLeft, tableSectionUnderlineY, marginLeft + contentWidth, tableSectionUnderlineY);
-  
-  yPosition += (15 * pxToMm);
+  yPosition += (25 * pxToMm); // Größerer Abstand zwischen Titel und Tabelle
 
   // Table Header (th: background-color: #f8f8f8, font-weight: bold, font-size: 11px, padding: 6px 8px)
   const tableHeaders = ['Position', 'Beschreibung', 'Menge', 'Einzelpreis (brutto)', 'Gesamtpreis (brutto)'];
@@ -415,7 +401,7 @@ export async function createVectorPdf({
   pdf.text(totalAmountText, gesamtpreisStartX + totalsAmountColumnWidth - totalAmountWidth - (8 * pxToMm), yPosition);
   
   // BESSERE SEITENAUFTEILUNG - Mehr Platz zwischen Tabelle und Abschluss
-  yPosition += (80 * pxToMm); // Deutlich mehr Abstand für harmonische Verteilung
+  yPosition += (40 * pxToMm); // Größerer Abstand für harmonische Verteilung
 
   // HINWEISE (.note: font-size: 12px, color: #777)
   pdf.setFont('helvetica', 'normal');
@@ -425,7 +411,7 @@ export async function createVectorPdf({
   const noteText = `Dieser Kostenvoranschlag ist unverbindlich und ${estimate.validUntil ? `gültig bis zum ${validUntilFormatted}` : 'gültig für 14 Tage'}.`;
   const noteLines = pdf.splitTextToSize(noteText, contentWidth);
   pdf.text(noteLines, marginLeft, yPosition);
-  yPosition += (noteLines.length * 12 * pxToMm * 1.2) + (30 * pxToMm); // Mehr Abstand
+  yPosition += (noteLines.length * 12 * pxToMm * 1.2) + (25 * pxToMm); // Größerer Abstand
 
   // CONDITIONS (ol: font-size: 0.9em, color: #555, margin-top: 20px, padding-left: 20px)
   pdf.setFontSize(pxToPdfSize(12 * 0.9)); // 0.9em
