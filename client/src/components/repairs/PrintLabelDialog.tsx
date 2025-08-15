@@ -330,7 +330,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
                 font-size: 8px;
                 text-align: left;
                 line-height: 1.1;
-                margin-top: auto;
+                margin-top: 1mm;
               }
             }
             ` : `
@@ -401,8 +401,8 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
                   <div class="customer-name">${firstName} ${lastName}</div>
                   ${customerPhone ? `<div class="customer-phone">${customerPhone}</div>` : ''}
                   <div class="model">${model}</div>
-                  ${deviceCode ? `<div class="device-code">${deviceCode}</div>` : ''}
                   <div class="issue">${repairIssue ? repairIssue.split(',').map(item => item.trim()).join('<br>') : ''}</div>
+                  ${deviceCode ? `<div class="device-code">${deviceCode}</div>` : ''}
                 </div>
               ` : `
                 <!-- Hochformat Layout: Vertikal gestapelt -->
