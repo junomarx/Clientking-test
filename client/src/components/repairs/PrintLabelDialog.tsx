@@ -72,10 +72,43 @@ export function PrintLabelDialog({
     }
   };
 
-  // Einfacher Druck mit @media print CSS
+  // Druck mit verstecktem Element das nur beim Drucken sichtbar ist
   const handlePrint = () => {
-    window.print();
-    onClose();
+    // Erstelle ein verstecktes Druck-Element
+    const printElement = document.createElement('div');
+    printElement.className = 'print-only';
+    printElement.style.display = 'none'; // Versteckt bis zum Drucken
+    
+    const orderCode = repair?.orderCode || `#${repair?.id || repairId}`;
+    const customerName = `${customer?.firstName || 'Kunde'} ${customer?.lastName || ''}`;
+    const phone = customer?.phone || '';
+    const model = repair?.model || '';
+    const issue = repair?.issue || '';
+    const deviceCode = formatDeviceCodeForLabel(deviceCodeData);
+    
+    printElement.innerHTML = `
+      <div class="print-left">
+        <div class="print-order-code">${orderCode}</div>
+        <svg width="60" height="60" viewBox="0 0 60 60">
+          ${document.querySelector('.label-content svg')?.innerHTML || ''}
+        </svg>
+      </div>
+      <div class="print-right">
+        <div class="print-customer">${customerName}</div>
+        ${phone ? `<div class="print-phone">${phone}</div>` : ''}
+        <div class="print-model">${model}</div>
+        ${deviceCode ? `<div class="print-device-code">${deviceCode}</div>` : ''}
+        <div class="print-issue">${issue.length > 40 ? issue.substring(0, 40) + '...' : issue}</div>
+      </div>
+    `;
+    
+    document.body.appendChild(printElement);
+    
+    setTimeout(() => {
+      window.print();
+      document.body.removeChild(printElement);
+      onClose();
+    }, 100);
   };
 
   if (!open) return null;

@@ -51,62 +51,100 @@
       box-shadow: none !important;
     }
 
-    /* Etikett-Druck Regeln */
+    /* Verstecke alle Elemente beim Drucken außer dem Etikett */
+    body * {
+      visibility: hidden !important;
+    }
+    
+    .print-only {
+      visibility: visible !important;
+    }
+    
+    .print-only * {
+      visibility: visible !important;
+    }
+    
+    /* Etikett-Druck Regeln für exaktes 57x32mm Format */
     @page {
-      size: 57mm 32mm; /* Querformat: Breite x Höhe */
+      size: 57mm 32mm;
       margin: 0;
     }
     
-    .label-container {
+    .print-only {
+      position: absolute !important;
+      left: 0 !important;
+      top: 0 !important;
       width: 57mm !important;
       height: 32mm !important;
-      margin: 0 !important;
-      padding: 2mm !important;
-      box-sizing: border-box !important;
-      overflow: hidden !important;
-      page-break-inside: avoid !important;
-      border: none !important;
       background: white !important;
-    }
-    
-    .label-content {
-      width: 53mm !important; /* 57mm - 4mm padding */
-      height: 28mm !important; /* 32mm - 4mm padding */
       display: flex !important;
-      flex-direction: row !important; /* Querformat: nebeneinander */
+      flex-direction: row !important;
       align-items: flex-start !important;
       justify-content: space-between !important;
+      padding: 2mm !important;
+      box-sizing: border-box !important;
       gap: 2mm !important;
-      overflow: hidden !important;
-      page-break-inside: avoid !important;
-      border: none !important;
-      padding: 1mm !important;
     }
     
-    /* Text-Größen für Druck optimieren */
-    .label-container p,
-    .label-container div {
-      font-size: 8px !important;
-      line-height: 1.1 !important;
-      margin: 0 !important;
-      padding: 0 !important;
+    .print-only .print-left {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      width: 22mm !important;
+      height: 28mm !important;
     }
     
-    .label-container .font-bold {
-      font-weight: bold !important;
+    .print-only .print-right {
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: flex-start !important;
+      width: 31mm !important;
+      height: 28mm !important;
+      gap: 1mm !important;
+    }
+    
+    .print-only .print-order-code {
       font-size: 9px !important;
+      font-weight: bold !important;
+      text-align: center !important;
+      margin: 0 !important;
+      line-height: 1.1 !important;
     }
     
-    .label-container .text-sm {
+    .print-only .print-customer {
       font-size: 8px !important;
+      font-weight: bold !important;
+      text-align: left !important;
+      margin: 0 !important;
+      line-height: 1.1 !important;
     }
     
-    .label-container .text-xs {
+    .print-only .print-phone {
       font-size: 7px !important;
+      color: #666 !important;
+      text-align: left !important;
+      margin: 0 !important;
+      line-height: 1.1 !important;
     }
     
-    /* QR-Code für Druck anpassen */
-    .label-container svg {
+    .print-only .print-model {
+      font-size: 8px !important;
+      font-weight: bold !important;
+      text-align: left !important;
+      margin: 0 !important;
+      line-height: 1.1 !important;
+    }
+    
+    .print-only .print-issue {
+      font-size: 7px !important;
+      text-align: left !important;
+      margin: 0 !important;
+      line-height: 1.1 !important;
+      margin-top: auto !important;
+    }
+    
+    .print-only svg {
       width: 15mm !important;
       height: 15mm !important;
     }
