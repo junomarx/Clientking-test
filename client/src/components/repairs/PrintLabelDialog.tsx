@@ -209,14 +209,14 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
             .qr-code {
               width: 12mm;
               height: 12mm;
-              flex-grow: 1;
+              flex-shrink: 0;
               display: flex;
               align-items: center;
               justify-content: center;
             }
             .qr-code svg {
-              width: 100%;
-              height: 100%;
+              width: 12mm;
+              height: 12mm;
             }
             .model {
               font-size: 10px;
@@ -257,7 +257,80 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
                 height: 100%;
                 display: flex;
               }
+              .left-section {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: flex-start;
+                width: 22mm;
+                padding-right: 2mm;
+              }
+              .right-section {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                width: 31mm;
+                height: 100%;
+                justify-content: flex-start;
+                gap: 1mm;
+              }
+              .repair-number {
+                font-size: 11px;
+                font-weight: bold;
+                margin-bottom: 2mm;
+                text-align: center;
+              }
+              .customer-name {
+                font-size: 10px;
+                font-weight: bold;
+                margin-bottom: 0;
+                text-align: left;
+                line-height: 1.1;
+              }
+              .customer-phone {
+                font-size: 8px;
+                margin-bottom: 0;
+                color: rgb(75, 85, 99);
+                text-align: left;
+                line-height: 1.1;
+              }
+              .qr-code {
+                width: 12mm;
+                height: 12mm;
+                flex-shrink: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              }
+              .qr-code svg {
+                width: 12mm;
+                height: 12mm;
+              }
+              .model {
+                font-size: 10px;
+                font-weight: bold;
+                margin-bottom: 0;
+                text-align: left;
+                line-height: 1.1;
+              }
+              .device-code {
+                font-size: 8px;
+                font-weight: bold;
+                color: #333;
+                border: 1px solid rgb(209, 213, 219);
+                padding: 2px 4px;
+                background-color: rgb(243, 244, 246);
+                border-radius: 2px;
+                display: inline-block;
+                text-align: center;
+                margin-top: 1px;
+                margin-bottom: 0;
+              }
               .issue {
+                font-size: 8px;
+                text-align: left;
+                line-height: 1.1;
+                margin-top: auto;
                 white-space: pre-wrap;
               }
             }
