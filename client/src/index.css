@@ -50,8 +50,6 @@
       border: none !important;
       box-shadow: none !important;
     }
-
-    /* Entferne komplett die @media print Regeln - sie funktionieren nicht richtig */
   }
 }
 
