@@ -187,28 +187,28 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
               gap: 4px;
             }
             .repair-number {
-              font-size: 14px;
+              font-size: 11px;
               font-weight: bold;
-              margin-bottom: 4px;
+              margin-bottom: 2px;
               text-align: center;
             }
             .customer-name {
-              font-size: 14px;
+              font-size: 10px;
               font-weight: bold;
               margin-bottom: 0;
               text-align: left;
-              line-height: 1.25;
+              line-height: 1.1;
             }
             .customer-phone {
-              font-size: 12px;
+              font-size: 8px;
               margin-bottom: 0;
               color: rgb(75, 85, 99);
               text-align: left;
-              line-height: 1.25;
+              line-height: 1.1;
             }
             .qr-code {
-              width: 60px;
-              height: 60px;
+              width: 50px;
+              height: 50px;
               flex-grow: 1;
               display: flex;
               align-items: center;
@@ -219,29 +219,29 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
               height: 100%;
             }
             .model {
-              font-size: 14px;
+              font-size: 10px;
               font-weight: bold;
               margin-bottom: 0;
               text-align: left;
-              line-height: 1.25;
+              line-height: 1.1;
             }
             .device-code {
-              font-size: 12px;
+              font-size: 8px;
               font-weight: bold;
               color: #333;
               border: 1px solid rgb(209, 213, 219);
-              padding: 4px 8px;
+              padding: 2px 4px;
               background-color: rgb(243, 244, 246);
-              border-radius: 4px;
+              border-radius: 2px;
               display: inline-block;
               text-align: center;
-              margin-top: 2px;
+              margin-top: 1px;
               margin-bottom: 0;
             }
             .issue {
-              font-size: 12px;
+              font-size: 8px;
               text-align: left;
-              line-height: 1.25;
+              line-height: 1.1;
               margin-top: auto;
             }
             
