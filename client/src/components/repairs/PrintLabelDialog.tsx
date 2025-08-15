@@ -244,6 +244,23 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
               line-height: 1.25;
               margin-top: auto;
             }
+            
+            @media print {
+              body {
+                width: 57mm;
+                height: 32mm;
+                margin: 0;
+                padding: 1mm;
+              }
+              .print-area {
+                width: 100%;
+                height: 100%;
+                display: flex;
+              }
+              .issue {
+                white-space: pre-wrap;
+              }
+            }
             ` : `
             /* HOCHFORMAT: Original Styling */
             .repair-number {
@@ -313,7 +330,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
                   ${customerPhone ? `<div class="customer-phone">${customerPhone}</div>` : ''}
                   <div class="model">${model}</div>
                   ${deviceCode ? `<div class="device-code">${deviceCode}</div>` : ''}
-                  <div class="issue">${repairIssue || ''}</div>
+                  <div class="issue">${repairIssue ? repairIssue.split(',').join('\n') : ''}</div>
                 </div>
               ` : `
                 <!-- Hochformat Layout: Vertikal gestapelt -->
