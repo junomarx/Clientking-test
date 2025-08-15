@@ -168,83 +168,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
               ${labelFormat === 'landscape' ? 'gap: 3mm;' : ''}
             }
             
-            /* QUERFORMAT: Exakte Kopie der funktionierenden Vorschau */
-            ${labelFormat === 'landscape' ? `
-            .left-section {
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              width: 24mm;
-              height: 100%;
-              justify-content: space-between;
-            }
-            .right-section {
-              display: flex;
-              flex-direction: column;
-              width: 32mm;
-              height: 100%;
-              justify-content: flex-start;
-              gap: 1mm;
-            }
-            .repair-number {
-              font-size: 11px;
-              font-weight: bold;
-              margin-bottom: 1mm;
-              text-align: center;
-            }
-            .customer-name {
-              font-size: 11px;
-              font-weight: bold;
-              margin-bottom: 1mm;
-              text-align: left;
-              line-height: 1.1;
-            }
-            .customer-phone {
-              font-size: 8px;
-              margin-bottom: 1mm;
-              color: #666;
-              text-align: left;
-              line-height: 1.1;
-            }
-            .qr-code {
-              width: 16mm;
-              height: 16mm;
-              flex-grow: 1;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-            }
-            .qr-code svg {
-              width: 100%;
-              height: 100%;
-            }
-            .model {
-              font-size: 11px;
-              font-weight: bold;
-              margin-bottom: 0.5mm;
-              text-align: left;
-              line-height: 1.1;
-            }
-            .device-code {
-              font-size: 8px;
-              font-weight: bold;
-              color: #333;
-              border: 1px solid #ccc;
-              padding: 0.5mm 1mm;
-              background-color: #f5f5f5;
-              border-radius: 1mm;
-              display: inline-block;
-              text-align: center;
-              margin-bottom: 1mm;
-            }
-            .issue {
-              font-size: 8px;
-              text-align: left;
-              line-height: 1.1;
-              margin-top: auto;
-            }
-            ` : `
-            /* HOCHFORMAT: Original Styling */
+            /* Einfache CSS-Regeln ohne Template-Fehler */
             .repair-number {
               font-size: 14px;
               font-weight: bold;
@@ -295,7 +219,6 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
               white-space: pre-wrap;
               text-align: center;
             }
-            `}
           </style>
         </head>
         <body>
