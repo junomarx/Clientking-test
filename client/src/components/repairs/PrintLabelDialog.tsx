@@ -88,63 +88,8 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
     }
   };
 
-  // Funktion zum Drucken mit PDF-Konvertierung der Vorschau
-  const handlePrint = async () => {
-    // PDF-Ansatz: Konvertiere die funktionierende Vorschau direkt zu PDF
-    const { jsPDF } = await import('jspdf');
-    const html2canvas = (await import('html2canvas')).default;
-    
-    // Finde das Vorschau-Element
-    const previewElement = document.querySelector('[style*="border: 1px solid #e5e5e5"]');
-    if (!previewElement) {
-      console.error('Vorschau-Element nicht gefunden');
-      return;
-    }
-    
-    try {
-      // Konvertiere Vorschau zu Canvas mit hoher Qualität
-      const canvas = await html2canvas(previewElement as HTMLElement, {
-        scale: 3,
-        useCORS: true,
-        backgroundColor: 'white',
-        width: previewElement.getBoundingClientRect().width,
-        height: previewElement.getBoundingClientRect().height
-      });
-      
-      const labelFormat = settings?.labelFormat || 'portrait';
-      const labelWidth = settings?.labelWidth || 32;
-      const labelHeight = settings?.labelHeight || 57;
-      
-      // PDF erstellen mit korrekter Ausrichtung
-      const pdf = new jsPDF({
-        orientation: labelFormat === 'landscape' ? 'landscape' : 'portrait',
-        unit: 'mm',
-        format: [labelWidth, labelHeight]
-      });
-      
-      const imgData = canvas.toDataURL('image/png');
-      pdf.addImage(imgData, 'PNG', 0, 0, labelWidth, labelHeight);
-      
-      // PDF in neuem Fenster öffnen und drucken
-      const pdfBlob = pdf.output('blob');
-      const pdfUrl = URL.createObjectURL(pdfBlob);
-      const printWindow = window.open(pdfUrl, '_blank');
-      
-      if (printWindow) {
-        printWindow.onload = () => {
-          setTimeout(() => printWindow.print(), 500);
-        };
-      }
-      
-      onClose();
-      return;
-      
-    } catch (error) {
-      console.error('Fehler beim PDF-Export:', error);
-      // Fallback zum alten HTML-Ansatz
-    }
-    
-    // Alter HTML-Ansatz (Fallback)
+  // Funktion zum Drucken mit neuem Fenster
+  const handlePrint = () => {
     if (!printRef.current) {
       console.error('Druckelement nicht gefunden');
       return;
