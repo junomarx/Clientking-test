@@ -4,14 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Printer } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useBusinessSettings } from "@/hooks/use-business-settings";
+import { useQuery } from "@tanstack/react-query";
 
 interface PrintLabelDialogProps {
   open: boolean;
   onClose: () => void;
-  repair: any;
-  customer: any;
-  deviceCodeData?: any;
-  isLoading: boolean;
+  repairId: number | null;
 }
 
 // Funktion zur Formatierung des Gerätecodes
@@ -32,13 +30,31 @@ const formatDeviceCodeForLabel = (deviceCode: any) => {
 export function PrintLabelDialog({
   open,
   onClose,
-  repair,
-  customer,
-  deviceCodeData,
-  isLoading
+  repairId
 }: PrintLabelDialogProps) {
   const printRef = useRef<HTMLDivElement>(null);
   const { data: settings } = useBusinessSettings();
+  
+  // Lade Reparaturdaten
+  const { data: repairsData, isLoading: isLoadingRepairs } = useQuery({
+    queryKey: ['/api/repairs'],
+    enabled: open && !!repairId
+  });
+  
+  const repair = repairsData?.find((r: any) => r.id === repairId);
+  
+  // Lade Kundendaten
+  const { data: customersData, isLoading: isLoadingCustomers } = useQuery({
+    queryKey: ['/api/customers'],
+    enabled: open && !!repair
+  });
+  
+  const customer = customersData?.find((c: any) => c.id === repair?.customerId);
+  
+  // Devicecode wird normalerweise nicht separat geladen, da es Teil der repair-Daten ist
+  const deviceCodeData = repair?.deviceCode || repair?.serialNumber || null;
+  
+  const isLoading = isLoadingRepairs || isLoadingCustomers;
   
   const handlePrint = () => {
     if (!repair) return;
@@ -54,11 +70,8 @@ export function PrintLabelDialog({
     const repairIssue = repair.issue;
     const deviceCode = formatDeviceCodeForLabel(deviceCodeData);
     
-    const qrCode = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-      <!-- QR-Code placeholder -->
-      <rect width="100" height="100" fill="white"/>
-      <text x="50" y="50" text-anchor="middle" font-size="8">QR</text>
-    </svg>`;
+    // QR-Code HTML für Print (vereinfacht als Platzhalter)
+    const qrCode = `<div style="width: 17mm; height: 17mm; border: 2px solid black; display: flex; align-items: center; justify-content: center; font-size: 8px;">QR</div>`;
 
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
