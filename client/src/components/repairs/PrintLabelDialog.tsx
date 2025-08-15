@@ -161,87 +161,88 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
             .print-area {
               width: ${labelWidth - 4}mm;
               height: ${labelHeight - 4}mm;
-              display: flex;
-              flex-direction: ${labelFormat === 'landscape' ? 'row' : 'column'};
-              align-items: ${labelFormat === 'landscape' ? 'flex-start' : 'center'};
-              justify-content: space-between;
-              ${labelFormat === 'landscape' ? 'gap: 12px;' : ''}
+              position: relative;
+              ${labelFormat === 'landscape' ? '' : 'display: flex; flex-direction: column; align-items: center; justify-content: space-between;'}
             }
             
-            /* QUERFORMAT: Exakte Pixel-Kopie der funktionierenden Vorschau */
+            /* QUERFORMAT: Absolute Positionierung wie in der Vorschau */
             ${labelFormat === 'landscape' ? `
             .left-section {
+              position: absolute;
+              left: 0;
+              top: 0;
+              width: 22mm;
+              height: 100%;
               display: flex;
               flex-direction: column;
               align-items: center;
-              width: 90px;
-              height: 100%;
               justify-content: space-between;
+              padding: 1mm 0;
             }
             .right-section {
+              position: absolute;
+              left: 25mm;
+              top: 0;
+              width: 35mm;
+              height: 100%;
               display: flex;
               flex-direction: column;
-              width: 120px;
-              height: 100%;
               justify-content: flex-start;
-              gap: 4px;
+              padding: 1mm 0;
+              gap: 1mm;
             }
             .repair-number {
-              font-size: 14px;
+              font-size: 11px;
               font-weight: bold;
-              margin-bottom: 4px;
               text-align: center;
+              margin: 0;
             }
             .customer-name {
-              font-size: 14px;
+              font-size: 11px;
               font-weight: bold;
-              margin-bottom: 0;
               text-align: left;
-              line-height: 1.25;
+              line-height: 1.1;
+              margin: 0;
             }
             .customer-phone {
-              font-size: 12px;
-              margin-bottom: 0;
-              color: #4b5563;
+              font-size: 9px;
+              color: #666;
               text-align: left;
-              line-height: 1.25;
+              line-height: 1.1;
+              margin: 0;
             }
             .qr-code {
-              width: 60px;
-              height: 60px;
-              flex-grow: 1;
-              display: flex;
-              align-items: center;
-              justify-content: center;
+              width: 16mm;
+              height: 16mm;
             }
             .qr-code svg {
               width: 100%;
               height: 100%;
             }
             .model {
-              font-size: 14px;
+              font-size: 11px;
               font-weight: bold;
-              margin-bottom: 0;
               text-align: left;
-              line-height: 1.25;
+              line-height: 1.1;
+              margin: 0;
             }
             .device-code {
-              font-size: 12px;
+              font-size: 8px;
               font-weight: bold;
               color: #333;
-              border: 1px solid #d1d5db;
-              padding: 4px 8px;
-              background-color: #f3f4f6;
-              border-radius: 4px;
+              border: 1px solid #ccc;
+              padding: 0.5mm 1mm;
+              background-color: #f5f5f5;
+              border-radius: 1mm;
               display: inline-block;
               text-align: center;
-              margin-top: 2px;
+              margin: 0;
             }
             .issue {
-              font-size: 12px;
+              font-size: 9px;
               text-align: left;
-              line-height: 1.25;
-              margin-top: auto;
+              line-height: 1.1;
+              margin: 0;
             }
             ` : `
             /* HOCHFORMAT: Original Styling */
