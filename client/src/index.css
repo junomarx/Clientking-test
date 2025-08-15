@@ -50,6 +50,66 @@
       border: none !important;
       box-shadow: none !important;
     }
+
+    /* Etikett-Druck Regeln */
+    @page {
+      size: 57mm 32mm; /* Querformat: Breite x Höhe */
+      margin: 0;
+    }
+    
+    .label-container {
+      width: 57mm !important;
+      height: 32mm !important;
+      margin: 0 !important;
+      padding: 2mm !important;
+      box-sizing: border-box !important;
+      overflow: hidden !important;
+      page-break-inside: avoid !important;
+      border: none !important;
+      background: white !important;
+    }
+    
+    .label-content {
+      width: 53mm !important; /* 57mm - 4mm padding */
+      height: 28mm !important; /* 32mm - 4mm padding */
+      display: flex !important;
+      flex-direction: row !important; /* Querformat: nebeneinander */
+      align-items: flex-start !important;
+      justify-content: space-between !important;
+      gap: 2mm !important;
+      overflow: hidden !important;
+      page-break-inside: avoid !important;
+      border: none !important;
+      padding: 1mm !important;
+    }
+    
+    /* Text-Größen für Druck optimieren */
+    .label-container p,
+    .label-container div {
+      font-size: 8px !important;
+      line-height: 1.1 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    
+    .label-container .font-bold {
+      font-weight: bold !important;
+      font-size: 9px !important;
+    }
+    
+    .label-container .text-sm {
+      font-size: 8px !important;
+    }
+    
+    .label-container .text-xs {
+      font-size: 7px !important;
+    }
+    
+    /* QR-Code für Druck anpassen */
+    .label-container svg {
+      width: 15mm !important;
+      height: 15mm !important;
+    }
   }
 }
 

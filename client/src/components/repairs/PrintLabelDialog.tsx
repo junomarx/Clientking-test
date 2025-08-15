@@ -1,67 +1,51 @@
-import React, { useRef } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Repair, Customer, BusinessSettings } from '@shared/schema';
-import { apiRequest } from '@/lib/queryClient';
-import { Loader2, Printer } from 'lucide-react';
-import { useBusinessSettings } from '@/hooks/use-business-settings';
-import { QRCodeSVG } from 'qrcode.react';
+import { useEffect, useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { QRCodeSVG } from "qrcode.react";
+import { Loader2, Printer } from "lucide-react";
+import { useBusinessSettings } from "@/hooks/use-business-settings";
+
+interface Customer {
+  id: number;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+  email?: string;
+}
+
+interface Repair {
+  id: number;
+  orderCode: string;
+  model: string;
+  issue: string;
+  deviceCodeType?: string;
+}
+
+interface DeviceCodeData {
+  deviceCode: string;
+  deviceCodeType: 'text' | 'pattern';
+}
 
 interface PrintLabelDialogProps {
   open: boolean;
   onClose: () => void;
-  repairId: number | null;
+  repair: Repair | null;
+  customer: Customer | null;
+  repairId?: number | string;
+  deviceCodeData?: DeviceCodeData | null;
 }
 
-export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogProps) {
-  const printRef = useRef<HTMLDivElement>(null);
+export function PrintLabelDialog({ 
+  open, 
+  onClose, 
+  repair, 
+  customer, 
+  repairId,
+  deviceCodeData 
+}: PrintLabelDialogProps) {
+  const [isLoading, setIsLoading] = useState(false);
   const { settings } = useBusinessSettings();
-  const queryClient = useQueryClient();
 
-  // Nutze bereits gecachte Daten aus dem Query Client
-  const repairs = queryClient.getQueryData<Repair[]>(['/api/repairs']);
-  const customers = queryClient.getQueryData<Customer[]>(['/api/customers']);
-  
-  const repair = repairs?.find(r => r.id === repairId) || null;
-  const customer: Customer | undefined = repair && customers ? customers.find(c => c.id === repair.customerId) : undefined;
-  
-  // Aktive Abfrage des Device-Codes, um sicherzustellen, dass die Daten verfügbar sind
-  const { data: deviceCodeData } = useQuery({
-    queryKey: ['/api/repairs', repairId, 'device-code'],
-    queryFn: async () => {
-      const response = await apiRequest("GET", `/api/repairs/${repairId}/device-code`);
-      if (!response.ok) {
-        // Wenn kein Device-Code vorhanden ist, geben wir null zurück
-        if (response.status === 404) {
-          return null;
-        }
-        throw new Error('Fehler beim Laden des Device-Codes');
-      }
-      return await response.json();
-    },
-    enabled: !!repairId && open,
-    staleTime: 5 * 60 * 1000, // 5 Minuten Cache
-  });
-
-  const isLoading = false;
-
-  // Helper function to safely render customer name
-  const getCustomerName = (): string => {
-    if (!customer) return 'Kunde';
-    const firstName = customer.firstName || 'Kunde';
-    const lastName = customer.lastName || '';
-    return `${firstName} ${lastName}`.trim();
-  };
-
-
-  // Hilfsfunktion um den Gerätecode für das Etikett zu formatieren
   const formatDeviceCodeForLabel = (deviceCodeData: any): string => {
     console.log('formatDeviceCodeForLabel called with:', deviceCodeData);
     
@@ -88,259 +72,9 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
     }
   };
 
-  // Funktion zum Drucken mit neuem Fenster
+  // Einfacher Druck mit @media print CSS
   const handlePrint = () => {
-    if (!printRef.current) {
-      console.error('Druckelement nicht gefunden');
-      return;
-    }
-    
-    // Erstelle ein neues Fenster für den Druck
-    const printWindow = window.open('', '_blank', 'width=600,height=600');
-    
-    if (!printWindow) {
-      alert('Bitte erlauben Sie Popup-Fenster für diese Seite, um drucken zu können.');
-      return;
-    }
-    
-    // Extrahiere den Inhalt aus dem Referenzobjekt
-    const qrCode = `<svg width="60" height="60"><foreignObject width="60" height="60"><div xmlns="http://www.w3.org/1999/xhtml"><div style="width:60px;height:60px;">${printRef.current.querySelector('svg')?.outerHTML || ''}</div></div></foreignObject></svg>`;
-    const repairIdValue = repair?.id || repairId || '';
-    const orderCode = repair?.orderCode || `#${repairIdValue}`;
-    const firstName = customer?.firstName || 'Kunde';
-    const lastName = customer?.lastName || '';
-    const customerPhone = customer?.phone || '';
-    const model = repair?.model || '';
-    const repairIssue = repair?.issue || '';
-    const deviceCode = formatDeviceCodeForLabel(deviceCodeData);
-    
-    // Debug für Geräte-Code
-    console.log('Device Code Debug:');
-    console.log('deviceCodeData:', deviceCodeData);
-    console.log('formatted deviceCode:', deviceCode);
-    console.log('deviceCode length:', deviceCode?.length);
-    console.log('deviceCode truthy:', !!deviceCode);
-    console.log('repair?.deviceCodeType:', repair?.deviceCodeType);
-    
-    // Dynamische Größen basierend auf Settings
-    const labelFormat = settings?.labelFormat || 'portrait';
-    const labelWidth = settings?.labelWidth || 32;
-    const labelHeight = settings?.labelHeight || 57;
-    
-    // Fülle das Druckfenster mit Inhalten
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Etikett für Reparatur ${orderCode || `#${repairId}`}</title>
-          <meta charset="UTF-8">
-          <style>
-            @page {
-              size: ${labelWidth}mm ${labelHeight}mm;
-              margin: 0;
-            }
-            html, body {
-              margin: 0;
-              padding: 0;
-              width: ${labelWidth}mm;
-              height: ${labelHeight}mm;
-              overflow: hidden;
-              font-family: Arial, sans-serif;
-            }
-            .label {
-              width: ${labelWidth}mm;
-              height: ${labelHeight}mm;
-              box-sizing: border-box;
-              padding: 2mm;
-              background-color: white;
-              display: flex;
-              flex-direction: ${labelFormat === 'landscape' ? 'row' : 'column'};
-              align-items: center;
-              justify-content: ${labelFormat === 'landscape' ? 'space-between' : 'flex-start'};
-            }
-            .print-area {
-              width: ${labelWidth - 4}mm;
-              height: ${labelHeight - 4}mm;
-              display: flex;
-              flex-direction: ${labelFormat === 'landscape' ? 'row' : 'column'};
-              align-items: ${labelFormat === 'landscape' ? 'flex-start' : 'center'};
-              justify-content: space-between;
-              ${labelFormat === 'landscape' ? 'gap: 12px;' : ''}
-            }
-            
-            /* QUERFORMAT: EXAKTE KOPIE der Vorschau-Werte */
-            ${labelFormat === 'landscape' ? `
-            .left-section {
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              width: 90px;
-              height: 100%;
-              justify-content: space-between;
-            }
-            .right-section {
-              display: flex;
-              flex-direction: column;
-              width: 120px;
-              height: 100%;
-              justify-content: flex-start;
-              gap: 4px;
-            }
-            .repair-number {
-              font-size: 14px;
-              font-weight: bold;
-              margin-bottom: 4px;
-              text-align: center;
-            }
-            .customer-name {
-              font-size: 14px;
-              font-weight: bold;
-              margin-bottom: 0;
-              text-align: left;
-              line-height: 1.25;
-            }
-            .customer-phone {
-              font-size: 12px;
-              margin-bottom: 0;
-              color: rgb(75, 85, 99);
-              text-align: left;
-              line-height: 1.25;
-            }
-            .qr-code {
-              width: 60px;
-              height: 60px;
-              flex-grow: 1;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-            }
-            .qr-code svg {
-              width: 100%;
-              height: 100%;
-            }
-            .model {
-              font-size: 14px;
-              font-weight: bold;
-              margin-bottom: 0;
-              text-align: left;
-              line-height: 1.25;
-            }
-            .device-code {
-              font-size: 12px;
-              font-weight: bold;
-              color: #333;
-              border: 1px solid rgb(209, 213, 219);
-              padding: 4px 8px;
-              background-color: rgb(243, 244, 246);
-              border-radius: 4px;
-              display: inline-block;
-              text-align: center;
-              margin-top: 2px;
-              margin-bottom: 0;
-            }
-            .issue {
-              font-size: 12px;
-              text-align: left;
-              line-height: 1.25;
-              margin-top: auto;
-            }
-            ` : `
-            /* HOCHFORMAT: Original Styling */
-            .repair-number {
-              font-size: 14px;
-              font-weight: bold;
-              margin-bottom: 0.2mm;
-              text-align: center;
-            }
-            .customer-name {
-              font-size: 10px;
-              font-weight: bold;
-              margin-bottom: 0.3mm;
-              text-align: center;
-            }
-            .customer-phone {
-              font-size: 8px;
-              margin-bottom: 0.5mm;
-              color: #333;
-              text-align: center;
-            }
-            .qr-code {
-              margin-bottom: 1.5mm;
-              width: 17mm;
-              height: 17mm;
-            }
-            .qr-code svg {
-              width: 100%;
-              height: 100%;
-            }
-            .device-code {
-              font-size: 8px;
-              margin-bottom: 1.5mm;
-              font-weight: bold;
-              color: #333;
-              border: 1px solid #666;
-              padding: 1mm;
-              background-color: #f0f0f0;
-              border-radius: 1mm;
-              display: inline-block;
-              text-align: center;
-            }
-            .model {
-              font-size: 9px;
-              font-weight: bold;
-              margin-bottom: 1mm;
-              text-align: center;
-            }
-            .issue {
-              font-size: 8px;
-              white-space: pre-wrap;
-              text-align: center;
-            }
-            `}
-          </style>
-        </head>
-        <body>
-          <div class="label">
-            <div class="print-area">
-              ${labelFormat === 'landscape' ? `
-                <!-- Querformat Layout: EXAKTE KOPIE der funktionierenden Vorschau -->
-                <div class="left-section">
-                  <div class="repair-number">${orderCode}</div>
-                  <div class="qr-code">${qrCode}</div>
-                </div>
-                <div class="right-section">
-                  <div class="customer-name">${firstName} ${lastName}</div>
-                  ${customerPhone ? `<div class="customer-phone">${customerPhone}</div>` : ''}
-                  <div class="model">${model}</div>
-                  ${deviceCode ? `<div class="device-code">${deviceCode}</div>` : ''}
-                  <div class="issue">${repairIssue || ''}</div>
-                </div>
-              ` : `
-                <!-- Hochformat Layout: Vertikal gestapelt -->
-                <div class="repair-number">${orderCode}</div>
-                <div class="customer-name">${firstName} ${lastName}</div>
-                ${customerPhone ? `<div class="customer-phone">${customerPhone}</div>` : ''}
-                <div class="qr-code">${qrCode}</div>
-                ${deviceCode ? `<div class="device-code">${deviceCode}</div>` : ''}
-                <div class="model">${model}</div>
-                <div class="issue">${repairIssue ? repairIssue.split(',').join('\\n') : ''}</div>
-              `}
-            </div>
-          </div>
-          <script>
-            // Drucken nach vollständigem Laden
-            window.onload = function() {
-              setTimeout(function() {
-                window.print();
-                window.close(); // Fenster direkt schließen, ohne auf onafterprint zu warten
-              }, 500);
-            };
-          </script>
-        </body>
-      </html>
-    `);
-    
-    printWindow.document.close();
+    window.print();
     onClose();
   };
 
@@ -361,7 +95,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
           <>
             <div className="border rounded-md p-4 max-h-[60vh] overflow-auto bg-gray-50 shadow-inner">
               <div className="bg-white p-4 rounded-md shadow-sm">
-                <div ref={printRef} className="label-container border border-dashed border-gray-300 p-3">
+                <div className="label-container border border-dashed border-gray-300 p-3">
                   {/* Vorschau basierend auf den gewählten Einstellungen */}
                   {(() => {
                     const labelFormat = settings?.labelFormat || 'portrait';
@@ -370,7 +104,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
                     if (isLandscape) {
                       // Querformat-Vorschau
                       return (
-                        <div style={{ 
+                        <div className="label-content" style={{ 
                           width: '220px', 
                           height: '120px', 
                           margin: '0 auto', 
@@ -447,61 +181,57 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
                     } else {
                       // Hochformat-Vorschau (Standard)
                       return (
-                        <div style={{ 
+                        <div className="label-content" style={{ 
                           width: '26mm', 
                           margin: '0 auto', 
                           display: 'flex', 
                           flexDirection: 'column', 
                           alignItems: 'center', 
-                          gap: '1mm',
+                          gap: '2px',
                           border: '1px solid #e5e5e5',
-                          padding: '2mm'
+                          padding: '8px',
+                          backgroundColor: 'white'
                         }}>
-                          {/* Auftragsnummer */}
                           <div className="text-center">
-                            <p className="text-lg font-bold">{repair?.orderCode || `#${repair?.id}`}</p>
+                            <p className="text-sm font-bold">{repair?.orderCode || `#${repair?.id}`}</p>
                           </div>
                           
-                          {/* Kundenname */}
-                          <div className="text-center w-full">
+                          <div className="text-center">
                             <p className="text-xs font-bold">
                               {customer?.firstName || 'Kunde'} {customer?.lastName || ''}
                             </p>
                           </div>
                           
-                          {/* Telefonnummer zwischen Name und QR-Code */}
-                          <div className="text-center w-full mb-2">
-                            <p className="text-xs text-gray-600">
-                              {customer?.phone || ''}
-                            </p>
-                          </div>
+                          {customer?.phone && (
+                            <div className="text-center">
+                              <p className="text-xs text-gray-600">{customer.phone}</p>
+                            </div>
+                          )}
                           
-                          {/* QR-Code mittig */}
-                          <div className="flex justify-center">
+                          <div style={{ marginBottom: '4px' }}>
                             <QRCodeSVG 
                               value={`${window.location.origin}/repairs/${repair?.orderCode || repair?.id}`} 
-                              size={64} 
+                              size={50} 
                               level="M"
                             />
                           </div>
                           
-                          {/* Geräte-Code (falls vorhanden) */}
                           {deviceCodeData && formatDeviceCodeForLabel(deviceCodeData) && (
-                            <div className="text-center w-full mb-2">
-                              <div className="text-xs font-bold bg-gray-100 border border-gray-300 rounded px-2 py-1 inline-block">
+                            <div style={{ marginBottom: '2px' }}>
+                              <div className="text-xs font-bold bg-gray-100 border border-gray-300 rounded px-1 py-0.5 inline-block">
                                 {formatDeviceCodeForLabel(deviceCodeData) as string}
                               </div>
                             </div>
                           )}
                           
-                          {/* Modell */}
-                          <div className="text-center w-full">
+                          <div className="text-center">
                             <p className="text-xs font-bold">{repair?.model}</p>
                           </div>
                           
-                          {/* Fehler */}
-                          <div className="text-center w-full">
-                            <p className="text-xs whitespace-pre-wrap">{repair?.issue ? repair.issue.split(',').join('\n') : ''}</p>
+                          <div className="text-center">
+                            <p className="text-xs leading-tight">
+                              {repair?.issue ? (repair.issue.length > 20 ? repair.issue.substring(0, 20) + '...' : repair.issue) : ''}
+                            </p>
                           </div>
                         </div>
                       );
@@ -511,15 +241,15 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
               </div>
             </div>
             
-            <DialogFooter className="flex justify-between">
-              <Button variant="outline" onClick={onClose}>
+            <div className="flex gap-2 pt-4">
+              <Button onClick={onClose} variant="outline" className="flex-1">
                 Abbrechen
               </Button>
-              <Button onClick={handlePrint} className="gap-2">
-                <Printer className="h-4 w-4" />
+              <Button onClick={handlePrint} className="flex-1">
+                <Printer className="w-4 h-4 mr-2" />
                 Drucken
               </Button>
-            </DialogFooter>
+            </div>
           </>
         )}
       </DialogContent>
