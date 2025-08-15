@@ -72,12 +72,10 @@ export function PrintLabelDialog({
     }
   };
 
-  // Druck mit verstecktem Element das nur beim Drucken sichtbar ist
+  // Zurück zur ursprünglichen HTML-String Methode die funktioniert hat
   const handlePrint = () => {
-    // Erstelle ein verstecktes Druck-Element
-    const printElement = document.createElement('div');
-    printElement.className = 'print-only';
-    printElement.style.display = 'none'; // Versteckt bis zum Drucken
+    const labelFormat = settings?.labelFormat || 'portrait';
+    const isLandscape = labelFormat === 'landscape';
     
     const orderCode = repair?.orderCode || `#${repair?.id || repairId}`;
     const customerName = `${customer?.firstName || 'Kunde'} ${customer?.lastName || ''}`;
@@ -86,29 +84,198 @@ export function PrintLabelDialog({
     const issue = repair?.issue || '';
     const deviceCode = formatDeviceCodeForLabel(deviceCodeData);
     
-    printElement.innerHTML = `
-      <div class="print-left">
-        <div class="print-order-code">${orderCode}</div>
-        <svg width="60" height="60" viewBox="0 0 60 60">
-          ${document.querySelector('.label-content svg')?.innerHTML || ''}
-        </svg>
-      </div>
-      <div class="print-right">
-        <div class="print-customer">${customerName}</div>
-        ${phone ? `<div class="print-phone">${phone}</div>` : ''}
-        <div class="print-model">${model}</div>
-        ${deviceCode ? `<div class="print-device-code">${deviceCode}</div>` : ''}
-        <div class="print-issue">${issue.length > 40 ? issue.substring(0, 40) + '...' : issue}</div>
-      </div>
-    `;
+    // QR-Code SVG generieren
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const qrSize = isLandscape ? 60 : 50;
+    canvas.width = qrSize;
+    canvas.height = qrSize;
     
-    document.body.appendChild(printElement);
+    // QR Code als Data URL für Druck
+    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${qrSize}x${qrSize}&data=${encodeURIComponent(`${window.location.origin}/repairs/${orderCode}`)}`;
     
-    setTimeout(() => {
-      window.print();
-      document.body.removeChild(printElement);
-      onClose();
-    }, 100);
+    let printContent = '';
+    
+    if (isLandscape) {
+      // Querformat HTML
+      printContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Etikett Druck</title>
+          <style>
+            @page { 
+              size: 57mm 32mm; 
+              margin: 0; 
+            }
+            body { 
+              margin: 0; 
+              padding: 2mm; 
+              font-family: Arial, sans-serif; 
+              width: 53mm; 
+              height: 28mm; 
+              display: flex; 
+              flex-direction: row; 
+              align-items: flex-start; 
+              gap: 2mm; 
+              box-sizing: border-box;
+            }
+            .left { 
+              display: flex; 
+              flex-direction: column; 
+              align-items: center; 
+              justify-content: space-between; 
+              width: 22mm; 
+              height: 28mm; 
+            }
+            .right { 
+              display: flex; 
+              flex-direction: column; 
+              justify-content: flex-start; 
+              width: 31mm; 
+              height: 28mm; 
+              gap: 1mm; 
+            }
+            .order-code { 
+              font-size: 9px; 
+              font-weight: bold; 
+              text-align: center; 
+              margin: 0; 
+              line-height: 1.1; 
+            }
+            .customer { 
+              font-size: 8px; 
+              font-weight: bold; 
+              margin: 0; 
+              line-height: 1.1; 
+            }
+            .phone { 
+              font-size: 7px; 
+              color: #666; 
+              margin: 0; 
+              line-height: 1.1; 
+            }
+            .model { 
+              font-size: 8px; 
+              font-weight: bold; 
+              margin: 0; 
+              line-height: 1.1; 
+            }
+            .issue { 
+              font-size: 7px; 
+              margin: 0; 
+              line-height: 1.1; 
+              margin-top: auto; 
+            }
+            img { 
+              width: 15mm; 
+              height: 15mm; 
+            }
+          </style>
+        </head>
+        <body>
+          <div class="left">
+            <div class="order-code">${orderCode}</div>
+            <img src="${qrCodeUrl}" alt="QR Code">
+          </div>
+          <div class="right">
+            <div class="customer">${customerName}</div>
+            ${phone ? `<div class="phone">${phone}</div>` : ''}
+            <div class="model">${model}</div>
+            ${deviceCode ? `<div class="device-code">${deviceCode}</div>` : ''}
+            <div class="issue">${issue.length > 40 ? issue.substring(0, 40) + '...' : issue}</div>
+          </div>
+        </body>
+        </html>
+      `;
+    } else {
+      // Hochformat HTML
+      printContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Etikett Druck</title>
+          <style>
+            @page { 
+              size: 32mm 57mm; 
+              margin: 0; 
+            }
+            body { 
+              margin: 0; 
+              padding: 2mm; 
+              font-family: Arial, sans-serif; 
+              width: 28mm; 
+              height: 53mm; 
+              display: flex; 
+              flex-direction: column; 
+              align-items: center; 
+              gap: 2mm; 
+              box-sizing: border-box;
+            }
+            .order-code { 
+              font-size: 8px; 
+              font-weight: bold; 
+              text-align: center; 
+              margin: 0; 
+            }
+            .customer { 
+              font-size: 7px; 
+              font-weight: bold; 
+              text-align: center; 
+              margin: 0; 
+            }
+            .phone { 
+              font-size: 6px; 
+              text-align: center; 
+              margin: 0; 
+            }
+            .model { 
+              font-size: 7px; 
+              font-weight: bold; 
+              text-align: center; 
+              margin: 0; 
+            }
+            .issue { 
+              font-size: 6px; 
+              text-align: center; 
+              margin: 0; 
+              margin-top: auto; 
+            }
+            img { 
+              width: 13mm; 
+              height: 13mm; 
+            }
+          </style>
+        </head>
+        <body>
+          <div class="order-code">${orderCode}</div>
+          <div class="customer">${customerName}</div>
+          ${phone ? `<div class="phone">${phone}</div>` : ''}
+          <img src="${qrCodeUrl}" alt="QR Code">
+          <div class="model">${model}</div>
+          ${deviceCode ? `<div class="device-code">${deviceCode}</div>` : ''}
+          <div class="issue">${issue.length > 40 ? issue.substring(0, 40) + '...' : issue}</div>
+        </body>
+        </html>
+      `;
+    }
+    
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+      
+      printWindow.onload = () => {
+        setTimeout(() => {
+          printWindow.print();
+          printWindow.close();
+        }, 500);
+      };
+    }
+    
+    onClose();
   };
 
   if (!open) return null;
