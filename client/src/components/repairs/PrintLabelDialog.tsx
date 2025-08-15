@@ -307,7 +307,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
                 height: 12mm;
               }
               .model {
-                font-size: 10px;
+                font-size: 8px;
                 font-weight: bold;
                 margin-bottom: 0;
                 text-align: left;
@@ -331,7 +331,6 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
                 text-align: left;
                 line-height: 1.1;
                 margin-top: auto;
-                white-space: pre-wrap;
               }
             }
             ` : `
@@ -403,7 +402,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
                   ${customerPhone ? `<div class="customer-phone">${customerPhone}</div>` : ''}
                   <div class="model">${model}</div>
                   ${deviceCode ? `<div class="device-code">${deviceCode}</div>` : ''}
-                  <div class="issue">${repairIssue ? repairIssue.split(',').join('\n') : ''}</div>
+                  <div class="issue">${repairIssue ? repairIssue.split(',').map(item => item.trim()).join('<br>') : ''}</div>
                 </div>
               ` : `
                 <!-- Hochformat Layout: Vertikal gestapelt -->
