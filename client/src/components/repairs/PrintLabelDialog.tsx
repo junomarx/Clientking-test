@@ -126,11 +126,11 @@ export function PrintLabelDialog({
                             justifyContent: 'space-between'
                           }}>
                             <div className="text-center" style={{ marginBottom: '4px' }}>
-                              <p className="text-sm font-bold">{repair?.orderCode || `#${repair?.id}`}</p>
+                              <p className="text-sm font-bold">{repair?.orderCode || `#${repair?.id || repairId}`}</p>
                             </div>
                             <div style={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
                               <QRCodeSVG 
-                                value={`${window.location.origin}/repairs/${repair?.orderCode || repair?.id}`} 
+                                value={`${window.location.origin}/repairs/${repair?.orderCode || repair?.id || repairId}`} 
                                 size={60} 
                                 level="M"
                               />
@@ -193,7 +193,7 @@ export function PrintLabelDialog({
                           backgroundColor: 'white'
                         }}>
                           <div className="text-center">
-                            <p className="text-sm font-bold">{repair?.orderCode || `#${repair?.id}`}</p>
+                            <p className="text-sm font-bold">{repair?.orderCode || `#${repair?.id || repairId}`}</p>
                           </div>
                           
                           <div className="text-center">
@@ -210,7 +210,7 @@ export function PrintLabelDialog({
                           
                           <div style={{ marginBottom: '4px' }}>
                             <QRCodeSVG 
-                              value={`${window.location.origin}/repairs/${repair?.orderCode || repair?.id}`} 
+                              value={`${window.location.origin}/repairs/${repair?.orderCode || repair?.id || repairId}`} 
                               size={50} 
                               level="M"
                             />
