@@ -207,8 +207,8 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
               line-height: 1.1;
             }
             .qr-code {
-              width: 50px;
-              height: 50px;
+              width: 12mm;
+              height: 12mm;
               flex-grow: 1;
               display: flex;
               align-items: center;
