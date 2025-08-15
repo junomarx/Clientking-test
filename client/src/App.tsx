@@ -22,14 +22,15 @@ import ApiTest from "@/pages/api-test";
 import SignaturePage from "@/pages/signature-page";
 import { ProtectedRoute, AdminProtectedRoute, SuperadminProtectedRoute } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
-import { ThemeProvider, useTheme } from "./hooks/use-theme";
+import { ThemeProvider } from "./hooks/use-theme";
 import { BusinessSettingsProvider } from "./hooks/use-business-settings";
 import { PrintManagerProvider } from "@/components/repairs/PrintOptionsManager";
 import { OnlineStatusProvider } from "./hooks/use-online-status";
 import { KioskModeProvider } from "./hooks/use-kiosk-mode";
 import { KioskOverlay } from "@/components/kiosk/KioskOverlay";
 import { useEffect } from "react";
-
+import { useTheme } from "./hooks/use-theme";
+import { clearAllBrands, clearAllModels } from '@/components/repairs/ClearCacheHelpers';
 
 function Router() {
   return (
@@ -137,8 +138,10 @@ function TitleUpdater() {
 // Component to clear cache on app start
 function CacheClearer() {
   useEffect(() => {
-    // Cache-Clearing wurde temporär deaktiviert
-    console.log('Cache-Clearing beim Start wurde deaktiviert');
+    // Löscht alle gespeicherten Hersteller und Modelle beim Start der App
+    clearAllBrands();
+    clearAllModels();
+    console.log('Cache für Gerätearten und Hersteller wurde beim Start gelöscht');
   }, []);
   
   return null;
