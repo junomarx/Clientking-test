@@ -27,6 +27,7 @@ import {
   Legend
 } from 'recharts';
 import SuperadminStatsOverview from './SuperadminStatsOverview';
+import RepairStatisticsTab from './RepairStatisticsTab';
 import { User } from '@shared/schema';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -355,14 +356,24 @@ export default function SuperadminDashboardTab() {
         </TabsContent>
 
         <TabsContent value="dsgvo">
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div>
               <h2 className="text-xl font-semibold mb-2">DSGVO-konforme Systemstatistiken</h2>
               <p className="text-sm text-muted-foreground">
                 Anonymisierte Metriken und Systemdaten, die den Datenschutzrichtlinien entsprechen.
               </p>
             </div>
-            <SuperadminStatsOverview />
+            
+            <div className="space-y-8">
+              {/* Anonymisierte Reparaturstatistiken */}
+              <RepairStatisticsTab />
+              
+              {/* Weitere DSGVO-konforme Statistiken */}
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-medium mb-4">Weitere Systemmetriken</h3>
+                <SuperadminStatsOverview />
+              </div>
+            </div>
           </div>
         </TabsContent>
       </Tabs>

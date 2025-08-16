@@ -2501,10 +2501,10 @@ export function registerSuperadminRoutes(app: Express) {
     }
   });
 
-  // Reparatur-basierte Gerätestatistiken für den Superadmin-Bereich
+  // Anonymisierte Reparaturstatistiken für DSGVO-Compliance
   app.get("/api/superadmin/device-statistics", isSuperadmin, async (req: Request, res: Response) => {
     try {
-      console.log("Superadmin ruft reparatur-basierte Gerätestatistiken ab");
+      console.log("Superadmin ruft anonymisierte Reparaturstatistiken ab (DSGVO-konform)");
 
       // Geräte pro Gerätetyp (basierend auf Reparaturdaten)
       const deviceTypeStats = await db.select({
@@ -2513,7 +2513,7 @@ export function registerSuperadminRoutes(app: Express) {
       })
       .from(repairs)
       .groupBy(repairs.deviceType)
-      .orderBy(count(repairs.id));
+      .orderBy(desc(count(repairs.id)));
 
       // Geräte pro Hersteller (alle Gerätetypen zusammen)
       const brandStats = await db.select({
@@ -2522,7 +2522,7 @@ export function registerSuperadminRoutes(app: Express) {
       })
       .from(repairs)
       .groupBy(repairs.brand)
-      .orderBy(count(repairs.id));
+      .orderBy(desc(count(repairs.id)));
 
       // Detaillierte Aufschlüsselung: Geräte pro Gerätetyp + Hersteller
       const detailedStats = await db.select({
@@ -2532,9 +2532,9 @@ export function registerSuperadminRoutes(app: Express) {
       })
       .from(repairs)
       .groupBy(repairs.deviceType, repairs.brand)
-      .orderBy(repairs.deviceType, count(repairs.id));
+      .orderBy(desc(count(repairs.id)));
 
-      // Gesamtanzahl aller Geräte (aus Reparaturdaten)
+      // Gesamtanzahl aller Reparaturen (anonymisiert - ohne Shop-Informationen)
       const totalDevicesResult = await db.select({
         total: count(repairs.id)
       }).from(repairs);
@@ -2543,26 +2543,26 @@ export function registerSuperadminRoutes(app: Express) {
 
       const response = {
         deviceTypeStats: deviceTypeStats.map(item => ({
-          deviceType: item.deviceType,
+          deviceType: item.deviceType || 'Unbekannt',
           count: Number(item.count)
         })),
         brandStats: brandStats.map(item => ({
-          brand: item.brand,
+          brand: item.brand || 'Unbekannt',
           count: Number(item.count)
         })),
         detailedStats: detailedStats.map(item => ({
-          deviceType: item.deviceType,
-          brand: item.brand,
+          deviceType: item.deviceType || 'Unbekannt',
+          brand: item.brand || 'Unbekannt',
           count: Number(item.count)
         })),
         totalDevices: Number(totalDevices)
       };
 
-      console.log(`Reparatur-basierte Gerätestatistiken abgerufen: ${totalDevices} Geräte insgesamt`);
+      console.log(`DSGVO-konforme Reparaturstatistiken abgerufen: ${totalDevices} Reparaturen insgesamt`);
       res.json(response);
     } catch (error) {
-      console.error("Fehler beim Abrufen der reparatur-basierten Gerätestatistiken:", error);
-      res.status(500).json({ message: "Fehler beim Abrufen der Gerätestatistiken" });
+      console.error("Fehler beim Abrufen der anonymisierten Reparaturstatistiken:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Reparaturstatistiken" });
     }
   });
   
