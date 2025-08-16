@@ -288,7 +288,7 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", (req, res, next) => {
-    passport.authenticate("local", (err: any, user: Express.User | false, info: any) => {
+    passport.authenticate("local", async (err: any, user: Express.User | false, info: any) => {
       if (err) return next(err);
       if (!user) {
         // Verwende die Fehlermeldung aus info, wenn vorhanden
@@ -297,10 +297,12 @@ export function setupAuth(app: Express) {
       }
       
       // DSGVO-Schutz: Prüfe, ob der Benutzer eine Shop-Zuordnung hat (außer bei Superadmins)
-      // Multi-Shop Admins (shopId = null, isAdmin = true, isSuperadmin = false) sind erlaubt
-      const isMultiShopAdmin = !user.shopId && user.isAdmin && !user.isSuperadmin;
+      // Multi-Shop Admins werden anhand der multi_shop_access Tabelle identifiziert
+      const accessibleShopsCount = await storage.getUserAccessibleShopsCount(user.id);
+      const hasMultiShopAccess = accessibleShopsCount > 0;
+      const isMultiShopAdmin = !user.shopId && !user.isSuperadmin && hasMultiShopAccess;
       
-      console.log(`🔍 Login-Prüfung für ${user.username}: shopId=${user.shopId}, isAdmin=${user.isAdmin}, isSuperadmin=${user.isSuperadmin}, isMultiShopAdmin=${isMultiShopAdmin}`);
+      console.log(`🔍 Login-Prüfung für ${user.username}: shopId=${user.shopId}, isAdmin=${user.isAdmin}, isSuperadmin=${user.isSuperadmin}, accessibleShopsCount=${accessibleShopsCount}, isMultiShopAdmin=${isMultiShopAdmin}`);
       
       if (!user.shopId && !user.isSuperadmin && !isMultiShopAdmin) {
         console.error(`❌ Login verweigert: Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung`);

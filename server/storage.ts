@@ -114,6 +114,7 @@ export interface IStorage {
 
   // Multi-Shop Methoden
   getUserAccessibleShops(userId: number): Promise<Shop[]>;
+  getUserAccessibleShopsCount(userId: number): Promise<number>;
   createUserShopAccess(access: InsertUserShopAccess): Promise<UserShopAccess>;
   revokeUserShopAccess(userId: number, shopId: number): Promise<boolean>;
   getUserShopAccess(userId: number): Promise<UserShopAccess[]>;
@@ -5416,6 +5417,39 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error getting accessible shops:', error);
       return [];
+    }
+  }
+
+  async getUserAccessibleShopsCount(userId: number): Promise<number> {
+    try {
+      const user = await this.getUser(userId);
+      if (!user) return 0;
+
+      // Für normale Shop-Owner: 1 Shop (ihren eigenen)
+      if (user.shopId && !user.isSuperadmin) {
+        const [shop] = await db
+          .select()
+          .from(shops)
+          .where(eq(shops.id, user.shopId));
+        return shop ? 1 : 0;
+      }
+
+      // Für Multi-Shop Admins: Anzahl der zugänglichen Shops
+      const count = await db
+        .select({ count: sql`count(*)`.mapWith(Number) })
+        .from(userShopAccess)
+        .where(
+          and(
+            eq(userShopAccess.userId, userId),
+            eq(userShopAccess.isActive, true),
+            isNull(userShopAccess.revokedAt)
+          )
+        );
+
+      return count[0]?.count || 0;
+    } catch (error) {
+      console.error('Error getting accessible shops count:', error);
+      return 0;
     }
   }
 
