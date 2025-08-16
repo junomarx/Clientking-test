@@ -17,6 +17,12 @@ export function ProtectedRoute({ path, children }: { path: string; children: Rea
     return <Redirect to="/auth" />;
   }
 
+  // Multi-Shop Admin Weiterleitung: Wenn der Benutzer ein Multi-Shop Admin ist 
+  // (shopId = null, isAdmin = true, isSuperadmin = false), leite zur Multi-Shop Verwaltung weiter
+  if (user.shopId === null && user.isAdmin && !user.isSuperadmin) {
+    return <Redirect to="/multi-shop" />;
+  }
+
   return <>{children}</>;
 }
 

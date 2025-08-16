@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 export interface Shop {
   id: number;
   name: string;
+  businessName: string;
   address?: string;
   isActive: boolean;
 }

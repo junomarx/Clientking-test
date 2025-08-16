@@ -297,11 +297,20 @@ export function setupAuth(app: Express) {
       }
       
       // DSGVO-Schutz: Prüfe, ob der Benutzer eine Shop-Zuordnung hat (außer bei Superadmins)
-      if (!user.shopId && !user.isSuperadmin) {
+      // Multi-Shop Admins (shopId = null, isAdmin = true, isSuperadmin = false) sind erlaubt
+      const isMultiShopAdmin = !user.shopId && user.isAdmin && !user.isSuperadmin;
+      
+      console.log(`🔍 Login-Prüfung für ${user.username}: shopId=${user.shopId}, isAdmin=${user.isAdmin}, isSuperadmin=${user.isSuperadmin}, isMultiShopAdmin=${isMultiShopAdmin}`);
+      
+      if (!user.shopId && !user.isSuperadmin && !isMultiShopAdmin) {
         console.error(`❌ Login verweigert: Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung`);
         return res.status(403).json({ 
           message: "Ihr Benutzerkonto ist nicht korrekt konfiguriert. Bitte kontaktieren Sie den Administrator." 
         });
+      }
+      
+      if (isMultiShopAdmin) {
+        console.log(`✅ Multi-Shop Admin erkannt: ${user.username} (ID: ${user.id})`);
       }
       
       req.login(user, async (err) => {

@@ -5469,30 +5469,36 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getMultiShopAdmins(): Promise<Array<User & { accessibleShops: Shop[] }>> {
+  async getMultiShopAdmins(): Promise<Array<User & { accessibleShops: Array<{ id: number, shop: { id: number, businessName: string, isActive: boolean }, grantedAt: string }> }>> {
     try {
-      // Finde alle Benutzer mit Multi-Shop-Access
-      const usersWithAccess = await db
-        .select({
-          userId: userShopAccess.userId
-        })
-        .from(userShopAccess)
+      // Finde alle Multi-Shop Admins (shopId = null, isAdmin = true, isSuperadmin = false)
+      const multiShopAdmins = await db
+        .select()
+        .from(users)
         .where(
           and(
-            eq(userShopAccess.isActive, true),
-            isNull(userShopAccess.revokedAt)
+            isNull(users.shopId),
+            eq(users.isAdmin, true),
+            eq(users.isSuperadmin, false)
           )
-        )
-        .groupBy(userShopAccess.userId);
+        );
 
       const result = [];
       
-      for (const { userId } of usersWithAccess) {
-        const user = await this.getUser(userId);
-        if (user) {
-          const accessibleShops = await this.getUserAccessibleShops(userId);
-          result.push({ ...user, accessibleShops });
-        }
+      for (const user of multiShopAdmins) {
+        const accessibleShops = await this.getUserAccessibleShops(user.id);
+        result.push({ 
+          ...user, 
+          accessibleShops: accessibleShops.map(access => ({
+            id: access.id,
+            shop: {
+              id: access.shop.id,
+              businessName: access.shop.businessName || access.shop.name || `Shop ${access.shop.id}`,
+              isActive: access.shop.isActive
+            },
+            grantedAt: access.grantedAt
+          }))
+        });
       }
 
       return result;

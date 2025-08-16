@@ -9,6 +9,7 @@ import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import AdminPage from "@/pages/admin-page";
 import SuperadminPage from "@/pages/superadmin-page";
+import MultiShopPage from "@/pages/multi-shop-page";
 
 // Design Preview Imports wurden entfernt
 import SettingsPage from "@/pages/settings-page";
@@ -53,6 +54,11 @@ function Router() {
       <Route path="/superadmin">
         <ProtectedRoute path="/superadmin">
           <SuperadminPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/multi-shop">
+        <ProtectedRoute path="/multi-shop">
+          <MultiShopPage />
         </ProtectedRoute>
       </Route>
       <Route path="/repairs/:orderCode">

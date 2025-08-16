@@ -404,7 +404,7 @@ export function registerSuperadminRoutes(app: Express) {
     }
   });
 
-  // Benutzerverwaltung
+  // Benutzerverwaltung (ohne Multi-Shop Admins)
   app.get("/api/superadmin/users", isSuperadmin, async (req: Request, res: Response) => {
     try {
       const allUsers = await db.select({
@@ -419,7 +419,14 @@ export function registerSuperadminRoutes(app: Express) {
         createdAt: users.createdAt,
         lastLoginAt: users.lastLoginAt,
         lastLogoutAt: users.lastLogoutAt,
-      }).from(users);
+      }).from(users)
+      .where(
+        // Schließe Multi-Shop Admins aus: shopId = null UND isAdmin = true UND isSuperadmin = false
+        or(
+          isNull(users.shopId) === false, // Normale Shop-Benutzer
+          and(isNull(users.shopId), eq(users.isSuperadmin, true)) // Superadmins
+        )
+      );
 
       res.json(allUsers);
     } catch (error) {
