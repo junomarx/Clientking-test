@@ -8,6 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Check, ChevronsUpDown, X } from "lucide-react";
 import { Building2, UserPlus, UserMinus, Users, ShieldCheck, Plus } from "lucide-react";
 import { useMultiShop, type MultiShopAdmin } from "@/hooks/use-multi-shop";
 import { useForm } from "react-hook-form";
@@ -62,15 +65,21 @@ export function MultiShopManagement() {
   
   const [isGrantDialogOpen, setIsGrantDialogOpen] = useState(false);
   const [isCreateAdminDialogOpen, setIsCreateAdminDialogOpen] = useState(false);
+  const [isShopSelectOpen, setIsShopSelectOpen] = useState(false);
 
-  // Alle Shops für Select abrufen
-  const { data: allShops = [] } = useQuery<Shop[]>({
+  // Alle Shops für Select abrufen (ohne Duplikate)
+  const { data: allShopsRaw = [] } = useQuery<Shop[]>({
     queryKey: ["/api/superadmin/shops"],
     queryFn: async () => {
       const response = await apiRequest("GET", "/api/superadmin/shops");
       return response.json();
     },
   });
+
+  // Duplikate entfernen basierend auf businessName
+  const allShops = allShopsRaw.filter((shop, index, self) => 
+    index === self.findIndex(s => s.businessName === shop.businessName)
+  );
 
   // Alle Benutzer für Select abrufen
   const { data: allUsers = [] } = useQuery<User[]>({
@@ -107,6 +116,8 @@ export function MultiShopManagement() {
 
   const onCreateAdmin = async (data: CreateAdminFormData) => {
     try {
+      console.log("Erstelle Multi-Shop Admin:", data);
+      
       // Erst den neuen Admin erstellen
       const createResponse = await apiRequest("POST", "/api/multi-shop/create-admin", {
         username: data.username,
@@ -114,17 +125,26 @@ export function MultiShopManagement() {
         email: data.email,
       });
       
+      if (!createResponse.ok) {
+        const errorData = await createResponse.json();
+        throw new Error(errorData.message || "Fehler beim Erstellen des Admins");
+      }
+      
       const newUser = await createResponse.json();
+      console.log("Admin erstellt:", newUser);
       
       // Dann Shop-Zugänge gewähren
       for (const shopId of data.shopIds) {
+        console.log(`Gewähre Zugang für Shop ${shopId}`);
         await grantAccess({ userId: newUser.id, shopId });
       }
       
       setIsCreateAdminDialogOpen(false);
       createAdminForm.reset();
-    } catch (error) {
+      console.log("Multi-Shop Admin erfolgreich erstellt");
+    } catch (error: any) {
       console.error("Fehler beim Erstellen des Multi-Shop Admins:", error);
+      alert(`Fehler: ${error.message}`);
     }
   };
 
@@ -223,47 +243,86 @@ export function MultiShopManagement() {
                     <FormField
                       control={createAdminForm.control}
                       name="shopIds"
-                      render={() => (
-                        <FormItem>
-                          <div className="mb-4">
-                            <FormLabel className="text-base">Shop-Zugänge</FormLabel>
-                            <p className="text-sm text-muted-foreground">
-                              Wählen Sie die Shops aus, auf die der Admin Zugang haben soll.
-                            </p>
-                          </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-y-auto">
-                            {allShops.map((shop) => (
-                              <FormField
-                                key={shop.id}
-                                control={createAdminForm.control}
-                                name="shopIds"
-                                render={({ field }) => (
-                                  <FormItem
-                                    key={shop.id}
-                                    className="flex flex-row items-start space-x-3 space-y-0"
-                                  >
-                                    <FormControl>
-                                      <Checkbox
-                                        checked={field.value?.includes(shop.id)}
-                                        onCheckedChange={(checked) => {
-                                          return checked
-                                            ? field.onChange([...field.value, shop.id])
-                                            : field.onChange(
-                                                field.value?.filter(
-                                                  (value) => value !== shop.id
-                                                )
-                                              )
-                                        }}
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>Shop-Zugänge</FormLabel>
+                          <p className="text-sm text-muted-foreground mb-2">
+                            Wählen Sie die Shops aus, auf die der Admin Zugang haben soll.
+                          </p>
+                          
+                          <Popover open={isShopSelectOpen} onOpenChange={setIsShopSelectOpen}>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant="outline"
+                                  role="combobox"
+                                  className="w-full justify-between"
+                                >
+                                  {field.value?.length > 0
+                                    ? `${field.value.length} Shop${field.value.length !== 1 ? 's' : ''} ausgewählt`
+                                    : "Shops auswählen..."}
+                                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[400px] p-0">
+                              <Command>
+                                <CommandInput placeholder="Shop suchen..." />
+                                <CommandEmpty>Keine Shops gefunden.</CommandEmpty>
+                                <CommandGroup className="max-h-64 overflow-auto">
+                                  {allShops.map((shop) => (
+                                    <CommandItem
+                                      value={shop.businessName}
+                                      key={shop.id}
+                                      onSelect={() => {
+                                        const isSelected = field.value?.includes(shop.id);
+                                        if (isSelected) {
+                                          field.onChange(field.value?.filter(id => id !== shop.id));
+                                        } else {
+                                          field.onChange([...(field.value || []), shop.id]);
+                                        }
+                                      }}
+                                    >
+                                      <Check
+                                        className={`mr-2 h-4 w-4 ${
+                                          field.value?.includes(shop.id) ? "opacity-100" : "opacity-0"
+                                        }`}
                                       />
-                                    </FormControl>
-                                    <FormLabel className="text-sm font-normal">
                                       {shop.businessName}
-                                    </FormLabel>
-                                  </FormItem>
-                                )}
-                              />
-                            ))}
-                          </div>
+                                      {!shop.isActive && (
+                                        <span className="ml-auto text-muted-foreground text-xs">(Inaktiv)</span>
+                                      )}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </Command>
+                            </PopoverContent>
+                          </Popover>
+                          
+                          {/* Ausgewählte Shops anzeigen */}
+                          {field.value && field.value.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {field.value.map((shopId) => {
+                                const shop = allShops.find(s => s.id === shopId);
+                                if (!shop) return null;
+                                return (
+                                  <div
+                                    key={shopId}
+                                    className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-md text-xs"
+                                  >
+                                    {shop.businessName}
+                                    <X
+                                      className="h-3 w-3 cursor-pointer hover:text-primary/70"
+                                      onClick={() => {
+                                        field.onChange(field.value?.filter(id => id !== shopId));
+                                      }}
+                                    />
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                          
                           <FormMessage />
                         </FormItem>
                       )}
