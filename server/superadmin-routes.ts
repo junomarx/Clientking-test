@@ -2502,7 +2502,7 @@ export function registerSuperadminRoutes(app: Express) {
   });
 
   // Anonymisierte Reparaturstatistiken für DSGVO-Compliance
-  app.get("/api/superadmin/device-statistics", isSuperadmin, async (req: Request, res: Response) => {
+  app.get("/api/superadmin/repair-statistics", isSuperadmin, async (req: Request, res: Response) => {
     try {
       console.log("Superadmin ruft anonymisierte Reparaturstatistiken ab (DSGVO-konform)");
 
@@ -2559,6 +2559,7 @@ export function registerSuperadminRoutes(app: Express) {
       };
 
       console.log(`DSGVO-konforme Reparaturstatistiken abgerufen: ${totalDevices} Reparaturen insgesamt`);
+      console.log("Response-Daten:", JSON.stringify(response, null, 2));
       res.json(response);
     } catch (error) {
       console.error("Fehler beim Abrufen der anonymisierten Reparaturstatistiken:", error);

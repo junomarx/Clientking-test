@@ -111,7 +111,7 @@ function BrandDetailsDialog({ brand, detailedStats }: { brand: string; detailedS
 
 export default function RepairStatisticsTab() {
   const { data: repairStats, isLoading, error } = useQuery<RepairStatistics>({
-    queryKey: ["/api/superadmin/device-statistics"],
+    queryKey: ["/api/superadmin/repair-statistics"],
     queryFn: getQueryFn({ on401: "throw" }),
   });
 
