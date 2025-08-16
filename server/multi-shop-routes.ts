@@ -15,9 +15,12 @@ export function registerMultiShopRoutes(app: Express) {
   
   // Middleware for authentication
   async function isAuthenticated(req: Request, res: Response, next: any) {
+    console.log('DEBUG: isAuthenticated check - Session:', !!req.session, 'User:', req.user?.username);
     if (!req.isAuthenticated || !req.isAuthenticated()) {
+      console.log('DEBUG: Authentication failed');
       return res.status(401).json({ message: "Nicht angemeldet" });
     }
+    console.log('DEBUG: Authentication successful for user:', req.user?.username);
     next();
   }
 
@@ -84,7 +87,9 @@ export function registerMultiShopRoutes(app: Express) {
   // Alle Multi-Shop Admins abrufen (nur für Superadmins)
   app.get("/api/multi-shop/admins", isAuthenticated, isSuperadmin, async (req: Request, res: Response) => {
     try {
+      console.log('DEBUG: Multi-Shop Admins Request - User:', req.user?.username, 'ID:', req.user?.id);
       const multiShopAdmins = await storage.getMultiShopAdmins();
+      console.log('DEBUG: Multi-Shop Admins Result:', multiShopAdmins.length, 'admins found');
       res.json(multiShopAdmins);
     } catch (error) {
       console.error('Error getting multi-shop admins:', error);

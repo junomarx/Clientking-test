@@ -5527,6 +5527,8 @@ export class DatabaseStorage implements IStorage {
 
   async getMultiShopAdmins(): Promise<Array<User & { accessibleShops: Array<{ id: number, shop: { id: number, businessName: string, isActive: boolean }, grantedAt: string }> }>> {
     try {
+      console.log('DEBUG: Searching for multi-shop admins...');
+      
       // Finde alle Multi-Shop Admins (shopId = null, isAdmin = true, isSuperadmin = false)
       const multiShopAdmins = await db
         .select()
@@ -5539,10 +5541,15 @@ export class DatabaseStorage implements IStorage {
           )
         );
 
+      console.log('DEBUG: Found multi-shop admins:', multiShopAdmins.length);
+      console.log('DEBUG: Admin details:', multiShopAdmins.map(u => ({ id: u.id, username: u.username, isAdmin: u.isAdmin, isSuperadmin: u.isSuperadmin, shopId: u.shopId })));
+
       const result = [];
       
       for (const user of multiShopAdmins) {
+        console.log(`DEBUG: Processing user ${user.username} (ID: ${user.id})`);
         const accessibleShops = await this.getUserAccessibleShops(user.id);
+        console.log(`DEBUG: User ${user.username} has ${accessibleShops.length} accessible shops`);
         
         // Konvertiere die Shop-Daten in das erwartete Format
         const formattedShops = accessibleShops.map(shop => ({
@@ -5558,6 +5565,7 @@ export class DatabaseStorage implements IStorage {
         });
       }
 
+      console.log('DEBUG: Final result:', result.length, 'admins with shop access');
       return result;
     } catch (error) {
       console.error('Error getting multi-shop admins:', error);
