@@ -92,8 +92,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/business-settings"] });
       
-      // Nach erfolgreichem Login zur Hauptseite weiterleiten
-      setLocation('/');
+      // Nach erfolgreichem Login zur passenden Seite weiterleiten
+      if (data.isSuperadmin) {
+        setLocation('/superadmin');
+      } else if (!data.shopId && !data.isSuperadmin) {
+        // Multi-Shop Admin (ohne shopId, aber nicht Superadmin)
+        setLocation('/multi-shop');
+      } else {
+        // Normale Shop-Owner
+        setLocation('/');
+      }
       
       toast({
         title: "Anmeldung erfolgreich",

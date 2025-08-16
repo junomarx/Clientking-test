@@ -5563,25 +5563,44 @@ export class DatabaseStorage implements IStorage {
     try {
       console.log('DEBUG: Searching for multi-shop admins...');
       
-      // Finde alle Multi-Shop Admins (shopId = null, isAdmin = true, isSuperadmin = false)
-      const multiShopAdmins = await db
+      // Finde alle Benutzer mit Multi-Shop Zugriff (haben Einträge in user_shop_access)
+      const allAccesses = await db
         .select()
-        .from(users)
+        .from(userShopAccess)
         .where(
           and(
-            isNull(users.shopId),
-            eq(users.isAdmin, true),
-            eq(users.isSuperadmin, false)
+            eq(userShopAccess.isActive, true),
+            isNull(userShopAccess.revokedAt)
           )
         );
 
-      console.log('DEBUG: Found multi-shop admins:', multiShopAdmins.length);
-      console.log('DEBUG: Admin details:', multiShopAdmins.map(u => ({ id: u.id, username: u.username, isAdmin: u.isAdmin, isSuperadmin: u.isSuperadmin, shopId: u.shopId })));
+      // Extrahiere eindeutige User-IDs
+      const uniqueUserIds = [...new Set(allAccesses.map(access => access.userId))];
+      
+      console.log('DEBUG: Found users with shop access:', uniqueUserIds.length);
+      console.log('DEBUG: User IDs with access:', uniqueUserIds);
 
       const result = [];
       
-      for (const user of multiShopAdmins) {
-        console.log(`DEBUG: Processing user ${user.username} (ID: ${user.id})`);
+      for (const userId of uniqueUserIds) {
+        // Benutzer-Details abrufen
+        const [user] = await db
+          .select()
+          .from(users)
+          .where(
+            and(
+              eq(users.id, userId),
+              isNull(users.shopId), // Nur Benutzer ohne eigenen Shop
+              eq(users.isSuperadmin, false) // Keine Superadmins
+            )
+          );
+
+        if (!user) {
+          console.log(`DEBUG: Skipping user ${userId} - not eligible for multi-shop admin`);
+          continue;
+        }
+
+        console.log(`DEBUG: Processing multi-shop admin ${user.username} (ID: ${user.id})`);
         const accessibleShops = await this.getUserAccessibleShops(user.id);
         console.log(`DEBUG: User ${user.username} has ${accessibleShops.length} accessible shops`);
         

@@ -123,6 +123,15 @@ export default function AuthPage() {
   
   // Redirect wenn bereits eingeloggt - nach allen Hook-Aufrufen
   if (user) {
+    // Multi-Shop Admins (ohne shopId, nicht Superadmin, haben Multi-Shop Zugriff)
+    if (!user.shopId && !user.isSuperadmin) {
+      return <Redirect to="/multi-shop" />;
+    }
+    // Superadmins
+    if (user.isSuperadmin) {
+      return <Redirect to="/superadmin" />;
+    }
+    // Normale Shop-Owner
     return <Redirect to="/" />;
   }
   
