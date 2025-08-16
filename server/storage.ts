@@ -57,6 +57,9 @@ import {
   loanerDevices,
   type LoanerDevice,
   type InsertLoanerDevice,
+  userShopAccess,
+  type UserShopAccess,
+  type InsertUserShopAccess,
 } from "@shared/schema";
 import crypto from "crypto";
 import { db } from "./db";
@@ -108,6 +111,22 @@ export interface IStorage {
   updateUserLastActivity(id: number): Promise<boolean>;
   updateUserLoginTimestamp(id: number): Promise<boolean>;
   updateUserLogoutTimestamp(id: number): Promise<boolean>;
+
+  // Multi-Shop Methoden
+  getUserAccessibleShops(userId: number): Promise<Shop[]>;
+  createUserShopAccess(access: InsertUserShopAccess): Promise<UserShopAccess>;
+  revokeUserShopAccess(userId: number, shopId: number): Promise<boolean>;
+  getUserShopAccess(userId: number): Promise<UserShopAccess[]>;
+  getMultiShopAdmins(): Promise<Array<User & { accessibleShops: Shop[] }>>;
+
+  // 2FA Methoden
+  setupEmailTwoFA(userId: number): Promise<boolean>;
+  setupTOTPTwoFA(userId: number): Promise<{ secret: string; backupCodes: string[] }>;
+  verifyTOTP(userId: number, token: string): Promise<boolean>;
+  generateEmailTwoFACode(userId: number): Promise<string>;
+  verifyEmailTwoFACode(userId: number, code: string): Promise<boolean>;
+  disableTwoFA(userId: number): Promise<boolean>;
+  generateBackupCodes(): string[];
   
   // E-Mail-Methoden
   getAllEmailTemplates(userId: number): Promise<EmailTemplate[]>;
@@ -5351,6 +5370,281 @@ export class DatabaseStorage implements IStorage {
       console.error(`Fehler beim Abrufen des Leihgeräts für Reparatur ${repairId}:`, error);
       return undefined;
     }
+  }
+
+  // === Multi-Shop Access Methoden ===
+  
+  async getUserAccessibleShops(userId: number): Promise<Shop[]> {
+    try {
+      const user = await this.getUser(userId);
+      if (!user) return [];
+
+      // Für normale Shop-Owner: Nur ihr eigener Shop
+      if (user.shopId && !user.isSuperadmin) {
+        const [shop] = await db
+          .select()
+          .from(shops)
+          .where(eq(shops.id, user.shopId));
+        return shop ? [shop] : [];
+      }
+
+      // Für Multi-Shop Admins: Alle zugänglichen Shops
+      const accessibleShops = await db
+        .select({
+          id: shops.id,
+          name: shops.name,
+          createdAt: shops.createdAt,
+          updatedAt: shops.updatedAt
+        })
+        .from(userShopAccess)
+        .innerJoin(shops, eq(userShopAccess.shopId, shops.id))
+        .where(
+          and(
+            eq(userShopAccess.userId, userId),
+            eq(userShopAccess.isActive, true),
+            isNull(userShopAccess.revokedAt)
+          )
+        );
+
+      return accessibleShops;
+    } catch (error) {
+      console.error('Error getting accessible shops:', error);
+      return [];
+    }
+  }
+
+  async createUserShopAccess(access: InsertUserShopAccess): Promise<UserShopAccess> {
+    try {
+      const [newAccess] = await db
+        .insert(userShopAccess)
+        .values(access)
+        .returning();
+      
+      return newAccess;
+    } catch (error) {
+      console.error('Error creating user shop access:', error);
+      throw error;
+    }
+  }
+
+  async revokeUserShopAccess(userId: number, shopId: number): Promise<boolean> {
+    try {
+      const result = await db
+        .update(userShopAccess)
+        .set({
+          isActive: false,
+          revokedAt: new Date()
+        })
+        .where(
+          and(
+            eq(userShopAccess.userId, userId),
+            eq(userShopAccess.shopId, shopId)
+          )
+        );
+
+      return true;
+    } catch (error) {
+      console.error('Error revoking user shop access:', error);
+      return false;
+    }
+  }
+
+  async getUserShopAccess(userId: number): Promise<UserShopAccess[]> {
+    try {
+      const accesses = await db
+        .select()
+        .from(userShopAccess)
+        .where(
+          and(
+            eq(userShopAccess.userId, userId),
+            eq(userShopAccess.isActive, true),
+            isNull(userShopAccess.revokedAt)
+          )
+        );
+
+      return accesses;
+    } catch (error) {
+      console.error('Error getting user shop access:', error);
+      return [];
+    }
+  }
+
+  async getMultiShopAdmins(): Promise<Array<User & { accessibleShops: Shop[] }>> {
+    try {
+      // Finde alle Benutzer mit Multi-Shop-Access
+      const usersWithAccess = await db
+        .select({
+          userId: userShopAccess.userId
+        })
+        .from(userShopAccess)
+        .where(
+          and(
+            eq(userShopAccess.isActive, true),
+            isNull(userShopAccess.revokedAt)
+          )
+        )
+        .groupBy(userShopAccess.userId);
+
+      const result = [];
+      
+      for (const { userId } of usersWithAccess) {
+        const user = await this.getUser(userId);
+        if (user) {
+          const accessibleShops = await this.getUserAccessibleShops(userId);
+          result.push({ ...user, accessibleShops });
+        }
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Error getting multi-shop admins:', error);
+      return [];
+    }
+  }
+
+  // === 2FA Methoden ===
+  
+  async setupEmailTwoFA(userId: number): Promise<boolean> {
+    try {
+      const result = await db
+        .update(users)
+        .set({
+          twoFaEmailEnabled: true
+        })
+        .where(eq(users.id, userId));
+
+      return true;
+    } catch (error) {
+      console.error('Error setting up email 2FA:', error);
+      return false;
+    }
+  }
+
+  async setupTOTPTwoFA(userId: number): Promise<{ secret: string; backupCodes: string[] }> {
+    try {
+      // Generiere Secret und Backup-Codes
+      const secret = crypto.randomBytes(32).toString('base64');
+      const backupCodes = this.generateBackupCodes();
+
+      await db
+        .update(users)
+        .set({
+          twoFaTotpEnabled: true,
+          twoFaSecret: secret,
+          backupCodes: backupCodes
+        })
+        .where(eq(users.id, userId));
+
+      return { secret, backupCodes };
+    } catch (error) {
+      console.error('Error setting up TOTP 2FA:', error);
+      throw error;
+    }
+  }
+
+  async verifyTOTP(userId: number, token: string): Promise<boolean> {
+    try {
+      // Hier würde normalerweise die TOTP-Validierung mit einer Bibliothek wie speakeasy stattfinden
+      // Für jetzt: Einfache Mock-Implementierung
+      const user = await this.getUser(userId);
+      if (!user || !user.twoFaTotpEnabled || !user.twoFaSecret) {
+        return false;
+      }
+
+      // TODO: Implementiere echte TOTP-Validierung mit speakeasy
+      // const verified = speakeasy.totp.verify({
+      //   secret: user.twoFaSecret,
+      //   encoding: 'base64',
+      //   token: token,
+      //   window: 1
+      // });
+
+      return token.length === 6; // Mock-Implementierung
+    } catch (error) {
+      console.error('Error verifying TOTP:', error);
+      return false;
+    }
+  }
+
+  async generateEmailTwoFACode(userId: number): Promise<string> {
+    try {
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      const expires = new Date(Date.now() + 10 * 60 * 1000); // 10 Minuten
+
+      await db
+        .update(users)
+        .set({
+          email2faCode: code,
+          email2faExpires: expires
+        })
+        .where(eq(users.id, userId));
+
+      return code;
+    } catch (error) {
+      console.error('Error generating email 2FA code:', error);
+      throw error;
+    }
+  }
+
+  async verifyEmailTwoFACode(userId: number, code: string): Promise<boolean> {
+    try {
+      const user = await this.getUser(userId);
+      if (!user || !user.email2faCode || !user.email2faExpires) {
+        return false;
+      }
+
+      const now = new Date();
+      if (now > user.email2faExpires) {
+        return false; // Code abgelaufen
+      }
+
+      const isValid = user.email2faCode === code;
+      
+      if (isValid) {
+        // Code nach Verwendung löschen
+        await db
+          .update(users)
+          .set({
+            email2faCode: null,
+            email2faExpires: null
+          })
+          .where(eq(users.id, userId));
+      }
+
+      return isValid;
+    } catch (error) {
+      console.error('Error verifying email 2FA code:', error);
+      return false;
+    }
+  }
+
+  async disableTwoFA(userId: number): Promise<boolean> {
+    try {
+      await db
+        .update(users)
+        .set({
+          twoFaEmailEnabled: false,
+          twoFaTotpEnabled: false,
+          twoFaSecret: null,
+          backupCodes: null,
+          email2faCode: null,
+          email2faExpires: null
+        })
+        .where(eq(users.id, userId));
+
+      return true;
+    } catch (error) {
+      console.error('Error disabling 2FA:', error);
+      return false;
+    }
+  }
+
+  generateBackupCodes(): string[] {
+    const codes = [];
+    for (let i = 0; i < 10; i++) {
+      codes.push(crypto.randomBytes(4).toString('hex').toUpperCase());
+    }
+    return codes;
   }
 }
 

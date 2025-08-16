@@ -248,6 +248,13 @@ export const users = pgTable("users", {
   trialExpiresAt: timestamp("trial_expires_at"),           // Ablaufdatum des Demo-Zugangs (nur für Demo-Paket)
   lastLoginAt: timestamp("last_login_at"),                 // Zeitpunkt der letzten Anmeldung
   lastLogoutAt: timestamp("last_logout_at"),               // Zeitpunkt der letzten Abmeldung
+  // 2FA-Unterstützung (nur für Admins/Superadmins)
+  twoFaEmailEnabled: boolean("two_fa_email_enabled").default(false),
+  twoFaTotpEnabled: boolean("two_fa_totp_enabled").default(false),
+  twoFaSecret: text("two_fa_secret"),                       // TOTP Secret für Google Authenticator
+  backupCodes: text("backup_codes").array(),               // Recovery Codes
+  email2FaCode: text("email_2fa_code"),                    // Aktueller Email-2FA-Code
+  email2FaExpires: timestamp("email_2fa_expires"),         // Ablaufzeit des Email-Codes
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -275,6 +282,28 @@ export const insertUserSchema = createInsertSchema(users).pick({
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+
+// Multi-Shop-Berechtigung Tabelle
+export const userShopAccess = pgTable("user_shop_access", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  shopId: integer("shop_id").notNull().references(() => shops.id),
+  accessLevel: text("access_level").default("admin").notNull(), // 'read', 'admin', 'owner'
+  grantedBy: integer("granted_by").notNull().references(() => users.id), // Superadmin der das vergeben hat
+  grantedAt: timestamp("granted_at").defaultNow().notNull(),
+  revokedAt: timestamp("revoked_at"),
+  isActive: boolean("is_active").default(true).notNull(),
+}, (table) => ({
+  uniqueUserShop: primaryKey({ columns: [table.userId, table.shopId] })
+}));
+
+export const insertUserShopAccessSchema = createInsertSchema(userShopAccess).omit({
+  id: true,
+  grantedAt: true,
+});
+
+export type UserShopAccess = typeof userShopAccess.$inferSelect;
+export type InsertUserShopAccess = z.infer<typeof insertUserShopAccessSchema>;
 
 // Unternehmensdaten / Geschäftsinformationen
 export const businessSettings = pgTable("business_settings", {
@@ -508,6 +537,24 @@ export type CostEstimateItem = {
 export type InsertCostEstimateItem = CostEstimateItem;
 // Keine InsertCostEstimateItem mehr nötig, da wir die Items direkt im JSONB speichern
 
+// Beziehungen definieren
+export const userShopAccessRelations = relations(userShopAccess, ({ one }) => ({
+  user: one(users, {
+    fields: [userShopAccess.userId],
+    references: [users.id],
+  }),
+  shop: one(shops, {
+    fields: [userShopAccess.shopId],
+    references: [shops.id],
+  }),
+  grantedByUser: one(users, {
+    fields: [userShopAccess.grantedBy],
+    references: [users.id],
+  }),
+}));
+
+
+
 // Beziehungen definieren - emailHistory zu repairs und emailTemplates
 export const emailHistoryRelations = relations(emailHistory, ({ one }) => ({
   repair: one(repairs, {
@@ -564,7 +611,7 @@ export const costEstimatesRelations = relations(costEstimates, ({ one }) => ({
   })
 }));
 
-export const userRelations = relations(users, ({ one }) => ({
+export const userRelations = relations(users, ({ one, many }) => ({
   package: one(packages, {
     fields: [users.packageId],
     references: [packages.id],
@@ -573,6 +620,7 @@ export const userRelations = relations(users, ({ one }) => ({
     fields: [users.shopId],
     references: [shops.id],
   }),
+  shopAccess: many(userShopAccess),
 }));
 
 // Beziehungen für shops
@@ -580,6 +628,7 @@ export const shopRelations = relations(shops, ({ many }) => ({
   users: many(users),
   customers: many(customers),
   repairs: many(repairs),
+  userAccess: many(userShopAccess),
 }));
 
 // Tabelle für gelöschte Standard-Gerätetypen

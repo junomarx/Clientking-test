@@ -49,6 +49,8 @@ import { registerSuperadminRoutes } from "./superadmin-routes";
 import { registerGlobalDeviceRoutes } from "./global-device-routes";
 import { registerSuperadminPrintTemplatesRoutes } from "./superadmin-print-templates-routes";
 import { setupEmployeeRoutes } from "./employee-routes";
+import { registerMultiShopRoutes } from "./multi-shop-routes";
+import { registerTwoFARoutes } from "./two-fa-routes";
 import path from 'path';
 import fs from 'fs';
 // jsPDF will be imported dynamically
@@ -853,6 +855,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Set up superadmin routes FIRST (before middleware that might interfere)
   registerSuperadminRoutes(app);
+  
+  // Set up multi-shop routes
+  registerMultiShopRoutes(app);
+
+  // Set up 2FA routes
+  registerTwoFARoutes(app);
   
   // Globale Middleware für Shop-Isolation registrieren
   // Diese Middleware hängt automatisch die Shop-ID des angemeldeten Benutzers an alle Anfragen an
