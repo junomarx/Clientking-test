@@ -7,7 +7,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Building2, UserPlus, UserMinus, Users, ShieldCheck } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Building2, UserPlus, UserMinus, Users, ShieldCheck, Plus } from "lucide-react";
 import { useMultiShop, type MultiShopAdmin } from "@/hooks/use-multi-shop";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,12 +22,21 @@ const grantAccessSchema = z.object({
   shopId: z.number().min(1, "Shop-ID ist erforderlich"),
 });
 
+// Schema für neuen Multi-Shop Admin erstellen
+const createAdminSchema = z.object({
+  username: z.string().min(3, "Benutzername muss mindestens 3 Zeichen haben"),
+  password: z.string().min(6, "Passwort muss mindestens 6 Zeichen haben"),
+  email: z.string().email("Gültige E-Mail-Adresse erforderlich"),
+  shopIds: z.array(z.number()).min(1, "Mindestens ein Shop muss ausgewählt werden"),
+});
+
 type GrantAccessFormData = z.infer<typeof grantAccessSchema>;
+type CreateAdminFormData = z.infer<typeof createAdminSchema>;
 
 // Shop und User Interfaces für Selects
 interface Shop {
   id: number;
-  name: string;
+  businessName: string;
   isActive: boolean;
 }
 
@@ -51,6 +61,7 @@ export function MultiShopManagement() {
   } = useMultiShop();
   
   const [isGrantDialogOpen, setIsGrantDialogOpen] = useState(false);
+  const [isCreateAdminDialogOpen, setIsCreateAdminDialogOpen] = useState(false);
 
   // Alle Shops für Select abrufen
   const { data: allShops = [] } = useQuery<Shop[]>({
@@ -78,10 +89,43 @@ export function MultiShopManagement() {
     },
   });
 
+  const createAdminForm = useForm<CreateAdminFormData>({
+    resolver: zodResolver(createAdminSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+      email: "",
+      shopIds: [],
+    },
+  });
+
   const onSubmit = (data: GrantAccessFormData) => {
     grantAccess(data);
     setIsGrantDialogOpen(false);
     form.reset();
+  };
+
+  const onCreateAdmin = async (data: CreateAdminFormData) => {
+    try {
+      // Erst den neuen Admin erstellen
+      const createResponse = await apiRequest("POST", "/api/multi-shop/create-admin", {
+        username: data.username,
+        password: data.password,
+        email: data.email,
+      });
+      
+      const newUser = await createResponse.json();
+      
+      // Dann Shop-Zugänge gewähren
+      for (const shopId of data.shopIds) {
+        await grantAccess({ userId: newUser.id, shopId });
+      }
+      
+      setIsCreateAdminDialogOpen(false);
+      createAdminForm.reset();
+    } catch (error) {
+      console.error("Fehler beim Erstellen des Multi-Shop Admins:", error);
+    }
   };
 
   const handleRevokeAccess = (userId: number, shopId: number) => {
@@ -117,86 +161,212 @@ export function MultiShopManagement() {
             Multi-Shop Verwaltung
           </CardTitle>
           
-          <Dialog open={isGrantDialogOpen} onOpenChange={setIsGrantDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <UserPlus className="h-4 w-4 mr-2" />
-                Shop-Zugang gewähren
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Shop-Zugang gewähren</DialogTitle>
-              </DialogHeader>
-              
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="userId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Benutzer</FormLabel>
-                        <Select onValueChange={(value) => field.onChange(parseInt(value))}>
+          <div className="flex gap-2">
+            <Dialog open={isCreateAdminDialogOpen} onOpenChange={setIsCreateAdminDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Neuen Admin erstellen
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Neuen Multi-Shop Admin erstellen</DialogTitle>
+                </DialogHeader>
+                
+                <Form {...createAdminForm}>
+                  <form onSubmit={createAdminForm.handleSubmit(onCreateAdmin)} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={createAdminForm.control}
+                        name="username"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Benutzername</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="admin123" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={createAdminForm.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>E-Mail</FormLabel>
+                            <FormControl>
+                              <Input {...field} type="email" placeholder="admin@example.com" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <FormField
+                      control={createAdminForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Passwort</FormLabel>
                           <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Benutzer auswählen" />
-                            </SelectTrigger>
+                            <Input {...field} type="password" placeholder="Mindestens 6 Zeichen" />
                           </FormControl>
-                          <SelectContent>
-                            {allUsers.map((user) => (
-                              <SelectItem key={user.id} value={user.id.toString()}>
-                                {user.username} ({user.email})
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="shopId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Shop</FormLabel>
-                        <Select onValueChange={(value) => field.onChange(parseInt(value))}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Shop auswählen" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={createAdminForm.control}
+                      name="shopIds"
+                      render={() => (
+                        <FormItem>
+                          <div className="mb-4">
+                            <FormLabel className="text-base">Shop-Zugänge</FormLabel>
+                            <p className="text-sm text-muted-foreground">
+                              Wählen Sie die Shops aus, auf die der Admin Zugang haben soll.
+                            </p>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-y-auto">
                             {allShops.map((shop) => (
-                              <SelectItem key={shop.id} value={shop.id.toString()}>
-                                {shop.name} {!shop.isActive && "(Inaktiv)"}
-                              </SelectItem>
+                              <FormField
+                                key={shop.id}
+                                control={createAdminForm.control}
+                                name="shopIds"
+                                render={({ field }) => (
+                                  <FormItem
+                                    key={shop.id}
+                                    className="flex flex-row items-start space-x-3 space-y-0"
+                                  >
+                                    <FormControl>
+                                      <Checkbox
+                                        checked={field.value?.includes(shop.id)}
+                                        onCheckedChange={(checked) => {
+                                          return checked
+                                            ? field.onChange([...field.value, shop.id])
+                                            : field.onChange(
+                                                field.value?.filter(
+                                                  (value) => value !== shop.id
+                                                )
+                                              )
+                                        }}
+                                      />
+                                    </FormControl>
+                                    <FormLabel className="text-sm font-normal">
+                                      {shop.businessName}
+                                    </FormLabel>
+                                  </FormItem>
+                                )}
+                              />
                             ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <div className="flex justify-end gap-2 pt-4">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={() => setIsGrantDialogOpen(false)}
-                    >
-                      Abbrechen
-                    </Button>
-                    <Button type="submit" disabled={isGrantingAccess}>
-                      {isGrantingAccess ? "Gewähre..." : "Zugang gewähren"}
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-            </DialogContent>
-          </Dialog>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <div className="flex justify-end gap-2 pt-4">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={() => setIsCreateAdminDialogOpen(false)}
+                      >
+                        Abbrechen
+                      </Button>
+                      <Button type="submit" disabled={isGrantingAccess}>
+                        {isGrantingAccess ? "Erstelle..." : "Admin erstellen"}
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
+              </DialogContent>
+            </Dialog>
+            
+            <Dialog open={isGrantDialogOpen} onOpenChange={setIsGrantDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Shop-Zugang gewähren
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Shop-Zugang gewähren</DialogTitle>
+                </DialogHeader>
+                
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="userId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Benutzer</FormLabel>
+                          <Select onValueChange={(value) => field.onChange(parseInt(value))}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Benutzer auswählen" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {allUsers.map((user) => (
+                                <SelectItem key={user.id} value={user.id.toString()}>
+                                  {user.username} ({user.email})
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="shopId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Shop</FormLabel>
+                          <Select onValueChange={(value) => field.onChange(parseInt(value))}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Shop auswählen" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {allShops.map((shop) => (
+                                <SelectItem key={shop.id} value={shop.id.toString()}>
+                                  {shop.businessName} {!shop.isActive && "(Inaktiv)"}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <div className="flex justify-end gap-2 pt-4">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={() => setIsGrantDialogOpen(false)}
+                      >
+                        Abbrechen
+                      </Button>
+                      <Button type="submit" disabled={isGrantingAccess}>
+                        {isGrantingAccess ? "Gewähre..." : "Zugang gewähren"}
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
       </CardHeader>
       
@@ -242,26 +412,26 @@ export function MultiShopManagement() {
                     </TableHeader>
                     <TableBody>
                       {admin.accessibleShops.map((shopAccess) => (
-                        <TableRow key={shopAccess.id}>
+                        <TableRow key={shopAccess.shopId}>
                           <TableCell className="font-medium">
-                            {shopAccess.shop.name}
+                            {shopAccess.shopName}
                           </TableCell>
                           <TableCell>
-                            <Badge variant={shopAccess.shop.isActive ? "default" : "secondary"}>
-                              {shopAccess.shop.isActive ? "Aktiv" : "Inaktiv"}
+                            <Badge variant={shopAccess.isActive ? "default" : "secondary"}>
+                              {shopAccess.isActive ? "Aktiv" : "Inaktiv"}
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            {new Date(shopAccess.grantedAt).toLocaleDateString("de-DE")}
+                            {new Date(shopAccess.grantedAt).toLocaleDateString()}
                           </TableCell>
                           <TableCell>
                             <Button
-                              variant="outline"
+                              variant="ghost"
                               size="sm"
                               onClick={() => handleRevokeAccess(admin.id, shopAccess.shopId)}
                               disabled={isRevokingAccess}
                             >
-                              <UserMinus className="h-3 w-3" />
+                              <UserMinus className="h-4 w-4" />
                             </Button>
                           </TableCell>
                         </TableRow>

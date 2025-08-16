@@ -106,4 +106,61 @@ export function registerMultiShopRoutes(app: Express) {
       res.status(500).json({ message: "Fehler beim Abrufen der Benutzer-Shop-Zugriffe" });
     }
   });
+
+  // Neuen Multi-Shop Admin erstellen
+  app.post("/api/multi-shop/create-admin", isAuthenticated, isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const { username, password, email } = req.body;
+      
+      if (!username || !password || !email) {
+        return res.status(400).json({ 
+          message: 'Benutzername, Passwort und E-Mail sind erforderlich' 
+        });
+      }
+
+      // Prüfen ob Benutzername bereits existiert
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(400).json({ 
+          message: 'Benutzername bereits vergeben' 
+        });
+      }
+
+      // Prüfen ob E-Mail bereits verwendet wird
+      const existingEmailUser = await storage.getUserByEmail(email);
+      if (existingEmailUser) {
+        return res.status(400).json({ 
+          message: 'E-Mail-Adresse bereits vergeben' 
+        });
+      }
+
+      console.log(`[MULTI-SHOP] Erstelle neuen Multi-Shop Admin: ${username}`);
+
+      // Neuen Benutzer erstellen (ohne shopId, da Multi-Shop Admin)
+      const newUser = await storage.createUser({
+        username,
+        email,
+        password, // Das Passwort wird in der storage.createUser Funktion gehasht
+        shopId: null, // Multi-Shop Admins haben keine spezifische shopId
+        isAdmin: true, // Multi-Shop Admins sind Admins
+        maxEmployees: 0, // Multi-Shop Admins brauchen keine Mitarbeiter-Limits
+        trialEndsAt: null, // Multi-Shop Admins haben keine Trial-Limits
+      });
+
+      console.log(`[MULTI-SHOP] Multi-Shop Admin erstellt: ID=${newUser.id}, username=${newUser.username}`);
+      
+      res.status(201).json({
+        id: newUser.id,
+        username: newUser.username,
+        email: newUser.email,
+        message: 'Multi-Shop Admin erfolgreich erstellt'
+      });
+    } catch (error: any) {
+      console.error('Fehler beim Erstellen des Multi-Shop Admins:', error);
+      res.status(500).json({ 
+        message: 'Interner Serverfehler beim Erstellen des Multi-Shop Admins',
+        error: error.message 
+      });
+    }
+  });
 }
