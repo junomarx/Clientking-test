@@ -136,11 +136,15 @@ export function registerMultiShopRoutes(app: Express) {
 
       console.log(`[MULTI-SHOP] Erstelle neuen Multi-Shop Admin: ${username}`);
 
+      // Passwort hashen vor der Speicherung
+      const { hashPassword } = await import('./auth');
+      const hashedPassword = await hashPassword(password);
+
       // Neuen Benutzer erstellen (ohne shopId, da Multi-Shop Admin)
       const newUser = await storage.createUser({
         username,
         email,
-        password, // Das Passwort wird in der storage.createUser Funktion gehasht
+        password: hashedPassword, // Bereits gehashtes Passwort verwenden
         shopId: null, // Multi-Shop Admins haben keine spezifische shopId
         isAdmin: true, // Multi-Shop Admins sind Admins
         maxEmployees: 0, // Multi-Shop Admins brauchen keine Mitarbeiter-Limits
