@@ -13,19 +13,10 @@ const createUserShopAccessSchema = z.object({
 
 export function registerMultiShopRoutes(app: Express) {
   
-  // Middleware for authentication
-  async function isAuthenticated(req: Request, res: Response, next: any) {
-    console.log('DEBUG: isAuthenticated check - Session:', !!req.session, 'User:', req.user?.username);
-    if (!req.isAuthenticated || !req.isAuthenticated()) {
-      console.log('DEBUG: Authentication failed');
-      return res.status(401).json({ message: "Nicht angemeldet" });
-    }
-    console.log('DEBUG: Authentication successful for user:', req.user?.username);
-    next();
-  }
+  // ENTFERNE die lokale Authentication-Middleware - verwende die globale Middleware aus routes.ts
 
   // Abrufen der zugänglichen Shops für einen Benutzer
-  app.get("/api/multi-shop/accessible-shops", isAuthenticated, async (req: Request, res: Response) => {
+  app.get("/api/multi-shop/accessible-shops", async (req: Request, res: Response) => {
     try {
       if (!req.user) {
         return res.status(401).json({ message: "Nicht angemeldet" });
@@ -40,7 +31,7 @@ export function registerMultiShopRoutes(app: Express) {
   });
 
   // Einem Benutzer Zugang zu einem Shop gewähren (nur für Superadmins)
-  app.post("/api/multi-shop/grant-access", isAuthenticated, isSuperadmin, async (req: Request, res: Response) => {
+  app.post("/api/multi-shop/grant-access", isSuperadmin, async (req: Request, res: Response) => {
     try {
       const validatedData = createUserShopAccessSchema.parse({
         ...req.body,
@@ -62,7 +53,7 @@ export function registerMultiShopRoutes(app: Express) {
   });
 
   // Shop-Zugang entziehen (nur für Superadmins)
-  app.delete("/api/multi-shop/revoke-access/:userId/:shopId", isAuthenticated, isSuperadmin, async (req: Request, res: Response) => {
+  app.delete("/api/multi-shop/revoke-access/:userId/:shopId", isSuperadmin, async (req: Request, res: Response) => {
     try {
       const userId = parseInt(req.params.userId);
       const shopId = parseInt(req.params.shopId);
@@ -85,7 +76,7 @@ export function registerMultiShopRoutes(app: Express) {
   });
 
   // Alle Multi-Shop Admins abrufen (nur für Superadmins)
-  app.get("/api/multi-shop/admins", isAuthenticated, isSuperadmin, async (req: Request, res: Response) => {
+  app.get("/api/multi-shop/admins", isSuperadmin, async (req: Request, res: Response) => {
     try {
       console.log('DEBUG: Multi-Shop Admins Request - User:', req.user?.username, 'ID:', req.user?.id);
       const multiShopAdmins = await storage.getMultiShopAdmins();
@@ -98,7 +89,7 @@ export function registerMultiShopRoutes(app: Express) {
   });
 
   // Shop-Zugang für einen Benutzer abrufen
-  app.get("/api/multi-shop/user-access", isAuthenticated, async (req: Request, res: Response) => {
+  app.get("/api/multi-shop/user-access", async (req: Request, res: Response) => {
     try {
       if (!req.user) {
         return res.status(401).json({ message: "Nicht angemeldet" });
@@ -113,7 +104,7 @@ export function registerMultiShopRoutes(app: Express) {
   });
 
   // Multi-Shop Admin Details abrufen
-  app.get("/api/multi-shop/admin/:id", isAuthenticated, isSuperadmin, async (req: Request, res: Response) => {
+  app.get("/api/multi-shop/admin/:id", isSuperadmin, async (req: Request, res: Response) => {
     try {
       const adminId = parseInt(req.params.id);
       if (isNaN(adminId)) {
@@ -133,7 +124,7 @@ export function registerMultiShopRoutes(app: Express) {
   });
 
   // Multi-Shop Admin aktualisieren
-  app.put("/api/multi-shop/admin/:id", isAuthenticated, isSuperadmin, async (req: Request, res: Response) => {
+  app.put("/api/multi-shop/admin/:id", isSuperadmin, async (req: Request, res: Response) => {
     try {
       const adminId = parseInt(req.params.id);
       if (isNaN(adminId)) {
@@ -157,7 +148,7 @@ export function registerMultiShopRoutes(app: Express) {
   });
 
   // Neuen Multi-Shop Admin erstellen
-  app.post("/api/multi-shop/create-admin", isAuthenticated, isSuperadmin, async (req: Request, res: Response) => {
+  app.post("/api/multi-shop/create-admin", isSuperadmin, async (req: Request, res: Response) => {
     try {
       const { username, password, email } = req.body;
       
