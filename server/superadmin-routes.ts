@@ -2506,56 +2506,91 @@ export function registerSuperadminRoutes(app: Express) {
     try {
       console.log("Superadmin ruft anonymisierte Reparaturstatistiken ab (DSGVO-konform)");
 
-      // Geräte pro Gerätetyp (basierend auf Reparaturdaten)
-      const deviceTypeStats = await db.select({
+      // Funktion zur Normalisierung von Gerätetypen und Herstellern
+      const normalizeDeviceType = (deviceType: string | null): string => {
+        if (!deviceType) return 'Unbekannt';
+        const normalized = deviceType.trim().toLowerCase();
+        
+        // Smartphone-Varianten normalisieren
+        if (normalized.includes('smartphone') || normalized.includes('handy') || normalized.includes('iphone')) {
+          return 'Smartphone';
+        }
+        // Tablet-Varianten normalisieren
+        if (normalized.includes('tablet') || normalized.includes('ipad')) {
+          return 'Tablet';
+        }
+        // Laptop-Varianten normalisieren
+        if (normalized.includes('laptop') || normalized.includes('notebook') || normalized.includes('macbook')) {
+          return 'Laptop';
+        }
+        // Watch-Varianten normalisieren
+        if (normalized.includes('watch') || normalized.includes('smartwatch')) {
+          return 'Watch';
+        }
+        // Spielekonsole-Varianten normalisieren
+        if (normalized.includes('konsole') || normalized.includes('playstation') || normalized.includes('xbox') || normalized.includes('nintendo')) {
+          return 'Spielekonsole';
+        }
+        
+        // Erste Buchstabe groß, Rest klein für andere Typen
+        return deviceType.trim().charAt(0).toUpperCase() + deviceType.trim().slice(1).toLowerCase();
+      };
+
+      const normalizeBrand = (brand: string | null): string => {
+        if (!brand) return 'Unbekannt';
+        return brand.trim().charAt(0).toUpperCase() + brand.trim().slice(1).toLowerCase();
+      };
+
+      // Alle Reparaturdaten laden
+      const allRepairs = await db.select({
         deviceType: repairs.deviceType,
-        count: count(repairs.id)
-      })
-      .from(repairs)
-      .groupBy(repairs.deviceType)
-      .orderBy(desc(count(repairs.id)));
-
-      // Geräte pro Hersteller (alle Gerätetypen zusammen)
-      const brandStats = await db.select({
         brand: repairs.brand,
-        count: count(repairs.id)
-      })
-      .from(repairs)
-      .groupBy(repairs.brand)
-      .orderBy(desc(count(repairs.id)));
-
-      // Detaillierte Aufschlüsselung: Geräte pro Gerätetyp + Hersteller
-      const detailedStats = await db.select({
-        deviceType: repairs.deviceType,
-        brand: repairs.brand,
-        count: count(repairs.id)
-      })
-      .from(repairs)
-      .groupBy(repairs.deviceType, repairs.brand)
-      .orderBy(desc(count(repairs.id)));
-
-      // Gesamtanzahl aller Reparaturen (anonymisiert - ohne Shop-Informationen)
-      const totalDevicesResult = await db.select({
-        total: count(repairs.id)
+        id: repairs.id
       }).from(repairs);
 
-      const totalDevices = totalDevicesResult[0]?.total || 0;
+      // Normalisierte Gerätetyp-Statistiken
+      const deviceTypeMap = new Map<string, number>();
+      const brandMap = new Map<string, number>();
+      const detailedMap = new Map<string, number>();
+
+      allRepairs.forEach(repair => {
+        const normalizedDeviceType = normalizeDeviceType(repair.deviceType);
+        const normalizedBrand = normalizeBrand(repair.brand);
+        const detailedKey = `${normalizedDeviceType}|${normalizedBrand}`;
+
+        // Gerätetyp-Zählung
+        deviceTypeMap.set(normalizedDeviceType, (deviceTypeMap.get(normalizedDeviceType) || 0) + 1);
+        
+        // Hersteller-Zählung
+        brandMap.set(normalizedBrand, (brandMap.get(normalizedBrand) || 0) + 1);
+        
+        // Detaillierte Zählung
+        detailedMap.set(detailedKey, (detailedMap.get(detailedKey) || 0) + 1);
+      });
+
+      // Sortierte Arrays erstellen
+      const deviceTypeStats = Array.from(deviceTypeMap.entries())
+        .map(([deviceType, count]) => ({ deviceType, count }))
+        .sort((a, b) => b.count - a.count);
+
+      const brandStats = Array.from(brandMap.entries())
+        .map(([brand, count]) => ({ brand, count }))
+        .sort((a, b) => b.count - a.count);
+
+      const detailedStats = Array.from(detailedMap.entries())
+        .map(([key, count]) => {
+          const [deviceType, brand] = key.split('|');
+          return { deviceType, brand, count };
+        })
+        .sort((a, b) => b.count - a.count);
+
+      const totalDevices = allRepairs.length;
 
       const response = {
-        deviceTypeStats: deviceTypeStats.map(item => ({
-          deviceType: item.deviceType || 'Unbekannt',
-          count: Number(item.count)
-        })),
-        brandStats: brandStats.map(item => ({
-          brand: item.brand || 'Unbekannt',
-          count: Number(item.count)
-        })),
-        detailedStats: detailedStats.map(item => ({
-          deviceType: item.deviceType || 'Unbekannt',
-          brand: item.brand || 'Unbekannt',
-          count: Number(item.count)
-        })),
-        totalDevices: Number(totalDevices)
+        deviceTypeStats,
+        brandStats,
+        detailedStats,
+        totalDevices
       };
 
       console.log(`DSGVO-konforme Reparaturstatistiken abgerufen: ${totalDevices} Reparaturen insgesamt`);
