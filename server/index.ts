@@ -134,7 +134,7 @@ app.use((req, res, next) => {
     await addShopIdColumn();
     await addFeatureOverridesColumn();
     await addPackageTables(); // Neue Migration für das Paketsystem
-    await addSuperadminColumn(); // Migration für Superadmin-Rolle
+    // await addSuperadminColumn(); // Migration für Superadmin-Rolle - DEAKTIVIERT wegen User-Flag Reset
     await addDeviceIssuesFields(); // Migration für erweiterte Fehlerkatalog-Felder
     await addHiddenDeviceTypesTable(); // Migration für ausgeblendete Standard-Gerätetypen
     await addBrandIdToModels(); // Migration für brandId-Spalte in userModels
