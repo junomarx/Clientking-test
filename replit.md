@@ -11,6 +11,15 @@ Detail-oriented: User requires pixel-perfect alignment and precision, especially
 Quality focus: Prefers comprehensive solutions that address all edge cases rather than quick fixes.
 Implementation Control: Only implement changes when explicitly commanded with "Ok leg los" - otherwise stay in advisory/brainstorming mode.
 
+## Brainstorming Ideas (August 2025)
+
+### Superadmin Dashboard Enhancements
+- **Anonymized Device Statistics**: System-wide repair statistics without shop identification, organized by:
+  - Geräteart (Device Type): Total repairs per category
+  - Geräteart + Hersteller (Device Type + Brand): Breakdown by manufacturer
+  - Geräteart + Hersteller + Modell (Device Type + Brand + Model): Full device model breakdown
+  - Purpose: Market trend analysis, spare parts planning, business intelligence without compromising shop privacy
+
 ## System Architecture
 
 ### Frontend Architecture
