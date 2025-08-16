@@ -15,6 +15,7 @@ import SuperadminEmailTab from "@/components/superadmin/SuperadminEmailTab";
 import SuperadminPrintTemplatesTab from "@/components/superadmin/SuperadminPrintTemplatesTab";
 import SuperadminSupportModeTab from "@/components/superadmin/SuperadminSupportModeTab";
 import SuperadminAccountTab from "@/components/superadmin/SuperadminAccountTab";
+import { MultiShopManagement } from "@/components/multi-shop/MultiShopManagement";
 
 import { SuperadminSidebar } from "@/components/superadmin/SuperadminSidebar";
 
@@ -32,7 +33,7 @@ export default function SuperadminPage() {
     const userIdParam = params.get('userId');
     
     // Tab setzen, wenn in URL vorhanden
-    if (tabParam && ['dashboard', 'users', 'packages', 'devices', 'device-statistics', 'email', 'print-templates', 'support-mode', 'account'].includes(tabParam)) {
+    if (tabParam && ['dashboard', 'users', 'packages', 'devices', 'device-statistics', 'email', 'print-templates', 'support-mode', 'account', 'multi-shop'].includes(tabParam)) {
       setActiveTab(tabParam);
     }
     
@@ -105,6 +106,7 @@ export default function SuperadminPage() {
               {activeTab === "print-templates" && "Vorlagen"}
               {activeTab === "support-mode" && "Support"}
               {activeTab === "account" && "Konto"}
+              {activeTab === "multi-shop" && "Multi-Shop"}
 
             </h1>
           </div>
@@ -121,6 +123,7 @@ export default function SuperadminPage() {
               {activeTab === "print-templates" && "Vorlagenverwaltung"}
               {activeTab === "support-mode" && "Support-Modus"}
               {activeTab === "account" && "Konto-Einstellungen"}
+              {activeTab === "multi-shop" && "Multi-Shop Verwaltung"}
 
             </h1>
             {/* Die Benutzerinfo wurde entfernt, da sie bereits in der Sidebar angezeigt wird */}
@@ -147,6 +150,7 @@ export default function SuperadminPage() {
               {activeTab === "print-templates" && <SuperadminPrintTemplatesTab />}
               {activeTab === "support-mode" && <SuperadminSupportModeTab />}
               {activeTab === "account" && <SuperadminAccountTab />}
+              {activeTab === "multi-shop" && <MultiShopManagement />}
             </SuperadminContext.Provider>
           </ScrollArea>
         </main>

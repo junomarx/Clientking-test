@@ -22,6 +22,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { SecretStatsDialog } from '@/components/settings/SecretStatsDialog';
+import { TwoFASetup } from '@/components/security/TwoFASetup';
 
 // Schema für die Geschäftseinstellungen
 const businessSettingsSchema = z.object({
@@ -386,6 +387,7 @@ export default function SettingsPage() {
                   <SelectItem value="prints">Ausdrucke</SelectItem>
                   <SelectItem value="subscription">Abonnement</SelectItem>
                   <SelectItem value="user">Benutzer</SelectItem>
+                  <SelectItem value="security">Sicherheit</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -400,6 +402,7 @@ export default function SettingsPage() {
               <TabsTrigger value="prints" className="w-full py-3">Ausdrucke</TabsTrigger>
               <TabsTrigger value="subscription" className="w-full py-3">Abonnement</TabsTrigger>
               <TabsTrigger value="user" className="w-full py-3">Benutzer</TabsTrigger>
+              <TabsTrigger value="security" className="w-full py-3">Sicherheit</TabsTrigger>
             </TabsList>
           </div>
 
@@ -871,6 +874,11 @@ export default function SettingsPage() {
           {/* Benutzer Tab */}
           <TabsContent value="user" className="mt-4">
             <UserSettingsTab />
+          </TabsContent>
+
+          {/* Sicherheit Tab */}
+          <TabsContent value="security" className="mt-4">
+            <TwoFASetup />
           </TabsContent>
         </Tabs>
       </div>

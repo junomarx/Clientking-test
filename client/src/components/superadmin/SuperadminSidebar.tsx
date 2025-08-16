@@ -17,7 +17,8 @@ import {
   Layout,
   X,
   ShieldAlert,
-  UserCog
+  UserCog,
+  Building2
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { User, BusinessSettings } from "@shared/schema";
@@ -143,6 +144,17 @@ export function SuperadminSidebar({
         >
           <ShieldAlert className="h-5 w-5 mr-2" />
           Support-Modus
+        </Button>
+        <Button 
+          variant={activeTab === "multi-shop" ? "default" : "ghost"}
+          className="w-full justify-start"
+          onClick={() => {
+            setActiveTab("multi-shop");
+            if (isMobile) closeMenu();
+          }}
+        >
+          <Building2 className="h-5 w-5 mr-2" />
+          Multi-Shop
         </Button>
         <Button 
           variant={activeTab === "account" ? "default" : "ghost"}
