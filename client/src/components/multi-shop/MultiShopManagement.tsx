@@ -13,6 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Check, ChevronsUpDown, X } from "lucide-react";
 import { Building2, UserPlus, UserMinus, Users, ShieldCheck, Plus } from "lucide-react";
 import { useMultiShop, type MultiShopAdmin } from "@/hooks/use-multi-shop";
+import { MultiShopAdminDetailsDialog } from "./MultiShopAdminDetailsDialog";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -66,6 +67,7 @@ export function MultiShopManagement() {
   const [isGrantDialogOpen, setIsGrantDialogOpen] = useState(false);
   const [isCreateAdminDialogOpen, setIsCreateAdminDialogOpen] = useState(false);
   const [isShopSelectOpen, setIsShopSelectOpen] = useState(false);
+  const [selectedAdminForDetails, setSelectedAdminForDetails] = useState<number | null>(null);
 
   // Alle Shops für Select abrufen (ohne Duplikate)
   const { data: allShopsRaw = [] } = useQuery<Shop[]>({
@@ -453,9 +455,18 @@ export function MultiShopManagement() {
                         )}
                       </div>
                     </div>
-                    <Badge variant="secondary">
-                      {admin.accessibleShops.length} Shop{admin.accessibleShops.length !== 1 ? "s" : ""}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary">
+                        {admin.accessibleShops.length} Shop{admin.accessibleShops.length !== 1 ? "s" : ""}
+                      </Badge>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSelectedAdminForDetails(admin.id)}
+                      >
+                        Details
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 
@@ -503,6 +514,15 @@ export function MultiShopManagement() {
           </div>
         )}
       </CardContent>
+      
+      {/* Multi-Shop Admin Details Dialog */}
+      <MultiShopAdminDetailsDialog
+        adminId={selectedAdminForDetails}
+        isOpen={selectedAdminForDetails !== null}
+        onOpenChange={(open) => {
+          if (!open) setSelectedAdminForDetails(null);
+        }}
+      />
     </Card>
   );
 }

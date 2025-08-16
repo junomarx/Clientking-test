@@ -118,6 +118,8 @@ export interface IStorage {
   revokeUserShopAccess(userId: number, shopId: number): Promise<boolean>;
   getUserShopAccess(userId: number): Promise<UserShopAccess[]>;
   getMultiShopAdmins(): Promise<Array<User & { accessibleShops: Shop[] }>>;
+  getMultiShopAdminDetails(adminId: number): Promise<User & { accessibleShops: Shop[] } | undefined>;
+  updateMultiShopAdmin(adminId: number, updates: Partial<User>): Promise<User>;
 
   // 2FA Methoden
   setupEmailTwoFA(userId: number): Promise<boolean>;
@@ -5410,6 +5412,56 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error getting accessible shops:', error);
       return [];
+    }
+  }
+
+  /**
+   * Multi-Shop Admin Details abrufen
+   */
+  async getMultiShopAdminDetails(adminId: number): Promise<User & { accessibleShops: Shop[] } | undefined> {
+    try {
+      // Admin abrufen
+      const admin = await db.select().from(users).where(
+        and(
+          eq(users.id, adminId),
+          eq(users.isAdmin, true),
+          eq(users.isSuperadmin, false),
+          isNull(users.shopId)
+        )
+      ).then(rows => rows[0]);
+
+      if (!admin) {
+        return undefined;
+      }
+
+      // Zugängliche Shops abrufen
+      const accessibleShops = await this.getUserAccessibleShops(adminId);
+
+      return {
+        ...admin,
+        accessibleShops
+      };
+    } catch (error) {
+      console.error('Error getting multi-shop admin details:', error);
+      return undefined;
+    }
+  }
+
+  /**
+   * Multi-Shop Admin aktualisieren
+   */
+  async updateMultiShopAdmin(adminId: number, updates: Partial<User>): Promise<User> {
+    try {
+      const [updatedAdmin] = await db
+        .update(users)
+        .set(updates)
+        .where(eq(users.id, adminId))
+        .returning();
+
+      return updatedAdmin;
+    } catch (error) {
+      console.error('Error updating multi-shop admin:', error);
+      throw error;
     }
   }
 
