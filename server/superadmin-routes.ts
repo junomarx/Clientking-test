@@ -6,7 +6,7 @@ import { Express, Request, Response } from "express";
 import { isSuperadmin } from "./superadmin-middleware";
 import { db } from "./db";
 import { storage } from "./storage";
-import { count, eq, and, or, sql, desc } from "drizzle-orm";
+import { count, eq, and, or, sql, desc, isNotNull } from "drizzle-orm";
 import { 
   users, packages, packageFeatures, shops, 
   customers, repairs, userDeviceTypes, userBrands, userModels, userModelSeries,
@@ -423,8 +423,10 @@ export function registerSuperadminRoutes(app: Express) {
       .where(
         // Schließe Multi-Shop Admins aus: shopId = null UND isAdmin = true UND isSuperadmin = false
         or(
-          isNull(users.shopId) === false, // Normale Shop-Benutzer
-          and(isNull(users.shopId), eq(users.isSuperadmin, true)) // Superadmins
+          // Normale Shop-Benutzer (haben shopId)
+          isNotNull(users.shopId),
+          // Superadmins (shopId = null aber isSuperadmin = true)
+          and(isNull(users.shopId), eq(users.isSuperadmin, true))
         )
       );
 
