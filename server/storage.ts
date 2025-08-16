@@ -5392,16 +5392,7 @@ export class DatabaseStorage implements IStorage {
 
       // Für Multi-Shop Admins: Alle zugänglichen Shops
       const accessibleShops = await db
-        .select({
-          id: shops.id,
-          name: shops.name,
-          businessName: shops.name,
-          isActive: shops.isActive,
-          createdAt: shops.createdAt,
-          updatedAt: shops.updatedAt,
-          shopId: userShopAccess.shopId,
-          grantedAt: userShopAccess.grantedAt
-        })
+        .select()
         .from(userShopAccess)
         .innerJoin(shops, eq(userShopAccess.shopId, shops.id))
         .where(
@@ -5412,7 +5403,16 @@ export class DatabaseStorage implements IStorage {
           )
         );
 
-      return accessibleShops;
+      return accessibleShops.map(row => ({
+        id: row.shops.id,
+        name: row.shops.name,
+        businessName: row.shops.name,
+        isActive: true, // Shops sind standardmäßig aktiv
+        createdAt: row.shops.createdAt,
+        updatedAt: row.shops.updatedAt,
+        shopId: row.user_shop_access.shopId,
+        grantedAt: row.user_shop_access.grantedAt
+      }));
     } catch (error) {
       console.error('Error getting accessible shops:', error);
       return [];
