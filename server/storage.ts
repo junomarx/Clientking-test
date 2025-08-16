@@ -5395,8 +5395,12 @@ export class DatabaseStorage implements IStorage {
         .select({
           id: shops.id,
           name: shops.name,
+          businessName: shops.name,
+          isActive: shops.isActive,
           createdAt: shops.createdAt,
-          updatedAt: shops.updatedAt
+          updatedAt: shops.updatedAt,
+          shopId: userShopAccess.shopId,
+          grantedAt: userShopAccess.grantedAt
         })
         .from(userShopAccess)
         .innerJoin(shops, eq(userShopAccess.shopId, shops.id))
@@ -5539,17 +5543,18 @@ export class DatabaseStorage implements IStorage {
       
       for (const user of multiShopAdmins) {
         const accessibleShops = await this.getUserAccessibleShops(user.id);
+        
+        // Konvertiere die Shop-Daten in das erwartete Format
+        const formattedShops = accessibleShops.map(shop => ({
+          shopId: shop.shopId || shop.id,
+          shopName: shop.businessName || shop.name || `Shop ${shop.id}`,
+          isActive: shop.isActive,
+          grantedAt: shop.grantedAt?.toISOString() || new Date().toISOString()
+        }));
+        
         result.push({ 
           ...user, 
-          accessibleShops: accessibleShops.map(access => ({
-            id: access.id,
-            shop: {
-              id: access.shop.id,
-              businessName: access.shop.businessName || access.shop.name || `Shop ${access.shop.id}`,
-              isActive: access.shop.isActive
-            },
-            grantedAt: access.grantedAt
-          }))
+          accessibleShops: formattedShops
         });
       }
 
