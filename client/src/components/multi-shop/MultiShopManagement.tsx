@@ -59,9 +59,11 @@ export function MultiShopManagement() {
     multiShopAdmins, 
     isLoadingAdmins, 
     grantAccess, 
-    revokeAccess, 
+    revokeAccess,
+    deleteAdmin,
     isGrantingAccess, 
-    isRevokingAccess 
+    isRevokingAccess,
+    isDeletingAdmin
   } = useMultiShop();
   
   const [isGrantDialogOpen, setIsGrantDialogOpen] = useState(false);
@@ -484,7 +486,7 @@ export function MultiShopManagement() {
                       {admin.accessibleShops.map((shopAccess) => (
                         <TableRow key={shopAccess.shopId}>
                           <TableCell className="font-medium">
-                            {shopAccess.name}
+                            {shopAccess.businessName || shopAccess.name}
                           </TableCell>
                           <TableCell>
                             <Badge variant={shopAccess.isActive ? "default" : "secondary"}>
@@ -521,6 +523,8 @@ export function MultiShopManagement() {
           admin={multiShopAdmins.find(a => a.id === selectedAdminForDetails) || null}
           isOpen={selectedAdminForDetails !== null}
           onClose={() => setSelectedAdminForDetails(null)}
+          onRevoke={(adminId, shopId) => revokeAccess({ userId: adminId, shopId })}
+          onDelete={(adminId) => deleteAdmin(adminId)}
           onRevoke={(adminId, shopId) => handleRevokeAccess(adminId, shopId)}
         />
       )}

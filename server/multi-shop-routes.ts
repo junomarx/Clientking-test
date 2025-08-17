@@ -1,6 +1,9 @@
 import type { Express, Request, Response } from "express";
 import { storage } from "./storage";
 import { isSuperadmin } from "./superadmin-middleware";
+import { db } from "./db";
+import { multiShopPermissions, users } from "@shared/schema";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 
 // Schema für Multi-Shop Access
@@ -268,6 +271,37 @@ export function registerMultiShopRoutes(app: Express) {
         message: 'Interner Serverfehler beim Erstellen des Multi-Shop Admins',
         error: error.message 
       });
+    }
+  });
+
+  // Multi-Shop Admin löschen
+  app.delete("/api/multi-shop/admin/:adminId", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const adminId = parseInt(req.params.adminId);
+
+      if (isNaN(adminId)) {
+        return res.status(400).json({ message: "Ungültige Admin-ID" });
+      }
+
+      // Prüfen ob der Admin existiert
+      const admin = await storage.getUser(adminId);
+      if (!admin) {
+        return res.status(404).json({ message: "Multi-Shop Admin nicht gefunden" });
+      }
+
+      // Alle Permissions für diesen Admin widerrufen
+      await db.delete(multiShopPermissions).where(eq(multiShopPermissions.multiShopAdminId, adminId));
+      
+      // Admin-Benutzer löschen
+      await db.delete(users).where(eq(users.id, adminId));
+      
+      res.json({ 
+        message: "Multi-Shop Admin erfolgreich gelöscht",
+        adminId: adminId
+      });
+    } catch (error) {
+      console.error("Fehler beim Löschen des Multi-Shop Admins:", error);
+      res.status(500).json({ message: "Interner Serverfehler" });
     }
   });
 }

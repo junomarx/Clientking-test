@@ -1,9 +1,11 @@
-import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Building2, Calendar, CheckCircle, Clock, Mail, User, Settings, Trash2 } from 'lucide-react';
+import { Building2, Calendar, CheckCircle, Clock, Mail, User, Settings, Trash2, Plus, UserMinus } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useToast } from '@/hooks/use-toast';
 
 interface MultiShopAdmin {
   id: number;
@@ -14,8 +16,10 @@ interface MultiShopAdmin {
   accessibleShops: Array<{
     id: number;
     name: string;
+    businessName?: string;
     shopId: number;
     grantedAt: string | null;
+    isActive?: boolean;
   }>;
   totalShops?: number;
 }
@@ -26,6 +30,7 @@ interface MultiShopAdminDetailsDialogProps {
   onClose: () => void;
   onRevoke?: (adminId: number, shopId: number) => void;
   onDelete?: (adminId: number) => void;
+  onGrantAccess?: (adminId: number, shopId: number) => void;
 }
 
 export function MultiShopAdminDetailsDialog({
@@ -33,8 +38,12 @@ export function MultiShopAdminDetailsDialog({
   isOpen,
   onClose,
   onRevoke,
-  onDelete
+  onDelete,
+  onGrantAccess
 }: MultiShopAdminDetailsDialogProps) {
+  const { toast } = useToast();
+  const [isDeleting, setIsDeleting] = useState(false);
+  
   if (!admin) return null;
 
   const handleRevokeAccess = (shopId: number) => {
@@ -43,10 +52,31 @@ export function MultiShopAdminDetailsDialog({
     }
   };
 
-  const handleDeleteAdmin = () => {
-    if (onDelete && window.confirm(`Möchten Sie den Multi-Shop Admin "${admin.username}" wirklich löschen?`)) {
-      onDelete(admin.id);
-      onClose();
+  const handleDeleteAdmin = async () => {
+    if (!onDelete) return;
+    
+    const confirmed = window.confirm(
+      `Möchten Sie den Multi-Shop Admin "${admin.username}" wirklich löschen?\n\nDies wird alle Shop-Zugriffe widerrufen und kann nicht rückgängig gemacht werden.`
+    );
+    
+    if (confirmed) {
+      setIsDeleting(true);
+      try {
+        await onDelete(admin.id);
+        toast({
+          title: "Admin gelöscht",
+          description: `Multi-Shop Admin "${admin.username}" wurde erfolgreich gelöscht.`,
+        });
+        onClose();
+      } catch (error) {
+        toast({
+          title: "Fehler beim Löschen",
+          description: "Der Admin konnte nicht gelöscht werden.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsDeleting(false);
+      }
     }
   };
 
@@ -138,7 +168,7 @@ export function MultiShopAdminDetailsDialog({
                       <div className="flex items-start space-x-3">
                         <Building2 className="h-5 w-5 text-blue-500 mt-0.5" />
                         <div>
-                          <h4 className="font-medium text-gray-900">{shop.name}</h4>
+                          <h4 className="font-medium text-gray-900">{shop.businessName || shop.name}</h4>
                           <p className="text-sm text-gray-500">Shop-ID: {shop.shopId}</p>
                           {shop.grantedAt && (
                             <div className="flex items-center gap-1 mt-1">

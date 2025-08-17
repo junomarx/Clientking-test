@@ -110,6 +110,28 @@ export function useMultiShop() {
     },
   });
 
+  // Multi-Shop Admin löschen
+  const deleteAdminMutation = useMutation({
+    mutationFn: async (adminId: number) => {
+      const response = await apiRequest("DELETE", `/api/multi-shop/admin/${adminId}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/multi-shop/admins"] });
+      toast({
+        title: "Admin gelöscht",
+        description: "Der Multi-Shop Admin wurde erfolgreich gelöscht.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler beim Löschen",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   return {
     // Daten
     accessibleShops: accessibleShops || [],
@@ -125,8 +147,10 @@ export function useMultiShop() {
     // Mutations
     grantAccess: grantAccessMutation.mutate,
     revokeAccess: revokeAccessMutation.mutate,
+    deleteAdmin: deleteAdminMutation.mutate,
     isGrantingAccess: grantAccessMutation.isPending,
     isRevokingAccess: revokeAccessMutation.isPending,
+    isDeletingAdmin: deleteAdminMutation.isPending,
     
     // Helper Functions
     hasMultipleShops: (accessibleShops?.length || 0) > 1,
