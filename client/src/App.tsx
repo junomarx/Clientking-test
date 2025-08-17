@@ -57,9 +57,7 @@ function Router() {
         </ProtectedRoute>
       </Route>
       <Route path="/multi-shop">
-        <ProtectedRoute path="/multi-shop">
-          <MultiShopPage />
-        </ProtectedRoute>
+        <MultiShopPage />
       </Route>
       <Route path="/repairs/:orderCode">
         <ProtectedRoute path="/repairs/:orderCode">

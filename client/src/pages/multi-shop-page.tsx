@@ -26,23 +26,14 @@ export default function MultiShopPage() {
     shopsError 
   });
 
-  // WICHTIG: Multi-Shop Admins sollen NICHT weitergeleitet werden
-  if (!user) {
-    console.log('🔥 Kein Benutzer - Weiterleitung');
-    return <Redirect to="/auth" />;
-  }
-  
-  if (user.isSuperadmin && !user.isMultiShopAdmin) {
-    console.log('🔥 Superadmin ohne Multi-Shop - Weiterleitung zu /');
-    return <Redirect to="/" />;
-  }
-  
-  if (!user.isMultiShopAdmin) {
-    console.log('🔥 Kein Multi-Shop Admin - Weiterleitung zu /');
-    return <Redirect to="/" />;
-  }
-  
-  console.log('🔥 Multi-Shop Admin erkannt, Seite wird geladen!');
+  // NOTFALL-DEBUG: Zeige immer die Seite an, egal was
+  console.log('🔥 NOTFALL-DEBUG: Zeige IMMER Multi-Shop Seite');
+  console.log('🔥 User Daten:', { 
+    user: user?.username, 
+    isMultiShopAdmin: user?.isMultiShopAdmin,
+    isSuperadmin: user?.isSuperadmin,
+    shopId: user?.shopId 
+  });
 
   const handleLogout = () => {
     logoutMutation.mutate();
