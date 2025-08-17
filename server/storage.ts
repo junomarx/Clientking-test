@@ -214,6 +214,7 @@ export interface IStorage {
   // Customer methods
   getAllCustomers(userId: number): Promise<Customer[]>;
   getCustomer(id: number, userId: number): Promise<Customer | undefined>;
+  getCustomersByShopId(shopId: number): Promise<Customer[]>;
   findCustomersByName(firstName: string, lastName: string, userId: number): Promise<Customer[]>;
   createCustomer(customer: InsertCustomer, userId: number): Promise<Customer>;
   updateCustomer(
@@ -1853,6 +1854,25 @@ export class DatabaseStorage implements IStorage {
       return results;
     } catch (error) {
       console.error("Error getting all customers:", error);
+      return [];
+    }
+  }
+
+  // DSGVO-konforme Methode für Multi-Shop Admin: Kunden nach Shop-ID abrufen
+  async getCustomersByShopId(shopId: number): Promise<Customer[]> {
+    try {
+      console.log(`🌐 getCustomersByShopId: Multi-Shop Admin lädt Kunden für Shop ${shopId}`);
+      
+      const customers = await db
+        .select()
+        .from(customers)
+        .where(eq(customers.shopId, shopId))
+        .orderBy(desc(customers.createdAt));
+      
+      console.log(`🌐 getCustomersByShopId: ${customers.length} Kunden für Shop ${shopId} abgerufen`);
+      return customers;
+    } catch (error) {
+      console.error(`Error fetching customers for shop ${shopId}:`, error);
       return [];
     }
   }
