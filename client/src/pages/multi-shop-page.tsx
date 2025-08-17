@@ -27,9 +27,21 @@ export default function MultiShopPage() {
   if (isLoadingShops) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+        <div className="text-center">
+          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
+          <p className="text-gray-600">Lade Shop-Daten...</p>
+        </div>
       </div>
     );
+  }
+
+  // Debugging: Zeige Fehler an
+  console.log('Multi-Shop Page - accessibleShops:', accessibleShops);
+  console.log('Multi-Shop Page - isLoadingShops:', isLoadingShops);
+  
+  // Fehlerbehandlung für leere oder fehlende Daten
+  if (!isLoadingShops && (!accessibleShops || accessibleShops.length === 0)) {
+    console.warn('Multi-Shop Page: Keine Shop-Daten verfügbar');
   }
 
   return (

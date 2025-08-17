@@ -1,9 +1,8 @@
 // Service Worker für PWA
-const CACHE_NAME = 'clientking-handyshop-v3';
+const CACHE_NAME = 'clientking-handyshop-v4';
 const urlsToCache = [
   '/',
-  '/manifest.json',
-  '/assets/ClientKing_Logo.png'
+  '/manifest.json'
 ];
 
 self.addEventListener('install', (event) => {
@@ -12,7 +11,11 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_NAME)
       .then((cache) => {
         console.log('Service Worker: Caching files');
-        return cache.addAll(urlsToCache);
+        return cache.addAll(urlsToCache).catch((error) => {
+          console.warn('Service Worker: Some files could not be cached:', error);
+          // Nicht den gesamten Install fehlschlagen lassen
+          return Promise.resolve();
+        });
       })
       .catch((error) => {
         console.error('Service Worker: Cache installation failed:', error);
@@ -65,31 +68,39 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // For other requests, try cache first, then network
+  // For other requests, try network first to avoid browser storage permission prompts
   event.respondWith(
-    caches.match(event.request)
+    fetch(event.request)
       .then((response) => {
-        if (response) {
+        // Don't cache if not a valid response
+        if (!response || response.status !== 200 || response.type !== 'basic') {
           return response;
         }
-        return fetch(event.request)
-          .then((response) => {
-            // Don't cache if not a valid response
-            if (!response || response.status !== 200 || response.type !== 'basic') {
-              return response;
-            }
 
-            // Only cache GET requests for static assets
-            if (event.request.method === 'GET' && !event.request.url.includes('/api/')) {
-              const responseToCache = response.clone();
-              caches.open(CACHE_NAME)
-                .then((cache) => {
-                  cache.put(event.request, responseToCache);
-                });
-            }
+        // Only cache static assets (CSS, JS, images) - no persistent storage for pages
+        const url = new URL(event.request.url);
+        if (event.request.method === 'GET' && 
+            !event.request.url.includes('/api/') &&
+            (url.pathname.endsWith('.css') || 
+             url.pathname.endsWith('.js') || 
+             url.pathname.endsWith('.png') || 
+             url.pathname.endsWith('.svg') || 
+             url.pathname.includes('/assets/'))) {
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME)
+            .then((cache) => {
+              cache.put(event.request, responseToCache);
+            })
+            .catch(() => {
+              // Ignore cache errors to prevent storage permission prompts
+            });
+        }
 
-            return response;
-          });
+        return response;
+      })
+      .catch(() => {
+        // Fallback to cache only for static assets
+        return caches.match(event.request);
       })
   );
 });

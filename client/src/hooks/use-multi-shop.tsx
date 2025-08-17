@@ -41,13 +41,22 @@ export function useMultiShop() {
   const queryClient = useQueryClient();
 
   // Abrufen der zugänglichen Shops für den aktuellen Benutzer
-  const { data: accessibleShops, isLoading: isLoadingShops } = useQuery<UserShopAccess[]>({
+  const { data: accessibleShops, isLoading: isLoadingShops, error: shopsError } = useQuery<UserShopAccess[]>({
     queryKey: ["/api/multi-shop/accessible-shops"],
     queryFn: async () => {
-      const response = await apiRequest("GET", "/api/multi-shop/accessible-shops");
-      return response.json();
+      try {
+        const response = await apiRequest("GET", "/api/multi-shop/accessible-shops");
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+      } catch (error) {
+        console.error('Error fetching accessible shops:', error);
+        throw error;
+      }
     },
     staleTime: 5 * 60 * 1000, // 5 Minuten
+    retry: 3,
   });
 
   // Abrufen aller Multi-Shop Admins (nur für Superadmins)
