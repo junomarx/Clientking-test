@@ -6199,6 +6199,88 @@ export class DatabaseStorage implements IStorage {
       return undefined;
     }
   }
+
+  // Multi-Shop Admin Management Methoden
+  
+  async getAllMultiShopAdmins(): Promise<any[]> {
+    try {
+      // Alle Multi-Shop Admins laden
+      const multiShopAdmins = await db
+        .select()
+        .from(users)
+        .where(eq(users.isMultiShopAdmin, true));
+
+      console.log(`🔍 ${multiShopAdmins.length} Multi-Shop Admins gefunden`);
+
+      // Für jeden Multi-Shop Admin die gewährten Permissions laden
+      const adminsWithPermissions = await Promise.all(
+        multiShopAdmins.map(async (admin) => {
+          const grantedPermissions = await this.getGrantedPermissions(admin.id);
+          const accessibleShops = await Promise.all(
+            grantedPermissions.map(async (permission) => {
+              const shop = await this.getShop(permission.shopId);
+              return shop ? {
+                id: shop.id,
+                name: shop.name || `Shop #${shop.id}`,
+                shopId: permission.shopId,
+                grantedAt: permission.grantedAt
+              } : null;
+            })
+          );
+
+          return {
+            id: admin.id,
+            username: admin.username,
+            email: admin.email,
+            isActive: true,
+            createdAt: admin.createdAt,
+            accessibleShops: accessibleShops.filter(shop => shop !== null),
+            totalShops: accessibleShops.filter(shop => shop !== null).length
+          };
+        })
+      );
+
+      console.log(`📋 Multi-Shop Admins verarbeitet: ${adminsWithPermissions.length}`);
+      return adminsWithPermissions;
+    } catch (error) {
+      console.error('Fehler beim Abrufen der Multi-Shop Admins:', error);
+      return [];
+    }
+  }
+
+  async getGrantedPermissions(multiShopAdminId: number): Promise<any[]> {
+    try {
+      const permissions = await db
+        .select()
+        .from(multiShopPermissions)
+        .where(
+          and(
+            eq(multiShopPermissions.multiShopAdminId, multiShopAdminId),
+            eq(multiShopPermissions.granted, true),
+            isNull(multiShopPermissions.revokedAt)
+          )
+        );
+
+      return permissions;
+    } catch (error) {
+      console.error('Fehler beim Abrufen der gewährten Permissions:', error);
+      return [];
+    }
+  }
+
+  async getShop(shopId: number): Promise<any | undefined> {
+    try {
+      const [shop] = await db
+        .select()
+        .from(shops)
+        .where(eq(shops.id, shopId));
+
+      return shop;
+    } catch (error) {
+      console.error(`Fehler beim Abrufen des Shops ${shopId}:`, error);
+      return undefined;
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();

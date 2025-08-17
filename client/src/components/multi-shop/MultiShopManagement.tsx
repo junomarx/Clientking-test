@@ -13,7 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Check, ChevronsUpDown, X } from "lucide-react";
 import { Building2, UserPlus, UserMinus, Users, ShieldCheck, Plus } from "lucide-react";
 import { useMultiShop, type MultiShopAdmin } from "@/hooks/use-multi-shop";
-import { MultiShopAdminDetailsDialog } from "./MultiShopAdminDetailsDialog";
+import { MultiShopAdminDetailsDialog } from "../superadmin/MultiShopAdminDetailsDialog";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -484,7 +484,7 @@ export function MultiShopManagement() {
                       {admin.accessibleShops.map((shopAccess) => (
                         <TableRow key={shopAccess.shopId}>
                           <TableCell className="font-medium">
-                            {shopAccess.shopName}
+                            {shopAccess.name}
                           </TableCell>
                           <TableCell>
                             <Badge variant={shopAccess.isActive ? "default" : "secondary"}>
@@ -517,11 +517,10 @@ export function MultiShopManagement() {
       
       {/* Multi-Shop Admin Details Dialog */}
       <MultiShopAdminDetailsDialog
-        adminId={selectedAdminForDetails}
+        admin={selectedAdminForDetails ? multiShopAdmins.find(a => a.id === selectedAdminForDetails) || null : null}
         isOpen={selectedAdminForDetails !== null}
-        onOpenChange={(open) => {
-          if (!open) setSelectedAdminForDetails(null);
-        }}
+        onClose={() => setSelectedAdminForDetails(null)}
+        onRevoke={(adminId, shopId) => handleRevokeAccess(adminId, shopId)}
       />
     </Card>
   );
