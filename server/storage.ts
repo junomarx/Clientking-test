@@ -5391,11 +5391,12 @@ export class DatabaseStorage implements IStorage {
         return shop ? [shop] : [];
       }
 
-      // Für Multi-Shop Admins: Alle zugänglichen Shops
+      // Für Multi-Shop Admins: Alle zugänglichen Shops mit echten Firmennamen
       const accessibleShops = await db
         .select()
         .from(userShopAccess)
         .innerJoin(shops, eq(userShopAccess.shopId, shops.id))
+        .leftJoin(businessSettings, eq(shops.id, businessSettings.shopId))
         .where(
           and(
             eq(userShopAccess.userId, userId),
@@ -5406,8 +5407,8 @@ export class DatabaseStorage implements IStorage {
 
       return accessibleShops.map(row => ({
         id: row.shops.id,
-        name: row.shops.name,
-        businessName: row.shops.name,
+        name: row.business_settings?.businessName || row.shops.name,
+        businessName: row.business_settings?.businessName || row.shops.name,
         isActive: true, // Shops sind standardmäßig aktiv
         createdAt: row.shops.createdAt,
         updatedAt: row.shops.updatedAt,
@@ -5458,22 +5459,34 @@ export class DatabaseStorage implements IStorage {
    */
   async getMultiShopAdminDetails(adminId: number): Promise<User & { accessibleShops: Shop[] } | undefined> {
     try {
-      // Admin abrufen
+      console.log('DEBUG: Getting multi-shop admin details for ID:', adminId);
+      
+      // Admin abrufen - Multi-Shop Admins haben isAdmin=false, aber Multi-Shop Zugriff
       const admin = await db.select().from(users).where(
         and(
           eq(users.id, adminId),
-          eq(users.isAdmin, true),
           eq(users.isSuperadmin, false),
           isNull(users.shopId)
         )
       ).then(rows => rows[0]);
 
+      console.log('DEBUG: Found admin:', admin ? `${admin.username} (ID: ${admin.id})` : 'not found');
+
       if (!admin) {
+        return undefined;
+      }
+
+      // Prüfen ob Benutzer Multi-Shop Zugriff hat
+      const accessCount = await this.getUserAccessibleShopsCount(adminId);
+      console.log('DEBUG: Admin has access to', accessCount, 'shops');
+      
+      if (accessCount === 0) {
         return undefined;
       }
 
       // Zugängliche Shops abrufen
       const accessibleShops = await this.getUserAccessibleShops(adminId);
+      console.log('DEBUG: Retrieved', accessibleShops.length, 'accessible shops');
 
       return {
         ...admin,
@@ -5604,7 +5617,7 @@ export class DatabaseStorage implements IStorage {
         const accessibleShops = await this.getUserAccessibleShops(user.id);
         console.log(`DEBUG: User ${user.username} has ${accessibleShops.length} accessible shops`);
         
-        // Konvertiere die Shop-Daten in das erwartete Format
+        // Konvertiere die Shop-Daten in das erwartete Format mit echten Firmennamen
         const formattedShops = accessibleShops.map(shop => ({
           shopId: shop.shopId || shop.id,
           shopName: shop.businessName || shop.name || `Shop ${shop.id}`,

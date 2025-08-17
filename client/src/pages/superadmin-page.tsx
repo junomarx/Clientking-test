@@ -59,6 +59,9 @@ export default function SuperadminPage() {
       await apiRequest("POST", "/api/logout");
       localStorage.removeItem("userId");
       localStorage.removeItem("username");
+      localStorage.removeItem("auth_token");
+      // Alle Query-Caches löschen
+      queryClient.clear();
       setLocation("/auth");
       toast({
         title: "Erfolgreich ausgeloggt",
@@ -66,10 +69,16 @@ export default function SuperadminPage() {
       });
     } catch (error) {
       console.error("Fehler beim Ausloggen:", error);
+      // Auch bei Fehlern den lokalen Zustand löschen
+      localStorage.removeItem("userId");
+      localStorage.removeItem("username");
+      localStorage.removeItem("auth_token");
+      queryClient.clear();
+      setLocation("/auth");
       toast({
         variant: "destructive",
-        title: "Fehler beim Ausloggen",
-        description: "Bitte versuchen Sie es erneut.",
+        title: "Ausloggen erzwungen",
+        description: "Sie wurden lokal abgemeldet.",
       });
     }
   };

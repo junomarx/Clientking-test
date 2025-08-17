@@ -107,11 +107,14 @@ export function registerMultiShopRoutes(app: Express) {
   app.get("/api/multi-shop/admin/:id", isSuperadmin, async (req: Request, res: Response) => {
     try {
       const adminId = parseInt(req.params.id);
+      console.log('DEBUG: Multi-Shop Admin Details Request for ID:', adminId);
       if (isNaN(adminId)) {
         return res.status(400).json({ message: "Ungültige Admin-ID" });
       }
 
       const admin = await storage.getMultiShopAdminDetails(adminId);
+      console.log('DEBUG: Admin found:', admin ? `${admin.username} with ${admin.accessibleShops.length} shops` : 'not found');
+      
       if (!admin) {
         return res.status(404).json({ message: "Multi-Shop Admin nicht gefunden" });
       }
