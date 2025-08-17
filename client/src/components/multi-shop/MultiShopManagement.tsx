@@ -131,7 +131,7 @@ export function MultiShopManagement() {
   // Grant Access Mutation
   const grantAccessMutation = useMutation({
     mutationFn: async (data: GrantAccessFormData) => {
-      const response = await apiRequest("POST", "/api/superadmin/grant-access", data);
+      const response = await apiRequest("POST", "/api/multi-shop/grant-access", data);
       return response.json();
     },
     onSuccess: () => {
@@ -153,7 +153,7 @@ export function MultiShopManagement() {
   // Revoke Access Mutation
   const revokeAccessMutation = useMutation({
     mutationFn: async (data: GrantAccessFormData) => {
-      const response = await apiRequest("DELETE", "/api/superadmin/revoke-access", data);
+      const response = await apiRequest("DELETE", `/api/multi-shop/revoke-access/${data.userId}/${data.shopId}`);
       return response.json();
     },
     onSuccess: () => {
@@ -175,7 +175,7 @@ export function MultiShopManagement() {
   // Delete Admin Mutation
   const deleteAdminMutation = useMutation({
     mutationFn: async (adminId: number) => {
-      const response = await apiRequest("DELETE", `/api/superadmin/multi-shop-admin/${adminId}`);
+      const response = await apiRequest("DELETE", `/api/multi-shop/admin/${adminId}`);
       return response.json();
     },
     onSuccess: () => {
