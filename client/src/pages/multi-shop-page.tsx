@@ -12,34 +12,68 @@ import { Redirect } from "wouter";
  * Zeigt alle zugänglichen Shops und ermöglicht Navigation zwischen ihnen
  */
 export default function MultiShopPage() {
+  console.log('🔥🔥🔥 MultiShopPage wird gerendert!');
+  
   const { user, logoutMutation } = useAuth();
   const { accessibleShops, isLoadingShops, shopsError } = useMultiShop();
 
-  // Nur Multi-Shop Admins haben Zugang zu dieser Seite
-  if (!user || !user.isMultiShopAdmin || user.isSuperadmin) {
+  console.log('🔥 MultiShopPage vollständiger State:', { 
+    user, 
+    userIsMultiShopAdmin: user?.isMultiShopAdmin,
+    userIsSuperadmin: user?.isSuperadmin,
+    accessibleShops, 
+    isLoadingShops, 
+    shopsError 
+  });
+
+  // WICHTIG: Multi-Shop Admins sollen NICHT weitergeleitet werden
+  if (!user) {
+    console.log('🔥 Kein Benutzer - Weiterleitung');
+    return <Redirect to="/auth" />;
+  }
+  
+  if (user.isSuperadmin && !user.isMultiShopAdmin) {
+    console.log('🔥 Superadmin ohne Multi-Shop - Weiterleitung zu /');
     return <Redirect to="/" />;
   }
+  
+  if (!user.isMultiShopAdmin) {
+    console.log('🔥 Kein Multi-Shop Admin - Weiterleitung zu /');
+    return <Redirect to="/" />;
+  }
+  
+  console.log('🔥 Multi-Shop Admin erkannt, Seite wird geladen!');
 
   const handleLogout = () => {
     logoutMutation.mutate();
   };
 
   if (isLoadingShops) {
+    console.log('🔥 Zeige Loading-State für Shop-Daten');
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
           <p className="text-gray-600">Lade Shop-Daten...</p>
+          <button 
+            onClick={() => logoutMutation.mutate()}
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Notfall-Logout
+          </button>
         </div>
       </div>
     );
   }
 
-  // Debugging: Zeige Fehler an
-  console.log('Multi-Shop Page - accessibleShops:', accessibleShops);
-  console.log('Multi-Shop Page - isLoadingShops:', isLoadingShops);
-  console.log('Multi-Shop Page - shopsError:', shopsError);
-  console.log('Multi-Shop Page - user:', user);
+  // UMFASSENDE DEBUG-LOGS für Multi-Shop Page
+  console.log('🐛 MULTI-SHOP PAGE DEBUG START');
+  console.log('🐛 user:', user);
+  console.log('🐛 user.isMultiShopAdmin:', user?.isMultiShopAdmin);
+  console.log('🐛 accessibleShops:', accessibleShops);
+  console.log('🐛 isLoadingShops:', isLoadingShops);
+  console.log('🐛 shopsError:', shopsError);
+  console.log('🐛 MULTI-SHOP PAGE DEBUG END');
   
   // Fehlerbehandlung 
   if (shopsError) {
@@ -82,6 +116,8 @@ export default function MultiShopPage() {
     console.warn('Multi-Shop Page: Keine Shop-Daten verfügbar (aber kein Fehler)');
   }
 
+  console.log('🔥 Rendere Multi-Shop Hauptcontent!');
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <div className="max-w-6xl mx-auto">
