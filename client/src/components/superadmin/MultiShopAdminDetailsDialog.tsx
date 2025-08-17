@@ -5,7 +5,10 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building2, Calendar, CheckCircle, Clock, Mail, User, Settings, Trash2, Plus, UserMinus } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { useQuery } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 
 interface MultiShopAdmin {
   id: number;
@@ -22,6 +25,12 @@ interface MultiShopAdmin {
     isActive?: boolean;
   }>;
   totalShops?: number;
+}
+
+interface Shop {
+  id: number;
+  businessName: string;
+  isActive: boolean;
 }
 
 interface MultiShopAdminDetailsDialogProps {
@@ -43,8 +52,25 @@ export function MultiShopAdminDetailsDialog({
 }: MultiShopAdminDetailsDialogProps) {
   const { toast } = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [selectedShopId, setSelectedShopId] = useState<string>("");
+  const [isGrantingAccess, setIsGrantingAccess] = useState(false);
   
+  // Alle verfügbaren Shops laden
+  const { data: allShops = [] } = useQuery<Shop[]>({
+    queryKey: ["/api/superadmin/shops"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/superadmin/shops");
+      return response.json();
+    },
+    enabled: isOpen && !!admin
+  });
+
   if (!admin) return null;
+
+  // Shops filtern, die noch nicht zugewiesen sind
+  const availableShops = allShops.filter(shop => 
+    !admin.accessibleShops.some(access => access.shopId === shop.id)
+  );
 
   const handleRevokeAccess = (shopId: number) => {
     if (onRevoke) {
@@ -77,6 +103,28 @@ export function MultiShopAdminDetailsDialog({
       } finally {
         setIsDeleting(false);
       }
+    }
+  };
+
+  const handleGrantAccess = async () => {
+    if (!onGrantAccess || !selectedShopId) return;
+    
+    setIsGrantingAccess(true);
+    try {
+      await onGrantAccess(admin.id, parseInt(selectedShopId));
+      setSelectedShopId("");
+      toast({
+        title: "Zugriff gewährt",
+        description: "Shop-Zugriff wurde erfolgreich gewährt.",
+      });
+    } catch (error) {
+      toast({
+        title: "Fehler",
+        description: "Shop-Zugriff konnte nicht gewährt werden.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGrantingAccess(false);
     }
   };
 
@@ -139,13 +187,44 @@ export function MultiShopAdminDetailsDialog({
           {/* Shop-Zugriffe */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Building2 className="h-5 w-5" />
-                Gewährte Shop-Zugriffe ({admin.totalShops})
-              </CardTitle>
-              <CardDescription>
-                Übersicht über alle Shops, auf die dieser Administrator Zugriff hat
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Building2 className="h-5 w-5" />
+                    Gewährte Shop-Zugriffe ({admin.accessibleShops.length})
+                  </CardTitle>
+                  <CardDescription>
+                    Übersicht über alle Shops, auf die dieser Administrator Zugriff hat
+                  </CardDescription>
+                </div>
+                
+                {/* Neuen Shop-Zugriff hinzufügen */}
+                {onGrantAccess && availableShops.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <Select value={selectedShopId} onValueChange={setSelectedShopId}>
+                      <SelectTrigger className="w-48">
+                        <SelectValue placeholder="Shop auswählen" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableShops.map((shop) => (
+                          <SelectItem key={shop.id} value={shop.id.toString()}>
+                            {shop.businessName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      onClick={handleGrantAccess}
+                      disabled={!selectedShopId || isGrantingAccess}
+                      size="sm"
+                      className="flex items-center gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      {isGrantingAccess ? "Gewähre..." : "Hinzufügen"}
+                    </Button>
+                  </div>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               {admin.accessibleShops.length === 0 ? (

@@ -525,7 +525,7 @@ export function MultiShopManagement() {
           onClose={() => setSelectedAdminForDetails(null)}
           onRevoke={(adminId, shopId) => revokeAccess({ userId: adminId, shopId })}
           onDelete={(adminId) => deleteAdmin(adminId)}
-          onRevoke={(adminId, shopId) => handleRevokeAccess(adminId, shopId)}
+          onGrantAccess={(adminId, shopId) => grantAccess({ userId: adminId, shopId })}
         />
       )}
     </Card>
