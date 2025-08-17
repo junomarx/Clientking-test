@@ -5668,7 +5668,8 @@ export class DatabaseStorage implements IStorage {
         // Konvertiere die Shop-Daten in das erwartete Format mit echten Firmennamen
         const formattedShops = accessibleShops.map(shop => ({
           shopId: shop.shopId || shop.id,
-          shopName: shop.businessName || shop.name || `Shop ${shop.id}`,
+          name: shop.name || `Shop ${shop.id}`,
+          businessName: shop.businessName || shop.name || `Shop ${shop.id}`,
           isActive: shop.isActive,
           grantedAt: shop.grantedAt?.toISOString() || new Date().toISOString()
         }));

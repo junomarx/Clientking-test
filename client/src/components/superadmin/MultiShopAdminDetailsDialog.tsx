@@ -67,10 +67,10 @@ export function MultiShopAdminDetailsDialog({
 
   if (!admin) return null;
 
-  // Shops filtern, die noch nicht zugewiesen sind
-  const availableShops = allShops.filter(shop => 
-    !admin.accessibleShops.some(access => access.shopId === shop.id)
-  );
+  // Shops filtern, die noch nicht zugewiesen sind und Duplikate entfernen
+  const availableShops = allShops
+    .filter(shop => !admin.accessibleShops.some(access => access.shopId === shop.id))
+    .filter((shop, index, self) => index === self.findIndex(s => s.id === shop.id));
 
   const handleRevokeAccess = (shopId: number) => {
     if (onRevoke) {
@@ -206,9 +206,7 @@ export function MultiShopAdminDetailsDialog({
                         <SelectValue placeholder="Shop auswählen" />
                       </SelectTrigger>
                       <SelectContent>
-                        {availableShops.filter((shop, index, self) => 
-                          index === self.findIndex(s => s.id === shop.id)
-                        ).map((shop) => (
+                        {availableShops.map((shop) => (
                           <SelectItem key={shop.id} value={shop.id.toString()}>
                             {shop.businessName}
                           </SelectItem>
