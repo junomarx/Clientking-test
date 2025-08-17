@@ -5467,10 +5467,16 @@ export class DatabaseStorage implements IStorage {
 
       // Für Multi-Shop Admins: Alle zugänglichen Shops mit echten Firmennamen
       const accessibleShops = await db
-        .select()
+        .select({
+          shopId: userShopAccess.shopId,
+          userId: userShopAccess.userId,
+          grantedAt: userShopAccess.grantedAt,
+          isActive: userShopAccess.isActive,
+          businessName: businessSettings.businessName,
+          shopName: businessSettings.businessName
+        })
         .from(userShopAccess)
-        .innerJoin(shops, eq(userShopAccess.shopId, shops.id))
-        .leftJoin(businessSettings, eq(shops.id, businessSettings.shopId))
+        .leftJoin(businessSettings, eq(userShopAccess.shopId, businessSettings.shopId))
         .where(
           and(
             eq(userShopAccess.userId, userId),
@@ -5480,14 +5486,12 @@ export class DatabaseStorage implements IStorage {
         );
 
       return accessibleShops.map(row => ({
-        id: row.shops.id,
-        name: row.business_settings?.businessName || `Shop ${row.shops.id}`,
-        businessName: row.business_settings?.businessName || `Shop ${row.shops.id}`,
-        isActive: true, // Shops sind standardmäßig aktiv
-        createdAt: row.shops.createdAt,
-        updatedAt: row.shops.updatedAt,
-        shopId: row.user_shop_access.shopId,
-        grantedAt: row.user_shop_access.grantedAt
+        id: row.shopId,
+        name: row.businessName || `Shop ${row.shopId}`,
+        businessName: row.businessName || `Shop ${row.shopId}`,
+        isActive: true,
+        shopId: row.shopId,
+        grantedAt: row.grantedAt
       }));
     } catch (error) {
       console.error('Error getting accessible shops:', error);
