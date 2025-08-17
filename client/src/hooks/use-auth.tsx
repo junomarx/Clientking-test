@@ -231,5 +231,13 @@ export function useAuth() {
     };
   }
   
-  return context;
+  // Multi-Shop Admin Modus erweitern
+  const isMultiShopAdminMode = context.user?.isMultiShopAdmin && localStorage.getItem('multiShopAdminMode') === 'true';
+  const selectedShopId = localStorage.getItem('multiShopAdminSelectedShop');
+  
+  return {
+    ...context,
+    isMultiShopAdminMode,
+    selectedShopId: selectedShopId ? parseInt(selectedShopId) : null
+  };
 }

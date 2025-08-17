@@ -36,8 +36,18 @@ export async function apiRequest(
     headers["X-User-ID"] = userId;
   }
   
+  // Multi-Shop Admin Modus: Shop-ID als Query-Parameter hinzufügen wenn verfügbar
+  let finalUrl = fullUrl;
+  const multiShopMode = localStorage.getItem('multiShopAdminMode');
+  const selectedShopId = localStorage.getItem('multiShopAdminSelectedShop');
+  if (multiShopMode === 'true' && selectedShopId && !fullUrl.includes('shopId=')) {
+    const separator = fullUrl.includes('?') ? '&' : '?';
+    finalUrl = `${fullUrl}${separator}shopId=${selectedShopId}`;
+    console.log(`🌐 Multi-Shop Admin API Call: ${finalUrl}`);
+  }
+  
   try {
-    const res = await fetch(fullUrl, {
+    const res = await fetch(finalUrl, {
       method,
       headers: headers,
       body: data ? JSON.stringify(data) : undefined,
@@ -116,7 +126,17 @@ export const getQueryFn: <T>(options: {
       headers["X-User-ID"] = userId;
     }
     
-    const res = await fetch(fullUrl, {
+    // Multi-Shop Admin Modus: Shop-ID als Query-Parameter hinzufügen wenn verfügbar
+    let finalUrl = fullUrl;
+    const multiShopMode = localStorage.getItem('multiShopAdminMode');
+    const selectedShopId = localStorage.getItem('multiShopAdminSelectedShop');
+    if (multiShopMode === 'true' && selectedShopId && !fullUrl.includes('shopId=')) {
+      const separator = fullUrl.includes('?') ? '&' : '?';
+      finalUrl = `${fullUrl}${separator}shopId=${selectedShopId}`;
+      console.log(`🌐 Multi-Shop Admin Query: ${finalUrl}`);
+    }
+    
+    const res = await fetch(finalUrl, {
       credentials: "include",
       headers: headers
     });

@@ -1035,6 +1035,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
+      const user = req.user as any;
+      
+      // Multi-Shop Admin Modus prüfen
+      if (user?.isMultiShopAdmin && req.query.shopId) {
+        const selectedShopId = parseInt(req.query.shopId as string);
+        console.log(`🌐 Multi-Shop Admin ${user.username}: Lade Kunden für Shop ${selectedShopId}`);
+        
+        // Prüfen ob der Multi-Shop Admin Zugriff auf diesen Shop hat
+        const accessibleShops = await storage.getUserAccessibleShops(userId);
+        const hasAccess = accessibleShops.some(access => access.shopId === selectedShopId);
+        
+        if (!hasAccess) {
+          return res.status(403).json({ error: "Zugriff auf diesen Shop verweigert" });
+        }
+        
+        // Shop-spezifische Kunden laden
+        const shopCustomers = await db
+          .select()
+          .from(customers)
+          .where(eq(customers.shopId, selectedShopId))
+          .orderBy(desc(customers.createdAt));
+        
+        console.log(`🌐 Multi-Shop Admin: ${shopCustomers.length} Kunden für Shop ${selectedShopId} geladen`);
+        return res.json(shopCustomers);
+      }
+      
       // Shop-ID aus der Shop-Isolation-Middleware
       const shopId = (req as any).userShopId;
       
@@ -1407,6 +1433,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
+      const user = req.user as any;
+      
+      // Multi-Shop Admin Modus prüfen
+      if (user?.isMultiShopAdmin && req.query.shopId) {
+        const selectedShopId = parseInt(req.query.shopId as string);
+        console.log(`🌐 Multi-Shop Admin ${user.username}: Lade Reparaturen für Shop ${selectedShopId}`);
+        
+        // Prüfen ob der Multi-Shop Admin Zugriff auf diesen Shop hat
+        const accessibleShops = await storage.getUserAccessibleShops(userId);
+        const hasAccess = accessibleShops.some(access => access.shopId === selectedShopId);
+        
+        if (!hasAccess) {
+          return res.status(403).json({ error: "Zugriff auf diesen Shop verweigert" });
+        }
+        
+        // Shop-spezifische Reparaturen laden
+        const shopRepairs = await db
+          .select()
+          .from(repairs)
+          .where(eq(repairs.shopId, selectedShopId))
+          .orderBy(desc(repairs.createdAt));
+        
+        console.log(`🌐 Multi-Shop Admin: ${shopRepairs.length} Reparaturen für Shop ${selectedShopId} geladen`);
+        return res.json(shopRepairs);
+      }
       
       // Multi-Shop Service nutzen für erweiterten Zugriff
       const repairs = await multiShopService.getAllRepairsForUser(userId);

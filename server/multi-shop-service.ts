@@ -16,7 +16,7 @@ export class MultiShopService {
     }
 
     const accessibleShops = await storage.getUserAccessibleShops(userId);
-    return accessibleShops.map(shop => shop.shopId);
+    return accessibleShops.map(access => access.shopId);
   }
 
   /**

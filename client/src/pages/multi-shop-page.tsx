@@ -250,9 +250,15 @@ export default function MultiShopPage() {
                       className="flex-1" 
                       size="sm"
                       onClick={() => {
-                        // Navigation zum Dashboard des spezifischen Shops
+                        // Multi-Shop Admin: Direkter Zugriff auf Shop-Dashboard
                         console.log("🔍 Multi-Shop Admin: Navigiere zu Shop Dashboard:", shopAccess.shopId);
-                        alert(`Dashboard für Shop ${shopAccess.shopId} wird implementiert`);
+                        
+                        // Temporär die Shop-ID im localStorage speichern für Shop-spezifische Navigation
+                        localStorage.setItem('multiShopAdminSelectedShop', shopAccess.shopId.toString());
+                        localStorage.setItem('multiShopAdminMode', 'true');
+                        
+                        // Zum Hauptdashboard navigieren (das System erkennt den Multi-Shop Admin Modus)
+                        window.location.href = '/';
                       }}
                     >
                       <BarChart3 className="w-4 h-4 mr-1" />
@@ -262,9 +268,15 @@ export default function MultiShopPage() {
                       variant="outline" 
                       size="sm"
                       onClick={() => {
-                        // Mitarbeiter-Verwaltung mit Transfer-Option
-                        console.log("👥 Multi-Shop Admin: Mitarbeiter-Verwaltung für Shop:", shopAccess.shopId);
-                        alert(`Mitarbeiter-Transfer für Shop ${shopAccess.shopId} wird implementiert`);
+                        // Multi-Shop Admin: Shop-spezifische Datenansicht
+                        console.log("👥 Multi-Shop Admin: Shop-Daten für Shop:", shopAccess.shopId);
+                        
+                        // Shop-ID für detaillierte Ansicht setzen
+                        localStorage.setItem('multiShopAdminSelectedShop', shopAccess.shopId.toString());
+                        localStorage.setItem('multiShopAdminMode', 'true');
+                        
+                        // Zu Reparaturen navigieren (mit Shop-Filter)
+                        window.location.href = '/';
                       }}
                     >
                       <Users className="w-4 h-4" />
