@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
 import { useMultiShop } from "@/hooks/use-multi-shop";
-import { Building2, Users, Settings } from "lucide-react";
+import { Building2, Users, Settings, BarChart3, TrendingUp, Activity, Calendar } from "lucide-react";
 import { Redirect } from "wouter";
 
 /**
@@ -54,51 +54,121 @@ export default function MultiShopPage() {
           </div>
         </div>
 
+        {/* Übersichts-Dashboard */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Verwaltete Shops</p>
+                  <p className="text-2xl font-bold">{accessibleShops?.length || 0}</p>
+                </div>
+                <Building2 className="h-8 w-8 text-primary" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Aktive Shops</p>
+                  <p className="text-2xl font-bold">
+                    {accessibleShops?.filter(shop => shop.isActive).length || 0}
+                  </p>
+                </div>
+                <Activity className="h-8 w-8 text-green-600" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Gesamt-Performance</p>
+                  <p className="text-2xl font-bold text-green-600">+12%</p>
+                </div>
+                <TrendingUp className="h-8 w-8 text-green-600" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Letztes Update</p>
+                  <p className="text-sm font-medium">{new Date().toLocaleDateString("de-DE")}</p>
+                </div>
+                <Calendar className="h-8 w-8 text-blue-600" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Shop-Zugriffe */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {accessibleShops?.map((shopAccess) => (
-            <Card key={shopAccess.id} className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <Building2 className="w-8 h-8 text-primary" />
-                  <Badge variant={shopAccess.shop.isActive ? "default" : "secondary"}>
-                    {shopAccess.shop.isActive ? "Aktiv" : "Inaktiv"}
-                  </Badge>
-                </div>
-                <CardTitle className="text-lg">
-                  {shopAccess.shop.businessName || shopAccess.shop.name}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 text-sm text-gray-600">
-                  <p>
-                    <span className="font-medium">Shop-ID:</span> {shopAccess.shop.id}
-                  </p>
-                  {shopAccess.shop.address && (
-                    <p>
-                      <span className="font-medium">Adresse:</span> {shopAccess.shop.address}
-                    </p>
-                  )}
-                  <p>
-                    <span className="font-medium">Zugang gewährt:</span>{" "}
-                    {new Date(shopAccess.grantedAt).toLocaleDateString("de-DE")}
-                  </p>
-                </div>
-                <div className="mt-4">
-                  <Button 
-                    className="w-full" 
-                    onClick={() => {
-                      // Hier würde die Navigation zum spezifischen Shop erfolgen
-                      // Das ist noch zu implementieren
-                      console.log("Navigiere zu Shop:", shopAccess.shop.id);
-                    }}
-                  >
-                    Shop verwalten
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+        <div>
+          <h2 className="text-2xl font-bold mb-6">Ihre verwalteten Shops</h2>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {accessibleShops?.map((shopAccess) => (
+              <Card key={shopAccess.id} className="hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02]">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <Building2 className="w-8 h-8 text-primary" />
+                    <Badge variant={shopAccess.isActive ? "default" : "secondary"}>
+                      {shopAccess.isActive ? "Aktiv" : "Inaktiv"}
+                    </Badge>
+                  </div>
+                  <CardTitle className="text-lg">
+                    {shopAccess.businessName || shopAccess.name}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3 text-sm text-gray-600 mb-4">
+                    <div className="flex justify-between">
+                      <span className="font-medium">Shop-ID:</span>
+                      <span className="text-right">{shopAccess.shopId}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">Zugang gewährt:</span>
+                      <span className="text-right">{new Date(shopAccess.grantedAt).toLocaleDateString("de-DE")}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">Status:</span>
+                      <Badge variant="outline" className="text-xs">
+                        Vollzugriff
+                      </Badge>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Button 
+                      className="flex-1" 
+                      size="sm"
+                      onClick={() => {
+                        // Navigation zum Dashboard des spezifischen Shops
+                        console.log("Navigiere zu Shop Dashboard:", shopAccess.shopId);
+                      }}
+                    >
+                      <BarChart3 className="w-4 h-4 mr-1" />
+                      Dashboard
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        // Navigation zu Shop-Einstellungen
+                        console.log("Navigiere zu Shop Settings:", shopAccess.shopId);
+                      }}
+                    >
+                      <Settings className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
 
         {/* Kein Zugang zu Shops */}
