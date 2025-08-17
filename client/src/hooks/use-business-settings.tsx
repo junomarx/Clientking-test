@@ -21,6 +21,9 @@ const BusinessSettingsContext = createContext<BusinessSettingsContextType | null
 export function BusinessSettingsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   
+  // Multi-Shop Admins haben keine Business Settings - sie verwalten nur andere Shops
+  const isMultiShopAdmin = user?.isMultiShopAdmin && !user?.shopId;
+  
   const { 
     data: settings, 
     isLoading, 
@@ -28,16 +31,16 @@ export function BusinessSettingsProvider({ children }: { children: ReactNode }) 
     refetch 
   } = useQuery<BusinessSettings | null, Error>({
     queryKey: ["/api/business-settings"], // KEIN userId mehr im Query-Key
-    // Abfrage nur aktivieren, wenn der Benutzer angemeldet ist
-    enabled: !!user,
+    // Abfrage nur aktivieren, wenn der Benutzer angemeldet ist UND nicht Multi-Shop Admin
+    enabled: !!user && !isMultiShopAdmin,
   });
 
   return (
     <BusinessSettingsContext.Provider
       value={{
-        settings: settings ?? null,
-        isLoading,
-        error,
+        settings: isMultiShopAdmin ? null : (settings ?? null), // Multi-Shop Admins haben keine Settings
+        isLoading: isMultiShopAdmin ? false : isLoading,
+        error: isMultiShopAdmin ? null : error,
         refetch, // Refetch-Funktion bereitstellen
       }}
     >

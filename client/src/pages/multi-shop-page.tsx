@@ -38,6 +38,8 @@ export default function MultiShopPage() {
   // Debugging: Zeige Fehler an
   console.log('Multi-Shop Page - accessibleShops:', accessibleShops);
   console.log('Multi-Shop Page - isLoadingShops:', isLoadingShops);
+  console.log('Multi-Shop Page - shopsError:', shopsError);
+  console.log('Multi-Shop Page - user:', user);
   
   // Fehlerbehandlung 
   if (shopsError) {
