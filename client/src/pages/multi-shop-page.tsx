@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
 import { useMultiShop } from "@/hooks/use-multi-shop";
 import { Building2, Users, Settings, BarChart3, TrendingUp, Activity, Calendar } from "lucide-react";
-import { Redirect } from "wouter";
+import { Redirect, useLocation } from "wouter";
 
 /**
  * Multi-Shop Dashboard für Multi-Shop Admins
@@ -16,6 +16,7 @@ export default function MultiShopPage() {
   
   const { user, logoutMutation } = useAuth();
   const { accessibleShops, isLoadingShops, shopsError } = useMultiShop();
+  const [location, setLocation] = useLocation();
 
   console.log('🔥 MultiShopPage vollständiger State:', { 
     user, 
@@ -261,8 +262,8 @@ export default function MultiShopPage() {
                         console.log(`🔧 Multi-Shop Admin aktiviert Shop ${shopAccess.shopId}`);
                         localStorage.setItem('multiShopAdminSelectedShopName', shopAccess.shopName || `Shop ${shopAccess.shopId}`);
                         
-                        // Navigation zum Haupt-Dashboard
-                        window.location.href = '/';
+                        // Navigation zum Haupt-Dashboard mit programmatischer Navigation
+                        setLocation('/');
                       }}
                     >
                       <BarChart3 className="w-4 h-4 mr-1" />
@@ -283,8 +284,8 @@ export default function MultiShopPage() {
                         console.log(`🔧 Multi-Shop Admin: Shop ${shopAccess.shopId} Datenansicht`);
                         localStorage.setItem('multiShopAdminSelectedShopName', shopAccess.shopName || `Shop ${shopAccess.shopId}`);
                         
-                        // Navigation zur Reparatur-Übersicht
-                        window.location.href = '/?tab=repairs';
+                        // Navigation zur Reparatur-Übersicht mit programmatischer Navigation
+                        setLocation('/');
                       }}
                     >
                       <Users className="w-4 h-4" />

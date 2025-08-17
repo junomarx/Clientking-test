@@ -464,6 +464,10 @@ export interface IStorage {
   getAllSpareParts(userId: number): Promise<SparePart[]>;
   getRepairsWithSpareParts(userId: number): Promise<any[]>;
   bulkUpdateSparePartStatus(partIds: number[], status: string, userId: number): Promise<boolean>;
+  
+  // Multi-Shop Admin Methoden
+  getAllMultiShopAdmins(): Promise<any[]>;
+  getUserAccessibleShops(userId: number): Promise<Shop[]>;
 }
 
 /**
