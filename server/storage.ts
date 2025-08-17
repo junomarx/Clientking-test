@@ -5485,20 +5485,19 @@ export class DatabaseStorage implements IStorage {
           )
         );
 
-      console.log('DEBUG: Raw accessible shops:', JSON.stringify(accessibleShops, null, 2));
+      console.log('DEBUG: Raw accessible shops from user_shop_access:', JSON.stringify(accessibleShops, null, 2));
       
-      return accessibleShops.map(row => {
-        const result = {
-          id: row.shopId,
-          name: row.businessName || `Shop ${row.shopId}`,
-          businessName: row.businessName || `Shop ${row.shopId}`,
-          isActive: true,
-          shopId: row.shopId,
-          grantedAt: row.grantedAt
-        };
-        console.log(`DEBUG: Mapping shop ${row.shopId} -> businessName: ${row.businessName} -> result:`, result);
-        return result;
-      });
+      const result = accessibleShops.map(row => ({
+        id: row.shopId,
+        name: row.businessName || `Shop ${row.shopId}`,
+        businessName: row.businessName || `Shop ${row.shopId}`,
+        isActive: true,
+        shopId: row.shopId,
+        grantedAt: row.grantedAt
+      }));
+      
+      console.log(`DEBUG: Final accessible shops for user ${userId}:`, result);
+      return result;
     } catch (error) {
       console.error('Error getting accessible shops:', error);
       return [];
