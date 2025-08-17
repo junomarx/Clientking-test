@@ -122,7 +122,7 @@ export default function MultiShopPage() {
                 <div>
                   <p className="text-sm text-muted-foreground">Aktive Shops</p>
                   <p className="text-2xl font-bold">
-                    {accessibleShops?.filter(shop => shop.isActive).length || 0}
+                    {accessibleShops?.length || 0}
                   </p>
                 </div>
                 <Activity className="h-8 w-8 text-green-600" />
@@ -164,12 +164,12 @@ export default function MultiShopPage() {
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <Building2 className="w-8 h-8 text-primary" />
-                    <Badge variant={shopAccess.isActive ? "default" : "secondary"}>
-                      {shopAccess.isActive ? "Aktiv" : "Inaktiv"}
+                    <Badge variant="default">
+                      Aktiv
                     </Badge>
                   </div>
                   <CardTitle className="text-lg">
-                    {shopAccess.businessName || shopAccess.name}
+                    {shopAccess.businessName || shopAccess.name || `Shop ${shopAccess.shopId}`}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>

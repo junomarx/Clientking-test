@@ -2,22 +2,16 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
-// Types für Multi-Shop System
-export interface Shop {
+// Types für Multi-Shop System - angepasst an die tatsächliche API-Antwort
+export interface UserShopAccess {
   id: number;
   name: string;
   businessName: string;
-  address?: string;
   isActive: boolean;
-}
-
-export interface UserShopAccess {
-  id: number;
-  userId: number;
+  createdAt: string;
+  updatedAt: string;
   shopId: number;
-  grantedBy: number;
   grantedAt: string;
-  shop: Shop;
 }
 
 export interface CreateUserShopAccess {
