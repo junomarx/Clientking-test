@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
 import { useMultiShop } from "@/hooks/use-multi-shop";
-import { Building2, Users, Settings, BarChart3, TrendingUp, Activity, Calendar } from "lucide-react";
+import { Building2, Users, Settings, BarChart3, TrendingUp, Activity, Calendar, Eye } from "lucide-react";
 import { Redirect, useLocation } from "wouter";
+import { ShopDetailsDialog } from "@/components/multi-shop/ShopDetailsDialog";
 
 /**
  * Multi-Shop Dashboard für Multi-Shop Admins
@@ -17,6 +18,8 @@ export default function MultiShopPage() {
   const { user, logoutMutation } = useAuth();
   const { accessibleShops, isLoadingShops, shopsError } = useMultiShop();
   const [location, setLocation] = useLocation();
+  const [selectedShop, setSelectedShop] = React.useState<any>(null);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = React.useState(false);
 
   console.log('🔥 MultiShopPage vollständiger State:', { 
     user, 
@@ -251,42 +254,30 @@ export default function MultiShopPage() {
                       className="flex-1" 
                       size="sm"
                       onClick={() => {
-                        // Multi-Shop Admin: Direkter Zugriff auf Shop-Dashboard
-                        console.log("🔍 Multi-Shop Admin: Navigiere zu Shop Dashboard:", shopAccess.shopId);
-                        
-                        // DSGVO-konform: Shop-Modus aktivieren
-                        localStorage.setItem('multiShopAdminSelectedShop', shopAccess.shopId.toString());
-                        localStorage.setItem('multiShopAdminMode', 'true');
-                        localStorage.setItem('multiShopAdminSelectedShopName', shopAccess.shopName || `Shop ${shopAccess.shopId}`);
-                        
-                        console.log(`🔧 Multi-Shop Admin aktiviert Shop ${shopAccess.shopId}`);
-                        
-                        // Erzwinge komplette Seitenneuladung für Multi-Shop Mode
-                        window.location.href = '/';
+                        console.log("👁️ Multi-Shop Admin: Öffne Shop-Details:", shopAccess.shopId);
+                        setSelectedShop(shopAccess);
+                        setIsDetailsDialogOpen(true);
                       }}
                     >
-                      <BarChart3 className="w-4 h-4 mr-1" />
-                      Dashboard
+                      <Eye className="w-4 h-4 mr-1" />
+                      Details
                     </Button>
                     <Button 
                       variant="outline" 
                       size="sm"
                       onClick={() => {
-                        // Multi-Shop Admin: Shop-spezifische Datenansicht
-                        console.log("👥 Multi-Shop Admin: Shop-Daten für Shop:", shopAccess.shopId);
-                        
                         // DSGVO-konform: Shop-Ansicht aktivieren  
                         localStorage.setItem('multiShopAdminSelectedShop', shopAccess.shopId.toString());
                         localStorage.setItem('multiShopAdminMode', 'true');
                         localStorage.setItem('multiShopAdminSelectedShopName', shopAccess.shopName || `Shop ${shopAccess.shopId}`);
                         
-                        console.log(`🔧 Multi-Shop Admin: Shop ${shopAccess.shopId} Datenansicht`);
+                        console.log(`🔧 Multi-Shop Admin: Vollzugriff auf Shop ${shopAccess.shopId}`);
                         
-                        // Erzwinge komplette Seitenneuladung für Multi-Shop Mode mit Reparatur-Tab
-                        window.location.href = '/?tab=repairs';
+                        // Vollzugriff auf Shop
+                        window.location.href = '/';
                       }}
                     >
-                      <Users className="w-4 h-4" />
+                      <BarChart3 className="w-4 h-4" />
                     </Button>
                   </div>
                 </CardContent>
@@ -364,6 +355,16 @@ export default function MultiShopPage() {
             Multi-Shop Verwaltungssystem • Handyshop Verwaltung
           </p>
         </div>
+
+        {/* Shop-Details Dialog */}
+        <ShopDetailsDialog
+          isOpen={isDetailsDialogOpen}
+          onClose={() => {
+            setIsDetailsDialogOpen(false);
+            setSelectedShop(null);
+          }}
+          shop={selectedShop}
+        />
       </div>
     </div>
   );
