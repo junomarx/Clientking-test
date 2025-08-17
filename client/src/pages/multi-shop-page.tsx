@@ -16,7 +16,7 @@ export default function MultiShopPage() {
   const { accessibleShops, isLoadingShops } = useMultiShop();
 
   // Nur Multi-Shop Admins haben Zugang zu dieser Seite
-  if (!user || user.shopId !== null || !user.isAdmin || user.isSuperadmin) {
+  if (!user || !user.isMultiShopAdmin || user.isSuperadmin) {
     return <Redirect to="/" />;
   }
 
