@@ -22,6 +22,7 @@ const updateAdminSchema = z.object({
   password: z.string().optional(),
   twoFaEmailEnabled: z.boolean(),
   twoFaTotpEnabled: z.boolean(),
+  isMultiShopAdmin: z.boolean(),
 });
 
 type UpdateAdminFormData = z.infer<typeof updateAdminSchema>;
@@ -38,6 +39,7 @@ interface AdminDetails {
   email: string;
   twoFaEmailEnabled: boolean;
   twoFaTotpEnabled: boolean;
+  isMultiShopAdmin: boolean;
   accessibleShops: Array<{
     id: number;
     businessName: string;
@@ -88,6 +90,7 @@ export function MultiShopAdminDetailsDialog({
       password: "",
       twoFaEmailEnabled: false,
       twoFaTotpEnabled: false,
+      isMultiShopAdmin: false,
     },
   });
 
@@ -99,6 +102,7 @@ export function MultiShopAdminDetailsDialog({
         password: "",
         twoFaEmailEnabled: adminDetails.twoFaEmailEnabled,
         twoFaTotpEnabled: adminDetails.twoFaTotpEnabled,
+        isMultiShopAdmin: adminDetails.isMultiShopAdmin || false,
       });
     }
   }, [adminDetails, form]);
@@ -265,6 +269,42 @@ export function MultiShopAdminDetailsDialog({
                     </Button>
                   </form>
                 </Form>
+              </CardContent>
+            </Card>
+
+            <Separator />
+
+            {/* Multi-Shop Admin Status */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Shield className="h-5 w-5" />
+                  Multi-Shop Admin Status
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">Als Multi-Shop Admin ernennen</p>
+                    <p className="text-sm text-muted-foreground">
+                      Multi-Shop Admins haben Zugriff auf das Multi-Shop Interface
+                    </p>
+                  </div>
+                  <FormField
+                    control={form.control}
+                    name="isMultiShopAdmin"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </CardContent>
             </Card>
 

@@ -462,6 +462,7 @@ function convertToUser(row: any): User {
     isActive: Boolean(row.is_active),
     isAdmin: Boolean(row.is_admin),
     isSuperadmin: Boolean(row.is_superadmin),
+    isMultiShopAdmin: Boolean(row.is_multi_shop_admin || false),
     pricingPlan: row.pricing_plan ? String(row.pricing_plan) : null,
     shopId: row.shop_id ? Number(row.shop_id) : null,
     companyName: row.company_name ? String(row.company_name) : null,
@@ -5461,32 +5462,25 @@ export class DatabaseStorage implements IStorage {
     try {
       console.log('DEBUG: Getting multi-shop admin details for ID:', adminId);
       
-      // Admin abrufen - Multi-Shop Admins haben isAdmin=false, aber Multi-Shop Zugriff
+      // NEUE LOGIK: Admin muss isMultiShopAdmin=true haben
       const admin = await db.select().from(users).where(
         and(
           eq(users.id, adminId),
-          eq(users.isSuperadmin, false),
-          isNull(users.shopId)
+          eq(users.isMultiShopAdmin, true),
+          eq(users.isSuperadmin, false)
         )
       ).then(rows => rows[0]);
 
-      console.log('DEBUG: Found admin:', admin ? `${admin.username} (ID: ${admin.id})` : 'not found');
+      console.log('DEBUG: Found multi-shop admin:', admin ? `${admin.username} (ID: ${admin.id}, isMultiShopAdmin: ${admin.isMultiShopAdmin})` : 'not found');
 
       if (!admin) {
+        console.log('DEBUG: User is not a multi-shop admin or does not exist');
         return undefined;
       }
 
-      // Prüfen ob Benutzer Multi-Shop Zugriff hat
-      const accessCount = await this.getUserAccessibleShopsCount(adminId);
-      console.log('DEBUG: Admin has access to', accessCount, 'shops');
-      
-      if (accessCount === 0) {
-        return undefined;
-      }
-
-      // Zugängliche Shops abrufen
+      // Zugängliche Shops abrufen (kann auch leer sein für neue Multi-Shop Admins)
       const accessibleShops = await this.getUserAccessibleShops(adminId);
-      console.log('DEBUG: Retrieved', accessibleShops.length, 'accessible shops');
+      console.log('DEBUG: Retrieved', accessibleShops.length, 'accessible shops for multi-shop admin');
 
       return {
         ...admin,
@@ -5574,46 +5568,27 @@ export class DatabaseStorage implements IStorage {
 
   async getMultiShopAdmins(): Promise<Array<User & { accessibleShops: Array<{ id: number, shop: { id: number, businessName: string, isActive: boolean }, grantedAt: string }> }>> {
     try {
-      console.log('DEBUG: Searching for multi-shop admins...');
+      console.log('DEBUG: Searching for multi-shop admins via isMultiShopAdmin flag...');
       
-      // Finde alle Benutzer mit Multi-Shop Zugriff (haben Einträge in user_shop_access)
-      const allAccesses = await db
+      // NEUE LOGIK: Benutzer mit isMultiShopAdmin=true abrufen
+      const multiShopAdmins = await db
         .select()
-        .from(userShopAccess)
+        .from(users)
         .where(
           and(
-            eq(userShopAccess.isActive, true),
-            isNull(userShopAccess.revokedAt)
+            eq(users.isMultiShopAdmin, true),
+            eq(users.isSuperadmin, false) // Keine Superadmins
           )
         );
 
-      // Extrahiere eindeutige User-IDs
-      const uniqueUserIds = [...new Set(allAccesses.map(access => access.userId))];
+      console.log('DEBUG: Found multi-shop admins:', multiShopAdmins.length);
       
-      console.log('DEBUG: Found users with shop access:', uniqueUserIds.length);
-      console.log('DEBUG: User IDs with access:', uniqueUserIds);
-
       const result = [];
       
-      for (const userId of uniqueUserIds) {
-        // Benutzer-Details abrufen
-        const [user] = await db
-          .select()
-          .from(users)
-          .where(
-            and(
-              eq(users.id, userId),
-              isNull(users.shopId), // Nur Benutzer ohne eigenen Shop
-              eq(users.isSuperadmin, false) // Keine Superadmins
-            )
-          );
-
-        if (!user) {
-          console.log(`DEBUG: Skipping user ${userId} - not eligible for multi-shop admin`);
-          continue;
-        }
-
+      for (const user of multiShopAdmins) {
         console.log(`DEBUG: Processing multi-shop admin ${user.username} (ID: ${user.id})`);
+        
+        // Hole zugängliche Shops (falls welche zugewiesen sind)
         const accessibleShops = await this.getUserAccessibleShops(user.id);
         console.log(`DEBUG: User ${user.username} has ${accessibleShops.length} accessible shops`);
         
@@ -5631,11 +5606,44 @@ export class DatabaseStorage implements IStorage {
         });
       }
 
-      console.log('DEBUG: Final result:', result.length, 'admins with shop access');
+      console.log('DEBUG: Final result:', result.length, 'multi-shop admins found');
       return result;
     } catch (error) {
       console.error('Error getting multi-shop admins:', error);
       return [];
+    }
+  }
+
+  /**
+   * Multi-Shop Admin aktualisieren
+   */
+  async updateMultiShopAdmin(adminId: number, updates: Partial<User>): Promise<User | undefined> {
+    try {
+      console.log('DEBUG: Updating multi-shop admin:', adminId, 'with updates:', Object.keys(updates));
+      
+      // Passwort aus Updates entfernen, falls leer
+      if (updates.password === '') {
+        delete updates.password;
+      }
+      
+      const [updatedUser] = await db
+        .update(users)
+        .set({
+          ...updates,
+          updatedAt: new Date()
+        } as any)
+        .where(eq(users.id, adminId))
+        .returning();
+
+      if (updatedUser) {
+        console.log('DEBUG: Multi-shop admin updated successfully:', updatedUser.username);
+        return updatedUser;
+      }
+      
+      return undefined;
+    } catch (error) {
+      console.error('Error updating multi-shop admin:', error);
+      return undefined;
     }
   }
 

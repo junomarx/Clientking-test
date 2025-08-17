@@ -95,8 +95,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Nach erfolgreichem Login zur passenden Seite weiterleiten
       if (data.isSuperadmin) {
         setLocation('/superadmin');
-      } else if (!data.shopId && !data.isSuperadmin) {
-        // Multi-Shop Admin (ohne shopId, aber nicht Superadmin)
+      } else if (data.isMultiShopAdmin) {
+        // Multi-Shop Admin - explizit via isMultiShopAdmin Flag
         setLocation('/multi-shop');
       } else {
         // Normale Shop-Owner
