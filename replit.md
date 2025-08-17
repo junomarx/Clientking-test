@@ -77,7 +77,11 @@ Implementation Control: Only implement changes when explicitly commanded with "O
 - **Email Templates**: Customizable with variable substitution.
 
 ### Key Features & Technical Implementations
-- **User & Authentication**: Secure session-based authentication, multi-shop isolation, and role-based access control. Employees have limited access to core functions (repairs, customers, estimates), while shop owners have full management capabilities.
+- **User & Authentication**: Secure session-based authentication, multi-shop isolation, and role-based access control with four distinct roles:
+  - **Superadmin**: System-wide administrative access
+  - **Multi-Shop Admin**: Cross-shop administrative access via explicit permissions  
+  - **Shop Owner**: Full management of their own shop (NOT admin role)
+  - **Employee**: Limited access to core functions (repairs, customers, estimates)
 - **Customer & Repair Management**: Detailed customer information, status-driven repair tracking, device categorization, issue tracking, and automated notifications. Includes QR-code based signature for drop-off and pickup, with loaner device management integrated into the repair workflow.
 - **Cost Estimation**: Dynamic estimate generation with vector-based PDF export. Implemented precision-aligned PDF generation using jsPDF with pixel-perfect column alignment, logo support via Base64 encoding, and harmonious A4 page utilization. Full edit functionality with correct field mapping for serialNumber (snake_case backend) and issue descriptions (August 2025).
 - **Email Communication**: Template-based system with variable substitution and email history. System-wide emails use superadmin-configured SMTP settings.
