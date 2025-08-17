@@ -23,7 +23,41 @@ export function registerMultiShopRoutes(app: Express) {
       }
 
       const accessibleShops = await storage.getUserAccessibleShops(req.user.id);
-      res.json(accessibleShops);
+      
+      // Für jeden Shop zusätzliche Metriken laden
+      const shopsWithMetrics = await Promise.all(accessibleShops.map(async (shop) => {
+        try {
+          const metrics = await storage.getShopMetrics(shop.shopId);
+          return {
+            ...shop,
+            metrics: metrics || {
+              totalRepairs: 0,
+              activeRepairs: 0,
+              completedRepairs: 0,
+              totalRevenue: 0,
+              monthlyRevenue: 0,
+              totalEmployees: 0,
+              pendingOrders: 0
+            }
+          };
+        } catch (error) {
+          console.error(`Fehler beim Laden der Metriken für Shop ${shop.shopId}:`, error);
+          return {
+            ...shop,
+            metrics: {
+              totalRepairs: 0,
+              activeRepairs: 0,
+              completedRepairs: 0,
+              totalRevenue: 0,
+              monthlyRevenue: 0,
+              totalEmployees: 0,
+              pendingOrders: 0
+            }
+          };
+        }
+      }));
+      
+      res.json(shopsWithMetrics);
     } catch (error) {
       console.error('Error getting accessible shops:', error);
       res.status(500).json({ message: "Fehler beim Abrufen der zugänglichen Shops" });

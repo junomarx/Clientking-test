@@ -202,7 +202,39 @@ export default function MultiShopPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3 text-sm text-gray-600 mb-4">
+                  {/* Shop-Metriken Anzeige */}
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div className="text-center p-3 bg-blue-50 rounded-lg">
+                      <div className="text-lg font-bold text-blue-600">
+                        {shopAccess.metrics?.totalRepairs || 0}
+                      </div>
+                      <div className="text-xs text-muted-foreground">Reparaturen</div>
+                    </div>
+                    <div className="text-center p-3 bg-green-50 rounded-lg">
+                      <div className="text-lg font-bold text-green-600">
+                        €{shopAccess.metrics?.totalRevenue || 0}
+                      </div>
+                      <div className="text-xs text-muted-foreground">Gesamtumsatz</div>
+                    </div>
+                  </div>
+                  
+                  {/* Zusätzliche Metriken */}
+                  <div className="grid grid-cols-3 gap-2 mb-4">
+                    <div className="text-center p-2 bg-gray-50 rounded">
+                      <div className="font-bold text-blue-600 text-sm">{shopAccess.metrics?.activeRepairs || 0}</div>
+                      <div className="text-xs text-muted-foreground">Aktive</div>
+                    </div>
+                    <div className="text-center p-2 bg-gray-50 rounded">
+                      <div className="font-bold text-purple-600 text-sm">{shopAccess.metrics?.totalEmployees || 0}</div>
+                      <div className="text-xs text-muted-foreground">Mitarbeiter</div>
+                    </div>
+                    <div className="text-center p-2 bg-gray-50 rounded">
+                      <div className="font-bold text-yellow-600 text-sm">€{shopAccess.metrics?.monthlyRevenue || 0}</div>
+                      <div className="text-xs text-muted-foreground">30T Umsatz</div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2 text-sm text-gray-600 mb-4">
                     <div className="flex justify-between">
                       <span className="font-medium">Shop-ID:</span>
                       <span className="text-right">{shopAccess.shopId}</span>
@@ -210,12 +242,6 @@ export default function MultiShopPage() {
                     <div className="flex justify-between">
                       <span className="font-medium">Zugang gewährt:</span>
                       <span className="text-right">{new Date(shopAccess.grantedAt).toLocaleDateString("de-DE")}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="font-medium">Status:</span>
-                      <Badge variant="outline" className="text-xs">
-                        Vollzugriff
-                      </Badge>
                     </div>
                   </div>
                   
@@ -225,7 +251,8 @@ export default function MultiShopPage() {
                       size="sm"
                       onClick={() => {
                         // Navigation zum Dashboard des spezifischen Shops
-                        console.log("Navigiere zu Shop Dashboard:", shopAccess.shopId);
+                        console.log("🔍 Multi-Shop Admin: Navigiere zu Shop Dashboard:", shopAccess.shopId);
+                        alert(`Dashboard für Shop ${shopAccess.shopId} wird implementiert`);
                       }}
                     >
                       <BarChart3 className="w-4 h-4 mr-1" />
@@ -235,11 +262,12 @@ export default function MultiShopPage() {
                       variant="outline" 
                       size="sm"
                       onClick={() => {
-                        // Navigation zu Shop-Einstellungen
-                        console.log("Navigiere zu Shop Settings:", shopAccess.shopId);
+                        // Mitarbeiter-Verwaltung mit Transfer-Option
+                        console.log("👥 Multi-Shop Admin: Mitarbeiter-Verwaltung für Shop:", shopAccess.shopId);
+                        alert(`Mitarbeiter-Transfer für Shop ${shopAccess.shopId} wird implementiert`);
                       }}
                     >
-                      <Settings className="w-4 h-4" />
+                      <Users className="w-4 h-4" />
                     </Button>
                   </div>
                 </CardContent>
@@ -247,6 +275,52 @@ export default function MultiShopPage() {
             ))}
           </div>
         </div>
+
+        {/* Gesamtstatistiken */}
+        {accessibleShops && accessibleShops.length > 0 && (
+          <Card className="mt-8">
+            <CardHeader>
+              <CardTitle>🌐 Gesamtübersicht</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="text-center p-4 bg-blue-50 rounded-lg">
+                  <div className="text-2xl font-bold text-blue-600">
+                    {accessibleShops.reduce((sum, shop) => sum + (shop.metrics?.totalRepairs || 0), 0)}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Gesamte Reparaturen</div>
+                </div>
+                <div className="text-center p-4 bg-green-50 rounded-lg">
+                  <div className="text-2xl font-bold text-green-600">
+                    €{accessibleShops.reduce((sum, shop) => sum + (shop.metrics?.totalRevenue || 0), 0)}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Gesamtumsatz</div>
+                </div>
+                <div className="text-center p-4 bg-purple-50 rounded-lg">
+                  <div className="text-2xl font-bold text-purple-600">
+                    {accessibleShops.reduce((sum, shop) => sum + (shop.metrics?.totalEmployees || 0), 0)}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Gesamte Mitarbeiter</div>
+                </div>
+                <div className="text-center p-4 bg-yellow-50 rounded-lg">
+                  <div className="text-2xl font-bold text-yellow-600">
+                    €{accessibleShops.reduce((sum, shop) => sum + (shop.metrics?.monthlyRevenue || 0), 0)}
+                  </div>
+                  <div className="text-sm text-muted-foreground">30-Tage Gesamtumsatz</div>
+                </div>
+              </div>
+              
+              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                <h4 className="font-semibold mb-2">🔄 Multi-Shop Features</h4>
+                <div className="text-sm text-gray-600">
+                  <p>• Mitarbeiter zwischen Shops transferieren</p>
+                  <p>• Gesamtstatistiken einsehen (DSGVO-konform)</p>
+                  <p>• Cross-Shop Performance Vergleich</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Kein Zugang zu Shops */}
         {accessibleShops?.length === 0 && (

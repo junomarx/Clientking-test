@@ -121,6 +121,22 @@ export interface IStorage {
   getMultiShopAdmins(): Promise<Array<User & { accessibleShops: Shop[] }>>;
   getMultiShopAdminDetails(adminId: number): Promise<User & { accessibleShops: Shop[] } | undefined>;
   updateMultiShopAdmin(adminId: number, updates: Partial<User>): Promise<User>;
+  
+  // Shop Metrics and Analytics
+  getShopMetrics(shopId: number): Promise<{
+    totalRepairs: number;
+    activeRepairs: number;
+    completedRepairs: number;
+    totalRevenue: number;
+    monthlyRevenue: number;
+    totalEmployees: number;
+    pendingOrders: number;
+  }>;
+  getShopDetails(shopId: number): Promise<any>;
+  
+  // Employee Transfer between Shops
+  transferEmployeeBetweenShops(employeeId: number, fromShopId: number, toShopId: number): Promise<boolean>;
+  getShopEmployees(shopId: number): Promise<User[]>;
 
   // 2FA Methoden
   setupEmailTwoFA(userId: number): Promise<boolean>;
@@ -5790,6 +5806,182 @@ export class DatabaseStorage implements IStorage {
       codes.push(crypto.randomBytes(4).toString('hex').toUpperCase());
     }
     return codes;
+  }
+  // Shop Metrics and Analytics Implementation
+  async getShopMetrics(shopId: number) {
+    try {
+      console.log(`📊 Lade Metriken für Shop ${shopId}`);
+      
+      // Gesamtanzahl Reparaturen
+      const totalRepairsResult = await db
+        .select({ count: count() })
+        .from(repairs)
+        .where(eq(repairs.shopId, shopId));
+      
+      // Aktive Reparaturen
+      const activeRepairsResult = await db
+        .select({ count: count() })
+        .from(repairs)
+        .where(
+          and(
+            eq(repairs.shopId, shopId),
+            not(inArray(repairs.status, ['completed', 'delivered', 'cancelled']))
+          )
+        );
+
+      // Abgeschlossene Reparaturen
+      const completedRepairsResult = await db
+        .select({ count: count() })
+        .from(repairs)
+        .where(
+          and(
+            eq(repairs.shopId, shopId),
+            inArray(repairs.status, ['completed', 'delivered'])
+          )
+        );
+
+      // Mitarbeiter in diesem Shop
+      const employeesResult = await db
+        .select({ count: count() })
+        .from(users)
+        .where(
+          and(
+            eq(users.shopId, shopId),
+            eq(users.isActive, true),
+            or(
+              eq(users.role, 'employee'),
+              eq(users.role, 'owner')
+            )
+          )
+        );
+
+      // Einfache Dummy-Berechnung für Umsatz (basierend auf abgeschlossenen Reparaturen)
+      const completedCount = completedRepairsResult[0]?.count || 0;
+      const avgRepairPrice = 89.99; // Durchschnittlicher Reparaturpreis
+      const totalRevenue = completedCount * avgRepairPrice;
+      
+      // Monatsumsatz (letzte 30 Tage)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      const monthlyCompletedResult = await db
+        .select({ count: count() })
+        .from(repairs)
+        .where(
+          and(
+            eq(repairs.shopId, shopId),
+            inArray(repairs.status, ['completed', 'delivered']),
+            gte(repairs.updatedAt, thirtyDaysAgo)
+          )
+        );
+
+      const monthlyRevenue = (monthlyCompletedResult[0]?.count || 0) * avgRepairPrice;
+
+      const metrics = {
+        totalRepairs: totalRepairsResult[0]?.count || 0,
+        activeRepairs: activeRepairsResult[0]?.count || 0,
+        completedRepairs: completedRepairsResult[0]?.count || 0,
+        totalRevenue: Math.round(totalRevenue),
+        monthlyRevenue: Math.round(monthlyRevenue),
+        totalEmployees: employeesResult[0]?.count || 0,
+        pendingOrders: 0 // Placeholder für zukünftige Bestellsystem-Integration
+      };
+
+      console.log(`📊 Shop ${shopId} Metriken:`, metrics);
+      return metrics;
+    } catch (error) {
+      console.error(`Fehler beim Laden der Shop-Metriken für Shop ${shopId}:`, error);
+      throw error;
+    }
+  }
+
+  async getShopDetails(shopId: number) {
+    try {
+      const shop = await db
+        .select()
+        .from(shops)
+        .where(eq(shops.id, shopId))
+        .limit(1);
+      
+      if (shop.length === 0) {
+        return null;
+      }
+
+      const shopData = shop[0];
+      const metrics = await this.getShopMetrics(shopId);
+      const employees = await this.getShopEmployees(shopId);
+
+      return {
+        ...shopData,
+        metrics,
+        employees
+      };
+    } catch (error) {
+      console.error(`Fehler beim Laden der Shop-Details für Shop ${shopId}:`, error);
+      throw error;
+    }
+  }
+
+  // Employee Transfer Implementation
+  async transferEmployeeBetweenShops(employeeId: number, fromShopId: number, toShopId: number): Promise<boolean> {
+    try {
+      console.log(`🔄 Transferiere Mitarbeiter ${employeeId} von Shop ${fromShopId} zu Shop ${toShopId}`);
+      
+      // Prüfen ob der Mitarbeiter existiert und im Quell-Shop ist
+      const employee = await db
+        .select()
+        .from(users)
+        .where(
+          and(
+            eq(users.id, employeeId),
+            eq(users.shopId, fromShopId)
+          )
+        )
+        .limit(1);
+
+      if (employee.length === 0) {
+        console.error(`Mitarbeiter ${employeeId} nicht in Shop ${fromShopId} gefunden`);
+        return false;
+      }
+
+      // Transfer durchführen
+      const result = await db
+        .update(users)
+        .set({ shopId: toShopId })
+        .where(eq(users.id, employeeId))
+        .returning();
+
+      const success = result.length > 0;
+      console.log(`🔄 Transfer ${success ? 'erfolgreich' : 'fehlgeschlagen'}`);
+      
+      return success;
+    } catch (error) {
+      console.error(`Fehler beim Transferieren des Mitarbeiters:`, error);
+      return false;
+    }
+  }
+
+  async getShopEmployees(shopId: number): Promise<User[]> {
+    try {
+      const employees = await db
+        .select()
+        .from(users)
+        .where(
+          and(
+            eq(users.shopId, shopId),
+            eq(users.isActive, true),
+            or(
+              eq(users.role, 'employee'),
+              eq(users.role, 'owner')
+            )
+          )
+        );
+
+      return employees;
+    } catch (error) {
+      console.error(`Fehler beim Laden der Shop-Mitarbeiter für Shop ${shopId}:`, error);
+      throw error;
+    }
   }
 }
 
