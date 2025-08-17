@@ -5481,8 +5481,8 @@ export class DatabaseStorage implements IStorage {
 
       return accessibleShops.map(row => ({
         id: row.shops.id,
-        name: row.business_settings?.businessName || row.shops.name,
-        businessName: row.business_settings?.businessName || row.shops.name,
+        name: row.business_settings?.businessName || `Shop ${row.shops.id}`,
+        businessName: row.business_settings?.businessName || `Shop ${row.shops.id}`,
         isActive: true, // Shops sind standardmäßig aktiv
         createdAt: row.shops.createdAt,
         updatedAt: row.shops.updatedAt,
@@ -5668,8 +5668,8 @@ export class DatabaseStorage implements IStorage {
         // Konvertiere die Shop-Daten in das erwartete Format mit echten Firmennamen
         const formattedShops = accessibleShops.map(shop => ({
           shopId: shop.shopId || shop.id,
-          name: shop.name || `Shop ${shop.id}`,
-          businessName: shop.businessName || shop.name || `Shop ${shop.id}`,
+          name: shop.businessName || shop.name || `Shop ${shop.shopId || shop.id}`,
+          businessName: shop.businessName || shop.name || `Shop ${shop.shopId || shop.id}`,
           isActive: shop.isActive,
           grantedAt: shop.grantedAt?.toISOString() || new Date().toISOString()
         }));
