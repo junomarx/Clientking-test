@@ -11,6 +11,19 @@ Detail-oriented: User requires pixel-perfect alignment and precision, especially
 Quality focus: Prefers comprehensive solutions that address all edge cases rather than quick fixes.
 Implementation Control: Only implement changes when explicitly commanded with "Ok leg los" - otherwise stay in advisory/brainstorming mode.
 
+## Recent Progress (August 17, 2025)
+
+### Multi-Shop System Improvements
+- **Shop-Namen Problem gelöst**: System zeigt jetzt echte Firmennamen ("Handy Reparatur Service", "Handyshop Test GmbH") statt generischer Namen ("Shop #14", "Shop #17")
+- **Multi-Shop Admin Umleitung**: "monking" User wird korrekt zur Multi-Shop Interface umgeleitet nach Login
+- **getUserAccessibleShops korrigiert**: Methode holt jetzt echte Firmennamen aus business_settings Tabelle via SQL JOIN
+- **Logout verbessert**: Cache-Bereinigung und lokaler Fallback implementiert
+
+### Bekannte Probleme (noch zu beheben)
+- **Multi-Shop Admin DSGVO-Problem**: "monking" User kann noch immer in eigene Shop-Daten zugreifen statt nur Multi-Shop Interface
+- **Superadmin Logout-Problem**: Superadmin erhält positive Toast-Meldung aber bleibt eingeloggt, Browser-Session wird nicht korrekt beendet
+- **MultiShopAdminDetailsDialog API**: Detail-API-Route funktioniert noch nicht vollständig
+
 ## Brainstorming Ideas (August 2025)
 
 ### Superadmin Dashboard Enhancements
