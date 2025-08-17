@@ -198,6 +198,24 @@ export function registerSuperadminRoutes(app: Express) {
       res.status(500).json({ message: "Fehler beim Aktualisieren der Geschäftseinstellungen" });
     }
   });
+  // Multi-Shop Admins abrufen
+  app.get("/api/superadmin/multi-shop-admins", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Nicht angemeldet" });
+      }
+      
+      // Multi-Shop Admins mit ihren zugänglichen Shops abrufen
+      const multiShopAdmins = await storage.getAllMultiShopAdmins();
+      console.log('Multi-Shop Admins abgerufen:', multiShopAdmins.length);
+      
+      res.json(multiShopAdmins);
+    } catch (error) {
+      console.error('Fehler beim Abrufen der Multi-Shop Admins:', error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Multi-Shop Admins" });
+    }
+  });
+
   // E-Mail-Routen registrieren
   registerSuperadminEmailRoutes(app);
   
