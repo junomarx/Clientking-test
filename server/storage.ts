@@ -5674,27 +5674,39 @@ export class DatabaseStorage implements IStorage {
       for (const user of multiShopAdmins) {
         console.log(`DEBUG: Processing multi-shop admin ${user.username} (ID: ${user.id})`);
         
-        // Hole zugängliche Shops (falls welche zugewiesen sind)
-        const accessibleShops = await this.getUserAccessibleShops(user.id);
-        console.log(`DEBUG: User ${user.username} has ${accessibleShops.length} accessible shops`);
+        // NEUE LOGIC: Hole zugängliche Shops aus multi_shop_permissions
+        const permissions = await db
+          .select({
+            shopId: multiShopPermissions.shopId,
+            grantedAt: multiShopPermissions.grantedAt
+          })
+          .from(multiShopPermissions)
+          .where(
+            and(
+              eq(multiShopPermissions.multiShopAdminId, user.id),
+              eq(multiShopPermissions.granted, true)
+            )
+          );
+          
+        console.log(`DEBUG: User ${user.username} has ${permissions.length} accessible shops via permissions`);
         
         // Lade Shop-Daten mit business_name aus der Datenbank
         const accessibleShopsWithNames = [];
         
-        for (const shop of accessibleShops) {
+        for (const permission of permissions) {
           const [businessData] = await db
             .select({
               businessName: businessSettings.businessName
             })
             .from(businessSettings)
-            .where(eq(businessSettings.shopId, shop.shopId));
+            .where(eq(businessSettings.shopId, permission.shopId));
             
           accessibleShopsWithNames.push({
-            shopId: shop.shopId,
-            name: businessData?.businessName || `Shop ${shop.shopId}`,
-            businessName: businessData?.businessName || `Shop ${shop.shopId}`,
-            isActive: shop.isActive,
-            grantedAt: shop.grantedAt?.toISOString() || new Date().toISOString()
+            shopId: permission.shopId,
+            name: businessData?.businessName || `Shop ${permission.shopId}`,
+            businessName: businessData?.businessName || `Shop ${permission.shopId}`,
+            isActive: true, // Permission granted = active
+            grantedAt: permission.grantedAt?.toISOString() || new Date().toISOString()
           });
         }
         
