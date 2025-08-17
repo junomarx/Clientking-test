@@ -5674,20 +5674,28 @@ export class DatabaseStorage implements IStorage {
         const accessibleShops = await this.getUserAccessibleShops(user.id);
         console.log(`DEBUG: User ${user.username} has ${accessibleShops.length} accessible shops`);
         
-        // Konvertiere die Shop-Daten in das erwartete Format mit echten Firmennamen
-        console.log(`DEBUG: Raw accessible shops for ${user.username}:`, JSON.stringify(accessibleShops, null, 2));
+        // Lade Shop-Daten mit business_name aus der Datenbank
+        const accessibleShopsWithNames = [];
         
-        const formattedShops = accessibleShops.map(shop => {
-          const result = {
-            shopId: shop.shopId || shop.id,
-            name: shop.businessName || shop.name || `Shop ${shop.shopId || shop.id}`,
-            businessName: shop.businessName || shop.name || `Shop ${shop.shopId || shop.id}`,
+        for (const shop of accessibleShops) {
+          const [businessData] = await db
+            .select({
+              businessName: businessSettings.businessName
+            })
+            .from(businessSettings)
+            .where(eq(businessSettings.shopId, shop.shopId));
+            
+          accessibleShopsWithNames.push({
+            shopId: shop.shopId,
+            name: businessData?.businessName || `Shop ${shop.shopId}`,
+            businessName: businessData?.businessName || `Shop ${shop.shopId}`,
             isActive: shop.isActive,
             grantedAt: shop.grantedAt?.toISOString() || new Date().toISOString()
-          };
-          console.log(`DEBUG: Formatted shop for ${user.username}:`, result);
-          return result;
-        });
+          });
+        }
+        
+        console.log(`DEBUG: Final shops with business names for ${user.username}:`, accessibleShopsWithNames);
+        const formattedShops = accessibleShopsWithNames;
         
         result.push({ 
           ...user, 
