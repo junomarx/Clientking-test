@@ -12,13 +12,27 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Check, ChevronsUpDown, X } from "lucide-react";
 import { Building2, UserPlus, UserMinus, Users, ShieldCheck, Plus } from "lucide-react";
-import { useMultiShop, type MultiShopAdmin } from "@/hooks/use-multi-shop";
+// Lokale MultiShopAdmin Interface
+interface MultiShopAdmin {
+  id: number;
+  username: string;
+  email?: string;
+  accessibleShops: {
+    id: number;
+    name: string;
+    businessName: string;
+    isActive: boolean;
+    shopId: number;
+    grantedAt: string;
+  }[];
+}
 import { MultiShopAdminDetailsDialog } from "../superadmin/MultiShopAdminDetailsDialog";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 // Schema für Shop-Zugang gewähren
 const grantAccessSchema = z.object({
@@ -55,16 +69,18 @@ interface User {
  * Ermöglicht die Verwaltung von Shop-Zugriffen für Benutzer
  */
 export function MultiShopManagement() {
-  const { 
-    multiShopAdmins, 
-    isLoadingAdmins, 
-    grantAccess, 
-    revokeAccess,
-    deleteAdmin,
-    isGrantingAccess, 
-    isRevokingAccess,
-    isDeletingAdmin
-  } = useMultiShop();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Direkte API-Aufrufe für Superadmin Multi-Shop Verwaltung
+  const { data: multiShopAdmins = [], isLoading: isLoadingAdmins } = useQuery<MultiShopAdmin[]>({
+    queryKey: ["/api/superadmin/multi-shop-admins"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/superadmin/multi-shop-admins");
+      return response.json();
+    },
+    staleTime: 5 * 60 * 1000,
+  });
   
   const [isGrantDialogOpen, setIsGrantDialogOpen] = useState(false);
   const [isCreateAdminDialogOpen, setIsCreateAdminDialogOpen] = useState(false);
@@ -112,8 +128,74 @@ export function MultiShopManagement() {
     },
   });
 
+  // Grant Access Mutation
+  const grantAccessMutation = useMutation({
+    mutationFn: async (data: GrantAccessFormData) => {
+      const response = await apiRequest("POST", "/api/superadmin/grant-access", data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/multi-shop-admins"] });
+      toast({
+        title: "Zugang gewährt",
+        description: "Shop-Zugang wurde erfolgreich gewährt",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler beim Gewähren des Zugangs",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Revoke Access Mutation
+  const revokeAccessMutation = useMutation({
+    mutationFn: async (data: GrantAccessFormData) => {
+      const response = await apiRequest("DELETE", "/api/superadmin/revoke-access", data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/multi-shop-admins"] });
+      toast({
+        title: "Zugang entzogen",
+        description: "Shop-Zugang wurde erfolgreich entzogen",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler beim Entziehen des Zugangs",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete Admin Mutation
+  const deleteAdminMutation = useMutation({
+    mutationFn: async (adminId: number) => {
+      const response = await apiRequest("DELETE", `/api/superadmin/multi-shop-admin/${adminId}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/multi-shop-admins"] });
+      toast({
+        title: "Admin gelöscht",
+        description: "Der Multi-Shop Admin wurde erfolgreich gelöscht.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler beim Löschen",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmit = (data: GrantAccessFormData) => {
-    grantAccess(data);
+    grantAccessMutation.mutate(data);
     setIsGrantDialogOpen(false);
     form.reset();
   };
@@ -140,7 +222,7 @@ export function MultiShopManagement() {
       // Dann Shop-Zugänge gewähren
       for (const shopId of data.shopIds) {
         console.log(`Gewähre Zugang für Shop ${shopId}`);
-        await grantAccess({ userId: newUser.id, shopId });
+        await grantAccessMutation.mutateAsync({ userId: newUser.id, shopId });
       }
       
       setIsCreateAdminDialogOpen(false);
@@ -154,7 +236,7 @@ export function MultiShopManagement() {
 
   const handleRevokeAccess = (userId: number, shopId: number) => {
     if (confirm("Möchten Sie diesen Shop-Zugang wirklich entziehen?")) {
-      revokeAccess({ userId, shopId });
+      revokeAccessMutation.mutate({ userId, shopId });
     }
   };
 
@@ -340,8 +422,8 @@ export function MultiShopManagement() {
                       >
                         Abbrechen
                       </Button>
-                      <Button type="submit" disabled={isGrantingAccess}>
-                        {isGrantingAccess ? "Erstelle..." : "Admin erstellen"}
+                      <Button type="submit" disabled={grantAccessMutation.isPending}>
+                        {grantAccessMutation.isPending ? "Erstelle..." : "Admin erstellen"}
                       </Button>
                     </div>
                   </form>
@@ -421,8 +503,8 @@ export function MultiShopManagement() {
                       >
                         Abbrechen
                       </Button>
-                      <Button type="submit" disabled={isGrantingAccess}>
-                        {isGrantingAccess ? "Gewähre..." : "Zugang gewähren"}
+                      <Button type="submit" disabled={grantAccessMutation.isPending}>
+                        {grantAccessMutation.isPending ? "Gewähre..." : "Zugang gewähren"}
                       </Button>
                     </div>
                   </form>
@@ -501,7 +583,7 @@ export function MultiShopManagement() {
                               variant="ghost"
                               size="sm"
                               onClick={() => handleRevokeAccess(admin.id, shopAccess.shopId)}
-                              disabled={isRevokingAccess}
+                              disabled={revokeAccessMutation.isPending}
                             >
                               <UserMinus className="h-4 w-4" />
                             </Button>
@@ -523,9 +605,9 @@ export function MultiShopManagement() {
           admin={multiShopAdmins.find(a => a.id === selectedAdminForDetails) || null}
           isOpen={selectedAdminForDetails !== null}
           onClose={() => setSelectedAdminForDetails(null)}
-          onRevoke={(adminId, shopId) => revokeAccess({ userId: adminId, shopId })}
-          onDelete={(adminId) => deleteAdmin(adminId)}
-          onGrantAccess={(adminId, shopId) => grantAccess({ userId: adminId, shopId })}
+          onRevoke={(adminId, shopId) => revokeAccessMutation.mutate({ userId: adminId, shopId })}
+          onDelete={(adminId) => deleteAdminMutation.mutate(adminId)}
+          onGrantAccess={(adminId, shopId) => grantAccessMutation.mutate({ userId: adminId, shopId })}
         />
       )}
     </Card>
