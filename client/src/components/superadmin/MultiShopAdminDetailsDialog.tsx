@@ -206,7 +206,9 @@ export function MultiShopAdminDetailsDialog({
                         <SelectValue placeholder="Shop auswählen" />
                       </SelectTrigger>
                       <SelectContent>
-                        {availableShops.map((shop) => (
+                        {availableShops.filter((shop, index, self) => 
+                          index === self.findIndex(s => s.id === shop.id)
+                        ).map((shop) => (
                           <SelectItem key={shop.id} value={shop.id.toString()}>
                             {shop.businessName}
                           </SelectItem>
