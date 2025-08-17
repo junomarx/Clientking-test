@@ -50,6 +50,7 @@ import { registerGlobalDeviceRoutes } from "./global-device-routes";
 import { registerSuperadminPrintTemplatesRoutes } from "./superadmin-print-templates-routes";
 import { setupEmployeeRoutes } from "./employee-routes";
 import { registerMultiShopRoutes } from "./multi-shop-routes";
+import { multiShopService } from "./multi-shop-service";
 import { registerTwoFARoutes } from "./two-fa-routes";
 import path from 'path';
 import fs from 'fs';
@@ -1407,8 +1408,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
-      // Reparaturen mit Benutzerfilterung abrufen
-      const repairs = await storage.getAllRepairs(userId);
+      // Multi-Shop Service nutzen für erweiterten Zugriff
+      const repairs = await multiShopService.getAllRepairsForUser(userId);
+      console.log(`🌐 Loaded ${repairs.length} repairs for user ${req.user?.username}`);
       res.json(repairs);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch repairs" });
@@ -2132,9 +2134,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Statistiken mit Benutzerkontext und optionalem Zeitraumfilter abrufen
       const stats = await storage.getStats(userId, startDate, endDate);
       
-      // Zusätzlich Kunden- und Reparaturanzahl hinzufügen
-      const customers = await storage.getAllCustomers(userId);
-      const repairs = await storage.getAllRepairs(userId);
+      // Multi-Shop Service nutzen für erweiterte Statistiken
+      const customers = await multiShopService.getAllCustomersForUser(userId);
+      const repairs = await multiShopService.getAllRepairsForUser(userId);
+      console.log(`🌐 Stats: ${customers.length} customers, ${repairs.length} repairs for user ${req.user?.username}`);
       
       res.json({
         ...stats,

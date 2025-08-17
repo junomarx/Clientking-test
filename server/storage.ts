@@ -1951,6 +1951,27 @@ export class DatabaseStorage implements IStorage {
       const user = await this.getUser(userId);
       if (!user) return [];
 
+      // Multi-Shop Admin: Zugriff auf alle zugänglichen Shops
+      if (user.isMultiShopAdmin) {
+        console.log(`🌐 Multi-Shop Admin ${user.username} (ID: ${userId}) ruft alle Reparaturen ab`);
+        const accessibleShops = await this.getUserAccessibleShops(userId);
+        const shopIds = accessibleShops.map(shop => shop.shopId);
+        
+        if (shopIds.length === 0) {
+          console.warn(`Multi-Shop Admin ${user.username} hat keine zugänglichen Shops`);
+          return [];
+        }
+
+        const results = await db
+          .select()
+          .from(repairs)
+          .where(inArray(repairs.shopId, shopIds))
+          .orderBy(desc(repairs.createdAt));
+
+        console.log(`🌐 Multi-Shop Admin: ${results.length} Reparaturen aus ${shopIds.length} Shops geladen`);
+        return results;
+      }
+
       // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, leere Liste zurückgeben statt Fallback auf Shop 1
       if (!user.shopId) {
         console.warn(`❌ Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
@@ -1973,7 +1994,7 @@ export class DatabaseStorage implements IStorage {
         console.log(`✅ Superadmin ${user.username} (ID: ${user.id}) hat aktiven Support-Zugriff - Zugriff erlaubt`);
       }
 
-      // Shop-ID aus dem Benutzer extrahieren für die Shop-Isolation
+      // Regulärer Shop-Benutzer: Nur eigene Shop-Daten
       const shopId = user.shopId;
       console.log(`getAllRepairs: Benutzer ${user.username} (ID: ${userId}) mit Shop-ID ${shopId} - isAdmin: ${user.isAdmin}`);
 
