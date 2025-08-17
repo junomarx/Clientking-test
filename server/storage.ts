@@ -5472,11 +5472,8 @@ export class DatabaseStorage implements IStorage {
           userId: userShopAccess.userId,
           grantedAt: userShopAccess.grantedAt,
           isActive: userShopAccess.isActive,
-          businessName: businessSettings.businessName,
-          shopName: businessSettings.businessName
         })
         .from(userShopAccess)
-        .leftJoin(businessSettings, eq(userShopAccess.shopId, businessSettings.shopId))
         .where(
           and(
             eq(userShopAccess.userId, userId),
@@ -5485,18 +5482,25 @@ export class DatabaseStorage implements IStorage {
           )
         );
 
-      console.log('DEBUG: Raw accessible shops from user_shop_access:', JSON.stringify(accessibleShops, null, 2));
+      // Lade business_name für jeden Shop separat  
+      const result = [];
+      for (const shop of accessibleShops) {
+        const [businessData] = await db
+          .select({ businessName: businessSettings.businessName })
+          .from(businessSettings)
+          .where(eq(businessSettings.shopId, shop.shopId));
+          
+        result.push({
+          id: shop.shopId,
+          name: businessData?.businessName || `Shop ${shop.shopId}`,
+          businessName: businessData?.businessName || `Shop ${shop.shopId}`,
+          isActive: true,
+          shopId: shop.shopId,
+          grantedAt: shop.grantedAt
+        });
+      }
       
-      const result = accessibleShops.map(row => ({
-        id: row.shopId,
-        name: row.businessName || `Shop ${row.shopId}`,
-        businessName: row.businessName || `Shop ${row.shopId}`,
-        isActive: true,
-        shopId: row.shopId,
-        grantedAt: row.grantedAt
-      }));
-      
-      console.log(`DEBUG: Final accessible shops for user ${userId}:`, result);
+      console.log(`DEBUG: Final accessible shops with business names for user ${userId}:`, result);
       return result;
     } catch (error) {
       console.error('Error getting accessible shops:', error);
