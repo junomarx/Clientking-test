@@ -5485,14 +5485,20 @@ export class DatabaseStorage implements IStorage {
           )
         );
 
-      return accessibleShops.map(row => ({
-        id: row.shopId,
-        name: row.businessName || `Shop ${row.shopId}`,
-        businessName: row.businessName || `Shop ${row.shopId}`,
-        isActive: true,
-        shopId: row.shopId,
-        grantedAt: row.grantedAt
-      }));
+      console.log('DEBUG: Raw accessible shops:', JSON.stringify(accessibleShops, null, 2));
+      
+      return accessibleShops.map(row => {
+        const result = {
+          id: row.shopId,
+          name: row.businessName || `Shop ${row.shopId}`,
+          businessName: row.businessName || `Shop ${row.shopId}`,
+          isActive: true,
+          shopId: row.shopId,
+          grantedAt: row.grantedAt
+        };
+        console.log(`DEBUG: Mapping shop ${row.shopId} -> businessName: ${row.businessName} -> result:`, result);
+        return result;
+      });
     } catch (error) {
       console.error('Error getting accessible shops:', error);
       return [];
@@ -5670,13 +5676,19 @@ export class DatabaseStorage implements IStorage {
         console.log(`DEBUG: User ${user.username} has ${accessibleShops.length} accessible shops`);
         
         // Konvertiere die Shop-Daten in das erwartete Format mit echten Firmennamen
-        const formattedShops = accessibleShops.map(shop => ({
-          shopId: shop.shopId || shop.id,
-          name: shop.businessName || shop.name || `Shop ${shop.shopId || shop.id}`,
-          businessName: shop.businessName || shop.name || `Shop ${shop.shopId || shop.id}`,
-          isActive: shop.isActive,
-          grantedAt: shop.grantedAt?.toISOString() || new Date().toISOString()
-        }));
+        console.log(`DEBUG: Raw accessible shops for ${user.username}:`, JSON.stringify(accessibleShops, null, 2));
+        
+        const formattedShops = accessibleShops.map(shop => {
+          const result = {
+            shopId: shop.shopId || shop.id,
+            name: shop.businessName || shop.name || `Shop ${shop.shopId || shop.id}`,
+            businessName: shop.businessName || shop.name || `Shop ${shop.shopId || shop.id}`,
+            isActive: shop.isActive,
+            grantedAt: shop.grantedAt?.toISOString() || new Date().toISOString()
+          };
+          console.log(`DEBUG: Formatted shop for ${user.username}:`, result);
+          return result;
+        });
         
         result.push({ 
           ...user, 
