@@ -27,6 +27,12 @@ Implementation Control: Only implement changes when explicitly commanded with "O
 - **✅ TypeScript Error Fixes**: Alle Interface-Kompatibilitätsprobleme behoben
 - **✅ Superadmin Logout Fix**: Korrekte useAuth Hook Integration für einwandfreie Weiterleitung nach Logout
 
+### Shop-Dropdown Duplikate Fix (August 17, 2025)
+- **✅ Database Cleanup**: 5 doppelte `business_settings` Einträge bereinigt
+- **✅ API Optimization**: `/api/superadmin/shops` verwendet `DISTINCT ON (shop_id)` für einzigartige Shops
+- **✅ Frontend Safeguards**: Zusätzliche Duplikat-Filterung in MultiShopManagement Komponente
+- **✅ Verification**: Shop-Dropdowns zeigen jetzt nur noch 13 einzigartige Shops ohne Duplikate
+
 ### Permission System Workflow
 1. **Multi-Shop Admin** erstellt Zugriffs-Anfrage für einen Shop
 2. **Shop-Owner** erhält automatisches Pop-up bei nächstem Login
