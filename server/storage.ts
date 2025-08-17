@@ -5652,80 +5652,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getMultiShopAdmins(): Promise<Array<User & { accessibleShops: Array<{ id: number, shop: { id: number, businessName: string, isActive: boolean }, grantedAt: string }> }>> {
-    try {
-      console.log('DEBUG: Searching for multi-shop admins via isMultiShopAdmin flag...');
-      
-      // NEUE LOGIK: Benutzer mit isMultiShopAdmin=true abrufen
-      const multiShopAdmins = await db
-        .select()
-        .from(users)
-        .where(
-          and(
-            eq(users.isMultiShopAdmin, true),
-            eq(users.isSuperadmin, false) // Keine Superadmins
-          )
-        );
-
-      console.log('DEBUG: Found multi-shop admins:', multiShopAdmins.length);
-      
-      const result = [];
-      
-      for (const user of multiShopAdmins) {
-        console.log(`DEBUG: Processing multi-shop admin ${user.username} (ID: ${user.id})`);
-        
-        // NEUE LOGIC: Hole zugängliche Shops aus multi_shop_permissions
-        const permissions = await db
-          .select({
-            shopId: multiShopPermissions.shopId,
-            grantedAt: multiShopPermissions.grantedAt
-          })
-          .from(multiShopPermissions)
-          .where(
-            and(
-              eq(multiShopPermissions.multiShopAdminId, user.id),
-              eq(multiShopPermissions.granted, true)
-            )
-          );
-          
-        console.log(`DEBUG: User ${user.username} has ${permissions.length} accessible shops via permissions`);
-        
-        // Lade Shop-Daten mit business_name aus der Datenbank
-        const accessibleShopsWithNames = [];
-        
-        for (const permission of permissions) {
-          const [businessData] = await db
-            .select({
-              businessName: businessSettings.businessName
-            })
-            .from(businessSettings)
-            .where(eq(businessSettings.shopId, permission.shopId));
-            
-          accessibleShopsWithNames.push({
-            shopId: permission.shopId,
-            name: businessData?.businessName || `Shop ${permission.shopId}`,
-            businessName: businessData?.businessName || `Shop ${permission.shopId}`,
-            isActive: true, // Permission granted = active
-            grantedAt: permission.grantedAt?.toISOString() || new Date().toISOString()
-          });
-        }
-        
-        console.log(`DEBUG: Final shops with business names for ${user.username}:`, accessibleShopsWithNames);
-        const formattedShops = accessibleShopsWithNames;
-        
-        result.push({ 
-          ...user, 
-          accessibleShops: formattedShops
-        });
-      }
-
-      console.log('DEBUG: Final result:', result.length, 'multi-shop admins found');
-      return result;
-    } catch (error) {
-      console.error('Error getting multi-shop admins:', error);
-      return [];
-    }
-  }
+  // DEPRECATED: Diese Funktion wurde durch getAllMultiShopAdmins() ersetzt
 
   /**
    * Multi-Shop Admin aktualisieren
@@ -6258,13 +6185,20 @@ export class DatabaseStorage implements IStorage {
           const grantedPermissions = await this.getGrantedPermissions(admin.id);
           const accessibleShops = await Promise.all(
             grantedPermissions.map(async (permission) => {
-              const shop = await this.getShop(permission.shopId);
-              return shop ? {
-                id: shop.id,
-                name: shop.name || `Shop #${shop.id}`,
+              // Hole Business-Namen aus business_settings statt aus shops Tabelle
+              const [businessData] = await db
+                .select({
+                  businessName: businessSettings.businessName
+                })
+                .from(businessSettings)
+                .where(eq(businessSettings.shopId, permission.shopId));
+                
+              return {
+                id: permission.shopId,
+                name: businessData?.businessName || `Shop #${permission.shopId}`,
                 shopId: permission.shopId,
                 grantedAt: permission.grantedAt
-              } : null;
+              };
             })
           );
 
