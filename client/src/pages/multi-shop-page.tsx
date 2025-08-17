@@ -254,16 +254,15 @@ export default function MultiShopPage() {
                         // Multi-Shop Admin: Direkter Zugriff auf Shop-Dashboard
                         console.log("🔍 Multi-Shop Admin: Navigiere zu Shop Dashboard:", shopAccess.shopId);
                         
-                        // Temporär die Shop-ID im localStorage speichern für Shop-spezifische Navigation
+                        // DSGVO-konform: Shop-Modus aktivieren
                         localStorage.setItem('multiShopAdminSelectedShop', shopAccess.shopId.toString());
                         localStorage.setItem('multiShopAdminMode', 'true');
-                        
-                        // DSGVO-konform: Shop-Modus aktivieren
-                        console.log(`🔧 Multi-Shop Admin aktiviert Shop ${shopAccess.shopId}`);
                         localStorage.setItem('multiShopAdminSelectedShopName', shopAccess.shopName || `Shop ${shopAccess.shopId}`);
                         
-                        // Navigation zum Haupt-Dashboard mit programmatischer Navigation
-                        setLocation('/');
+                        console.log(`🔧 Multi-Shop Admin aktiviert Shop ${shopAccess.shopId}`);
+                        
+                        // Erzwinge komplette Seitenneuladung für Multi-Shop Mode
+                        window.location.href = '/';
                       }}
                     >
                       <BarChart3 className="w-4 h-4 mr-1" />
@@ -276,16 +275,15 @@ export default function MultiShopPage() {
                         // Multi-Shop Admin: Shop-spezifische Datenansicht
                         console.log("👥 Multi-Shop Admin: Shop-Daten für Shop:", shopAccess.shopId);
                         
-                        // Shop-ID für detaillierte Ansicht setzen
+                        // DSGVO-konform: Shop-Ansicht aktivieren  
                         localStorage.setItem('multiShopAdminSelectedShop', shopAccess.shopId.toString());
                         localStorage.setItem('multiShopAdminMode', 'true');
-                        
-                        // DSGVO-konform: Shop-Ansicht aktivieren  
-                        console.log(`🔧 Multi-Shop Admin: Shop ${shopAccess.shopId} Datenansicht`);
                         localStorage.setItem('multiShopAdminSelectedShopName', shopAccess.shopName || `Shop ${shopAccess.shopId}`);
                         
-                        // Navigation zur Reparatur-Übersicht mit programmatischer Navigation
-                        setLocation('/');
+                        console.log(`🔧 Multi-Shop Admin: Shop ${shopAccess.shopId} Datenansicht`);
+                        
+                        // Erzwinge komplette Seitenneuladung für Multi-Shop Mode mit Reparatur-Tab
+                        window.location.href = '/?tab=repairs';
                       }}
                     >
                       <Users className="w-4 h-4" />

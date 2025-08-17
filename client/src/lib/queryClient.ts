@@ -36,14 +36,20 @@ export async function apiRequest(
     headers["X-User-ID"] = userId;
   }
   
-  // Multi-Shop Admin Modus: Shop-ID als Query-Parameter hinzufügen wenn verfügbar
-  let finalUrl = fullUrl;
+  // Multi-Shop Admin Modus: Header für DSGVO-konforme Shop-Datentrennung
   const multiShopMode = localStorage.getItem('multiShopAdminMode');
   const selectedShopId = localStorage.getItem('multiShopAdminSelectedShop');
+  if (multiShopMode === 'true' && selectedShopId) {
+    headers["X-Multi-Shop-Mode"] = "true";
+    headers["X-Selected-Shop-Id"] = selectedShopId;
+    console.log(`🌐 DSGVO-Multi-Shop API: Shop ${selectedShopId} Header gesetzt für ${fullUrl}`);
+  }
+  
+  // Fallback: Query-Parameter für Kompatibilität
+  let finalUrl = fullUrl;
   if (multiShopMode === 'true' && selectedShopId && !fullUrl.includes('shopId=')) {
     const separator = fullUrl.includes('?') ? '&' : '?';
     finalUrl = `${fullUrl}${separator}shopId=${selectedShopId}`;
-    console.log(`🌐 Multi-Shop Admin API Call: ${finalUrl}`);
   }
   
   try {
