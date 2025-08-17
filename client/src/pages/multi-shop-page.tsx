@@ -13,7 +13,7 @@ import { Redirect } from "wouter";
  */
 export default function MultiShopPage() {
   const { user, logoutMutation } = useAuth();
-  const { accessibleShops, isLoadingShops } = useMultiShop();
+  const { accessibleShops, isLoadingShops, shopsError } = useMultiShop();
 
   // Nur Multi-Shop Admins haben Zugang zu dieser Seite
   if (!user || !user.isMultiShopAdmin || user.isSuperadmin) {
@@ -39,9 +39,45 @@ export default function MultiShopPage() {
   console.log('Multi-Shop Page - accessibleShops:', accessibleShops);
   console.log('Multi-Shop Page - isLoadingShops:', isLoadingShops);
   
-  // Fehlerbehandlung für leere oder fehlende Daten
+  // Fehlerbehandlung 
+  if (shopsError) {
+    console.error('Multi-Shop Page Error:', shopsError);
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Multi-Shop Verwaltung</h1>
+              <p className="text-gray-600 mt-2">
+                Willkommen zurück, <span className="font-semibold">{user.username}</span>
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
+              <Button variant="outline" onClick={handleLogout}>
+                Abmelden
+              </Button>
+            </div>
+          </div>
+          <Card className="text-center py-12">
+            <CardContent>
+              <Building2 className="w-16 h-16 text-red-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold mb-2">Fehler beim Laden</h3>
+              <p className="text-gray-600 mb-6">
+                Fehler: {shopsError.message}
+              </p>
+              <Button variant="outline" onClick={() => window.location.reload()}>
+                Seite neu laden
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+  
+  // Fallback für leere Daten (ohne Fehler)
   if (!isLoadingShops && (!accessibleShops || accessibleShops.length === 0)) {
-    console.warn('Multi-Shop Page: Keine Shop-Daten verfügbar');
+    console.warn('Multi-Shop Page: Keine Shop-Daten verfügbar (aber kein Fehler)');
   }
 
   return (

@@ -125,6 +125,9 @@ export function useMultiShop() {
     isLoadingShops,
     isLoadingAdmins,
     
+    // Error States
+    shopsError,
+    
     // Mutations
     grantAccess: grantAccessMutation.mutate,
     revokeAccess: revokeAccessMutation.mutate,
