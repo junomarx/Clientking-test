@@ -1471,13 +1471,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const shopId = parseInt(selectedShopId as string);
         console.log(`🌐 DSGVO-API: Multi-Shop Admin ${user.username} lädt Shop ${shopId} Daten per Header`);
         
-        // Prüfen ob der Multi-Shop Admin Zugriff auf diesen Shop hat
-        const accessibleShops = await storage.getUserAccessibleShops(userId);
-        const hasAccess = accessibleShops.some(access => access.shopId === shopId);
+        // NEUE PERMISSION-PRÜFUNG: Shop-Owner muss explizit zustimmen
+        const hasPermission = await storage.hasShopPermission(userId, shopId);
         
-        if (!hasAccess) {
-          console.warn(`❌ Multi-Shop Admin ${user.username} hat keinen Zugang zu Shop ${shopId}`);
-          return res.status(403).json({ error: "Zugriff auf diesen Shop verweigert" });
+        if (!hasPermission) {
+          // Automatisch Permission Request erstellen
+          const shopOwner = await storage.getUserByShopId(shopId);
+          if (shopOwner) {
+            await storage.requestShopAccess(userId, shopId, shopOwner.id);
+          }
+          console.warn(`❌ Multi-Shop Admin ${user.username} hat keine Berechtigung für Shop ${shopId} - Permission Request erstellt`);
+          return res.status(403).json({ 
+            error: "Shop-Owner Zustimmung erforderlich",
+            permissionRequested: true 
+          });
         }
         
         // Shop-spezifische Reparaturen laden
@@ -1496,12 +1503,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const selectedShopId = parseInt(req.query.shopId as string);
         console.log(`🌐 Multi-Shop Admin ${user.username}: Lade Reparaturen für Shop ${selectedShopId}`);
         
-        // Prüfen ob der Multi-Shop Admin Zugriff auf diesen Shop hat
-        const accessibleShops = await storage.getUserAccessibleShops(userId);
-        const hasAccess = accessibleShops.some(access => access.shopId === selectedShopId);
+        // NEUE PERMISSION-PRÜFUNG: Shop-Owner muss explizit zustimmen
+        const hasPermission = await storage.hasShopPermission(userId, selectedShopId);
         
-        if (!hasAccess) {
-          return res.status(403).json({ error: "Zugriff auf diesen Shop verweigert" });
+        if (!hasPermission) {
+          // Automatisch Permission Request erstellen
+          const shopOwner = await storage.getUserByShopId(selectedShopId);
+          if (shopOwner) {
+            await storage.requestShopAccess(userId, selectedShopId, shopOwner.id);
+          }
+          return res.status(403).json({ 
+            error: "Shop-Owner Zustimmung erforderlich",
+            permissionRequested: true 
+          });
         }
         
         // Shop-spezifische Reparaturen laden
@@ -6951,6 +6965,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Fehler beim Abrufen des Leihgeräts für Reparatur:", error);
       res.status(500).json({ message: "Fehler beim Abrufen des Leihgeräts" });
+    }
+  });
+
+  // MULTI-SHOP PERMISSION API ENDPUNKTE
+  
+  // Ausstehende Permission-Anfragen für Shop-Owner abrufen
+  app.get("/api/permissions/pending", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const pendingPermissions = await storage.getPendingPermissions(userId);
+      
+      // Multi-Shop Admin Details laden für jede Permission
+      const permissionsWithDetails = await Promise.all(
+        pendingPermissions.map(async (permission) => {
+          const admin = await storage.getUser(permission.multiShopAdminId);
+          const shop = await storage.getShop(permission.shopId);
+          return {
+            ...permission,
+            adminName: admin?.username || 'Unbekannt',
+            shopName: shop?.name || 'Unbekannt',
+          };
+        })
+      );
+      
+      console.log(`📋 ${pendingPermissions.length} ausstehende Permissions für Shop-Owner ${userId}`);
+      res.json(permissionsWithDetails);
+    } catch (error) {
+      console.error("Fehler beim Abrufen der ausstehenden Permissions:", error);
+      res.status(500).json({ message: "Failed to fetch pending permissions" });
+    }
+  });
+
+  // Permission gewähren
+  app.post("/api/permissions/:id/grant", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const permissionId = parseInt(req.params.id);
+      const success = await storage.grantShopAccess(permissionId);
+      
+      if (success) {
+        console.log(`✅ Permission ${permissionId} gewährt`);
+        res.json({ success: true, message: "Zugriff erfolgreich gewährt" });
+      } else {
+        res.status(404).json({ message: "Permission nicht gefunden" });
+      }
+    } catch (error) {
+      console.error("Fehler beim Gewähren der Permission:", error);
+      res.status(500).json({ message: "Failed to grant permission" });
+    }
+  });
+
+  // Permission ablehnen/widerrufen
+  app.post("/api/permissions/:id/revoke", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const permissionId = parseInt(req.params.id);
+      const success = await storage.revokeShopAccess(permissionId);
+      
+      if (success) {
+        console.log(`❌ Permission ${permissionId} widerrufen`);
+        res.json({ success: true, message: "Zugriff erfolgreich widerrufen" });
+      } else {
+        res.status(404).json({ message: "Permission nicht gefunden" });
+      }
+    } catch (error) {
+      console.error("Fehler beim Widerrufen der Permission:", error);
+      res.status(500).json({ message: "Failed to revoke permission" });
     }
   });
 

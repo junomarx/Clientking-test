@@ -60,6 +60,9 @@ import {
   userShopAccess,
   type UserShopAccess,
   type InsertUserShopAccess,
+  multiShopPermissions,
+  type MultiShopPermission,
+  type InsertMultiShopPermission,
 } from "@shared/schema";
 import crypto from "crypto";
 import { db } from "./db";
@@ -121,6 +124,15 @@ export interface IStorage {
   getMultiShopAdmins(): Promise<Array<User & { accessibleShops: Shop[] }>>;
   getMultiShopAdminDetails(adminId: number): Promise<User & { accessibleShops: Shop[] } | undefined>;
   updateMultiShopAdmin(adminId: number, updates: Partial<User>): Promise<User>;
+  getUserByShopId(shopId: number): Promise<User | undefined>;
+  
+  // Multi-Shop Permission Methoden
+  requestShopAccess(multiShopAdminId: number, shopId: number, shopOwnerId: number): Promise<MultiShopPermission>;
+  grantShopAccess(permissionId: number): Promise<boolean>;
+  revokeShopAccess(permissionId: number): Promise<boolean>;
+  getShopPermissions(shopOwnerId: number): Promise<MultiShopPermission[]>;
+  hasShopPermission(multiShopAdminId: number, shopId: number): Promise<boolean>;
+  getPendingPermissions(shopOwnerId: number): Promise<MultiShopPermission[]>;
   
   // Shop Metrics and Analytics
   getShopMetrics(shopId: number): Promise<{
@@ -6026,6 +6038,165 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error(`Fehler beim Laden der Shop-Mitarbeiter für Shop ${shopId}:`, error);
       throw error;
+    }
+  }
+
+  // Multi-Shop Permission System Implementierung
+  async requestShopAccess(multiShopAdminId: number, shopId: number, shopOwnerId: number): Promise<MultiShopPermission> {
+    try {
+      // Prüfen ob bereits eine Permission existiert
+      const [existingPermission] = await db
+        .select()
+        .from(multiShopPermissions)
+        .where(
+          and(
+            eq(multiShopPermissions.multiShopAdminId, multiShopAdminId),
+            eq(multiShopPermissions.shopId, shopId)
+          )
+        );
+
+      if (existingPermission) {
+        console.log(`🔄 Permission bereits vorhanden für Admin ${multiShopAdminId} und Shop ${shopId}`);
+        return existingPermission;
+      }
+
+      // Neue Permission Request erstellen
+      const [newPermission] = await db
+        .insert(multiShopPermissions)
+        .values({
+          multiShopAdminId,
+          shopId,
+          shopOwnerId,
+          granted: false,
+        })
+        .returning();
+
+      console.log(`📝 Permission Request erstellt: Admin ${multiShopAdminId} möchte Zugriff auf Shop ${shopId}`);
+      return newPermission;
+    } catch (error) {
+      console.error('Fehler beim Erstellen der Permission Request:', error);
+      throw error;
+    }
+  }
+
+  async grantShopAccess(permissionId: number): Promise<boolean> {
+    try {
+      const [grantedPermission] = await db
+        .update(multiShopPermissions)
+        .set({
+          granted: true,
+          grantedAt: new Date(),
+          revokedAt: null,
+        })
+        .where(eq(multiShopPermissions.id, permissionId))
+        .returning();
+
+      if (grantedPermission) {
+        console.log(`✅ Shop-Zugriff gewährt für Permission ${permissionId}`);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Fehler beim Gewähren des Shop-Zugriffs:', error);
+      return false;
+    }
+  }
+
+  async revokeShopAccess(permissionId: number): Promise<boolean> {
+    try {
+      const [revokedPermission] = await db
+        .update(multiShopPermissions)
+        .set({
+          granted: false,
+          revokedAt: new Date(),
+        })
+        .where(eq(multiShopPermissions.id, permissionId))
+        .returning();
+
+      if (revokedPermission) {
+        console.log(`❌ Shop-Zugriff widerrufen für Permission ${permissionId}`);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Fehler beim Widerrufen des Shop-Zugriffs:', error);
+      return false;
+    }
+  }
+
+  async getShopPermissions(shopOwnerId: number): Promise<MultiShopPermission[]> {
+    try {
+      const permissions = await db
+        .select()
+        .from(multiShopPermissions)
+        .where(eq(multiShopPermissions.shopOwnerId, shopOwnerId))
+        .orderBy(desc(multiShopPermissions.createdAt));
+
+      return permissions;
+    } catch (error) {
+      console.error('Fehler beim Abrufen der Shop-Permissions:', error);
+      return [];
+    }
+  }
+
+  async hasShopPermission(multiShopAdminId: number, shopId: number): Promise<boolean> {
+    try {
+      const [permission] = await db
+        .select()
+        .from(multiShopPermissions)
+        .where(
+          and(
+            eq(multiShopPermissions.multiShopAdminId, multiShopAdminId),
+            eq(multiShopPermissions.shopId, shopId),
+            eq(multiShopPermissions.granted, true)
+          )
+        );
+
+      return !!permission;
+    } catch (error) {
+      console.error('Fehler beim Prüfen der Shop-Permission:', error);
+      return false;
+    }
+  }
+
+  async getPendingPermissions(shopOwnerId: number): Promise<MultiShopPermission[]> {
+    try {
+      const pendingPermissions = await db
+        .select()
+        .from(multiShopPermissions)
+        .where(
+          and(
+            eq(multiShopPermissions.shopOwnerId, shopOwnerId),
+            eq(multiShopPermissions.granted, false),
+            isNull(multiShopPermissions.revokedAt)
+          )
+        )
+        .orderBy(desc(multiShopPermissions.createdAt));
+
+      return pendingPermissions;
+    } catch (error) {
+      console.error('Fehler beim Abrufen der ausstehenden Permissions:', error);
+      return [];
+    }
+  }
+
+  async getUserByShopId(shopId: number): Promise<User | undefined> {
+    try {
+      // Shop-Owner ist der Benutzer, der zu diesem Shop gehört (nicht Multi-Shop Admin)
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(
+          and(
+            eq(users.shopId, shopId),
+            eq(users.isMultiShopAdmin, false) // Nur normale Shop-Owner, nicht Multi-Shop Admins
+          )
+        );
+
+      return user;
+    } catch (error) {
+      console.error('Fehler beim Abrufen des Shop-Owners:', error);
+      return undefined;
     }
   }
 }

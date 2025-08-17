@@ -11,6 +11,8 @@ import { NewOrderModal } from '@/components/NewOrderModal';
 import { useLocation, useParams } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import PermissionDialog from '@/components/permissions/PermissionDialog';
+import { useAuth } from '@/hooks/use-auth';
 
 // Import der Einstellungs-Komponenten
 import { BusinessSettingsTab } from '@/components/settings/BusinessSettingsTab';
@@ -36,6 +38,26 @@ export default function Home() {
   // Multi-Shop Admin Modus prüfen
   const [multiShopAdminMode, setMultiShopAdminMode] = useState(false);
   const [selectedShopId, setSelectedShopId] = useState<number | null>(null);
+  
+  // Permission Dialog State
+  const [isPermissionDialogOpen, setIsPermissionDialogOpen] = useState(false);
+  
+  // Auth Hook für User-Informationen
+  const { user } = useAuth();
+
+  // Permission-Anfragen für Shop-Owner laden
+  const { data: pendingPermissions = [], refetch: refetchPermissions } = useQuery({
+    queryKey: ['/api/permissions/pending'],
+    enabled: !!user && !user.isMultiShopAdmin, // Nur für normale Shop-Owner laden
+    refetchInterval: 30000, // Alle 30 Sekunden prüfen
+  });
+
+  // Automatisch Permission-Dialog öffnen wenn neue Anfragen da sind
+  useEffect(() => {
+    if (pendingPermissions.length > 0 && !user?.isMultiShopAdmin) {
+      setIsPermissionDialogOpen(true);
+    }
+  }, [pendingPermissions.length, user?.isMultiShopAdmin]);
 
   // URL Parameter auswerten für Tab und QR-Code-Filter
   useEffect(() => {
@@ -234,6 +256,18 @@ export default function Home() {
         customerId={selectedCustomerId}
         onSuccess={handleOrderCreated}
       />
+
+      {/* Permission Dialog für Shop-Owner */}
+      {!user?.isMultiShopAdmin && (
+        <PermissionDialog
+          permissions={pendingPermissions}
+          isOpen={isPermissionDialogOpen}
+          onClose={() => {
+            setIsPermissionDialogOpen(false);
+            refetchPermissions(); // Permissions neu laden nach Schließen
+          }}
+        />
+      )}
     </div>
   );
 }

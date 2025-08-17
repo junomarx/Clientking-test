@@ -1,13 +1,20 @@
 import { storage } from "./storage";
 
 /**
- * Multi-Shop Service für erweiterte Datenabfragen
- * Ermöglicht Multi-Shop Admins vollständigen Zugriff auf alle Daten ihrer zugänglichen Shops
+ * Multi-Shop Service mit Permission-basierter Zugriffskontrolle
+ * 
+ * Implementiert das neue explizite Permission-System:
+ * - Multi-Shop Admins benötigen explizite Zustimmung von Shop-Ownern
+ * - Shop-Owner erhalten Pop-up Dialoge für Zugriffs-Anfragen  
+ * - Nach Zustimmung: vollständiger Datenzugriff für Multi-Shop Admins
+ * 
+ * DSGVO-Konformität durch explizite Einverständniserklärung gewährleistet.
  */
 export class MultiShopService {
   
   /**
-   * Prüft ob ein Benutzer Multi-Shop Admin ist und gibt seine zugänglichen Shop-IDs zurück
+   * Prüft ob ein Benutzer Multi-Shop Admin ist und gibt seine BERECHTIGTEN Shop-IDs zurück
+   * Nur Shops mit explizit gewährten Permissions werden zurückgegeben
    */
   async getAccessibleShopIds(userId: number): Promise<number[] | null> {
     const user = await storage.getUser(userId);
@@ -15,8 +22,43 @@ export class MultiShopService {
       return null;
     }
 
-    const accessibleShops = await storage.getUserAccessibleShops(userId);
-    return accessibleShops.map(access => access.shopId);
+    // Nur gewährte Permissions laden (granted: true, revokedAt: null)
+    const grantedPermissions = await storage.getGrantedPermissions(userId);
+    const shopIds = grantedPermissions.map(permission => permission.shopId);
+    
+    console.log(`🔐 Permission-basierte Shops für Multi-Shop Admin ${userId}: [${shopIds.join(', ')}]`);
+    return shopIds.length > 0 ? shopIds : [];
+  }
+
+  /**
+   * Erstelle Permission-Anfrage für Multi-Shop Admin Zugriff
+   */
+  async requestShopAccess(multiShopAdminId: number, shopId: number): Promise<boolean> {
+    try {
+      // Prüfen ob User Multi-Shop Admin ist
+      const admin = await storage.getUser(multiShopAdminId);
+      if (!admin?.isMultiShopAdmin) {
+        return false;
+      }
+
+      // Shop-Owner finden
+      const shopOwner = await storage.getShopOwner(shopId);
+      if (!shopOwner) {
+        return false;
+      }
+
+      // Permission-Anfrage erstellen
+      const success = await storage.createPermissionRequest(multiShopAdminId, shopId, shopOwner.id);
+      
+      if (success) {
+        console.log(`📋 Permission-Anfrage erstellt: Admin ${multiShopAdminId} -> Shop ${shopId} (Owner: ${shopOwner.id})`);
+      }
+      
+      return success;
+    } catch (error) {
+      console.error("Fehler beim Erstellen der Permission-Anfrage:", error);
+      return false;
+    }
   }
 
   /**

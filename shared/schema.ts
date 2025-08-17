@@ -306,6 +306,26 @@ export const insertUserShopAccessSchema = createInsertSchema(userShopAccess).omi
 export type UserShopAccess = typeof userShopAccess.$inferSelect;
 export type InsertUserShopAccess = z.infer<typeof insertUserShopAccessSchema>;
 
+// Multi-Shop Permissions - Shop-Owner Zustimmung für Multi-Shop Admin Zugriff
+export const multiShopPermissions = pgTable("multi_shop_permissions", {
+  id: serial("id").primaryKey(),
+  multiShopAdminId: integer("multi_shop_admin_id").references(() => users.id).notNull(),
+  shopId: integer("shop_id").references(() => shops.id).notNull(),
+  shopOwnerId: integer("shop_owner_id").references(() => users.id).notNull(),
+  granted: boolean("granted").default(false).notNull(),
+  grantedAt: timestamp("granted_at"),
+  revokedAt: timestamp("revoked_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertMultiShopPermissionSchema = createInsertSchema(multiShopPermissions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type MultiShopPermission = typeof multiShopPermissions.$inferSelect;
+export type InsertMultiShopPermission = z.infer<typeof insertMultiShopPermissionSchema>;
+
 // Unternehmensdaten / Geschäftsinformationen
 export const businessSettings = pgTable("business_settings", {
   id: serial("id").primaryKey(),
