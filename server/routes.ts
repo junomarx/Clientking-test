@@ -2206,18 +2206,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const username = (req.user as any).username;
       console.log(`NEUE IMPLEMENTATION: Fetching business settings for user ${userId} (${username})`);
       
+      // Benutzer holen, um zu prüfen ob Multi-Shop Admin
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Benutzer nicht gefunden" });
+      }
+      
+      // AUSNAHME für Multi-Shop Admins - sie haben keine eigenen Business Settings
+      if (user.isMultiShopAdmin && !user.shopId) {
+        console.log(`🔧 Multi-Shop Admin ${user.username} (ID: ${user.id}) benötigt keine Business Settings`);
+        return res.status(200).json(null); // Leere Settings für Multi-Shop Admins
+      }
+      
       // Verwende die aktualisierte Storage-Methode mit Tenant-Isolation
       const userSettings = await storage.getBusinessSettings(userId);
       
       // Wenn keine Einstellungen gefunden wurden, erstelle Standardeinstellungen
       if (!userSettings) {
         console.log(`Keine Einstellungen für Benutzer ${userId} gefunden, erstelle Standardeinstellungen`);
-        
-        // Benutzer holen, um Shop-ID für neue Einstellungen zu bestimmen
-        const user = await storage.getUser(userId);
-        if (!user) {
-          return res.status(404).json({ message: "Benutzer nicht gefunden" });
-        }
         
         // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, Fehler zurückgeben statt Fallback auf Shop 1
         if (!user.shopId) {
