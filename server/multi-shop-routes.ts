@@ -13,6 +13,32 @@ const createUserShopAccessSchema = z.object({
 
 export function registerMultiShopRoutes(app: Express) {
   
+  // Multi-Shop Admins abrufen (für Superadmin)
+  app.get("/api/multi-shop/admins", async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Nicht angemeldet" });
+      }
+      
+      const user = await storage.getUser(req.user.id);
+      console.log(`🔐 Multi-Shop Admins Abfrage von User ${req.user.id} (${user?.username})`);
+      
+      if (!user?.isSuperadmin) {
+        console.log("❌ Keine Superadmin-Rechte");
+        return res.status(403).json({ message: "Keine Superadmin-Rechte" });
+      }
+      
+      console.log("✅ Superadmin-Berechtigung bestätigt - lade Multi-Shop Admins");
+      const multiShopAdmins = await storage.getAllMultiShopAdmins();
+      console.log(`📋 ${multiShopAdmins.length} Multi-Shop Admins gefunden`);
+      
+      res.json(multiShopAdmins);
+    } catch (error) {
+      console.error("❌ Fehler beim Abrufen der Multi-Shop Admins:", error);
+      res.status(500).json({ message: "Fehler beim Laden der Multi-Shop Admins" });
+    }
+  });
+  
   // ENTFERNE die lokale Authentication-Middleware - verwende die globale Middleware aus routes.ts
 
   // Abrufen der zugänglichen Shops für einen Benutzer

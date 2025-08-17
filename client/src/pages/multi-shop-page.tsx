@@ -257,7 +257,11 @@ export default function MultiShopPage() {
                         localStorage.setItem('multiShopAdminSelectedShop', shopAccess.shopId.toString());
                         localStorage.setItem('multiShopAdminMode', 'true');
                         
-                        // Zum Hauptdashboard navigieren (das System erkennt den Multi-Shop Admin Modus)
+                        // DSGVO-konform: Shop-Modus aktivieren
+                        console.log(`🔧 Multi-Shop Admin aktiviert Shop ${shopAccess.shopId}`);
+                        localStorage.setItem('multiShopAdminSelectedShopName', shopAccess.shopName || `Shop ${shopAccess.shopId}`);
+                        
+                        // Navigation zum Haupt-Dashboard
                         window.location.href = '/';
                       }}
                     >
@@ -275,8 +279,12 @@ export default function MultiShopPage() {
                         localStorage.setItem('multiShopAdminSelectedShop', shopAccess.shopId.toString());
                         localStorage.setItem('multiShopAdminMode', 'true');
                         
-                        // Zu Reparaturen navigieren (mit Shop-Filter)
-                        window.location.href = '/';
+                        // DSGVO-konform: Shop-Ansicht aktivieren  
+                        console.log(`🔧 Multi-Shop Admin: Shop ${shopAccess.shopId} Datenansicht`);
+                        localStorage.setItem('multiShopAdminSelectedShopName', shopAccess.shopName || `Shop ${shopAccess.shopId}`);
+                        
+                        // Navigation zur Reparatur-Übersicht
+                        window.location.href = '/?tab=repairs';
                       }}
                     >
                       <Users className="w-4 h-4" />

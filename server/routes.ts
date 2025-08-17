@@ -1037,7 +1037,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = (req.user as any).id;
       const user = req.user as any;
       
-      // Multi-Shop Admin Modus prüfen
+      // DSGVO-konform: Multi-Shop Admin Header prüfen
+      const multiShopMode = req.headers['x-multi-shop-mode'] === 'true';
+      const selectedShopIdHeader = req.headers['x-selected-shop-id'];
+      
+      if (user?.isMultiShopAdmin && multiShopMode && selectedShopIdHeader) {
+        const shopId = parseInt(selectedShopIdHeader as string);
+        console.log(`🌐 DSGVO-API: Multi-Shop Admin ${user.username} lädt Kunden für Shop ${shopId} per Header`);
+        
+        // Prüfen ob der Multi-Shop Admin Zugriff auf diesen Shop hat
+        const accessibleShops = await storage.getUserAccessibleShops(userId);
+        const hasAccess = accessibleShops.some(access => access.shopId === shopId);
+        
+        if (!hasAccess) {
+          console.warn(`❌ Multi-Shop Admin ${user.username} hat keinen Zugang zu Shop ${shopId}`);
+          return res.status(403).json({ error: "Zugriff auf diesen Shop verweigert" });
+        }
+        
+        // Shop-spezifische Kunden laden
+        const shopCustomers = await db
+          .select()
+          .from(customers)
+          .where(eq(customers.shopId, shopId))
+          .orderBy(desc(customers.createdAt));
+        
+        console.log(`🌐 DSGVO-API: ${shopCustomers.length} Kunden für Multi-Shop Admin aus Shop ${shopId} geladen`);
+        return res.json(shopCustomers);
+      }
+      
+      // Multi-Shop Admin Modus prüfen (Query-Parameter Fallback)
       if (user?.isMultiShopAdmin && req.query.shopId) {
         const selectedShopId = parseInt(req.query.shopId as string);
         console.log(`🌐 Multi-Shop Admin ${user.username}: Lade Kunden für Shop ${selectedShopId}`);
@@ -1435,7 +1463,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = (req.user as any).id;
       const user = req.user as any;
       
-      // Multi-Shop Admin Modus prüfen
+      // DSGVO-konform: Multi-Shop Admin Header prüfen
+      const multiShopMode = req.headers['x-multi-shop-mode'] === 'true';
+      const selectedShopId = req.headers['x-selected-shop-id'];
+      
+      if (user?.isMultiShopAdmin && multiShopMode && selectedShopId) {
+        const shopId = parseInt(selectedShopId as string);
+        console.log(`🌐 DSGVO-API: Multi-Shop Admin ${user.username} lädt Shop ${shopId} Daten per Header`);
+        
+        // Prüfen ob der Multi-Shop Admin Zugriff auf diesen Shop hat
+        const accessibleShops = await storage.getUserAccessibleShops(userId);
+        const hasAccess = accessibleShops.some(access => access.shopId === shopId);
+        
+        if (!hasAccess) {
+          console.warn(`❌ Multi-Shop Admin ${user.username} hat keinen Zugang zu Shop ${shopId}`);
+          return res.status(403).json({ error: "Zugriff auf diesen Shop verweigert" });
+        }
+        
+        // Shop-spezifische Reparaturen laden
+        const shopRepairs = await db
+          .select()
+          .from(repairs)
+          .where(eq(repairs.shopId, shopId))
+          .orderBy(desc(repairs.createdAt));
+        
+        console.log(`🌐 DSGVO-API: ${shopRepairs.length} Reparaturen für Multi-Shop Admin aus Shop ${shopId} geladen`);
+        return res.json(shopRepairs);
+      }
+      
+      // Multi-Shop Admin Modus prüfen (Query-Parameter Fallback)
       if (user?.isMultiShopAdmin && req.query.shopId) {
         const selectedShopId = parseInt(req.query.shopId as string);
         console.log(`🌐 Multi-Shop Admin ${user.username}: Lade Reparaturen für Shop ${selectedShopId}`);
@@ -1464,6 +1520,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`🌐 Loaded ${repairs.length} repairs for user ${req.user?.username}`);
       res.json(repairs);
     } catch (error) {
+      console.error("Fehler beim Laden der Reparaturen:", error);
       res.status(500).json({ message: "Failed to fetch repairs" });
     }
   });

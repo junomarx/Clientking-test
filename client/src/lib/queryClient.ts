@@ -126,15 +126,16 @@ export const getQueryFn: <T>(options: {
       headers["X-User-ID"] = userId;
     }
     
-    // Multi-Shop Admin Modus: Shop-ID als Query-Parameter hinzufügen wenn verfügbar
-    let finalUrl = fullUrl;
+    // DSGVO-konform: Multi-Shop Admin Header setzen
     const multiShopMode = localStorage.getItem('multiShopAdminMode');
     const selectedShopId = localStorage.getItem('multiShopAdminSelectedShop');
-    if (multiShopMode === 'true' && selectedShopId && !fullUrl.includes('shopId=')) {
-      const separator = fullUrl.includes('?') ? '&' : '?';
-      finalUrl = `${fullUrl}${separator}shopId=${selectedShopId}`;
-      console.log(`🌐 Multi-Shop Admin Query: ${finalUrl}`);
+    if (multiShopMode === 'true' && selectedShopId) {
+      headers['X-Multi-Shop-Mode'] = 'true';
+      headers['X-Selected-Shop-Id'] = selectedShopId;
+      console.log(`🌐 DSGVO-Query: Multi-Shop Header für Shop ${selectedShopId} gesetzt`);
     }
+    
+    let finalUrl = fullUrl;
     
     const res = await fetch(finalUrl, {
       credentials: "include",

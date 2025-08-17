@@ -33,10 +33,27 @@ export default function Home() {
   const [qrCodeFilter, setQrCodeFilter] = useState<string>('');
   const [isQrCodeNavigation, setIsQrCodeNavigation] = useState<boolean>(false);
   
+  // Multi-Shop Admin Modus prüfen
+  const [multiShopAdminMode, setMultiShopAdminMode] = useState(false);
+  const [selectedShopId, setSelectedShopId] = useState<number | null>(null);
+
   // URL Parameter auswerten für Tab und QR-Code-Filter
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const tabParam = urlParams.get('tab');
+    
+    // Multi-Shop Admin Modus aus localStorage prüfen
+    const isMultiShopMode = localStorage.getItem('multiShopAdminMode') === 'true';
+    const shopId = localStorage.getItem('multiShopAdminSelectedShop');
+    
+    if (isMultiShopMode && shopId) {
+      console.log(`🌐 DSGVO-konform: Multi-Shop Admin Modus aktiviert für Shop ${shopId}`);
+      setMultiShopAdminMode(true);
+      setSelectedShopId(parseInt(shopId));
+      
+      // Multi-Shop Modus in der Sidebar anzeigen
+      document.title = `Shop ${shopId} - Handyshop Verwaltung`;
+    }
     
     // QR-Code-Filter aus URL-Pfad extrahieren (für /repairs/:orderCode)
     if (params.orderCode) {
