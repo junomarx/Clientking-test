@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
 import { User, BusinessSettings } from "@shared/schema";
 
 import SuperadminDashboardTab, { SuperadminContext } from "@/components/superadmin/SuperadminDashboardTab";
@@ -22,6 +23,8 @@ import { SuperadminSidebar } from "@/components/superadmin/SuperadminSidebar";
 export default function SuperadminPage() {
   const [location, setLocation] = useLocation();
   const { toast } = useToast();
+  const { logoutMutation } = useAuth();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   
@@ -53,34 +56,10 @@ export default function SuperadminPage() {
     queryKey: ["/api/business-settings"],
   });
 
-  // Ausloggen-Funktion
-  const handleLogout = async () => {
-    try {
-      await apiRequest("POST", "/api/logout");
-      localStorage.removeItem("userId");
-      localStorage.removeItem("username");
-      localStorage.removeItem("auth_token");
-      // Alle Query-Caches löschen
-      queryClient.clear();
-      setLocation("/auth");
-      toast({
-        title: "Erfolgreich ausgeloggt",
-        description: "Sie wurden erfolgreich abgemeldet.",
-      });
-    } catch (error) {
-      console.error("Fehler beim Ausloggen:", error);
-      // Auch bei Fehlern den lokalen Zustand löschen
-      localStorage.removeItem("userId");
-      localStorage.removeItem("username");
-      localStorage.removeItem("auth_token");
-      queryClient.clear();
-      setLocation("/auth");
-      toast({
-        variant: "destructive",
-        title: "Ausloggen erzwungen",
-        description: "Sie wurden lokal abgemeldet.",
-      });
-    }
+  // Ausloggen-Funktion - nutze den standardmäßigen Auth Hook
+  const handleLogout = () => {
+    console.log("🚪 Superadmin Logout ausgelöst");
+    logoutMutation.mutate();
   };
 
   // Seite-Titel aktualisieren

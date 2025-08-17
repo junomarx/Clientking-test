@@ -516,12 +516,14 @@ export function MultiShopManagement() {
       </CardContent>
       
       {/* Multi-Shop Admin Details Dialog */}
-      <MultiShopAdminDetailsDialog
-        admin={selectedAdminForDetails ? multiShopAdmins.find(a => a.id === selectedAdminForDetails) || null : null}
-        isOpen={selectedAdminForDetails !== null}
-        onClose={() => setSelectedAdminForDetails(null)}
-        onRevoke={(adminId, shopId) => handleRevokeAccess(adminId, shopId)}
-      />
+      {selectedAdminForDetails && (
+        <MultiShopAdminDetailsDialog
+          admin={multiShopAdmins.find(a => a.id === selectedAdminForDetails) || null}
+          isOpen={selectedAdminForDetails !== null}
+          onClose={() => setSelectedAdminForDetails(null)}
+          onRevoke={(adminId, shopId) => handleRevokeAccess(adminId, shopId)}
+        />
+      )}
     </Card>
   );
 }
