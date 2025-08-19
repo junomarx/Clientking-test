@@ -74,6 +74,22 @@ class OnlineStatusManager {
         await this.unregisterKiosk(message.userId);
         break;
       
+      case 'signature-request':
+        await this.handleSignatureRequest(ws, message);
+        break;
+      
+      case 'signature-request-retry':
+        await this.handleSignatureRequestRetry(ws, message);
+        break;
+      
+      case 'signature-ack':
+        await this.handleSignatureAck(ws, message);
+        break;
+      
+      case 'signature-complete':
+        await this.handleSignatureComplete(ws, message);
+        break;
+      
       default:
         console.log('Unknown message type:', message.type, message);
     }
@@ -304,6 +320,91 @@ class OnlineStatusManager {
         console.warn(`⚠️ Kiosk-WebSocket nicht bereit: ${user.username} (Status: ${user.socket.readyState})`);
       }
     }
+  }
+
+  // Neue ACK-Mechanismus Handler
+  private async handleSignatureRequest(ws: WebSocket, message: any) {
+    const { tempId, repairId, timestamp } = message;
+    
+    console.log(`🎯 PC: Signaturanfrage erhalten - tempId: ${tempId}, repairId: ${repairId}`);
+    
+    // Log für DSGVO & Debugging
+    console.log(`[SIGNATURE-LOG] Request sent - tempId: ${tempId}, repairId: ${repairId}, timestamp: ${timestamp}`);
+    
+    // Weiterleitung an alle Kiosks
+    this.broadcastToKiosks({
+      type: 'signature-request',
+      tempId,
+      repairId,
+      timestamp,
+      payload: message.payload
+    });
+  }
+
+  private async handleSignatureRequestRetry(ws: WebSocket, message: any) {
+    const { tempId, retryCount } = message;
+    
+    console.log(`🔄 PC: Retry ${retryCount} für tempId: ${tempId}`);
+    
+    // Log für DSGVO & Debugging
+    console.log(`[SIGNATURE-LOG] Retry sent - tempId: ${tempId}, retryCount: ${retryCount}, timestamp: ${Date.now()}`);
+    
+    // Erneute Weiterleitung an alle Kiosks
+    this.broadcastToKiosks({
+      type: 'signature-request',
+      tempId,
+      retryCount,
+      timestamp: Date.now(),
+      payload: message.payload
+    });
+  }
+
+  private async handleSignatureAck(ws: WebSocket, message: any) {
+    const { tempId, status, kioskId, timestamp } = message;
+    
+    console.log(`✅ Kiosk: ACK empfangen - tempId: ${tempId}, status: ${status}, kioskId: ${kioskId}`);
+    
+    // Log für DSGVO & Debugging
+    console.log(`[SIGNATURE-LOG] ACK received - tempId: ${tempId}, status: ${status}, kioskId: ${kioskId}, timestamp: ${timestamp}`);
+    
+    // ACK an alle PCs weiterleiten (nicht nur den Sender)
+    this.broadcastToPCs({
+      type: 'signature-ack',
+      tempId,
+      status,
+      kioskId,
+      timestamp
+    });
+  }
+
+  private async handleSignatureComplete(ws: WebSocket, message: any) {
+    const { tempId, repairId, signatureData, timestamp } = message;
+    
+    console.log(`🎉 Kiosk: Unterschrift vollständig - tempId: ${tempId}, repairId: ${repairId}`);
+    
+    // Log für DSGVO & Debugging
+    console.log(`[SIGNATURE-LOG] Signature complete - tempId: ${tempId}, repairId: ${repairId}, timestamp: ${timestamp}`);
+    
+    // Unterschrift an alle PCs weiterleiten
+    this.broadcastToPCs({
+      type: 'signature-complete',
+      tempId,
+      repairId,
+      signatureData,
+      timestamp
+    });
+  }
+
+  // Hilfsmethoden für zielgerichtete Übertragung
+  private broadcastToPCs(message: any) {
+    let pcCount = 0;
+    this.connectedUsers.forEach((user) => {
+      if (!user.isKiosk && user.socket.readyState === WebSocket.OPEN) {
+        user.socket.send(JSON.stringify(message));
+        pcCount++;
+      }
+    });
+    console.log(`💻 Nachricht an ${pcCount} PC(s) gesendet:`, message.type);
   }
 
   // Cleanup-Methode

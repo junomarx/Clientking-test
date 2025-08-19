@@ -13,6 +13,22 @@ Implementation Control: Only implement changes when explicitly commanded with "O
 
 ## Recent Progress (August 19, 2025)
 
+### Enhanced Kiosk System with ACK-Mechanism (August 19, 2025)
+- **✅ WebSocket ACK-Protocol**: Enhanced signature request flow with immediate confirmation from kiosk devices
+- **✅ Retry Logic**: 3-attempt retry system with 1-second timeout for reliable kiosk communication
+- **✅ Real-time Status Updates**: PC receives instant feedback when kiosk opens signature dialog
+- **✅ Signature Complete Events**: Immediate notification to PC when customer completes signature on kiosk
+- **✅ Visual Status Indicators**: Enhanced UI with loading states, retry counters, and connection status
+- **✅ DSGVO Compliance Logging**: Complete signature workflow logging for audit trails
+- **✅ Fallback QR-Code Method**: Automatic fallback when kiosk unreachable after 3 retries
+
+### New Kiosk Workflow (Enhanced)
+1. **PC → Server → Kiosk**: Signature request with unique tempId
+2. **Kiosk → Server → PC**: Immediate ACK confirmation ("opened" status)
+3. **Customer Signs**: Interactive signature process on kiosk tablet
+4. **Kiosk → Server → PC**: Signature complete with data transfer
+5. **Automatic Cleanup**: Dialog closes, cache invalidates, workflow completes
+
 ### Legacy Admin System Complete Removal (August 19, 2025)
 - **✅ Database Schema Cleanup**: `is_admin` column completely removed from users table
 - **✅ AdminProtectedRoute Removal**: Legacy admin routing components deleted from protected-route.tsx

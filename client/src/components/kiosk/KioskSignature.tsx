@@ -10,6 +10,7 @@ import { useKioskMode } from '@/hooks/use-kiosk-mode';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { useOnlineStatus } from '@/hooks/use-online-status';
 import { PatternDrawer } from './PatternDrawer';
 
 interface KioskSignatureProps {
@@ -62,14 +63,30 @@ export function KioskSignature({ onCancel, onSuccess }: KioskSignatureProps) {
     setCurrentStep("signature");
   };
 
+  const { sendMessage } = useOnlineStatus();
+
   const submitSignatureMutation = useMutation({
     mutationFn: async (signatureData: string) => {
       console.log('Kiosk: Sende Unterschrift für repairId:', signatureRequest?.repairId);
+      
+      // Zusätzlich WebSocket-Nachricht für sofortige PC-Benachrichtigung
+      if (sendMessage && signatureRequest?.tempId) {
+        sendMessage({
+          type: 'signature-complete',
+          tempId: signatureRequest.tempId,
+          repairId: signatureRequest.repairId,
+          signatureData,
+          timestamp: Date.now()
+        });
+        console.log(`🎉 Signature-Complete gesendet für tempId: ${signatureRequest.tempId}`);
+      }
+      
       const response = await apiRequest('POST', '/api/kiosk-signature', {
         repairId: signatureRequest?.repairId,
         signature: signatureData,
         deviceCode: deviceCode || null,
         deviceCodeType: deviceCodeType || null,
+        tempId: signatureRequest?.tempId,
         timestamp: Date.now()
       });
       return response.json();

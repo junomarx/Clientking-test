@@ -55,24 +55,36 @@ export function KioskModeProvider({ children }: { children: ReactNode }) {
         
         if (message.type === 'signature-request') {
           console.log('✅ Kiosk: Gültige Unterschrifts-Anfrage wird verarbeitet', {
-            repairId: message.payload.repairId,
-            customerName: message.payload.customerName,
-            attempt: message.payload.attempt || 1
+            repairId: message.payload?.repairId || message.repairId,
+            customerName: message.payload?.customerName,
+            tempId: message.tempId,
+            attempt: message.payload?.attempt || 1
           });
+
+          // Sofort ACK senden bei Empfang der Anfrage
+          const kioskId = `kiosk-${user?.id || 'unknown'}`;
+          sendMessage({
+            type: 'signature-ack',
+            tempId: message.tempId,
+            status: 'opened',
+            kioskId,
+            timestamp: Date.now()
+          });
+          console.log(`✅ ACK gesendet für tempId: ${message.tempId}`);
           
           const newSignatureRequest = {
-            repairId: message.payload.repairId,
-            tempId: message.payload.tempId || `temp-${Date.now()}`,
-            customerName: message.payload.customerName,
-            customerPhone: message.payload.customerPhone,
-            customerEmail: message.payload.customerEmail,
-            customerAddress: message.payload.customerAddress,
-            repairDetails: message.payload.repairDetails,
-            deviceInfo: message.payload.deviceInfo,
-            orderCode: message.payload.orderCode,
-            estimatedCost: message.payload.estimatedCost,
-            status: message.payload.status,
-            repairTerms: message.payload.repairTerms,
+            repairId: message.payload?.repairId || message.repairId,
+            tempId: message.tempId || `temp-${Date.now()}`,
+            customerName: message.payload?.customerName,
+            customerPhone: message.payload?.customerPhone,
+            customerEmail: message.payload?.customerEmail,
+            customerAddress: message.payload?.customerAddress,
+            repairDetails: message.payload?.repairDetails,
+            deviceInfo: message.payload?.deviceInfo,
+            orderCode: message.payload?.orderCode,
+            estimatedCost: message.payload?.estimatedCost,
+            status: message.payload?.status,
+            repairTerms: message.payload?.repairTerms,
             shopName: message.payload.shopName,
             timestamp: Date.now()
           };

@@ -12,7 +12,8 @@ import { useMutation } from '@tanstack/react-query';
 import { Repair } from '@/lib/types';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
-import { RotateCcw, Smartphone, Loader2, Tablet } from 'lucide-react';
+import { useOnlineStatus } from '@/hooks/use-online-status';
+import { RotateCcw, Smartphone, Loader2, Tablet, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { isMobileDevice, isPortraitMode } from '@/lib/deviceHelpers';
 
 interface SignatureDialogProps {
@@ -32,11 +33,141 @@ export function SignatureDialog({
   signatureType = 'dropoff' 
 }: SignatureDialogProps) {
   const { toast } = useToast();
+  const { sendMessage } = useOnlineStatus();
   const [error, setError] = useState<string | null>(null);
   const [isPortrait, setIsPortrait] = useState<boolean>(false);
   const [isMobile, setIsMobile] = useState<boolean>(false);
   
-  // Kiosk-Senden Mutation
+  // ACK-Mechanismus State
+  const [kioskRequestStatus, setKioskRequestStatus] = useState<'idle' | 'sending' | 'waiting' | 'ack_received' | 'failed'>('idle');
+  const [currentTempId, setCurrentTempId] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const [retryTimer, setRetryTimer] = useState<NodeJS.Timeout | null>(null);
+  
+  // WebSocket-Listener für ACK und Complete Events
+  useEffect(() => {
+    if (!open || !currentTempId) return;
+
+    const handleWebSocketMessage = (event: CustomEvent) => {
+      const message = event.detail;
+      
+      if (message.type === 'signature-ack' && message.tempId === currentTempId) {
+        console.log(`✅ PC: ACK empfangen für tempId: ${currentTempId}`);
+        setKioskRequestStatus('ack_received');
+        
+        // Retry-Timer stoppen
+        if (retryTimer) {
+          clearTimeout(retryTimer);
+          setRetryTimer(null);
+        }
+        
+        toast({
+          title: 'Kiosk bereit',
+          description: 'Unterschrift wird am Kiosk gestartet. Leiten Sie den Kunden zum Tablet.',
+        });
+      }
+      
+      if (message.type === 'signature-complete' && message.tempId === currentTempId) {
+        console.log(`🎉 PC: Unterschrift vollständig für tempId: ${currentTempId}`);
+        
+        toast({
+          title: 'Unterschrift erhalten',
+          description: 'Die Unterschrift wurde erfolgreich vom Kiosk übertragen.',
+        });
+        
+        // Dialog schließen und Cache invalidieren
+        queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
+        onClose();
+      }
+    };
+
+    window.addEventListener('kioskWebSocketMessage', handleWebSocketMessage as EventListener);
+    
+    return () => {
+      window.removeEventListener('kioskWebSocketMessage', handleWebSocketMessage as EventListener);
+    };
+  }, [open, currentTempId, retryTimer, onClose]);
+
+  // Retry-Mechanismus
+  const startRetryTimer = () => {
+    const timer = setTimeout(() => {
+      if (retryCount < 3) {
+        console.log(`🔄 PC: Retry ${retryCount + 1} für tempId: ${currentTempId}`);
+        setRetryCount(prev => prev + 1);
+        
+        if (sendMessage && currentTempId) {
+          sendMessage({
+            type: 'signature-request-retry',
+            tempId: currentTempId,
+            retryCount: retryCount + 1,
+            payload: {
+              repairId,
+              customerName: repair?.customerName,
+              repairDetails: repair?.issue,
+              deviceInfo: `${repair?.deviceType} ${repair?.brand} ${repair?.model}`,
+              orderCode: repair?.orderCode,
+              estimatedCost: repair?.estimatedCost,
+              status: repair?.status
+            }
+          });
+        }
+        
+        // Nächsten Retry planen
+        startRetryTimer();
+      } else {
+        console.log(`❌ PC: Maximale Retries erreicht für tempId: ${currentTempId}`);
+        setKioskRequestStatus('failed');
+        
+        toast({
+          title: 'Kiosk nicht erreichbar',
+          description: 'Bitte verwenden Sie den QR-Code für die Unterschrift.',
+          variant: 'destructive',
+        });
+      }
+    }, 1000); // 1 Sekunde Timeout
+    
+    setRetryTimer(timer);
+  };
+
+  // Neue Kiosk-Senden Funktion mit ACK-Mechanismus
+  const sendToKioskWithAck = () => {
+    const tempId = `sig-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    setCurrentTempId(tempId);
+    setKioskRequestStatus('sending');
+    setRetryCount(0);
+    
+    console.log(`🎯 PC: Sende Signaturanfrage mit tempId: ${tempId}`);
+    
+    if (sendMessage) {
+      sendMessage({
+        type: 'signature-request',
+        tempId,
+        repairId,
+        timestamp: Date.now(),
+        payload: {
+          repairId,
+          customerName: repair?.customerName,
+          repairDetails: repair?.issue,
+          deviceInfo: `${repair?.deviceType} ${repair?.brand} ${repair?.model}`,
+          orderCode: repair?.orderCode,
+          estimatedCost: repair?.estimatedCost,
+          status: repair?.status
+        }
+      });
+      
+      setKioskRequestStatus('waiting');
+      startRetryTimer();
+    } else {
+      setKioskRequestStatus('failed');
+      toast({
+        title: 'Verbindungsfehler',
+        description: 'WebSocket-Verbindung nicht verfügbar.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Legacy Kiosk-Senden Mutation (Fallback)
   const sendToKioskMutation = useMutation({
     mutationFn: async () => {
       const response = await apiRequest('POST', '/api/send-to-kiosk', {
@@ -60,6 +191,22 @@ export function SignatureDialog({
     },
   });
   
+  // Cleanup beim Schließen des Dialogs
+  useEffect(() => {
+    if (!open) {
+      // Reset aller Kiosk-States
+      setKioskRequestStatus('idle');
+      setCurrentTempId(null);
+      setRetryCount(0);
+      
+      // Timer löschen
+      if (retryTimer) {
+        clearTimeout(retryTimer);
+        setRetryTimer(null);
+      }
+    }
+  }, [open, retryTimer]);
+
   // Überprüfung der Geräteausrichtung beim Öffnen des Dialogs
   useEffect(() => {
     if (!open) return;
@@ -169,28 +316,59 @@ export function SignatureDialog({
           </div>
         )}
         
-        {/* Kiosk-Gerät Option */}
+        {/* Kiosk-Gerät Option mit ACK-Status */}
         <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <Tablet className="h-6 w-6 text-blue-600" />
               <div>
                 <h3 className="font-medium text-blue-900">An Kiosk-Gerät senden</h3>
-                <p className="text-sm text-blue-700">Kunde kann direkt am Kiosk-Gerät unterschreiben</p>
+                <p className="text-sm text-blue-700">
+                  {kioskRequestStatus === 'ack_received' 
+                    ? 'Kiosk ist bereit - leiten Sie den Kunden zum Tablet'
+                    : kioskRequestStatus === 'waiting'
+                    ? `Verbindung wird hergestellt... (Versuch ${retryCount}/3)`
+                    : 'Kunde kann direkt am Kiosk-Gerät unterschreiben'
+                  }
+                </p>
               </div>
             </div>
             <Button
-              onClick={() => sendToKioskMutation.mutate()}
-              disabled={sendToKioskMutation.isPending}
+              onClick={sendToKioskWithAck}
+              disabled={kioskRequestStatus === 'sending' || kioskRequestStatus === 'waiting'}
               variant="outline"
               className="bg-blue-600 text-white hover:bg-blue-700 border-blue-600"
             >
-              {sendToKioskMutation.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : (
-                <Tablet className="h-4 w-4 mr-2" />
+              {kioskRequestStatus === 'sending' && (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Senden...
+                </>
               )}
-              Senden
+              {kioskRequestStatus === 'waiting' && (
+                <>
+                  <Clock className="h-4 w-4 animate-pulse mr-2" />
+                  Warte... ({retryCount}/3)
+                </>
+              )}
+              {kioskRequestStatus === 'ack_received' && (
+                <>
+                  <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                  Kiosk bereit
+                </>
+              )}
+              {kioskRequestStatus === 'failed' && (
+                <>
+                  <XCircle className="h-4 w-4 text-red-500 mr-2" />
+                  Fehlgeschlagen
+                </>
+              )}
+              {kioskRequestStatus === 'idle' && (
+                <>
+                  <Tablet className="h-4 w-4 mr-2" />
+                  Senden
+                </>
+              )}
             </Button>
           </div>
         </div>
