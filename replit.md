@@ -21,6 +21,7 @@ Implementation Control: Only implement changes when explicitly commanded with "O
 - **✅ Scalable Terminal Management**: Unlimited kiosk terminals per shop with independent authentication
 - **✅ Email-Based Authentication**: Kiosk employees use email addresses with secure password hashing
 - **✅ Complete Backend API**: Full CRUD operations for kiosk employee management with shop isolation
+- **✅ Automatic Kiosk Mode Activation**: Kiosk users are automatically placed in kiosk mode upon login
 
 ### New Multi-Kiosk Architecture (Revolutionary)
 **Backend Implementation:**
@@ -41,6 +42,13 @@ Implementation Control: Only implement changes when explicitly commanded with "O
 3. **Name Assignment**: FirstName + LastName for clear identification
 4. **Automatic Setup**: Password hashing and shop assignment handled automatically
 5. **Immediate Availability**: Real-time status checking via WebSocket integration
+6. **Auto-Activation**: Kiosk users automatically enter kiosk mode upon login without manual activation
+
+### Automatic Kiosk Mode System (August 19, 2025)
+- **Role Detection**: Login system detects `role === 'kiosk'` and triggers automatic activation
+- **Instant Activation**: localStorage and state updated immediately upon successful kiosk login
+- **Event-Driven**: Custom events ensure KioskModeProvider responds to login-triggered activation
+- **Seamless UX**: Kiosk users land directly in kiosk mode, ready for signature collection
 
 ### Multi-Kiosk Test Results (Verified August 19, 2025)
 ```bash
