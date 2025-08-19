@@ -175,12 +175,20 @@ export function SignatureDialog({
       });
       return response.json();
     },
-    onSuccess: () => {
-      toast({
-        title: 'An Kiosk-Gerät gesendet',
-        description: 'Die Unterschrifts-Anfrage wurde an das Kiosk-Gerät gesendet.',
-      });
-      onClose();
+    onSuccess: (data) => {
+      if (data.hasActiveKiosks) {
+        toast({
+          title: 'An Kiosk-Gerät gesendet',
+          description: data.message || 'Die Unterschrifts-Anfrage wurde an das Kiosk-Gerät gesendet.',
+        });
+        onClose();
+      } else {
+        toast({
+          title: 'Kein Kiosk verfügbar',
+          description: data.message || 'Nutzen Sie den QR-Code für die Unterschrift.',
+          variant: 'destructive',
+        });
+      }
     },
     onError: (error: any) => {
       toast({

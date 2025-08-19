@@ -254,6 +254,21 @@ class OnlineStatusManager {
     return user ? user.lastHeartbeat : null;
   }
 
+  // NEUE METHODE: Prüft ob echte Kiosk-Geräte verfügbar sind
+  hasActiveKiosks(): boolean {
+    const activeKiosks = Array.from(this.connectedUsers.values()).filter(user => 
+      user.isKiosk && user.socket.readyState === WebSocket.OPEN
+    );
+    return activeKiosks.length > 0;
+  }
+
+  // NEUE METHODE: Anzahl der aktiven Kiosk-Geräte
+  getActiveKioskCount(): number {
+    return Array.from(this.connectedUsers.values()).filter(user => 
+      user.isKiosk && user.socket.readyState === WebSocket.OPEN
+    ).length;
+  }
+
   // Kiosk-Registrierung
   private async registerKiosk(ws: WebSocket, userId: number) {
     const user = this.connectedUsers.get(userId);

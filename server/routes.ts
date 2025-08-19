@@ -5915,15 +5915,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         messageSent = true;
       }
 
-      const responseMessage = messageSent 
+      // Prüfen ob echte Kiosk-Geräte verfügbar sind
+      const hasActiveKiosks = onlineStatusManager ? onlineStatusManager.hasActiveKiosks() : false;
+      
+      const responseMessage = hasActiveKiosks 
         ? "Anfrage erfolgreich an Kiosk-Gerät gesendet"
-        : "Anfrage gesendet, aber keine aktiven Kiosk-Verbindungen gefunden";
+        : "Kein Kiosk verfügbar - nutzen Sie den QR-Code";
         
-      console.log(`✅ ${responseMessage} für Reparatur ${repairId}`);
+      console.log(`✅ ${responseMessage} für Reparatur ${repairId} (Aktive Kiosks: ${hasActiveKiosks})`);
       res.json({ 
-        success: true, 
+        success: hasActiveKiosks, 
         message: responseMessage,
-        sent: messageSent 
+        sent: messageSent,
+        hasActiveKiosks 
       });
     } catch (error) {
       console.error("❌ Fehler beim Senden an Kiosk:", error);
