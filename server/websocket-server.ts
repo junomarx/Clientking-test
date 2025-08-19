@@ -452,6 +452,30 @@ class OnlineStatusManager {
     });
   }
 
+  // Direkte ACK-Verarbeitung für Mock-Sockets (ohne WebSocket Parameter)
+  private handleSignatureAckDirect(message: any): void {
+    if (!message) {
+      console.error('❌ handleSignatureAckDirect: Nachricht ist undefined');
+      return;
+    }
+    
+    const { tempId, status, kioskId, timestamp } = message;
+    
+    console.log(`✅ Kiosk: ACK empfangen - tempId: ${tempId}, status: ${status}, kioskId: ${kioskId}`);
+    
+    // Log für DSGVO & Debugging
+    console.log(`[SIGNATURE-LOG] ACK received - tempId: ${tempId}, status: ${status}, kioskId: ${kioskId}, timestamp: ${timestamp}`);
+    
+    // ACK an alle PCs weiterleiten
+    this.broadcastToPCs({
+      type: 'signature-ack',
+      tempId,
+      status,
+      kioskId,
+      timestamp
+    });
+  }
+
   private async handleSignatureComplete(ws: WebSocket, message: any) {
     const { tempId, repairId, signatureData, timestamp } = message;
     
@@ -495,11 +519,28 @@ class OnlineStatusManager {
       const mockSocket = {
         readyState: 1, // WebSocket.OPEN
         send: (message: string) => {
-          console.log(`🎭 DEBUG: Mock-Socket für Kiosk ${userId} empfängt:`, JSON.parse(message).type);
-          // Simuliere erfolgreiche ACK-Antwort nach kurzer Verzögerung
-          setTimeout(() => {
-            console.log(`🎭 DEBUG: Mock-ACK von Kiosk ${userId}`);
-          }, 100);
+          const parsedMessage = JSON.parse(message);
+          console.log(`🎭 DEBUG: Mock-Socket für Kiosk ${userId} empfängt:`, parsedMessage.type);
+          
+          // Simuliere realistische Kiosk-Antworten
+          if (parsedMessage.type === 'signature-request') {
+            // Simuliere dass Kiosk die Unterschriftsseite öffnet
+            setTimeout(() => {
+              console.log(`🎭 DEBUG: Mock-Kiosk ${userId} sendet ACK-Antwort`);
+              
+              // Sende ACK zurück an WebSocket-Manager (simuliert Kiosk-Browser)
+              const ackMessage = {
+                type: 'signature-ack',
+                status: 'opened',
+                kioskId: `debug-kiosk-${userId}`,
+                tempId: parsedMessage.payload?.tempId || undefined,
+                timestamp: Date.now()
+              };
+              
+              // Simuliere Kiosk-ACK durch direkten Callback
+              this.handleSignatureAckDirect(ackMessage);
+            }, 200);
+          }
         },
         close: () => console.log(`🎭 DEBUG: Mock-Socket ${userId} geschlossen`)
       } as any;
