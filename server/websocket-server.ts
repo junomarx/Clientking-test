@@ -109,6 +109,16 @@ class OnlineStatusManager {
       }
     }
 
+    // Benutzerrolle aus Datenbank abrufen um Kiosk-Status zu ermitteln
+    let isKioskUser = false;
+    try {
+      const user = await storage.getUser(userId);
+      isKioskUser = user?.role === 'kiosk';
+      console.log(`🔍 User ${username} (ID: ${userId}) - Role: ${user?.role} - Is Kiosk: ${isKioskUser}`);
+    } catch (error) {
+      console.error('Error fetching user role:', error);
+    }
+
     // Neue Verbindung hinzufügen
     this.connectedUsers.set(userId, {
       userId,
@@ -116,7 +126,7 @@ class OnlineStatusManager {
       socket: ws,
       lastHeartbeat: new Date(),
       isActive: true,
-      isKiosk: false
+      isKiosk: isKioskUser
     });
 
     // LastLoginAt in Datenbank aktualisieren
