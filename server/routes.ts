@@ -7133,6 +7133,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Kiosk-Verfügbarkeit ohne explizite shopId (nutzt User-Session)
+  app.get("/api/kiosk/availability", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentifizierung fehlgeschlagen" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user || !user.shopId) {
+        return res.status(404).json({ message: "Benutzer oder Shop nicht gefunden" });
+      }
+
+      const shopId = user.shopId;
+      
+      const kioskEmployees = await storage.getKioskEmployees(shopId);
+      const onlineStatusManager = getOnlineStatusManager();
+      
+      // Alle Kiosk-Mitarbeiter und ihre Online-Status prüfen
+      const kioskStatuses = kioskEmployees.map(kiosk => {
+        const isOnline = onlineStatusManager ? onlineStatusManager.isUserOnline(kiosk.id) : false;
+        return {
+          id: kiosk.id,
+          email: kiosk.email,
+          firstName: kiosk.firstName,
+          lastName: kiosk.lastName,
+          isOnline
+        };
+      });
+      
+      const onlineCount = kioskStatuses.filter(k => k.isOnline).length;
+      
+      console.log(`📱 Multi-Kiosk-Status für Shop ${shopId}: ${onlineCount}/${kioskEmployees.length} online`);
+      console.log('📱 Online-Status Details:', kioskStatuses.map(k => `${k.firstName} ${k.lastName} (ID: ${k.id}) - ${k.isOnline ? 'ONLINE' : 'OFFLINE'}`));
+      
+      res.json({
+        totalKiosks: kioskEmployees.length,
+        onlineCount,
+        kiosks: kioskStatuses,
+        // Für Rückwärtskompatibilität - erster Online-Kiosk
+        isOnline: onlineCount > 0,
+        kioskUser: kioskStatuses.find(k => k.isOnline) || null
+      });
+    } catch (error) {
+      console.error("Fehler beim Prüfen der Kiosk-Verfügbarkeit:", error);
+      res.status(500).json({ message: "Fehler beim Prüfen der Kiosk-Verfügbarkeit" });
+    }
+  });
+
   // Multi-Kiosk-Verfügbarkeit prüfen (neue Multi-Terminal Version)
   app.get("/api/kiosk/availability/:shopId", isAuthenticated, async (req: Request, res: Response) => {
     try {

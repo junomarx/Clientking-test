@@ -74,9 +74,9 @@ export function QRSignatureDialog({ open, onOpenChange, repair, businessName, si
   const [pollInterval, setPollInterval] = useState<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
-  // Kiosk-Verfügbarkeit abrufen - verwende Shop-ID statt Customer-ID
+  // Kiosk-Verfügbarkeit abrufen - verwende Shop-ID des aktuellen Benutzers
   const { data: kioskAvailability } = useQuery<KioskAvailability>({
-    queryKey: ['/api/kiosk/availability/999'], // Hardcoded für Shop 999 (wird dynamisch über User-Context bestimmt)
+    queryKey: ['/api/kiosk/availability'], // Shop-ID wird automatisch über User-Session bestimmt
     enabled: open,
     refetchInterval: 5000, // Alle 5 Sekunden aktualisieren
   });
