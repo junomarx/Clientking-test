@@ -81,13 +81,16 @@ export function QRSignatureDialog({ open, onOpenChange, repair, businessName, si
     refetchInterval: 5000, // Alle 5 Sekunden aktualisieren
   });
 
-  // Kiosk-Senden Funktion
-  const sendToKiosk = async () => {
+  // Kiosk-Senden Funktion mit spezifischer Kiosk-Auswahl
+  const sendToKiosk = async (kioskId?: number) => {
+    const selectedKiosk = kioskId ? kioskAvailability?.kiosks.find(k => k.id === kioskId) : null;
+    
     try {
-      console.log('📤 Sende Unterschrifts-Anfrage an Kiosk für Reparatur ID:', repair.id);
+      console.log('📤 Sende Unterschrifts-Anfrage an Kiosk:', selectedKiosk ? `${selectedKiosk.firstName} ${selectedKiosk.lastName} (ID: ${selectedKiosk.id})` : 'alle verfügbaren');
       
       const response = await apiRequest('POST', '/api/send-to-kiosk', {
-        repairId: repair.id
+        repairId: repair.id,
+        kioskId: kioskId // Spezifische Kiosk-ID mitgeben
       });
       
       const responseData = await response.json();
@@ -95,8 +98,8 @@ export function QRSignatureDialog({ open, onOpenChange, repair, businessName, si
       
       if (response.ok) {
         toast({
-          title: 'An Kiosk gesendet',
-          description: `Die Unterschriftsanfrage wurde an das Kiosk-Gerät gesendet. Status: ${responseData.sent ? 'Kiosk verfügbar' : 'Kein Kiosk aktiv'}`,
+          title: selectedKiosk ? `An ${selectedKiosk.firstName} ${selectedKiosk.lastName} gesendet` : 'An Kiosk gesendet',
+          description: `Die Unterschriftsanfrage wurde erfolgreich gesendet. Status: ${responseData.sent ? 'Kiosk verfügbar' : 'Kein Kiosk aktiv'}`,
         });
       } else {
         throw new Error(responseData.message || 'Fehler beim Senden');
@@ -105,7 +108,7 @@ export function QRSignatureDialog({ open, onOpenChange, repair, businessName, si
       console.error('❌ Fehler beim Senden an Kiosk:', error);
       toast({
         title: 'Fehler',
-        description: 'Die Anfrage konnte nicht an das Kiosk gesendet werden.',
+        description: `Die Anfrage konnte nicht an ${selectedKiosk ? selectedKiosk.firstName + ' ' + selectedKiosk.lastName : 'das Kiosk'} gesendet werden.`,
         variant: 'destructive',
       });
     }
@@ -433,13 +436,33 @@ export function QRSignatureDialog({ open, onOpenChange, repair, businessName, si
                       </Button>
                     </div>
                     
-                    <Button onClick={sendToKiosk} variant="outline" size="sm" className="w-full" disabled={!kioskAvailability?.onlineCount}>
-                      <Tablet className="h-4 w-4 mr-2" />
-                      {kioskAvailability?.onlineCount ? 
-                        `An ${kioskAvailability.onlineCount} von ${kioskAvailability.totalKiosks} Kiosk${kioskAvailability.totalKiosks > 1 ? 's' : ''} senden` :
-                        `Kein Kiosk online (0/${kioskAvailability?.totalKiosks || 0})`
-                      }
-                    </Button>
+{kioskAvailability?.kiosks && kioskAvailability.kiosks.length > 0 ? (
+                      <div className="space-y-2">
+                        {kioskAvailability.kiosks.map((kiosk) => (
+                          <Button 
+                            key={kiosk.id}
+                            onClick={() => sendToKiosk(kiosk.id)} 
+                            variant="outline" 
+                            size="sm" 
+                            className="w-full"
+                            disabled={!kiosk.isOnline}
+                          >
+                            <Tablet className="h-4 w-4 mr-2" />
+                            <div className="flex items-center justify-between w-full">
+                              <span>An {kiosk.firstName} {kiosk.lastName}</span>
+                              <span className={`text-xs px-2 py-1 rounded-full ${kiosk.isOnline ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                {kiosk.isOnline ? 'Online' : 'Offline'}
+                              </span>
+                            </div>
+                          </Button>
+                        ))}
+                      </div>
+                    ) : (
+                      <Button variant="outline" size="sm" className="w-full" disabled>
+                        <Tablet className="h-4 w-4 mr-2" />
+                        Keine Kiosks verfügbar
+                      </Button>
+                    )}
                   </>
                 )}
 

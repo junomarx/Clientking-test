@@ -14,8 +14,8 @@ interface ConnectedUser {
 class OnlineStatusManager {
   private wss: WebSocketServer;
   private connectedUsers = new Map<number, ConnectedUser>();
-  private heartbeatInterval: NodeJS.Timeout;
-  private statusBroadcastInterval: NodeJS.Timeout;
+  private heartbeatInterval: NodeJS.Timeout | null = null;
+  private statusBroadcastInterval: NodeJS.Timeout | null = null;
 
   constructor(server: Server) {
     this.wss = new WebSocketServer({ server, path: '/ws/status' });
@@ -430,6 +430,38 @@ class OnlineStatusManager {
       }
     });
     console.log(`💻 Nachricht an ${pcCount} PC(s) gesendet:`, message.type);
+  }
+
+  // Force-Register für Debug-Zwecke (simuliert WebSocket-Registrierung)
+  forceRegisterKiosk(userId: number): void {
+    const user = this.connectedUsers.get(userId);
+    if (user) {
+      user.isKiosk = true;
+      console.log(`🛠️ DEBUG: Kiosk ${userId} (${user.username}) force-registered`);
+    } else {
+      // Erstelle temporären Benutzer für Force-Registration
+      const tempUser: ConnectedUser = {
+        userId,
+        username: `debug-kiosk-${userId}`,
+        socket: null as any, // Wird nie verwendet bei Debug
+        lastHeartbeat: new Date(),
+        isActive: true,
+        isKiosk: true
+      };
+      this.connectedUsers.set(userId, tempUser);
+      console.log(`🛠️ DEBUG: Kiosk ${userId} force-registered als Temp-User`);
+    }
+  }
+
+  // Debug-Methode um zu sehen welche Benutzer registriert sind
+  getRegisteredUsers(): ConnectedUser[] {
+    return Array.from(this.connectedUsers.values());
+  }
+
+  // Prüfen ob ein Benutzer online ist
+  isUserOnline(userId: number): boolean {
+    const user = this.connectedUsers.get(userId);
+    return user ? user.isActive : false;
   }
 
   // Cleanup-Methode

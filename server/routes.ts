@@ -7141,6 +7141,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const onlineCount = kioskStatuses.filter(k => k.isOnline).length;
       
       console.log(`📱 Multi-Kiosk-Status für Shop ${shopId}: ${onlineCount}/${kioskEmployees.length} online`);
+      console.log('📱 Online-Status Details:', kioskStatuses.map(k => `${k.firstName} ${k.lastName} (ID: ${k.id}) - ${k.isOnline ? 'ONLINE' : 'OFFLINE'}`));
       
       res.json({
         totalKiosks: kioskEmployees.length,
@@ -7153,6 +7154,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Fehler beim Prüfen der Multi-Kiosk-Verfügbarkeit:", error);
       res.status(500).json({ message: "Fehler beim Prüfen der Multi-Kiosk-Verfügbarkeit" });
+    }
+  });
+
+  // Debug-Endpoint um Kiosk manuell zu registrieren
+  app.post("/api/debug/register-kiosk/:userId", async (req: Request, res: Response) => {
+    const userId = parseInt(req.params.userId);
+    
+    if (isNaN(userId)) {
+      return res.status(400).json({ message: "Ungültige User-ID" });
+    }
+    
+    try {
+      const onlineStatusManager = getOnlineStatusManager();
+      
+      if (onlineStatusManager) {
+        // Simuliere WebSocket-Registrierung für Debug-Zwecke
+        console.log(`🛠️ DEBUG: Registriere Kiosk ${userId} manuell`);
+        onlineStatusManager.forceRegisterKiosk(userId);
+        res.json({ message: `Kiosk ${userId} erfolgreich registriert`, userId });
+      } else {
+        res.status(500).json({ message: "Online-Status-Manager nicht verfügbar" });
+      }
+    } catch (error) {
+      console.error('Debug-Registrierung fehlgeschlagen:', error);
+      res.status(500).json({ message: "Registrierung fehlgeschlagen" });
     }
   });
 
