@@ -214,7 +214,7 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   email: text("email").notNull(),
   isActive: boolean("is_active").default(false).notNull(), // Benutzer muss vom Admin freigeschaltet werden
-  isAdmin: boolean("is_admin").default(false).notNull(),   // Administrator-Rechte
+
   isSuperadmin: boolean("is_superadmin").default(false).notNull(), // Superadmin-Rechte (kann alle Shops verwalten)
   isMultiShopAdmin: boolean("is_multi_shop_admin").default(false).notNull(), // Multi-Shop Admin-Rechte (kann mehrere Shops verwalten)
   

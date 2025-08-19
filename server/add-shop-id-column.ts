@@ -190,15 +190,9 @@ export async function addShopIdColumn() {
       console.log('Die feedbacks-Tabelle existiert nicht, überspringe...');
     }
 
-    // Stelle sicher, dass bugi mit ID=3 als Admin bleibt
-    console.log('Stelle sicher, dass bugi (ID=3) Administrator-Rechte behält...');
-    await db.execute(sql`UPDATE users SET is_admin = true WHERE id = 3`);
-    
-    // Stelle sicher, dass alle anderen Benutzer niemals Admin-Rechte haben
-    console.log('Entferne Admin-Rechte bei allen anderen Benutzern...');
-    await db.execute(sql`UPDATE users SET is_admin = false WHERE id != 3`);
+    // Admin-Rechte Migration wurde entfernt da is_admin Spalte gelöscht wurde
 
-    console.log('Shop-ID und Admin-Rechte Migration erfolgreich abgeschlossen.');
+    console.log('Shop-ID Migration erfolgreich abgeschlossen.');
   } catch (error) {
     console.error('Fehler bei der Migration:', error);
     throw error;

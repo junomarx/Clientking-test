@@ -66,8 +66,8 @@ interface User {
   username: string;
   email: string;
   isActive: boolean;
-  isAdmin: boolean;
   role: string | null;
+  isMultiShopAdmin: boolean;
   shopId: number | null;
   companyName: string | null;
   companyAddress: string | null;
@@ -298,8 +298,8 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
         `/api/superadmin/users/${userId}`,
         {
           email: data.email,
-          isAdmin: data.isAdmin,
-          packageId: data.packageId,
+          role: data.role,
+          isMultiShopAdmin: data.isMultiShopAdmin,
           shopId: data.shopId,
           companyName: data.companyName,
           companyAddress: data.companyAddress,
@@ -433,7 +433,8 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
           
           // Formular mit Benutzerdaten und Geschäftseinstellungen füllen
           setEditForm({
-            isAdmin: user.isAdmin,
+            role: user.role,
+            isMultiShopAdmin: user.isMultiShopAdmin,
             shopId: user.shopId,
             email: user.email,
             companyName: user.companyName || businessSettings?.businessName,
@@ -453,7 +454,8 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
         } else {
           // Kein Fehler, nur Formular mit Benutzerdaten füllen
           setEditForm({
-            isAdmin: user.isAdmin,
+            role: user.role,
+            isMultiShopAdmin: user.isMultiShopAdmin,
             shopId: user.shopId,
             email: user.email,
             companyName: user.companyName,
@@ -468,7 +470,8 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
         
         // Im Fehlerfall nur Benutzerdaten anzeigen
         setEditForm({
-          isAdmin: user.isAdmin,
+          role: user.role,
+          isMultiShopAdmin: user.isMultiShopAdmin,
           shopId: user.shopId,
           email: user.email,
           companyName: user.companyName,
@@ -488,8 +491,8 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
       console.error("Keine gültige Benutzer-ID gefunden:", user);
       // Trotzdem Formular mit verfügbaren Daten füllen
       setEditForm({
-        isAdmin: user.isAdmin,
-        packageId: user.packageId,
+        role: user.role,
+        isMultiShopAdmin: user.isMultiShopAdmin,
         shopId: user.shopId,
         email: user.email,
         companyName: user.companyName,
@@ -658,9 +661,13 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
                         )}
                       </TableCell>
                       <TableCell>
-                        {user.isAdmin ? (
+                        {user.isSuperadmin ? (
                           <Badge variant="secondary">
-                            <UserCog className="h-3 w-3 mr-1" /> Admin
+                            <UserCog className="h-3 w-3 mr-1" /> Superadmin
+                          </Badge>
+                        ) : user.isMultiShopAdmin ? (
+                          <Badge variant="secondary" className="bg-purple-100 text-purple-700">
+                            <UserCog className="h-3 w-3 mr-1" /> Multi-Shop Admin
                           </Badge>
                         ) : user.role === 'employee' ? (
                           <Badge variant="outline" className="bg-blue-100 text-blue-700">
@@ -769,9 +776,13 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
                       </Badge>
                     )}
                     
-                    {user.isAdmin ? (
+                    {user.isSuperadmin ? (
                       <Badge variant="secondary">
-                        <UserCog className="h-3 w-3 mr-1" /> Admin
+                        <UserCog className="h-3 w-3 mr-1" /> Superadmin
+                      </Badge>
+                    ) : user.isMultiShopAdmin ? (
+                      <Badge variant="secondary" className="bg-purple-100 text-purple-700">
+                        <UserCog className="h-3 w-3 mr-1" /> Multi-Shop Admin
                       </Badge>
                     ) : user.role === 'employee' ? (
                       <Badge variant="outline" className="bg-blue-100 text-blue-700">
@@ -957,14 +968,14 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
             <TabsContent value="permissions" className="space-y-4 py-4">
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-4 items-center gap-4">
-                  <Label className="text-right">Administrator</Label>
+                  <Label className="text-right">Multi-Shop Admin</Label>
                   <div className="col-span-3 flex items-center">
                     <Switch
-                      checked={!!editForm.isAdmin}
-                      onCheckedChange={(checked) => setEditForm({ ...editForm, isAdmin: checked })}
+                      checked={!!editForm.isMultiShopAdmin}
+                      onCheckedChange={(checked) => setEditForm({ ...editForm, isMultiShopAdmin: checked })}
                     />
                     <span className="ml-2">
-                      {editForm.isAdmin ? 'Administrator-Rechte aktiviert' : 'Keine Administrator-Rechte'}
+                      {editForm.isMultiShopAdmin ? 'Multi-Shop Administrator-Rechte aktiviert' : 'Keine Multi-Shop-Rechte'}
                     </span>
                   </div>
                 </div>

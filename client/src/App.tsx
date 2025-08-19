@@ -7,7 +7,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Home from "@/pages/Home";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
-import AdminPage from "@/pages/admin-page";
 import SuperadminPage from "@/pages/superadmin-page";
 import MultiShopPage from "@/pages/multi-shop-page";
 
@@ -21,7 +20,7 @@ import OptimizedTableDemo from "@/pages/optimized-table-demo";
 import ResponsiveDevicesDemo from "@/pages/responsive-devices-demo";
 import ApiTest from "@/pages/api-test";
 import SignaturePage from "@/pages/signature-page";
-import { ProtectedRoute, AdminProtectedRoute, SuperadminProtectedRoute } from "./lib/protected-route";
+import { ProtectedRoute, SuperadminProtectedRoute } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 import { ThemeProvider } from "./hooks/use-theme";
 import { BusinessSettingsProvider } from "./hooks/use-business-settings";
@@ -46,11 +45,7 @@ function Router() {
       <Route path="/api-test" component={ApiTest} />
       <Route path="/signature/:tempId" component={SignaturePage} />
       
-      <Route path="/admin">
-        <ProtectedRoute path="/admin">
-          <AdminPage />
-        </ProtectedRoute>
-      </Route>
+
       <Route path="/superadmin">
         <ProtectedRoute path="/superadmin">
           <SuperadminPage />

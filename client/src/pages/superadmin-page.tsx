@@ -36,7 +36,7 @@ export default function SuperadminPage() {
     const userIdParam = params.get('userId');
     
     // Tab setzen, wenn in URL vorhanden
-    if (tabParam && ['dashboard', 'users', 'packages', 'devices', 'device-statistics', 'email', 'print-templates', 'support-mode', 'account', 'multi-shop'].includes(tabParam)) {
+    if (tabParam && ['dashboard', 'users', 'devices', 'device-statistics', 'email', 'print-templates', 'support-mode', 'account', 'multi-shop'].includes(tabParam)) {
       setActiveTab(tabParam);
     }
     
@@ -87,7 +87,6 @@ export default function SuperadminPage() {
             <h1 className="text-lg font-medium ml-10">
               {activeTab === "dashboard" && "Dashboard"}
               {activeTab === "users" && "Benutzer"}
-              {activeTab === "packages" && "Pakete"}
               {activeTab === "devices" && "Geräte"}
               {activeTab === "device-statistics" && "Statistiken"}
               {activeTab === "email" && "E-Mail"}
@@ -104,7 +103,6 @@ export default function SuperadminPage() {
             <h1 className="text-xl font-semibold">
               {activeTab === "dashboard" && "Superadmin Dashboard"}
               {activeTab === "users" && "Benutzerverwaltung"}
-              {activeTab === "packages" && "Paketverwaltung"}
               {activeTab === "devices" && "Geräteverwaltung"}
               {activeTab === "device-statistics" && "Gerätestatistiken"}
               {activeTab === "email" && "E-Mail-Konfiguration"}
