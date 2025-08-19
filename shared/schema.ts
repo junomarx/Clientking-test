@@ -219,7 +219,7 @@ export const users = pgTable("users", {
   isMultiShopAdmin: boolean("is_multi_shop_admin").default(false).notNull(), // Multi-Shop Admin-Rechte (kann mehrere Shops verwalten)
   
   // Mitarbeiter-System
-  role: text("role").default("owner").notNull(), // "owner" oder "employee"
+  role: text("role").default("owner").notNull(), // "owner", "employee", oder "kiosk"
   parentUserId: integer("parent_user_id"), // NULL für Shop-Owner, User-ID des Shop-Besitzers für Mitarbeiter - Referenz wird später hinzugefügt
   permissions: jsonb("permissions"), // Granulare Berechtigungen für Mitarbeiter
   firstName: text("first_name"), // Vorname für bessere Identifikation

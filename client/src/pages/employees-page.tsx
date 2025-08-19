@@ -7,11 +7,13 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Plus, Trash2, Edit, User, Mail, Phone } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, Trash2, Edit, User, Mail, Phone, Smartphone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { apiRequest } from '@/lib/queryClient';
 import { EditEmployeeDialog } from '@/components/employees/EditEmployeeDialog';
+import KioskManagement from '@/components/kiosk/KioskManagement';
 
 interface Employee {
   id: number;
@@ -68,6 +70,9 @@ export default function EmployeesPage() {
     }
   });
 
+  // Prüfe, ob maximale Anzahl an Mitarbeitern erreicht ist
+  const maxEmployeesReached = businessSettings && employees.length >= (businessSettings.maxEmployees || 2);
+
   // Neuen Mitarbeiter erstellen
   const createEmployeeMutation = useMutation({
     mutationFn: async (employeeData: NewEmployeeForm) => {
@@ -77,15 +82,10 @@ export default function EmployeesPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/employees'] });
       setIsNewEmployeeDialogOpen(false);
-      setNewEmployeeForm({
-        password: '',
-        email: '',
-        firstName: '',
-        lastName: ''
-      });
+      setNewEmployeeForm({ password: '', email: '', firstName: '', lastName: '' });
       toast({
         title: "Mitarbeiter erstellt",
-        description: "Der neue Mitarbeiter wurde erfolgreich angelegt.",
+        description: "Der neue Mitarbeiter wurde erfolgreich hinzugefügt.",
       });
     },
     onError: (error: any) => {
@@ -184,122 +184,145 @@ export default function EmployeesPage() {
 
   return (
     <div className="p-4 md:p-6 space-y-4 md:space-y-6">
-      {/* Header - responsive für mobile Geräte */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Mitarbeiterverwaltung</h1>
+          <h1 className="text-2xl md:text-3xl font-bold">Mitarbeiter & Kiosk</h1>
           <p className="text-muted-foreground text-sm md:text-base">
-            Verwalten Sie die Mitarbeiter Ihres Geschäfts
+            Verwalten Sie Mitarbeiter und Kiosk-Terminals Ihres Geschäfts
           </p>
-          {businessSettings && (
-            <p className="text-sm text-gray-600 mt-1">
-              Sie können noch {Math.max(0, (businessSettings.maxEmployees || 2) - employees.length)} Mitarbeiter hinzufügen
-            </p>
-          )}
         </div>
-        <Button 
-          onClick={() => setIsNewEmployeeDialogOpen(true)}
-          className="w-full sm:w-auto"
-          disabled={businessSettings && employees.length >= (businessSettings.maxEmployees || 2)}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Neuer Mitarbeiter
-        </Button>
       </div>
 
-      {/* Mitarbeiter-Liste - responsive Grid */}
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-        {employees.map((employee) => (
-          <Card key={employee.id} className="relative">
-            <CardHeader className="pb-3">
-              {/* Mobile-optimierter Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                <div className="flex items-center space-x-2">
-                  <User className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                  <CardTitle className="text-base md:text-lg truncate">
-                    {employee.firstName} {employee.lastName}
-                  </CardTitle>
-                </div>
-                <Badge 
-                  variant={employee.isActive ? "default" : "secondary"}
-                  className="self-start sm:self-center"
-                >
-                  {employee.isActive ? "Aktiv" : "Inaktiv"}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* E-Mail mit Umbruch für mobile Geräte */}
-              <div className="space-y-2">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2 text-sm">
-                  <div className="flex items-center space-x-2 mb-1 sm:mb-0">
-                    <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                    <span className="font-medium">E-Mail:</span>
-                  </div>
-                  <span className="text-muted-foreground break-all sm:break-normal">
-                    {employee.email}
-                  </span>
-                </div>
-              </div>
+      {/* Tabs für Mitarbeiter und Kiosk */}
+      <Tabs defaultValue="employees" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="employees" className="flex items-center gap-2">
+            <User className="h-4 w-4" />
+            Mitarbeiter
+          </TabsTrigger>
+          <TabsTrigger value="kiosk" className="flex items-center gap-2">
+            <Smartphone className="h-4 w-4" />
+            Kiosk-System
+          </TabsTrigger>
+        </TabsList>
 
-              {/* Actions - mobile-optimiert */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-2 border-t">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={employee.isActive}
-                    onCheckedChange={() => handleStatusToggle(employee.id, employee.isActive)}
-                    disabled={updateEmployeeStatusMutation.isPending}
-                  />
-                  <Label className="text-sm">
-                    {employee.isActive ? "Aktiv" : "Inaktiv"}
-                  </Label>
-                </div>
-                <div className="flex gap-2 justify-end">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEditEmployee(employee)}
-                    disabled={updateEmployeeStatusMutation.isPending}
-                    className="text-primary hover:text-primary"
-                  >
-                    <Edit className="h-4 w-4 mr-1" />
-                    <span className="hidden sm:inline">Bearbeiten</span>
-                  </Button>
-                  {userRole === 'owner' && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDeleteEmployee(employee.id, `${employee.firstName} ${employee.lastName}`)}
-                      disabled={deleteEmployeeMutation.isPending}
-                      className="text-destructive hover:text-destructive"
+        {/* Mitarbeiter Tab */}
+        <TabsContent value="employees" className="space-y-6">
+          {/* Mitarbeiter-Header */}
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <div>
+              <h2 className="text-xl font-semibold">Mitarbeiter verwalten</h2>
+              {maxEmployeesReached && (
+                <p className="text-sm text-amber-600">
+                  Maximale Anzahl erreicht ({employees.length}/{businessSettings?.maxEmployees || 'unlimited'})
+                </p>
+              )}
+            </div>
+            {userRole === 'owner' && (
+              <Button 
+                onClick={() => setIsNewEmployeeDialogOpen(true)}
+                disabled={maxEmployeesReached}
+                className="w-full sm:w-auto"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Mitarbeiter hinzufügen
+              </Button>
+            )}
+          </div>
+
+          {/* Mitarbeiter-Liste */}
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+            {employees.map((employee) => (
+              <Card key={employee.id} className="relative">
+                <CardHeader className="pb-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div className="flex items-center space-x-2">
+                      <User className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                      <CardTitle className="text-base md:text-lg truncate">
+                        {employee.firstName} {employee.lastName}
+                      </CardTitle>
+                    </div>
+                    <Badge 
+                      variant={employee.isActive ? "default" : "secondary"}
+                      className="self-start sm:self-center"
                     >
-                      <Trash2 className="h-4 w-4 mr-1" />
-                      <span className="hidden sm:inline">Löschen</span>
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                      {employee.isActive ? "Aktiv" : "Inaktiv"}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2 text-sm">
+                      <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <span className="truncate">{employee.email}</span>
+                    </div>
+                  </div>
 
-      {employees.length === 0 && (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <User className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Keine Mitarbeiter</h3>
-            <p className="text-muted-foreground text-center mb-4">
-              Sie haben noch keine Mitarbeiter angelegt. 
-              Erstellen Sie Ihren ersten Mitarbeiter, um loszulegen.
-            </p>
-            <Button onClick={() => setIsNewEmployeeDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Ersten Mitarbeiter erstellen
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+                  {userRole === 'owner' && (
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={employee.isActive}
+                          onCheckedChange={() => handleStatusToggle(employee.id, employee.isActive)}
+                          disabled={updateEmployeeStatusMutation.isPending}
+                        />
+                        <span className="text-xs text-muted-foreground">
+                          {employee.isActive ? "Aktiv" : "Inaktiv"}
+                        </span>
+                      </div>
+                      
+                      <div className="flex gap-1 sm:ml-auto">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEditEmployee(employee)}
+                          className="text-blue-600 hover:text-blue-700"
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          <span className="hidden sm:inline">Bearbeiten</span>
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDeleteEmployee(employee.id, `${employee.firstName} ${employee.lastName}`)}
+                          disabled={deleteEmployeeMutation.isPending}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          <span className="hidden sm:inline">Löschen</span>
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {employees.length === 0 && (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <User className="h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Keine Mitarbeiter</h3>
+                <p className="text-muted-foreground text-center mb-4">
+                  Sie haben noch keine Mitarbeiter angelegt. 
+                  Erstellen Sie Ihren ersten Mitarbeiter, um loszulegen.
+                </p>
+                <Button onClick={() => setIsNewEmployeeDialogOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Ersten Mitarbeiter erstellen
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* Kiosk Tab */}
+        <TabsContent value="kiosk" className="space-y-6">
+          {user?.shopId && <KioskManagement shopId={user.shopId} />}
+        </TabsContent>
+      </Tabs>
 
       {/* Neuer Mitarbeiter Dialog */}
       <Dialog open={isNewEmployeeDialogOpen} onOpenChange={setIsNewEmployeeDialogOpen}>
@@ -328,8 +351,6 @@ export default function EmployeesPage() {
                 />
               </div>
             </div>
-            
-
             
             <div className="space-y-2">
               <Label htmlFor="email">E-Mail</Label>

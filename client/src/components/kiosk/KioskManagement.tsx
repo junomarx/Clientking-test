@@ -1,0 +1,268 @@
+import { useState } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { apiRequest, queryClient } from '@/lib/queryClient';
+import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import { Plus, Smartphone, Users, AlertCircle } from 'lucide-react';
+
+interface KioskEmployee {
+  id: number;
+  username: string;
+  email: string;
+  isActive: boolean;
+  firstName?: string;
+  lastName?: string;
+}
+
+interface KioskManagementProps {
+  shopId: number;
+}
+
+export default function KioskManagement({ shopId }: KioskManagementProps) {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [newKioskData, setNewKioskData] = useState({
+    username: '',
+    password: ''
+  });
+
+  // Kiosk-Mitarbeiter laden
+  const { data: kioskEmployees = [], isLoading } = useQuery({
+    queryKey: ['/api/kiosk/employees', shopId],
+    queryFn: async () => {
+      const response = await apiRequest('GET', `/api/kiosk/employees/${shopId}`);
+      return response.json();
+    },
+    enabled: !!shopId
+  });
+
+  // Kiosk-Verfügbarkeit prüfen
+  const { data: kioskAvailability } = useQuery({
+    queryKey: ['/api/kiosk/availability', shopId],
+    queryFn: async () => {
+      const response = await apiRequest('GET', `/api/kiosk/availability/${shopId}`);
+      return response.json();
+    },
+    refetchInterval: 5000, // Alle 5 Sekunden prüfen
+    enabled: !!shopId
+  });
+
+  // Neuen Kiosk-Mitarbeiter erstellen
+  const createKioskMutation = useMutation({
+    mutationFn: async (kioskData: { username: string; password: string }) => {
+      const response = await apiRequest('POST', '/api/kiosk/create', kioskData);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Kiosk-Mitarbeiter erstellt',
+        description: 'Der Kiosk-Mitarbeiter wurde erfolgreich erstellt.',
+      });
+      setIsCreateDialogOpen(false);
+      setNewKioskData({ username: '', password: '' });
+      queryClient.invalidateQueries({ queryKey: ['/api/kiosk/employees', shopId] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Fehler',
+        description: error.message || 'Kiosk-Mitarbeiter konnte nicht erstellt werden.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const handleCreateKiosk = () => {
+    if (!newKioskData.username || !newKioskData.password) {
+      toast({
+        title: 'Unvollständige Daten',
+        description: 'Bitte füllen Sie alle Felder aus.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    createKioskMutation.mutate(newKioskData);
+  };
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-center justify-center">
+            <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Kiosk-Status Overview */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Smartphone className="h-5 w-5" />
+            Kiosk-System Status
+          </CardTitle>
+          <CardDescription>
+            Übersicht über die Kiosk-Verfügbarkeit und -Mitarbeiter
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold">
+                {kioskEmployees.length}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Kiosk-Mitarbeiter
+              </div>
+            </div>
+            <div className="text-center">
+              <Badge variant={kioskAvailability?.isOnline ? "default" : "secondary"}>
+                {kioskAvailability?.isOnline ? "Online" : "Offline"}
+              </Badge>
+              <div className="text-sm text-muted-foreground mt-1">
+                Kiosk-Status
+              </div>
+            </div>
+            <div className="text-center">
+              {kioskAvailability?.kioskUser && (
+                <>
+                  <div className="text-sm font-medium">
+                    {kioskAvailability.kioskUser.username}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Aktiver Kiosk
+                  </div>
+                </>
+              )}
+              {!kioskAvailability?.kioskUser && (
+                <div className="text-sm text-muted-foreground">
+                  Kein Kiosk verfügbar
+                </div>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Kiosk-Mitarbeiter Liste */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Kiosk-Mitarbeiter
+              </CardTitle>
+              <CardDescription>
+                Verwalten Sie die Kiosk-Terminals für Ihren Shop
+              </CardDescription>
+            </div>
+            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Kiosk hinzufügen
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Neuen Kiosk-Mitarbeiter erstellen</DialogTitle>
+                  <DialogDescription>
+                    Erstellen Sie einen neuen Kiosk-Mitarbeiter für Tablet-Terminals
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="username">Benutzername</Label>
+                    <Input
+                      id="username"
+                      placeholder="z.B. kiosk-tablet-1"
+                      value={newKioskData.username}
+                      onChange={(e) => setNewKioskData({ ...newKioskData, username: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="password">Passwort</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="Sicheres Passwort"
+                      value={newKioskData.password}
+                      onChange={(e) => setNewKioskData({ ...newKioskData, password: e.target.value })}
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                      Abbrechen
+                    </Button>
+                    <Button 
+                      onClick={handleCreateKiosk} 
+                      disabled={createKioskMutation.isPending}
+                    >
+                      {createKioskMutation.isPending ? 'Erstelle...' : 'Erstellen'}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {kioskEmployees.length === 0 ? (
+            <div className="text-center py-8">
+              <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium mb-2">Noch keine Kiosk-Mitarbeiter</h3>
+              <p className="text-muted-foreground mb-4">
+                Erstellen Sie einen Kiosk-Mitarbeiter, um Tablet-Terminals zu verwenden.
+              </p>
+              <Button onClick={() => setIsCreateDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Ersten Kiosk erstellen
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {kioskEmployees.map((kiosk: KioskEmployee) => (
+                <div
+                  key={kiosk.id}
+                  className="flex items-center justify-between p-4 border rounded-lg"
+                >
+                  <div className="flex items-center gap-3">
+                    <Smartphone className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <div className="font-medium">{kiosk.username}</div>
+                      <div className="text-sm text-muted-foreground">
+                        Kiosk-Terminal
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={kiosk.isActive ? "default" : "secondary"}>
+                      {kiosk.isActive ? "Aktiv" : "Inaktiv"}
+                    </Badge>
+                    {kioskAvailability?.kioskUser?.id === kiosk.id && (
+                      <Badge variant="outline" className="text-green-600">
+                        Online
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

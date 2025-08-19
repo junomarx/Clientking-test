@@ -7037,6 +7037,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // NEUE KIOSK-MITARBEITER API-ENDPUNKTE
+  
+  // Kiosk-Mitarbeiter für einen Shop abrufen
+  app.get("/api/kiosk/employees/:shopId", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const shopId = parseInt(req.params.shopId);
+      const userId = (req.user as any).id;
+      
+      // Nur Shop-Owner und Superadmins können Kiosk-Mitarbeiter verwalten
+      const user = await storage.getUser(userId);
+      if (!user || (!user.isSuperadmin && user.shopId !== shopId)) {
+        return res.status(403).json({ message: "Keine Berechtigung für diesen Shop" });
+      }
+      
+      const kioskEmployees = await storage.getKioskEmployees(shopId);
+      console.log(`📱 ${kioskEmployees.length} Kiosk-Mitarbeiter für Shop ${shopId} gefunden`);
+      
+      res.json(kioskEmployees);
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Kiosk-Mitarbeiter:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Kiosk-Mitarbeiter" });
+    }
+  });
+  
+  // Neuen Kiosk-Mitarbeiter erstellen
+  app.post("/api/kiosk/create", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { username, password } = req.body;
+      const userId = (req.user as any).id;
+      
+      if (!username || !password) {
+        return res.status(400).json({ message: "Benutzername und Passwort sind erforderlich" });
+      }
+      
+      const user = await storage.getUser(userId);
+      if (!user || (!user.isSuperadmin && user.role !== "owner")) {
+        return res.status(403).json({ message: "Nur Shop-Owner können Kiosk-Mitarbeiter erstellen" });
+      }
+      
+      // Passwort hashen
+      const { scrypt, randomBytes } = await import("crypto");
+      const { promisify } = await import("util");
+      const scryptAsync = promisify(scrypt);
+      
+      const salt = randomBytes(16).toString("hex");
+      const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+      const hashedPassword = `${buf.toString("hex")}.${salt}`;
+      
+      const kioskEmployee = await storage.createKioskEmployee({
+        username,
+        email: `${username}@kiosk.local`,
+        password: hashedPassword,
+        shopId: user.shopId!,
+        parentUserId: userId
+      });
+      
+      console.log(`✅ Kiosk-Mitarbeiter erstellt: ${kioskEmployee.username} für Shop ${user.shopId}`);
+      res.json({ 
+        success: true, 
+        message: "Kiosk-Mitarbeiter erfolgreich erstellt",
+        kioskEmployee: {
+          id: kioskEmployee.id,
+          username: kioskEmployee.username,
+          isActive: kioskEmployee.isActive
+        }
+      });
+    } catch (error) {
+      console.error("Fehler beim Erstellen des Kiosk-Mitarbeiters:", error);
+      res.status(500).json({ message: "Fehler beim Erstellen des Kiosk-Mitarbeiters" });
+    }
+  });
+  
+  // Kiosk-Verfügbarkeit prüfen (neue verbesserte Version)
+  app.get("/api/kiosk/availability/:shopId", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const shopId = parseInt(req.params.shopId);
+      
+      const kioskStatus = await storage.isKioskOnline(shopId);
+      const onlineStatusManager = getOnlineStatusManager();
+      
+      let isOnline = false;
+      if (onlineStatusManager && kioskStatus.kioskUser) {
+        isOnline = onlineStatusManager.isUserOnline(kioskStatus.kioskUser.id);
+      }
+      
+      console.log(`📱 Kiosk-Verfügbarkeit für Shop ${shopId}: ${isOnline ? 'verfügbar' : 'nicht verfügbar'}`);
+      
+      res.json({
+        isOnline,
+        kioskUser: kioskStatus.kioskUser ? {
+          id: kioskStatus.kioskUser.id,
+          username: kioskStatus.kioskUser.username
+        } : null
+      });
+    } catch (error) {
+      console.error("Fehler beim Prüfen der Kiosk-Verfügbarkeit:", error);
+      res.status(500).json({ message: "Fehler beim Prüfen der Kiosk-Verfügbarkeit" });
+    }
+  });
+
   const httpServer = createServer(app);
   
   // WebSocket-Server initialisieren

@@ -481,6 +481,11 @@ export interface IStorage {
   // Multi-Shop Admin Methoden
   getAllMultiShopAdmins(): Promise<any[]>;
   getUserAccessibleShops(userId: number): Promise<Shop[]>;
+  
+  // Kiosk-Mitarbeiter Methoden
+  getKioskEmployees(shopId: number): Promise<User[]>;
+  createKioskEmployee(kioskData: { username: string; email: string; password: string; shopId: number; parentUserId: number }): Promise<User>;
+  isKioskOnline(shopId: number): Promise<{ isOnline: boolean; kioskUser?: User }>;
 }
 
 /**
@@ -6141,6 +6146,73 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error(`Fehler beim Abrufen des Shops ${shopId}:`, error);
       return undefined;
+    }
+  }
+
+  // NEUE KIOSK-MITARBEITER METHODEN
+  async getKioskEmployees(shopId: number): Promise<User[]> {
+    try {
+      const kioskEmployees = await db
+        .select()
+        .from(users)
+        .where(
+          and(
+            eq(users.shopId, shopId),
+            eq(users.role, "kiosk"),
+            eq(users.isActive, true)
+          )
+        );
+      return kioskEmployees;
+    } catch (error) {
+      console.error(`Fehler beim Abrufen der Kiosk-Mitarbeiter für Shop ${shopId}:`, error);
+      return [];
+    }
+  }
+
+  async createKioskEmployee(kioskData: { 
+    username: string; 
+    email: string; 
+    password: string; 
+    shopId: number; 
+    parentUserId: number 
+  }): Promise<User> {
+    try {
+      const [newKioskEmployee] = await db
+        .insert(users)
+        .values({
+          username: kioskData.username,
+          email: kioskData.email,
+          password: kioskData.password,
+          shopId: kioskData.shopId,
+          parentUserId: kioskData.parentUserId,
+          role: "kiosk",
+          isActive: true,
+          firstName: "Kiosk",
+          lastName: "Terminal"
+        })
+        .returning();
+      
+      console.log(`✅ Kiosk-Mitarbeiter erstellt: ${newKioskEmployee.username} für Shop ${kioskData.shopId}`);
+      return newKioskEmployee;
+    } catch (error) {
+      console.error("Fehler beim Erstellen des Kiosk-Mitarbeiters:", error);
+      throw error;
+    }
+  }
+
+  async isKioskOnline(shopId: number): Promise<{ isOnline: boolean; kioskUser?: User }> {
+    try {
+      const kioskEmployees = await this.getKioskEmployees(shopId);
+      
+      // TODO: Integration mit WebSocket OnlineStatusManager
+      // Für jetzt geben wir false zurück, wird später mit WebSocket integriert
+      return {
+        isOnline: false,
+        kioskUser: kioskEmployees.length > 0 ? kioskEmployees[0] : undefined
+      };
+    } catch (error) {
+      console.error(`Fehler beim Prüfen der Kiosk-Verfügbarkeit für Shop ${shopId}:`, error);
+      return { isOnline: false };
     }
   }
 }
