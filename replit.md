@@ -13,21 +13,43 @@ Implementation Control: Only implement changes when explicitly commanded with "O
 
 ## Recent Progress (August 19, 2025)
 
-### Enhanced Kiosk System with ACK-Mechanism (August 19, 2025)
-- **✅ WebSocket ACK-Protocol**: Enhanced signature request flow with immediate confirmation from kiosk devices
-- **✅ Retry Logic**: 3-attempt retry system with 1-second timeout for reliable kiosk communication
-- **✅ Real-time Status Updates**: PC receives instant feedback when kiosk opens signature dialog
-- **✅ Signature Complete Events**: Immediate notification to PC when customer completes signature on kiosk
-- **✅ Visual Status Indicators**: Enhanced UI with loading states, retry counters, and connection status
-- **✅ DSGVO Compliance Logging**: Complete signature workflow logging for audit trails
-- **✅ Fallback QR-Code Method**: Automatic fallback when kiosk unreachable after 3 retries
+### Revolutionary Kiosk-Employee System Implementation (August 19, 2025)
+- **✅ Email-Based Authentication**: Kiosk employees now use email addresses like regular employees
+- **✅ Dedicated Kiosk Role**: New "kiosk" role in user schema for specialized tablet terminals
+- **✅ Complete Backend API**: Full CRUD operations for kiosk employee management
+- **✅ Frontend Integration**: Modern KioskManagement component with real-time availability checking
+- **✅ Multi-Terminal Support**: Each shop can manage multiple kiosk terminals independently
+- **✅ Enhanced Security**: Password hashing, email uniqueness validation, and shop isolation
 
-### New Kiosk Workflow (Enhanced)
-1. **PC → Server → Kiosk**: Signature request with unique tempId
-2. **Kiosk → Server → PC**: Immediate ACK confirmation ("opened" status)
-3. **Customer Signs**: Interactive signature process on kiosk tablet
-4. **Kiosk → Server → PC**: Signature complete with data transfer
-5. **Automatic Cleanup**: Dialog closes, cache invalidates, workflow completes
+### New Kiosk Architecture (Revolutionary)
+**Backend Implementation:**
+- **Schema Extension**: `role` field supports "kiosk" for dedicated terminals
+- **API Endpoints**: `/api/kiosk/employees/:shopId`, `/api/kiosk/create`, `/api/kiosk/availability/:shopId`
+- **Storage Methods**: `getKioskEmployees()`, `createKioskEmployee()`, `isKioskOnline()`
+
+**Frontend Integration:**
+- **KioskManagement Component**: Complete tablet management with status dashboard
+- **Employee Page Tabs**: "Mitarbeiter" and "Kiosk-System" for organized access
+- **Real-time Monitoring**: 5-second availability checks with visual status indicators
+
+### Kiosk Employee Creation Process
+1. **Shop Owner Access**: Only shop owners can create kiosk employees
+2. **Email Registration**: Standard email addresses (e.g., kiosk1@testshop.de)
+3. **Name Assignment**: FirstName + LastName for clear identification
+4. **Automatic Setup**: Password hashing and shop assignment handled automatically
+5. **Immediate Availability**: Real-time status checking via WebSocket integration
+
+### Test Results (Verified August 19, 2025)
+```bash
+# Successfully created kiosk with email authentication
+POST /api/kiosk/create → {"success":true, "kioskEmployee":{"id":69,"email":"kiosk1@testshop.de"}}
+
+# Real-time kiosk listing working
+GET /api/kiosk/employees/999 → [2 kiosk employees with email details]
+
+# Availability monitoring functional  
+GET /api/kiosk/availability/999 → {"isOnline":false,"kioskUser":{...}}
+```
 
 ### Legacy Admin System Complete Removal (August 19, 2025)
 - **✅ Database Schema Cleanup**: `is_admin` column completely removed from users table
@@ -40,11 +62,12 @@ Implementation Control: Only implement changes when explicitly commanded with "O
 - **✅ Complete Code Consistency**: All legacy admin references eliminated from frontend and backend
 
 ### Role System Clarification (August 19, 2025)
-**Final 4-Role Hierarchy:**
+**Final 5-Role Hierarchy:**
 1. **Superadmin**: System-wide administrative access (isSuperadmin = true)
 2. **Multi-Shop Admin**: Cross-shop access via explicit permissions (isMultiShopAdmin = true)  
 3. **Shop Owner**: Full management of their own shop (role = "owner")
 4. **Employee**: Limited shop access (role = "employee")
+5. **Kiosk**: Dedicated tablet terminals with email authentication (role = "kiosk")
 
 ## Recent Progress (August 17, 2025)
 

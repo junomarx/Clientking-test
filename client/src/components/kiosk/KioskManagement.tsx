@@ -29,8 +29,10 @@ export default function KioskManagement({ shopId }: KioskManagementProps) {
   const { toast } = useToast();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newKioskData, setNewKioskData] = useState({
-    username: '',
-    password: ''
+    email: '',
+    password: '',
+    firstName: '',
+    lastName: ''
   });
 
   // Kiosk-Mitarbeiter laden
@@ -56,7 +58,7 @@ export default function KioskManagement({ shopId }: KioskManagementProps) {
 
   // Neuen Kiosk-Mitarbeiter erstellen
   const createKioskMutation = useMutation({
-    mutationFn: async (kioskData: { username: string; password: string }) => {
+    mutationFn: async (kioskData: { email: string; password: string; firstName: string; lastName: string }) => {
       const response = await apiRequest('POST', '/api/kiosk/create', kioskData);
       return response.json();
     },
@@ -66,7 +68,7 @@ export default function KioskManagement({ shopId }: KioskManagementProps) {
         description: 'Der Kiosk-Mitarbeiter wurde erfolgreich erstellt.',
       });
       setIsCreateDialogOpen(false);
-      setNewKioskData({ username: '', password: '' });
+      setNewKioskData({ email: '', password: '', firstName: '', lastName: '' });
       queryClient.invalidateQueries({ queryKey: ['/api/kiosk/employees', shopId] });
     },
     onError: (error: any) => {
@@ -79,7 +81,7 @@ export default function KioskManagement({ shopId }: KioskManagementProps) {
   });
 
   const handleCreateKiosk = () => {
-    if (!newKioskData.username || !newKioskData.password) {
+    if (!newKioskData.email || !newKioskData.password || !newKioskData.firstName || !newKioskData.lastName) {
       toast({
         title: 'Unvollständige Daten',
         description: 'Bitte füllen Sie alle Felder aus.',
@@ -138,7 +140,7 @@ export default function KioskManagement({ shopId }: KioskManagementProps) {
               {kioskAvailability?.kioskUser && (
                 <>
                   <div className="text-sm font-medium">
-                    {kioskAvailability.kioskUser.username}
+                    {kioskAvailability.kioskUser.firstName} {kioskAvailability.kioskUser.lastName}
                   </div>
                   <div className="text-sm text-muted-foreground">
                     Aktiver Kiosk
@@ -183,13 +185,34 @@ export default function KioskManagement({ shopId }: KioskManagementProps) {
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="firstName">Vorname</Label>
+                      <Input
+                        id="firstName"
+                        placeholder="z.B. Kiosk"
+                        value={newKioskData.firstName}
+                        onChange={(e) => setNewKioskData({ ...newKioskData, firstName: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="lastName">Nachname</Label>
+                      <Input
+                        id="lastName"
+                        placeholder="z.B. Terminal 1"
+                        value={newKioskData.lastName}
+                        onChange={(e) => setNewKioskData({ ...newKioskData, lastName: e.target.value })}
+                      />
+                    </div>
+                  </div>
                   <div>
-                    <Label htmlFor="username">Benutzername</Label>
+                    <Label htmlFor="email">E-Mail-Adresse</Label>
                     <Input
-                      id="username"
-                      placeholder="z.B. kiosk-tablet-1"
-                      value={newKioskData.username}
-                      onChange={(e) => setNewKioskData({ ...newKioskData, username: e.target.value })}
+                      id="email"
+                      type="email"
+                      placeholder="kiosk@meinshop.de"
+                      value={newKioskData.email}
+                      onChange={(e) => setNewKioskData({ ...newKioskData, email: e.target.value })}
                     />
                   </div>
                   <div>
@@ -241,9 +264,9 @@ export default function KioskManagement({ shopId }: KioskManagementProps) {
                   <div className="flex items-center gap-3">
                     <Smartphone className="h-5 w-5 text-muted-foreground" />
                     <div>
-                      <div className="font-medium">{kiosk.username}</div>
+                      <div className="font-medium">{kiosk.firstName} {kiosk.lastName}</div>
                       <div className="text-sm text-muted-foreground">
-                        Kiosk-Terminal
+                        {kiosk.email}
                       </div>
                     </div>
                   </div>

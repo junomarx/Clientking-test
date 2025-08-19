@@ -6170,29 +6170,30 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createKioskEmployee(kioskData: { 
-    username: string; 
     email: string; 
     password: string; 
     shopId: number; 
-    parentUserId: number 
+    parentUserId: number;
+    firstName: string;
+    lastName: string;
   }): Promise<User> {
     try {
       const [newKioskEmployee] = await db
         .insert(users)
         .values({
-          username: kioskData.username,
+          username: null, // Kiosk-Mitarbeiter haben keinen Username
           email: kioskData.email,
           password: kioskData.password,
           shopId: kioskData.shopId,
           parentUserId: kioskData.parentUserId,
           role: "kiosk",
           isActive: true,
-          firstName: "Kiosk",
-          lastName: "Terminal"
+          firstName: kioskData.firstName,
+          lastName: kioskData.lastName
         })
         .returning();
       
-      console.log(`✅ Kiosk-Mitarbeiter erstellt: ${newKioskEmployee.username} für Shop ${kioskData.shopId}`);
+      console.log(`✅ Kiosk-Mitarbeiter erstellt: ${newKioskEmployee.email} für Shop ${kioskData.shopId}`);
       return newKioskEmployee;
     } catch (error) {
       console.error("Fehler beim Erstellen des Kiosk-Mitarbeiters:", error);

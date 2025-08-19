@@ -7064,16 +7064,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Neuen Kiosk-Mitarbeiter erstellen
   app.post("/api/kiosk/create", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const { username, password } = req.body;
+      const { email, password, firstName, lastName } = req.body;
       const userId = (req.user as any).id;
       
-      if (!username || !password) {
-        return res.status(400).json({ message: "Benutzername und Passwort sind erforderlich" });
+      if (!email || !password || !firstName || !lastName) {
+        return res.status(400).json({ message: "E-Mail, Passwort, Vor- und Nachname sind erforderlich" });
       }
       
       const user = await storage.getUser(userId);
       if (!user || (!user.isSuperadmin && user.role !== "owner")) {
         return res.status(403).json({ message: "Nur Shop-Owner können Kiosk-Mitarbeiter erstellen" });
+      }
+      
+      // Prüfen ob E-Mail bereits existiert
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: "E-Mail-Adresse wird bereits verwendet" });
       }
       
       // Passwort hashen
@@ -7086,20 +7092,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const hashedPassword = `${buf.toString("hex")}.${salt}`;
       
       const kioskEmployee = await storage.createKioskEmployee({
-        username,
-        email: `${username}@kiosk.local`,
+        email,
         password: hashedPassword,
         shopId: user.shopId!,
-        parentUserId: userId
+        parentUserId: userId,
+        firstName,
+        lastName
       });
       
-      console.log(`✅ Kiosk-Mitarbeiter erstellt: ${kioskEmployee.username} für Shop ${user.shopId}`);
+      console.log(`✅ Kiosk-Mitarbeiter erstellt: ${kioskEmployee.email} für Shop ${user.shopId}`);
       res.json({ 
         success: true, 
         message: "Kiosk-Mitarbeiter erfolgreich erstellt",
         kioskEmployee: {
           id: kioskEmployee.id,
-          username: kioskEmployee.username,
+          email: kioskEmployee.email,
+          firstName: kioskEmployee.firstName,
+          lastName: kioskEmployee.lastName,
           isActive: kioskEmployee.isActive
         }
       });
