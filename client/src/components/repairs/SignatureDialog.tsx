@@ -178,7 +178,7 @@ export function SignatureDialog({
     onSuccess: (data) => {
       if (data.hasActiveKiosks) {
         toast({
-          title: 'An Kiosk-Gerät gesendet',
+          title: 'An Kiosk Terminal 1 gesendet',
           description: data.message || 'Die Unterschrifts-Anfrage wurde an das Kiosk-Gerät gesendet.',
         });
         onClose();
