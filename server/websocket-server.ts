@@ -236,7 +236,7 @@ class OnlineStatusManager {
 
     // An alle verbundenen Clients senden
     for (const user of this.connectedUsers.values()) {
-      if (user.socket.readyState === WebSocket.OPEN) {
+      if (user.socket && user.socket.readyState === WebSocket.OPEN) {
         try {
           user.socket.send(statusMessage);
         } catch (error) {
