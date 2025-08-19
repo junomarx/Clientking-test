@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { CustomSignaturePad } from '@/components/ui/signature-pad';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { Repair } from '@/lib/types';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
@@ -23,6 +23,18 @@ interface SignatureDialogProps {
   repair?: Repair | null;
   // Signatur-Typ: 'dropoff' für die Abgabe des Geräts, 'pickup' für die Abholung
   signatureType?: 'dropoff' | 'pickup';
+}
+
+interface KioskAvailability {
+  totalKiosks: number;
+  onlineCount: number;
+  kiosks: Array<{
+    id: number;
+    email: string;
+    firstName: string;
+    lastName: string;
+    isOnline: boolean;
+  }>;
 }
 
 export function SignatureDialog({ 
@@ -43,6 +55,13 @@ export function SignatureDialog({
   const [currentTempId, setCurrentTempId] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [retryTimer, setRetryTimer] = useState<NodeJS.Timeout | null>(null);
+
+  // Kiosk-Verfügbarkeit abrufen
+  const { data: kioskAvailability } = useQuery<KioskAvailability>({
+    queryKey: ['/api/kiosk/availability', repair?.customerId],
+    enabled: open && !!repair?.customerId,
+    refetchInterval: 5000, // Alle 5 Sekunden aktualisieren
+  });
   
   // WebSocket-Listener für ACK und Complete Events
   useEffect(() => {
@@ -102,7 +121,7 @@ export function SignatureDialog({
             retryCount: retryCount + 1,
             payload: {
               repairId,
-              customerName: repair?.customerName,
+              customerName: `Kunde ${repair?.customerId || 'unbekannt'}`,
               repairDetails: repair?.issue,
               deviceInfo: `${repair?.deviceType} ${repair?.brand} ${repair?.model}`,
               orderCode: repair?.orderCode,
@@ -146,7 +165,7 @@ export function SignatureDialog({
         timestamp: Date.now(),
         payload: {
           repairId,
-          customerName: repair?.customerName,
+          customerName: `Kunde ${repair?.customerId || 'unbekannt'}`,
           repairDetails: repair?.issue,
           deviceInfo: `${repair?.deviceType} ${repair?.brand} ${repair?.model}`,
           orderCode: repair?.orderCode,
@@ -178,7 +197,7 @@ export function SignatureDialog({
     onSuccess: (data) => {
       if (data.hasActiveKiosks) {
         toast({
-          title: 'An Kiosk Terminal 1 gesendet',
+          title: `An ${kioskAvailability?.onlineCount || 1} Kiosk${(kioskAvailability?.onlineCount || 1) > 1 ? 's' : ''} gesendet`,
           description: data.message || 'Die Unterschrifts-Anfrage wurde an das Kiosk-Gerät gesendet.',
         });
         onClose();
@@ -330,13 +349,20 @@ export function SignatureDialog({
             <div className="flex items-center space-x-3">
               <Tablet className="h-6 w-6 text-blue-600" />
               <div>
-                <h3 className="font-medium text-blue-900">An Kiosk Terminal 1 senden</h3>
+                <h3 className="font-medium text-blue-900">
+                  {kioskAvailability?.onlineCount ? 
+                    `An ${kioskAvailability.onlineCount} von ${kioskAvailability.totalKiosks} Kiosk${kioskAvailability.totalKiosks > 1 ? 's' : ''} senden` :
+                    `Kiosk offline (0/${kioskAvailability?.totalKiosks || 0})`
+                  }
+                </h3>
                 <p className="text-sm text-blue-700">
                   {kioskRequestStatus === 'ack_received' 
                     ? 'Kiosk ist bereit - leiten Sie den Kunden zum Tablet'
                     : kioskRequestStatus === 'waiting'
                     ? `Verbindung wird hergestellt... (Versuch ${retryCount}/3)`
-                    : 'Kunde kann direkt am Kiosk-Gerät unterschreiben'
+                    : kioskAvailability?.onlineCount 
+                      ? 'Kunde kann direkt am Kiosk-Gerät unterschreiben'
+                      : 'Kein Kiosk online - verwenden Sie die manuelle Unterschrift unten'
                   }
                 </p>
               </div>
@@ -374,7 +400,10 @@ export function SignatureDialog({
               {kioskRequestStatus === 'idle' && (
                 <>
                   <Tablet className="h-4 w-4 mr-2" />
-                  An Terminal 1
+                  {kioskAvailability?.onlineCount ? 
+                    `An ${kioskAvailability.onlineCount} von ${kioskAvailability.totalKiosks} Kiosk${kioskAvailability.totalKiosks > 1 ? 's' : ''} senden` :
+                    `Kein Kiosk online (0/${kioskAvailability?.totalKiosks || 0})`
+                  }
                 </>
               )}
             </Button>

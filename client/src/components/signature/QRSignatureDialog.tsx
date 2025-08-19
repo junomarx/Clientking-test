@@ -6,6 +6,7 @@ import { Loader2, QrCode, CheckCircle2, XCircle, RefreshCw, Copy, ExternalLink, 
 import { QRCodeSVG } from "qrcode.react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
 
 interface QRSignatureDialogProps {
   open: boolean;
@@ -40,6 +41,18 @@ interface SignatureStatus {
   hasSignature?: boolean;
 }
 
+interface KioskAvailability {
+  totalKiosks: number;
+  onlineCount: number;
+  kiosks: Array<{
+    id: number;
+    email: string;
+    firstName: string;
+    lastName: string;
+    isOnline: boolean;
+  }>;
+}
+
 // Function to determine signature type based on repair status
 function determineSignatureType(status?: string): 'dropoff' | 'pickup' {
   if (status === 'eingegangen') {
@@ -60,6 +73,13 @@ export function QRSignatureDialog({ open, onOpenChange, repair, businessName, si
   const [error, setError] = useState<string | null>(null);
   const [pollInterval, setPollInterval] = useState<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
+
+  // Kiosk-Verfügbarkeit abrufen
+  const { data: kioskAvailability } = useQuery<KioskAvailability>({
+    queryKey: ['/api/kiosk/availability', repair?.customerId], // Use customerId to get shop info
+    enabled: open && !!repair?.customerId,
+    refetchInterval: 5000, // Alle 5 Sekunden aktualisieren
+  });
 
   // Kiosk-Senden Funktion
   const sendToKiosk = async () => {
@@ -413,9 +433,12 @@ export function QRSignatureDialog({ open, onOpenChange, repair, businessName, si
                       </Button>
                     </div>
                     
-                    <Button onClick={sendToKiosk} variant="outline" size="sm" className="w-full">
+                    <Button onClick={sendToKiosk} variant="outline" size="sm" className="w-full" disabled={!kioskAvailability?.onlineCount}>
                       <Tablet className="h-4 w-4 mr-2" />
-                      An Kiosk Terminal 1 senden
+                      {kioskAvailability?.onlineCount ? 
+                        `An ${kioskAvailability.onlineCount} von ${kioskAvailability.totalKiosks} Kiosk${kioskAvailability.totalKiosks > 1 ? 's' : ''} senden` :
+                        `Kein Kiosk online (0/${kioskAvailability?.totalKiosks || 0})`
+                      }
                     </Button>
                   </>
                 )}
