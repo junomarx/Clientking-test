@@ -53,7 +53,7 @@ export function setupAuth(app: Express) {
     store: storage.sessionStore,
     name: isProduction ? 'handyshop.sid' : 'connect.sid', // Standard Cookie-Name in Entwicklung
     cookie: {
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 1 Woche
+      maxAge: 1000 * 60 * 60 * 24 * 30, // 30 Tage für bessere UX
       sameSite: 'lax',
       httpOnly: true,
       secure: isProduction, // Nur in Produktion HTTPS verwenden

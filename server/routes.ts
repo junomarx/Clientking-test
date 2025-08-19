@@ -7149,11 +7149,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const shopId = user.shopId;
       
       const kioskEmployees = await storage.getKioskEmployees(shopId);
-      const onlineStatusManager = getOnlineStatusManager();
+      
+      // Verwende den WebSocket-Manager aus dem Export
+      const webSocketManager = getOnlineStatusManager();
       
       // Alle Kiosk-Mitarbeiter und ihre Online-Status prüfen
       const kioskStatuses = kioskEmployees.map(kiosk => {
-        const isOnline = onlineStatusManager ? onlineStatusManager.isUserOnline(kiosk.id) : false;
+        const isOnline = webSocketManager ? webSocketManager.isUserOnline(kiosk.id) : false;
         return {
           id: kiosk.id,
           email: kiosk.email,
@@ -7188,11 +7190,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const shopId = parseInt(req.params.shopId);
       
       const kioskEmployees = await storage.getKioskEmployees(shopId);
-      const onlineStatusManager = getOnlineStatusManager();
+      
+      // Verwende den WebSocket-Manager aus dem Export für Multi-Terminal
+      const webSocketManager = getOnlineStatusManager();
       
       // Alle Kiosk-Mitarbeiter und ihre Online-Status prüfen
       const kioskStatuses = kioskEmployees.map(kiosk => {
-        const isOnline = onlineStatusManager ? onlineStatusManager.isUserOnline(kiosk.id) : false;
+        const isOnline = webSocketManager ? webSocketManager.isUserOnline(kiosk.id) : false;
         return {
           id: kiosk.id,
           email: kiosk.email,
@@ -7218,6 +7222,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Fehler beim Prüfen der Multi-Kiosk-Verfügbarkeit:", error);
       res.status(500).json({ message: "Fehler beim Prüfen der Multi-Kiosk-Verfügbarkeit" });
+    }
+  });
+
+  // Debug-Endpoint um WebSocket-Status zu prüfen
+  app.get("/api/debug/websocket-status", async (req: Request, res: Response) => {
+    try {
+      const onlineStatusManager = getOnlineStatusManager();
+      
+      if (onlineStatusManager) {
+        const registeredUsers = onlineStatusManager.getRegisteredUsers();
+        const debugInfo = {
+          totalConnected: registeredUsers.length,
+          users: registeredUsers.map(user => ({
+            userId: user.userId,
+            username: user.username,
+            isActive: user.isActive,
+            isKiosk: user.isKiosk,
+            lastHeartbeat: user.lastHeartbeat,
+            socketReady: user.socket?.readyState === 1,
+            isOnlineByMethod: onlineStatusManager.isUserOnline(user.userId)
+          }))
+        };
+        
+        console.log(`🔍 DEBUG: WebSocket-Status`, debugInfo);
+        res.json(debugInfo);
+      } else {
+        res.status(500).json({ message: "Online-Status-Manager nicht verfügbar" });
+      }
+    } catch (error) {
+      console.error("Fehler beim Abrufen des WebSocket-Status:", error);
+      res.status(500).json({ message: "Fehler beim Status-Abruf" });
     }
   });
 

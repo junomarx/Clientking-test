@@ -272,7 +272,18 @@ class OnlineStatusManager {
   }
 
   isUserOnline(userId: number): boolean {
-    return this.connectedUsers.has(userId);
+    const user = this.connectedUsers.get(userId);
+    if (!user) return false;
+    
+    // Prüfe, ob WebSocket aktiv ist
+    const isSocketReady = user.socket && user.socket.readyState === WebSocket.OPEN;
+    
+    // Debug-Output für bessere Nachverfolgung
+    if (!isSocketReady && user) {
+      console.log(`🔍 User ${userId} (${user.username}) ist in Map, aber WebSocket Status: ${user.socket?.readyState || 'null'}`);
+    }
+    
+    return isSocketReady && user.isActive;
   }
 
   getOnlineUserCount(): number {
@@ -576,11 +587,34 @@ class OnlineStatusManager {
   getRegisteredUsers(): ConnectedUser[] {
     return Array.from(this.connectedUsers.values());
   }
+  
+  // NEUE METHODE: Forciere Kiosk-Registrierung für Debug-Zwecke
+  forceRegisterKiosk(userId: number): boolean {
+    const user = this.connectedUsers.get(userId);
+    if (!user) {
+      console.log(`❌ forceRegisterKiosk: User ${userId} nicht in connectedUsers Map`);
+      return false;
+    }
+    
+    user.isKiosk = true;
+    user.isActive = true;
+    console.log(`🛠️ DEBUG: Kiosk ${userId} (${user.username}) wurde manuell registriert`);
+    console.log(`🛠️ WebSocket-Status: ${user.socket?.readyState} (1=OPEN)`);
+    
+    return true;
+  }
 
   // Prüfen ob ein Benutzer online ist
   isUserOnline(userId: number): boolean {
     const user = this.connectedUsers.get(userId);
-    return user ? user.isActive : false;
+    if (!user) return false;
+    
+    // WebSocket-Status und Aktivität prüfen
+    const hasValidSocket = user.socket && user.socket.readyState === 1; // WebSocket.OPEN
+    const isRecentlyActive = user.isActive && user.lastHeartbeat && 
+                           (new Date().getTime() - user.lastHeartbeat.getTime()) < 60000; // 60 Sekunden
+    
+    return hasValidSocket && isRecentlyActive;
   }
 
   // Cleanup-Methode
