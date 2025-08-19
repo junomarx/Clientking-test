@@ -330,7 +330,7 @@ export function SignatureDialog({
             <div className="flex items-center space-x-3">
               <Tablet className="h-6 w-6 text-blue-600" />
               <div>
-                <h3 className="font-medium text-blue-900">An Kiosk-Gerät senden</h3>
+                <h3 className="font-medium text-blue-900">An Kiosk Terminal 1 senden</h3>
                 <p className="text-sm text-blue-700">
                   {kioskRequestStatus === 'ack_received' 
                     ? 'Kiosk ist bereit - leiten Sie den Kunden zum Tablet'
@@ -374,7 +374,7 @@ export function SignatureDialog({
               {kioskRequestStatus === 'idle' && (
                 <>
                   <Tablet className="h-4 w-4 mr-2" />
-                  Senden
+                  An Terminal 1
                 </>
               )}
             </Button>
