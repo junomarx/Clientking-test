@@ -415,7 +415,7 @@ export function QRSignatureDialog({ open, onOpenChange, repair, businessName, si
                     
                     <Button onClick={sendToKiosk} variant="outline" size="sm" className="w-full">
                       <Tablet className="h-4 w-4 mr-2" />
-                      An Kiosk senden
+                      An Kiosk Terminal 1 senden
                     </Button>
                   </>
                 )}
