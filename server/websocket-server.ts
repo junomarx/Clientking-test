@@ -96,8 +96,8 @@ class OnlineStatusManager {
   }
 
   private async handleAuth(ws: WebSocket, userId: number, username: string) {
-    if (!userId || !username) {
-      ws.close(1000, 'Invalid auth data');
+    if (!userId) {
+      ws.close(1000, 'Invalid auth data - missing userId');
       return;
     }
 
@@ -111,14 +111,19 @@ class OnlineStatusManager {
 
     // Benutzerrolle aus Datenbank abrufen um Kiosk-Status zu ermitteln
     let isKioskUser = false;
+    let actualUsername = username;
     try {
       const user = await storage.getUser(userId);
       isKioskUser = user?.role === 'kiosk';
-      console.log(`🔍 User ${username} (ID: ${userId}) - Role: ${user?.role} - Is Kiosk: ${isKioskUser}`);
+      // Für Kiosk-Benutzer verwenden wir den Namen aus der Datenbank
+      if (isKioskUser && user) {
+        actualUsername = `${user.firstName} ${user.lastName}`;
+      }
+      console.log(`🔍 User ${actualUsername} (ID: ${userId}) - Role: ${user?.role} - Is Kiosk: ${isKioskUser}`);
       
       // Automatische Kiosk-Registrierung für Benutzer mit role === 'kiosk'
       if (isKioskUser) {
-        console.log(`🤖 Automatische Kiosk-Registrierung für ${username} (${userId})`);
+        console.log(`🤖 Automatische Kiosk-Registrierung für ${actualUsername} (${userId})`);
       }
     } catch (error) {
       console.error('Error fetching user role:', error);
@@ -127,7 +132,7 @@ class OnlineStatusManager {
     // Neue Verbindung hinzufügen
     this.connectedUsers.set(userId, {
       userId,
-      username,
+      username: actualUsername,
       socket: ws,
       lastHeartbeat: new Date(),
       isActive: true,
@@ -136,7 +141,7 @@ class OnlineStatusManager {
     
     // Bei Kiosk-Benutzern automatische Bestätigung senden
     if (isKioskUser) {
-      console.log(`📱 Automatische Kiosk-Aktivierung: ${username} (${userId})`);
+      console.log(`📱 Automatische Kiosk-Aktivierung: ${actualUsername} (${userId})`);
       console.log(`📱 Aktuelle Kiosk-Geräte: ${Array.from(this.connectedUsers.values()).filter(u => u.isKiosk).map(u => u.username).join(', ')}`);
       
       // Bestätigung an Kiosk senden
@@ -163,7 +168,7 @@ class OnlineStatusManager {
     // Status-Update an alle Clients
     this.broadcastStatusUpdate();
 
-    console.log(`User ${username} (${userId}) connected via WebSocket`);
+    console.log(`User ${actualUsername} (${userId}) connected via WebSocket`);
   }
 
   private async handleHeartbeat(userId: number) {
