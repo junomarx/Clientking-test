@@ -7034,6 +7034,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // NEUE KIOSK-MITARBEITER API-ENDPUNKTE
   
+  // Alle Kiosk-Mitarbeiter für den aktuellen Shop abrufen (vereinfachte Route)
+  app.get("/api/kiosk/employees", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const user = await storage.getUser(userId);
+      
+      if (!user || !user.shopId) {
+        return res.status(403).json({ message: "Keine Shop-Zuordnung gefunden" });
+      }
+      
+      const kioskEmployees = await storage.getKioskEmployees(user.shopId);
+      console.log(`📱 ${kioskEmployees.length} Kiosk-Mitarbeiter für Shop ${user.shopId} gefunden (User: ${user.username})`);
+      
+      res.json(kioskEmployees);
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Kiosk-Mitarbeiter:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Kiosk-Mitarbeiter" });
+    }
+  });
+  
   // Kiosk-Mitarbeiter für einen Shop abrufen
   app.get("/api/kiosk/employees/:shopId", isAuthenticated, async (req: Request, res: Response) => {
     try {

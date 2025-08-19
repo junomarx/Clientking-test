@@ -67,7 +67,7 @@ export function setupAuth(app: Express) {
   app.use(passport.session());
 
   passport.use(
-    new LocalStrategy({ usernameField: 'email' }, async (emailOrUsername, password, done) => {
+    new LocalStrategy({ usernameField: 'username' }, async (emailOrUsername, password, done) => {
       try {
         let user = null;
         

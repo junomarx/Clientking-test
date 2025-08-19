@@ -57,7 +57,7 @@ export default function KioskManagement({ shopId }: KioskManagementProps) {
   const { data: kioskEmployees = [], isLoading } = useQuery({
     queryKey: ['/api/kiosk/employees', shopId],
     queryFn: async () => {
-      const response = await apiRequest('GET', `/api/kiosk/employees/${shopId}`);
+      const response = await apiRequest('GET', `/api/kiosk/employees`);
       return response.json();
     },
     enabled: !!shopId
@@ -299,7 +299,7 @@ export default function KioskManagement({ shopId }: KioskManagementProps) {
                       <Label htmlFor="lastName">Nachname</Label>
                       <Input
                         id="lastName"
-                        placeholder="z.B. Terminal 1"
+                        placeholder="z.B. Tablet A"
                         value={newKioskData.lastName}
                         onChange={(e) => setNewKioskData({ ...newKioskData, lastName: e.target.value })}
                       />
