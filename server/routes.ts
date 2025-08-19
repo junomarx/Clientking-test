@@ -7118,31 +7118,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Kiosk-Verfügbarkeit prüfen (neue verbesserte Version)
+  // Multi-Kiosk-Verfügbarkeit prüfen (neue Multi-Terminal Version)
   app.get("/api/kiosk/availability/:shopId", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const shopId = parseInt(req.params.shopId);
       
-      const kioskStatus = await storage.isKioskOnline(shopId);
+      const kioskEmployees = await storage.getKioskEmployees(shopId);
       const onlineStatusManager = getOnlineStatusManager();
       
-      let isOnline = false;
-      if (onlineStatusManager && kioskStatus.kioskUser) {
-        isOnline = onlineStatusManager.isUserOnline(kioskStatus.kioskUser.id);
-      }
+      // Alle Kiosk-Mitarbeiter und ihre Online-Status prüfen
+      const kioskStatuses = kioskEmployees.map(kiosk => {
+        const isOnline = onlineStatusManager ? onlineStatusManager.isUserOnline(kiosk.id) : false;
+        return {
+          id: kiosk.id,
+          email: kiosk.email,
+          firstName: kiosk.firstName,
+          lastName: kiosk.lastName,
+          isOnline
+        };
+      });
       
-      console.log(`📱 Kiosk-Verfügbarkeit für Shop ${shopId}: ${isOnline ? 'verfügbar' : 'nicht verfügbar'}`);
+      const onlineCount = kioskStatuses.filter(k => k.isOnline).length;
+      
+      console.log(`📱 Multi-Kiosk-Status für Shop ${shopId}: ${onlineCount}/${kioskEmployees.length} online`);
       
       res.json({
-        isOnline,
-        kioskUser: kioskStatus.kioskUser ? {
-          id: kioskStatus.kioskUser.id,
-          username: kioskStatus.kioskUser.username
-        } : null
+        totalKiosks: kioskEmployees.length,
+        onlineCount,
+        kiosks: kioskStatuses,
+        // Für Rückwärtskompatibilität - erster Online-Kiosk
+        isOnline: onlineCount > 0,
+        kioskUser: kioskStatuses.find(k => k.isOnline) || null
       });
     } catch (error) {
-      console.error("Fehler beim Prüfen der Kiosk-Verfügbarkeit:", error);
-      res.status(500).json({ message: "Fehler beim Prüfen der Kiosk-Verfügbarkeit" });
+      console.error("Fehler beim Prüfen der Multi-Kiosk-Verfügbarkeit:", error);
+      res.status(500).json({ message: "Fehler beim Prüfen der Multi-Kiosk-Verfügbarkeit" });
     }
   });
 

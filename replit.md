@@ -13,24 +13,27 @@ Implementation Control: Only implement changes when explicitly commanded with "O
 
 ## Recent Progress (August 19, 2025)
 
-### Revolutionary Kiosk-Employee System Implementation (August 19, 2025)
-- **✅ Email-Based Authentication**: Kiosk employees now use email addresses like regular employees
-- **✅ Dedicated Kiosk Role**: New "kiosk" role in user schema for specialized tablet terminals
-- **✅ Complete Backend API**: Full CRUD operations for kiosk employee management
-- **✅ Frontend Integration**: Modern KioskManagement component with real-time availability checking
-- **✅ Multi-Terminal Support**: Each shop can manage multiple kiosk terminals independently
-- **✅ Enhanced Security**: Password hashing, email uniqueness validation, and shop isolation
+### Revolutionary Multi-Kiosk System Implementation (August 19, 2025)
+- **✅ Multi-Kiosk Architecture**: Complete overhaul to support multiple concurrent kiosk terminals per shop
+- **✅ Individual Online Status Tracking**: Each kiosk terminal shows separate online/offline status
+- **✅ Enhanced Multi-Kiosk API**: `/api/kiosk/availability/:shopId` returns comprehensive status for all kiosks
+- **✅ Real-Time Status Dashboard**: Frontend displays "X/Y online" with individual kiosk status badges
+- **✅ Scalable Terminal Management**: Unlimited kiosk terminals per shop with independent authentication
+- **✅ Email-Based Authentication**: Kiosk employees use email addresses with secure password hashing
+- **✅ Complete Backend API**: Full CRUD operations for kiosk employee management with shop isolation
 
-### New Kiosk Architecture (Revolutionary)
+### New Multi-Kiosk Architecture (Revolutionary)
 **Backend Implementation:**
-- **Schema Extension**: `role` field supports "kiosk" for dedicated terminals
+- **Multi-Kiosk API**: Enhanced `/api/kiosk/availability/:shopId` returns array of all kiosk statuses
+- **Individual Tracking**: Each kiosk has separate online/offline status via WebSocket integration
+- **Scalable Storage**: `getKioskEmployees()`, `getAllOnlineKiosks()`, `isKioskOnline()` methods
 - **API Endpoints**: `/api/kiosk/employees/:shopId`, `/api/kiosk/create`, `/api/kiosk/availability/:shopId`
-- **Storage Methods**: `getKioskEmployees()`, `createKioskEmployee()`, `isKioskOnline()`
 
 **Frontend Integration:**
-- **KioskManagement Component**: Complete tablet management with status dashboard
+- **Multi-Status Dashboard**: Displays "X/Y online" with individual kiosk status badges
+- **KioskManagement Component**: Complete management for unlimited tablet terminals
 - **Employee Page Tabs**: "Mitarbeiter" and "Kiosk-System" for organized access
-- **Real-time Monitoring**: 5-second availability checks with visual status indicators
+- **Real-time Monitoring**: 5-second availability checks for all kiosk terminals simultaneously
 
 ### Kiosk Employee Creation Process
 1. **Shop Owner Access**: Only shop owners can create kiosk employees
@@ -39,16 +42,23 @@ Implementation Control: Only implement changes when explicitly commanded with "O
 4. **Automatic Setup**: Password hashing and shop assignment handled automatically
 5. **Immediate Availability**: Real-time status checking via WebSocket integration
 
-### Test Results (Verified August 19, 2025)
+### Multi-Kiosk Test Results (Verified August 19, 2025)
 ```bash
-# Successfully created kiosk with email authentication
-POST /api/kiosk/create → {"success":true, "kioskEmployee":{"id":69,"email":"kiosk1@testshop.de"}}
+# Multi-Kiosk API returns comprehensive status for all terminals
+GET /api/kiosk/availability/999 → {
+  "totalKiosks": 2,
+  "onlineCount": 0,
+  "kiosks": [
+    {"id": 68, "email": "kiosk-tablet-1@kiosk.local", "firstName": "Kiosk", "lastName": "Terminal", "isOnline": false},
+    {"id": 69, "email": "kiosk1@testshop.de", "firstName": "Kiosk", "lastName": "Terminal 1", "isOnline": false}
+  ]
+}
 
-# Real-time kiosk listing working
-GET /api/kiosk/employees/999 → [2 kiosk employees with email details]
+# Individual kiosk employee management working
+GET /api/kiosk/employees/999 → [2 kiosk employees with full authentication details]
 
-# Availability monitoring functional  
-GET /api/kiosk/availability/999 → {"isOnline":false,"kioskUser":{...}}
+# Multi-terminal creation successful
+POST /api/kiosk/create → {"success": true, "kioskEmployee": {...}}
 ```
 
 ### Legacy Admin System Complete Removal (August 19, 2025)

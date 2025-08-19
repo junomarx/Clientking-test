@@ -486,6 +486,7 @@ export interface IStorage {
   getKioskEmployees(shopId: number): Promise<User[]>;
   createKioskEmployee(kioskData: { username: string; email: string; password: string; shopId: number; parentUserId: number }): Promise<User>;
   isKioskOnline(shopId: number): Promise<{ isOnline: boolean; kioskUser?: User }>;
+  getAllOnlineKiosks(shopId: number): Promise<{ onlineKiosks: User[]; totalKiosks: number }>;
 }
 
 /**
@@ -6214,6 +6215,22 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error(`Fehler beim Prüfen der Kiosk-Verfügbarkeit für Shop ${shopId}:`, error);
       return { isOnline: false };
+    }
+  }
+
+  async getAllOnlineKiosks(shopId: number): Promise<{ onlineKiosks: User[]; totalKiosks: number }> {
+    try {
+      const kioskEmployees = await this.getKioskEmployees(shopId);
+      
+      // TODO: Integration mit WebSocket OnlineStatusManager für alle Kiosks
+      // Für jetzt geben wir alle als offline zurück
+      return {
+        onlineKiosks: [],
+        totalKiosks: kioskEmployees.length
+      };
+    } catch (error) {
+      console.error(`Fehler beim Prüfen der Multi-Kiosk-Verfügbarkeit für Shop ${shopId}:`, error);
+      return { onlineKiosks: [], totalKiosks: 0 };
     }
   }
 

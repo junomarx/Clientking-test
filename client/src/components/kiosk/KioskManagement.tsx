@@ -230,36 +230,28 @@ export default function KioskManagement({ shopId }: KioskManagementProps) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold">
-                {kioskEmployees.length}
+                {kioskAvailability?.totalKiosks || kioskEmployees.length}
               </div>
               <div className="text-sm text-muted-foreground">
                 Kiosk-Mitarbeiter
               </div>
             </div>
             <div className="text-center">
-              <Badge variant={kioskAvailability?.isOnline ? "default" : "secondary"}>
-                {kioskAvailability?.isOnline ? "Online" : "Offline"}
+              <div className="text-2xl font-bold text-green-600">
+                {kioskAvailability?.onlineCount || 0}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Online
+              </div>
+            </div>
+            <div className="text-center">
+              <Badge variant={(kioskAvailability?.onlineCount || 0) > 0 ? "default" : "secondary"} 
+                     className={(kioskAvailability?.onlineCount || 0) > 0 ? "bg-green-100 text-green-800" : ""}>
+                {(kioskAvailability?.onlineCount || 0) > 0 ? "Aktive Kiosks" : "Offline"}
               </Badge>
               <div className="text-sm text-muted-foreground mt-1">
                 Kiosk-Status
               </div>
-            </div>
-            <div className="text-center">
-              {kioskAvailability?.kioskUser && (
-                <>
-                  <div className="text-sm font-medium">
-                    {kioskAvailability.kioskUser.firstName} {kioskAvailability.kioskUser.lastName}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    Aktiver Kiosk
-                  </div>
-                </>
-              )}
-              {!kioskAvailability?.kioskUser && (
-                <div className="text-sm text-muted-foreground">
-                  Kein Kiosk verfügbar
-                </div>
-              )}
             </div>
           </div>
         </CardContent>
@@ -382,11 +374,14 @@ export default function KioskManagement({ shopId }: KioskManagementProps) {
                     <Badge variant={kiosk.isActive ? "default" : "secondary"}>
                       {kiosk.isActive ? "Aktiv" : "Inaktiv"}
                     </Badge>
-                    {kioskAvailability?.kioskUser?.id === kiosk.id && (
-                      <Badge variant="outline" className="text-green-600">
-                        Online
-                      </Badge>
-                    )}
+                    {(() => {
+                      const kioskStatus = kioskAvailability?.kiosks?.find(k => k.id === kiosk.id);
+                      return kioskStatus?.isOnline && (
+                        <Badge variant="outline" className="text-green-600">
+                          Online
+                        </Badge>
+                      );
+                    })()}
                   </div>
                   <div className="flex gap-2">
                     <Button
