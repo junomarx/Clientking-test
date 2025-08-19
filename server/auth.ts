@@ -72,14 +72,14 @@ export function setupAuth(app: Express) {
         let user = null;
         
         // Strikte Regeln: 
-        // - Enthält "@" = Mitarbeiter (role='employee') über E-Mail
+        // - Enthält "@" = Mitarbeiter (role='employee') oder Kiosk (role='kiosk') über E-Mail
         // - Kein "@" = Shop-Owner (role='owner' oder null/undefined) über Benutzername
         if (emailOrUsername.includes('@')) {
-          // E-Mail-basierte Anmeldung nur für Mitarbeiter
+          // E-Mail-basierte Anmeldung für Mitarbeiter und Kiosk-Mitarbeiter
           user = await storage.getUserByEmail(emailOrUsername);
           
-          // Zusätzliche Validierung: Nur Mitarbeiter dürfen sich per E-Mail anmelden
-          if (user && user.role !== 'employee') {
+          // Zusätzliche Validierung: Nur Mitarbeiter und Kiosk-Mitarbeiter dürfen sich per E-Mail anmelden
+          if (user && user.role !== 'employee' && user.role !== 'kiosk') {
             console.log(`❌ Login-Verstoß: Benutzer ${user.username} (role: ${user.role}) versuchte E-Mail-Login`);
             return done(null, false, { message: 'E-Mail-Anmeldung nur für Mitarbeiter möglich' });
           }
@@ -88,9 +88,9 @@ export function setupAuth(app: Express) {
           user = await storage.getUserByUsername(emailOrUsername);
           
           // Zusätzliche Validierung: Nur Shop-Owner dürfen sich per Benutzername anmelden
-          if (user && user.role === 'employee') {
-            console.log(`❌ Login-Verstoß: Mitarbeiter ${user.username} versuchte Benutzername-Login`);
-            return done(null, false, { message: 'Mitarbeiter müssen sich mit ihrer E-Mail-Adresse anmelden' });
+          if (user && (user.role === 'employee' || user.role === 'kiosk')) {
+            console.log(`❌ Login-Verstoß: ${user.role === 'kiosk' ? 'Kiosk-Mitarbeiter' : 'Mitarbeiter'} ${user.username} versuchte Benutzername-Login`);
+            return done(null, false, { message: 'Mitarbeiter und Kiosk-Mitarbeiter müssen sich mit ihrer E-Mail-Adresse anmelden' });
           }
         }
         
