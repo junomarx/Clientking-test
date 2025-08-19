@@ -73,6 +73,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // WICHTIG: Benutzer-ID im localStorage speichern, damit sie für API-Anfragen verfügbar ist
       if (data.id) {
         localStorage.setItem('userId', data.id.toString());
+        
+        // Automatische Kiosk-Modus-Aktivierung für Kiosk-Benutzer
+        if (data.role === 'kiosk') {
+          console.log('🎯 Kiosk-Benutzer erkannt - aktiviere automatisch Kiosk-Modus');
+          localStorage.setItem('kioskMode', 'true');
+          
+          // Trigger custom event für KioskModeProvider
+          const kioskActivationEvent = new CustomEvent('auto-activate-kiosk-mode', {
+            detail: { userId: data.id, role: data.role }
+          });
+          window.dispatchEvent(kioskActivationEvent);
+        }
         console.log('UserId saved to localStorage:', data.id);
       }
       
@@ -98,6 +110,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else if (data.isMultiShopAdmin) {
         // Multi-Shop Admin - explizit via isMultiShopAdmin Flag
         setLocation('/multi-shop');
+      } else if (data.role === 'kiosk') {
+        // Kiosk-Benutzer bleiben auf der Startseite, aber im Kiosk-Modus
+        console.log('🎯 Kiosk-Benutzer bleibt auf Startseite im Kiosk-Modus');
+        setLocation('/');
       } else {
         // Normale Shop-Owner
         setLocation('/');

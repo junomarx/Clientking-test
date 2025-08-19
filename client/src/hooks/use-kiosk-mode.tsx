@@ -33,6 +33,25 @@ export function KioskModeProvider({ children }: { children: ReactNode }) {
   const [isKioskMode, setIsKioskMode] = useState(() => {
     return localStorage.getItem('kioskMode') === 'true';
   });
+  
+  // Listener für automatische Kiosk-Aktivierung nach Login
+  useEffect(() => {
+    const handleAutoActivateKiosk = (event: CustomEvent) => {
+      const { userId, role } = event.detail;
+      console.log('🎯 Auto-Aktivierung Kiosk-Modus für:', { userId, role });
+      
+      if (role === 'kiosk') {
+        setIsKioskMode(true);
+        console.log('✅ Kiosk-Modus automatisch aktiviert');
+      }
+    };
+
+    window.addEventListener('auto-activate-kiosk-mode', handleAutoActivateKiosk as EventListener);
+    
+    return () => {
+      window.removeEventListener('auto-activate-kiosk-mode', handleAutoActivateKiosk as EventListener);
+    };
+  }, []);
   const [signatureRequest, setSignatureRequest] = useState<SignatureRequest | null>(null);
   const { user } = useAuth();
   const { wsStatus, sendMessage } = useOnlineStatus();
