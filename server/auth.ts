@@ -95,6 +95,11 @@ export function setupAuth(app: Express) {
         }
         
         if (!user || !(await comparePasswords(password, user.password))) {
+          console.log(`❌ Login fehlgeschlagen für ${emailOrUsername}: User ${user ? 'gefunden' : 'nicht gefunden'}${user ? ', Passwort ungültig' : ''}`);
+          if (user) {
+            console.log(`🔍 Debug Info: User ID ${user.id}, Role: ${user.role}, Email: ${user.email}`);
+            console.log(`🔑 Gespeicherter Passwort-Hash: ${user.password.substring(0, 20)}...`);
+          }
           return done(null, false, { message: 'Ungültige Anmeldedaten' });
         }
         
