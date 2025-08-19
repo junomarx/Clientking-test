@@ -115,6 +115,11 @@ class OnlineStatusManager {
       const user = await storage.getUser(userId);
       isKioskUser = user?.role === 'kiosk';
       console.log(`🔍 User ${username} (ID: ${userId}) - Role: ${user?.role} - Is Kiosk: ${isKioskUser}`);
+      
+      // Automatische Kiosk-Registrierung für Benutzer mit role === 'kiosk'
+      if (isKioskUser) {
+        console.log(`🤖 Automatische Kiosk-Registrierung für ${username} (${userId})`);
+      }
     } catch (error) {
       console.error('Error fetching user role:', error);
     }
@@ -128,6 +133,19 @@ class OnlineStatusManager {
       isActive: true,
       isKiosk: isKioskUser
     });
+    
+    // Bei Kiosk-Benutzern automatische Bestätigung senden
+    if (isKioskUser) {
+      console.log(`📱 Automatische Kiosk-Aktivierung: ${username} (${userId})`);
+      console.log(`📱 Aktuelle Kiosk-Geräte: ${Array.from(this.connectedUsers.values()).filter(u => u.isKiosk).map(u => u.username).join(', ')}`);
+      
+      // Bestätigung an Kiosk senden
+      ws.send(JSON.stringify({
+        type: 'kiosk_registered',
+        message: 'Kiosk automatically registered',
+        timestamp: Date.now()
+      }));
+    }
 
     // LastLoginAt in Datenbank aktualisieren
     try {
