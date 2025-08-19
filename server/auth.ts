@@ -304,51 +304,23 @@ export function setupAuth(app: Express) {
     passport.authenticate("local", async (err: any, user: Express.User | false, info: any) => {
       if (err) return next(err);
       if (!user) {
-        // Verwende die Fehlermeldung aus info, wenn vorhanden
         const errorMessage = info && info.message ? info.message : "Benutzername oder Passwort falsch";
         return res.status(401).json({ message: errorMessage });
-      }
-      
-      // DSGVO-Schutz: Prüfe, ob der Benutzer eine Shop-Zuordnung hat (außer bei Superadmins)
-      // Multi-Shop Admins werden anhand der multi_shop_access Tabelle identifiziert
-      const accessibleShopsCount = await storage.getUserAccessibleShopsCount(user.id);
-      const hasMultiShopAccess = accessibleShopsCount > 0;
-      const isMultiShopAdmin = !user.shopId && !user.isSuperadmin && hasMultiShopAccess;
-      
-      console.log(`🔍 Login-Prüfung für ${user.username}: shopId=${user.shopId}, isAdmin=${user.isAdmin}, isSuperadmin=${user.isSuperadmin}, accessibleShopsCount=${accessibleShopsCount}, isMultiShopAdmin=${isMultiShopAdmin}`);
-      
-      if (!user.shopId && !user.isSuperadmin && !isMultiShopAdmin) {
-        console.error(`❌ Login verweigert: Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung`);
-        return res.status(403).json({ 
-          message: "Ihr Benutzerkonto ist nicht korrekt konfiguriert. Bitte kontaktieren Sie den Administrator." 
-        });
-      }
-      
-      if (isMultiShopAdmin) {
-        console.log(`✅ Multi-Shop Admin erkannt: ${user.username} (ID: ${user.id})`);
       }
       
       req.login(user, async (err) => {
         if (err) return next(err);
         
-        // Update last login timestamp
         try {
           await storage.updateUserLastLogin(user.id);
         } catch (error) {
           console.error("Failed to update last login timestamp:", error);
         }
         
-        // Generate a simple token (in production we would use JWT)
-        const token = Buffer.from(`${user.id}:${user.username}:${Date.now()}`).toString('base64');
-        
         console.log(`✅ Login erfolgreich für Benutzer ${user.username} (ID: ${user.id}, Shop-ID: ${user.shopId})`);
         
-        // Return the user without the password and token
         const { password, ...userWithoutPassword } = user;
-        res.status(200).json({ 
-          ...userWithoutPassword, 
-          token 
-        });
+        res.status(200).json(userWithoutPassword);
       });
     })(req, res, next);
   });

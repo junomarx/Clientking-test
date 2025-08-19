@@ -137,7 +137,7 @@ export default function AuthPage() {
   
   function onLoginSubmit(data: LoginFormValues) {
     console.log('Login-Versuch mit Benutzername:', data.username);
-    loginMutation.mutate({ email: data.username, password: data.password });
+    loginMutation.mutate({ username: data.username, password: data.password });
     
     // Nach der erfolgreichen Anmeldung prüfen wir, ob die userId im localStorage vorhanden ist
     setTimeout(() => {
