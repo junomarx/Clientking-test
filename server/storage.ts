@@ -6216,6 +6216,51 @@ export class DatabaseStorage implements IStorage {
       return { isOnline: false };
     }
   }
+
+  async updateKioskEmployee(kioskId: number, updateData: {
+    email?: string;
+    firstName?: string;
+    lastName?: string;
+    isActive?: boolean;
+  }): Promise<User> {
+    try {
+      const [updatedKiosk] = await db
+        .update(users)
+        .set({
+          email: updateData.email,
+          firstName: updateData.firstName,
+          lastName: updateData.lastName,
+          isActive: updateData.isActive
+        })
+        .where(eq(users.id, kioskId))
+        .returning();
+      
+      if (!updatedKiosk) {
+        throw new Error("Kiosk-Mitarbeiter nicht gefunden");
+      }
+      
+      return updatedKiosk;
+    } catch (error) {
+      console.error("Fehler beim Aktualisieren des Kiosk-Mitarbeiters:", error);
+      throw error;
+    }
+  }
+
+  async deleteKioskEmployee(kioskId: number): Promise<void> {
+    try {
+      const result = await db
+        .delete(users)
+        .where(eq(users.id, kioskId))
+        .returning();
+      
+      if (result.length === 0) {
+        throw new Error("Kiosk-Mitarbeiter nicht gefunden");
+      }
+    } catch (error) {
+      console.error("Fehler beim Löschen des Kiosk-Mitarbeiters:", error);
+      throw error;
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();

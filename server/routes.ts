@@ -7146,6 +7146,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Kiosk-Mitarbeiter bearbeiten
+  app.patch("/api/kiosk/:kioskId", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const kioskId = parseInt(req.params.kioskId);
+      const { email, firstName, lastName, isActive } = req.body;
+      const userId = (req.user as any).id;
+      
+      const user = await storage.getUser(userId);
+      if (!user || (!user.isSuperadmin && user.role !== "owner")) {
+        return res.status(403).json({ message: "Nur Shop-Owner können Kiosk-Mitarbeiter bearbeiten" });
+      }
+      
+      // Kiosk-Mitarbeiter abrufen und Berechtigung prüfen
+      const kioskEmployee = await storage.getUser(kioskId);
+      if (!kioskEmployee || kioskEmployee.role !== "kiosk" || kioskEmployee.shopId !== user.shopId) {
+        return res.status(404).json({ message: "Kiosk-Mitarbeiter nicht gefunden oder keine Berechtigung" });
+      }
+      
+      // E-Mail-Eindeutigkeit prüfen (falls E-Mail geändert wird)
+      if (email && email !== kioskEmployee.email) {
+        const existingUser = await storage.getUserByEmail(email);
+        if (existingUser && existingUser.id !== kioskId) {
+          return res.status(400).json({ message: "E-Mail-Adresse wird bereits verwendet" });
+        }
+      }
+      
+      const updatedKiosk = await storage.updateKioskEmployee(kioskId, {
+        email: email || kioskEmployee.email,
+        firstName: firstName || kioskEmployee.firstName,
+        lastName: lastName || kioskEmployee.lastName,
+        isActive: isActive !== undefined ? isActive : kioskEmployee.isActive
+      });
+      
+      console.log(`✅ Kiosk-Mitarbeiter bearbeitet: ${updatedKiosk.email} für Shop ${user.shopId}`);
+      res.json({ 
+        success: true, 
+        message: "Kiosk-Mitarbeiter erfolgreich bearbeitet",
+        kioskEmployee: {
+          id: updatedKiosk.id,
+          email: updatedKiosk.email,
+          firstName: updatedKiosk.firstName,
+          lastName: updatedKiosk.lastName,
+          isActive: updatedKiosk.isActive
+        }
+      });
+    } catch (error) {
+      console.error("Fehler beim Bearbeiten des Kiosk-Mitarbeiters:", error);
+      res.status(500).json({ message: "Fehler beim Bearbeiten des Kiosk-Mitarbeiters" });
+    }
+  });
+
+  // Kiosk-Mitarbeiter löschen
+  app.delete("/api/kiosk/:kioskId", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const kioskId = parseInt(req.params.kioskId);
+      const userId = (req.user as any).id;
+      
+      const user = await storage.getUser(userId);
+      if (!user || (!user.isSuperadmin && user.role !== "owner")) {
+        return res.status(403).json({ message: "Nur Shop-Owner können Kiosk-Mitarbeiter löschen" });
+      }
+      
+      // Kiosk-Mitarbeiter abrufen und Berechtigung prüfen
+      const kioskEmployee = await storage.getUser(kioskId);
+      if (!kioskEmployee || kioskEmployee.role !== "kiosk" || kioskEmployee.shopId !== user.shopId) {
+        return res.status(404).json({ message: "Kiosk-Mitarbeiter nicht gefunden oder keine Berechtigung" });
+      }
+      
+      await storage.deleteKioskEmployee(kioskId);
+      
+      console.log(`❌ Kiosk-Mitarbeiter gelöscht: ${kioskEmployee.email} für Shop ${user.shopId}`);
+      res.json({ 
+        success: true, 
+        message: "Kiosk-Mitarbeiter erfolgreich gelöscht"
+      });
+    } catch (error) {
+      console.error("Fehler beim Löschen des Kiosk-Mitarbeiters:", error);
+      res.status(500).json({ message: "Fehler beim Löschen des Kiosk-Mitarbeiters" });
+    }
+  });
+
   const httpServer = createServer(app);
   
   // WebSocket-Server initialisieren

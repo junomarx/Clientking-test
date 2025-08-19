@@ -9,7 +9,18 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Smartphone, Users, AlertCircle } from 'lucide-react';
+import { Plus, Smartphone, Users, AlertCircle, Edit, Trash2, Wifi, WifiOff } from 'lucide-react';
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle, 
+  AlertDialogTrigger 
+} from '@/components/ui/alert-dialog';
 
 interface KioskEmployee {
   id: number;
@@ -28,9 +39,15 @@ export default function KioskManagement({ shopId }: KioskManagementProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [editKiosk, setEditKiosk] = useState<KioskEmployee | null>(null);
   const [newKioskData, setNewKioskData] = useState({
     email: '',
     password: '',
+    firstName: '',
+    lastName: ''
+  });
+  const [editKioskData, setEditKioskData] = useState({
+    email: '',
     firstName: '',
     lastName: ''
   });
@@ -80,6 +97,55 @@ export default function KioskManagement({ shopId }: KioskManagementProps) {
     },
   });
 
+  // Kiosk-Mitarbeiter bearbeiten
+  const editKioskMutation = useMutation({
+    mutationFn: async (data: { kioskId: number; email: string; firstName: string; lastName: string }) => {
+      const response = await apiRequest('PATCH', `/api/kiosk/${data.kioskId}`, {
+        email: data.email,
+        firstName: data.firstName,
+        lastName: data.lastName
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Kiosk-Mitarbeiter bearbeitet',
+        description: 'Die Änderungen wurden erfolgreich gespeichert.',
+      });
+      setEditKiosk(null);
+      queryClient.invalidateQueries({ queryKey: ['/api/kiosk/employees', shopId] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Fehler',
+        description: error.message || 'Fehler beim Bearbeiten des Kiosk-Mitarbeiters.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Kiosk-Mitarbeiter löschen
+  const deleteKioskMutation = useMutation({
+    mutationFn: async (kioskId: number) => {
+      const response = await apiRequest('DELETE', `/api/kiosk/${kioskId}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Kiosk-Mitarbeiter gelöscht',
+        description: 'Der Kiosk-Mitarbeiter wurde erfolgreich gelöscht.',
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/kiosk/employees', shopId] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Fehler',
+        description: error.message || 'Fehler beim Löschen des Kiosk-Mitarbeiters.',
+        variant: 'destructive',
+      });
+    },
+  });
+
   const handleCreateKiosk = () => {
     if (!newKioskData.email || !newKioskData.password || !newKioskData.firstName || !newKioskData.lastName) {
       toast({
@@ -91,6 +157,39 @@ export default function KioskManagement({ shopId }: KioskManagementProps) {
     }
 
     createKioskMutation.mutate(newKioskData);
+  };
+
+  const handleEditKiosk = (kiosk: KioskEmployee) => {
+    setEditKiosk(kiosk);
+    setEditKioskData({
+      email: kiosk.email,
+      firstName: kiosk.firstName || '',
+      lastName: kiosk.lastName || ''
+    });
+  };
+
+  const handleSaveEdit = () => {
+    if (!editKiosk) return;
+    
+    if (!editKioskData.email || !editKioskData.firstName || !editKioskData.lastName) {
+      toast({
+        title: 'Unvollständige Daten',
+        description: 'Bitte füllen Sie alle Felder aus.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    editKioskMutation.mutate({
+      kioskId: editKiosk.id,
+      email: editKioskData.email,
+      firstName: editKioskData.firstName,
+      lastName: editKioskData.lastName
+    });
+  };
+
+  const handleDeleteKiosk = (kioskId: number) => {
+    deleteKioskMutation.mutate(kioskId);
   };
 
   if (isLoading) {
@@ -280,12 +379,100 @@ export default function KioskManagement({ shopId }: KioskManagementProps) {
                       </Badge>
                     )}
                   </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEditKiosk(kiosk)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Kiosk-Mitarbeiter löschen</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Sind Sie sicher, dass Sie {kiosk.firstName} {kiosk.lastName} löschen möchten? 
+                            Diese Aktion kann nicht rückgängig gemacht werden.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDeleteKiosk(kiosk.id)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Löschen
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </div>
               ))}
             </div>
           )}
         </CardContent>
       </Card>
+
+      {/* Bearbeiten Dialog */}
+      {editKiosk && (
+        <Dialog open={!!editKiosk} onOpenChange={() => setEditKiosk(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Kiosk-Mitarbeiter bearbeiten</DialogTitle>
+              <DialogDescription>
+                Bearbeiten Sie die Daten des Kiosk-Mitarbeiters
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-firstName">Vorname</Label>
+                  <Input
+                    id="edit-firstName"
+                    value={editKioskData.firstName}
+                    onChange={(e) => setEditKioskData({ ...editKioskData, firstName: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-lastName">Nachname</Label>
+                  <Input
+                    id="edit-lastName"
+                    value={editKioskData.lastName}
+                    onChange={(e) => setEditKioskData({ ...editKioskData, lastName: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="edit-email">E-Mail-Adresse</Label>
+                <Input
+                  id="edit-email"
+                  type="email"
+                  value={editKioskData.email}
+                  onChange={(e) => setEditKioskData({ ...editKioskData, email: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setEditKiosk(null)}>
+                Abbrechen
+              </Button>
+              <Button 
+                onClick={handleSaveEdit}
+                disabled={editKioskMutation.isPending}
+              >
+                {editKioskMutation.isPending ? 'Speichere...' : 'Speichern'}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
