@@ -3564,28 +3564,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getUsersByEmail(email: string): Promise<User[]> {
-    try {
-      return await db.select().from(users).where(eq(users.email, email));
-    } catch (error) {
-      console.log(
-        `Fehler beim Abrufen der Benutzer mit Email ${email}:`,
-        error,
-      );
-      console.log("Verwende Fallback-Abfrage...");
 
-      const result = await db.execute(sql`
-        SELECT id, username, password, email, is_active, is_admin, is_superadmin, pricing_plan, 
-               shop_id, company_name, company_address, company_vat_number,
-               company_phone, company_email, reset_token, reset_token_expires,
-               created_at, feature_overrides, package_id
-        FROM users
-        WHERE email = ${email}
-      `);
-
-      return result.rows.map((row) => convertToUser(row));
-    }
-  }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
     try {
@@ -3618,61 +3597,9 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getAllUsers(currentUserId?: number): Promise<User[]> {
-    // Wenn keine Benutzer-ID angegeben ist, versuche den Standard-Admin zu laden
-    const currentUser = currentUserId
-      ? await this.getUser(currentUserId)
-      : await this.getUserByUsername("bugi");
 
-    if (!currentUser) return [];
 
-    // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, leere Liste zurückgeben statt Fallback auf Shop 1
-    if (!currentUser.shopId) {
-      console.warn(`❌ Benutzer ${currentUser.username} (ID: ${currentUser.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
-      return [];
-    }
-    
-    // Jeder Benutzer, auch Admin, sieht nur Benutzer aus seinem eigenen Shop (DSGVO-konform)
-    const shopIdValue = currentUser.shopId;
-    return await db
-      .select()
-      .from(users)
-      .where(eq(users.shopId, shopIdValue))
-      .orderBy(desc(users.createdAt));
-  }
 
-  async updateUser(
-    id: number,
-    userData: Partial<Omit<User, "id" | "password">>,
-    currentUserId?: number,
-  ): Promise<User | undefined> {
-    // Prüfe Berechtigungen: Nur Benutzer aus dem eigenen Shop können bearbeitet werden
-    if (!currentUserId) return undefined;
-
-    const currentUser = await this.getUser(currentUserId);
-    if (!currentUser) return undefined;
-
-    // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, undefined zurückgeben statt Fallback auf Shop 1
-    if (!currentUser.shopId) {
-      console.warn(`❌ Benutzer ${currentUser.username} (ID: ${currentUser.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
-      return undefined;
-    }
-
-    // Shop-ID aus dem Benutzer extrahieren für die Shop-Isolation
-    const shopIdValue = currentUser.shopId;
-    const whereCondition = and(
-      eq(costEstimates.id, id),
-      eq(costEstimates.shopId, shopIdValue),
-    ) as SQL<unknown>;
-
-    const [updatedEstimate] = await db
-      .update(costEstimates)
-      .set(updateData)
-      .where(whereCondition)
-      .returning();
-
-    return updatedEstimate;
-  }
 
   async updateCostEstimateStatus(
     id: number,
@@ -3722,48 +3649,9 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async deleteCostEstimate(
-    id: number,
-    currentUserId?: number,
-  ): Promise<boolean> {
-    try {
-      if (!currentUserId) {
-        return false; // Wenn keine Benutzer-ID angegeben ist, gebe false zurück
-      }
 
-      // Benutzer holen, um Shop-ID zu erhalten
-      const currentUser = await this.getUser(currentUserId);
-    if (!currentUser) return undefined;
 
-    // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, undefined zurückgeben statt Fallback auf Shop 1
-    if (!currentUser.shopId) {
-      console.warn(`❌ Benutzer ${currentUser.username} (ID: ${currentUser.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
-      return undefined;
-    }
 
-    // Shop-ID aus dem Benutzer extrahieren für die Shop-Isolation
-    const shopIdValue = currentUser.shopId;
-      const whereCondition = and(
-        eq(costEstimates.id, id),
-        eq(costEstimates.shopId, shopIdValue),
-      ) as SQL<unknown>;
-
-      // Kostenvoranschlag als umgewandelt markieren
-      await db
-        .update(costEstimates)
-        .set({
-          convertedToRepair: true,
-          repairId: repair.id,
-          updatedAt: new Date(),
-        })
-        .where(whereCondition);
-
-      return repair;
-    } catch (error) {
-      console.error("Error converting cost estimate to repair:", error);
-      return undefined;
-    }
-  }
 
   // Global device data methods for public access
   async getGlobalDeviceTypes(): Promise<UserDeviceType[]> {
