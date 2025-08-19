@@ -47,18 +47,18 @@ Implementation Control: Only implement changes when explicitly commanded with "O
 # Multi-Kiosk API returns comprehensive status for all terminals
 GET /api/kiosk/availability/999 → {
   "totalKiosks": 2,
-  "onlineCount": 0,
+  "onlineCount": 2,
   "kiosks": [
-    {"id": 68, "email": "kiosk-tablet-1@kiosk.local", "firstName": "Kiosk", "lastName": "Terminal", "isOnline": false},
-    {"id": 69, "email": "kiosk1@testshop.de", "firstName": "Kiosk", "lastName": "Terminal 1", "isOnline": false}
+    {"id": 68, "email": "kiosk-tablet-1@kiosk.local", "firstName": "Kiosk", "lastName": "Terminal", "isOnline": true},
+    {"id": 69, "email": "kiosk1@testshop.de", "firstName": "Kiosk", "lastName": "Terminal 1", "isOnline": true}
   ]
 }
 
-# Individual kiosk employee management working
-GET /api/kiosk/employees/999 → [2 kiosk employees with full authentication details]
+# Individual kiosk targeting working
+POST /api/send-to-kiosk → {"success": true, "sent": true, "message": "Nachricht erfolgreich an Kiosk 68 gesendet"}
 
-# Multi-terminal creation successful
-POST /api/kiosk/create → {"success": true, "kioskEmployee": {...}}
+# Status: Kiosk Terminal (ID: 68) fully functional, Terminal 1 (ID: 69) displays online but limited functionality
+# Primary kiosk system operational for signature collection workflows
 ```
 
 ### Legacy Admin System Complete Removal (August 19, 2025)
