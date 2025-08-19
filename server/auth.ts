@@ -99,6 +99,14 @@ export function setupAuth(app: Express) {
           if (user) {
             console.log(`🔍 Debug Info: User ID ${user.id}, Role: ${user.role}, Email: ${user.email}`);
             console.log(`🔑 Gespeicherter Passwort-Hash: ${user.password.substring(0, 20)}...`);
+            console.log(`🔑 Eingegebenes Passwort: ${password}`);
+            // Test: Hash des eingegebenen Passworts erstellen
+            try {
+              const testHash = await hashPassword(password);
+              console.log(`🔍 Test-Hash des Passworts: ${testHash.substring(0, 20)}...`);
+            } catch(e) {
+              console.log(`❌ Fehler beim Test-Hash erstellen: ${e}`);
+            }
           }
           return done(null, false, { message: 'Ungültige Anmeldedaten' });
         }
