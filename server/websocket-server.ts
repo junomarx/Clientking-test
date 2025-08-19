@@ -487,20 +487,48 @@ class OnlineStatusManager {
     const user = this.connectedUsers.get(userId);
     if (user) {
       user.isKiosk = true;
+      user.lastHeartbeat = new Date();
+      user.isActive = true;
       console.log(`🛠️ DEBUG: Kiosk ${userId} (${user.username}) force-registered`);
     } else {
-      // Erstelle temporären Benutzer für Force-Registration
+      // Erstelle temporären Benutzer für Force-Registration mit Mock-Socket
+      const mockSocket = {
+        readyState: 1, // WebSocket.OPEN
+        send: (message: string) => {
+          console.log(`🎭 DEBUG: Mock-Socket für Kiosk ${userId} empfängt:`, JSON.parse(message).type);
+          // Simuliere erfolgreiche ACK-Antwort nach kurzer Verzögerung
+          setTimeout(() => {
+            console.log(`🎭 DEBUG: Mock-ACK von Kiosk ${userId}`);
+          }, 100);
+        },
+        close: () => console.log(`🎭 DEBUG: Mock-Socket ${userId} geschlossen`)
+      } as any;
+
       const tempUser: ConnectedUser = {
         userId,
         username: `debug-kiosk-${userId}`,
-        socket: null as any, // Wird nie verwendet bei Debug
+        socket: mockSocket,
         lastHeartbeat: new Date(),
         isActive: true,
         isKiosk: true
       };
       this.connectedUsers.set(userId, tempUser);
-      console.log(`🛠️ DEBUG: Kiosk ${userId} force-registered als Temp-User`);
+      console.log(`🛠️ DEBUG: Kiosk ${userId} force-registered als Temp-User mit Mock-Socket`);
     }
+    
+    // Regelmäßige Heartbeat-Updates für Debug-Kiosks
+    this.setupDebugHeartbeat(userId);
+  }
+  
+  // Hält Debug-Kiosks künstlich "am Leben"
+  private setupDebugHeartbeat(userId: number): void {
+    setInterval(() => {
+      const user = this.connectedUsers.get(userId);
+      if (user && user.username?.startsWith('debug-kiosk-')) {
+        user.lastHeartbeat = new Date();
+        user.isActive = true;
+      }
+    }, 5000); // Alle 5 Sekunden Heartbeat-Update
   }
 
   // Debug-Methode um zu sehen welche Benutzer registriert sind
