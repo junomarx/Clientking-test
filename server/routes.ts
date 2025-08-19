@@ -7150,7 +7150,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/kiosk/:kioskId", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const kioskId = parseInt(req.params.kioskId);
-      const { email, firstName, lastName, isActive } = req.body;
+      const { email, firstName, lastName, isActive, password } = req.body;
       const userId = (req.user as any).id;
       
       const user = await storage.getUser(userId);
@@ -7172,12 +7172,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      const updatedKiosk = await storage.updateKioskEmployee(kioskId, {
+      // Passwort-Update vorbereiten (falls angegeben)
+      let updateData: any = {
         email: email || kioskEmployee.email,
         firstName: firstName || kioskEmployee.firstName,
         lastName: lastName || kioskEmployee.lastName,
         isActive: isActive !== undefined ? isActive : kioskEmployee.isActive
-      });
+      };
+
+      // Wenn ein neues Passwort angegeben wurde, es hashen
+      if (password && password.trim() !== '') {
+        const hashedPassword = await hashPassword(password);
+        updateData.password = hashedPassword;
+        console.log(`🔐 Neues Passwort für Kiosk-Mitarbeiter ${kioskEmployee.email} wird gesetzt`);
+      }
+
+      const updatedKiosk = await storage.updateKioskEmployee(kioskId, updateData);
       
       console.log(`✅ Kiosk-Mitarbeiter bearbeitet: ${updatedKiosk.email} für Shop ${user.shopId}`);
       res.json({ 

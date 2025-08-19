@@ -49,7 +49,8 @@ export default function KioskManagement({ shopId }: KioskManagementProps) {
   const [editKioskData, setEditKioskData] = useState({
     email: '',
     firstName: '',
-    lastName: ''
+    lastName: '',
+    password: ''
   });
 
   // Kiosk-Mitarbeiter laden
@@ -164,7 +165,8 @@ export default function KioskManagement({ shopId }: KioskManagementProps) {
     setEditKioskData({
       email: kiosk.email,
       firstName: kiosk.firstName || '',
-      lastName: kiosk.lastName || ''
+      lastName: kiosk.lastName || '',
+      password: '' // Leer lassen für Sicherheit
     });
   };
 
@@ -174,18 +176,25 @@ export default function KioskManagement({ shopId }: KioskManagementProps) {
     if (!editKioskData.email || !editKioskData.firstName || !editKioskData.lastName) {
       toast({
         title: 'Unvollständige Daten',
-        description: 'Bitte füllen Sie alle Felder aus.',
+        description: 'Bitte füllen Sie alle Pflichtfelder aus.',
         variant: 'destructive',
       });
       return;
     }
 
-    editKioskMutation.mutate({
+    const updateData: any = {
       kioskId: editKiosk.id,
       email: editKioskData.email,
       firstName: editKioskData.firstName,
       lastName: editKioskData.lastName
-    });
+    };
+
+    // Passwort nur hinzufügen, wenn es eingegeben wurde
+    if (editKioskData.password && editKioskData.password.trim() !== '') {
+      updateData.password = editKioskData.password;
+    }
+
+    editKioskMutation.mutate(updateData);
   };
 
   const handleDeleteKiosk = (kioskId: number) => {
@@ -456,6 +465,16 @@ export default function KioskManagement({ shopId }: KioskManagementProps) {
                   type="email"
                   value={editKioskData.email}
                   onChange={(e) => setEditKioskData({ ...editKioskData, email: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-password">Neues Passwort (optional)</Label>
+                <Input
+                  id="edit-password"
+                  type="password"
+                  placeholder="Leer lassen, um Passwort nicht zu ändern"
+                  value={editKioskData.password}
+                  onChange={(e) => setEditKioskData({ ...editKioskData, password: e.target.value })}
                 />
               </div>
             </div>

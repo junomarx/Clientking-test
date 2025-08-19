@@ -6222,16 +6222,20 @@ export class DatabaseStorage implements IStorage {
     firstName?: string;
     lastName?: string;
     isActive?: boolean;
+    password?: string;
   }): Promise<User> {
     try {
+      // Erstelle das Update-Objekt dynamisch
+      const setData: any = {};
+      if (updateData.email !== undefined) setData.email = updateData.email;
+      if (updateData.firstName !== undefined) setData.firstName = updateData.firstName;
+      if (updateData.lastName !== undefined) setData.lastName = updateData.lastName;
+      if (updateData.isActive !== undefined) setData.isActive = updateData.isActive;
+      if (updateData.password !== undefined) setData.password = updateData.password;
+
       const [updatedKiosk] = await db
         .update(users)
-        .set({
-          email: updateData.email,
-          firstName: updateData.firstName,
-          lastName: updateData.lastName,
-          isActive: updateData.isActive
-        })
+        .set(setData)
         .where(eq(users.id, kioskId))
         .returning();
       
