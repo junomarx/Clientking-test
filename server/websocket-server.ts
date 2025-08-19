@@ -150,7 +150,7 @@ class OnlineStatusManager {
 
   private async handleHeartbeat(userId: number) {
     const user = this.connectedUsers.get(userId);
-    if (user) {
+    if (user && user.socket && user.socket.readyState === WebSocket.OPEN) {
       user.lastHeartbeat = new Date();
       user.isActive = true;
       
@@ -201,7 +201,9 @@ class OnlineStatusManager {
         
         if (timeSinceLastHeartbeat > timeout) {
           console.log(`User ${user.username} (${userId}) timed out`);
-          user.socket.close();
+          if (user.socket && user.socket.readyState === WebSocket.OPEN) {
+            user.socket.close();
+          }
           this.connectedUsers.delete(userId);
           
           // LastLogoutAt in Datenbank aktualisieren
@@ -267,7 +269,7 @@ class OnlineStatusManager {
   // NEUE METHODE: Prüft ob echte Kiosk-Geräte verfügbar sind
   hasActiveKiosks(): boolean {
     const activeKiosks = Array.from(this.connectedUsers.values()).filter(user => 
-      user.isKiosk && user.socket.readyState === WebSocket.OPEN
+      user.isKiosk && user.socket && user.socket.readyState === WebSocket.OPEN
     );
     return activeKiosks.length > 0;
   }
@@ -275,7 +277,7 @@ class OnlineStatusManager {
   // NEUE METHODE: Anzahl der aktiven Kiosk-Geräte
   getActiveKioskCount(): number {
     return Array.from(this.connectedUsers.values()).filter(user => 
-      user.isKiosk && user.socket.readyState === WebSocket.OPEN
+      user.isKiosk && user.socket && user.socket.readyState === WebSocket.OPEN
     ).length;
   }
 
@@ -312,7 +314,7 @@ class OnlineStatusManager {
     const messageString = JSON.stringify(message);
     
     for (const user of this.connectedUsers.values()) {
-      if (user.socket.readyState === WebSocket.OPEN) {
+      if (user && user.socket && user.socket.readyState === WebSocket.OPEN) {
         try {
           user.socket.send(messageString);
         } catch (error) {
@@ -334,7 +336,7 @@ class OnlineStatusManager {
     }
     
     for (const user of kioskUsers) {
-      if (user.socket.readyState === WebSocket.OPEN) {
+      if (user.socket && user.socket.readyState === WebSocket.OPEN) {
         try {
           user.socket.send(messageString);
           console.log(`✅ Kiosk-Nachricht gesendet an ${user.username} (${user.userId})`);
@@ -342,8 +344,38 @@ class OnlineStatusManager {
           console.error(`❌ Fehler beim Senden an Kiosk ${user.username}:`, error);
         }
       } else {
-        console.warn(`⚠️ Kiosk-WebSocket nicht bereit: ${user.username} (Status: ${user.socket.readyState})`);
+        console.warn(`⚠️ Kiosk-WebSocket nicht bereit: ${user.username} (Status: ${user.socket?.readyState || 'null'})`);
       }
+    }
+  }
+
+  // Send message to specific kiosk by ID
+  sendToSpecificKiosk(kioskId: number, message: any): boolean {
+    const user = this.connectedUsers.get(kioskId);
+    
+    if (!user) {
+      console.warn(`❌ Kiosk ${kioskId} nicht verbunden`);
+      return false;
+    }
+    
+    if (!user.isKiosk) {
+      console.warn(`❌ Benutzer ${kioskId} ist kein Kiosk`);
+      return false;
+    }
+    
+    if (!user.socket || user.socket.readyState !== WebSocket.OPEN) {
+      console.warn(`❌ Kiosk ${kioskId} WebSocket nicht bereit (Status: ${user.socket?.readyState})`);
+      return false;
+    }
+    
+    try {
+      const messageString = JSON.stringify(message);
+      user.socket.send(messageString);
+      console.log(`✅ Nachricht erfolgreich an Kiosk ${kioskId} (${user.username}) gesendet`);
+      return true;
+    } catch (error) {
+      console.error(`❌ Fehler beim Senden an Kiosk ${kioskId}:`, error);
+      return false;
     }
   }
 

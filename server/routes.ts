@@ -5896,9 +5896,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           timestamp: new Date().toISOString()
         });
         
-        // Primärer Broadcast an alle Clients
-        onlineStatusManager.broadcast(message);
-        
         // Gezielter Broadcast an Kiosk-Geräte mit Retry
         for (let attempt = 1; attempt <= 3; attempt++) {
           onlineStatusManager.broadcastToKiosks({
@@ -5958,6 +5955,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Fehler beim Abrufen der Ersatzteile:", error);
       res.status(500).json({ 
         message: "Fehler beim Abrufen der Ersatzteile",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Send signature request to specific kiosk
+  app.post("/api/send-to-kiosk", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { repairId, kioskId } = req.body;
+      const userId = req.user?.id;
+      
+      if (!userId || !repairId) {
+        return res.status(400).json({ message: "User ID und Repair ID sind erforderlich" });
+      }
+      
+      console.log(`📤 Sende Unterschrifts-Anfrage von User ${userId} für Reparatur ${repairId} an Kiosk ${kioskId || 'alle'}`);
+      
+      // Reparatur und Kundendaten abrufen
+      const repair = await storage.getRepair(repairId, userId);
+      if (!repair) {
+        return res.status(404).json({ message: "Reparatur nicht gefunden" });
+      }
+      
+      const customer = await storage.getCustomer(repair.customerId, userId);
+      if (!customer) {
+        return res.status(404).json({ message: "Kunde nicht gefunden" });
+      }
+      
+      // Geschäftseinstellungen für Reparaturbedingungen abrufen
+      const businessSettings = await storage.getBusinessSettings(userId);
+      
+      // Nachricht für Kiosk-Geräte vorbereiten
+      const message = {
+        type: 'signature-request',
+        payload: {
+          repairId: repair.id,
+          customerName: `${customer.firstName} ${customer.lastName}`,
+          customerPhone: customer.phone,
+          customerEmail: customer.email,
+          customerAddress: customer.address,
+          repairDetails: `${repair.deviceType} ${repair.brand} ${repair.model} - ${repair.issue}`,
+          deviceInfo: `${repair.brand} ${repair.model} (${repair.deviceType})`,
+          orderCode: repair.orderCode,
+          estimatedCost: repair.estimatedCost,
+          status: repair.status,
+          repairTerms: businessSettings?.repairTerms || null,
+          shopName: businessSettings?.businessName || 'Reparaturservice',
+          timestamp: Date.now()
+        }
+      };
+      
+      // An spezifischen Kiosk oder alle Kiosks senden
+      const onlineStatusManager = getOnlineStatusManager();
+      if (onlineStatusManager) {
+        if (kioskId) {
+          // An spezifischen Kiosk senden
+          console.log(`🎯 Sende an spezifischen Kiosk ${kioskId}`);
+          const success = onlineStatusManager.sendToSpecificKiosk(kioskId, message);
+          
+          return res.json({ 
+            success: true,
+            sent: success,
+            message: success ? `Nachricht erfolgreich an Kiosk ${kioskId} gesendet` : `Kiosk ${kioskId} nicht online`
+          });
+        } else {
+          // An alle Kiosks senden
+          console.log(`📡 Sende an alle verfügbaren Kiosks`);
+          onlineStatusManager.broadcastToKiosks(message);
+          
+          return res.json({ 
+            success: true,
+            sent: true,
+            message: "Nachricht an alle verfügbaren Kiosks gesendet"
+          });
+        }
+      } else {
+        return res.status(500).json({ 
+          success: false,
+          sent: false,
+          message: "WebSocket-Server nicht verfügbar" 
+        });
+      }
+      
+    } catch (error) {
+      console.error("❌ Fehler beim Senden an Kiosk:", error);
+      res.status(500).json({ 
+        success: false,
+        sent: false,
+        message: "Fehler beim Senden der Anfrage",
         error: error instanceof Error ? error.message : String(error)
       });
     }
