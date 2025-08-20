@@ -324,7 +324,63 @@ async function processShopAssignment(
 /**
  * Registriert alle Superadmin Routes
  */
+// Superadmin Statistics Route
+export async function getSuperadminStats(req: Request, res: Response) {
+  try {
+    if (!req.isAuthenticated() || !req.user!.isSuperadmin) {
+      return res.status(403).json({ error: "Superadmin-Berechtigung erforderlich" });
+    }
+
+    // Alle Statistiken sammeln
+    const totalUsers = await storage.getTotalUsersCount();
+    const activeUsers = await storage.getActiveUsersCount();
+    const totalShops = await storage.getTotalShopsCount();
+    const totalRepairs = await storage.getTotalRepairsCount();
+
+    const stats = {
+      users: {
+        totalUsers: totalUsers.toString(),
+        activeUsers: activeUsers.toString()
+      },
+      shops: {
+        totalShops: totalShops.toString()
+      },
+      repairs: {
+        totalRepairs: totalRepairs.toString()
+      },
+      orders: {
+        totalOrders: "0"
+      },
+      revenue: {
+        totalRevenue: "0"
+      }
+    };
+
+    res.json(stats);
+  } catch (error) {
+    console.error("Fehler beim Laden der Superadmin-Statistiken:", error);
+    res.status(500).json({ error: "Server-Fehler beim Laden der Statistiken" });
+  }
+}
+
+// Superadmin Users Route
+export async function getSuperadminUsers(req: Request, res: Response) {
+  try {
+    if (!req.isAuthenticated() || !req.user!.isSuperadmin) {
+      return res.status(403).json({ error: "Superadmin-Berechtigung erforderlich" });
+    }
+
+    const users = await storage.getAllUsers();
+    res.json(users);
+  } catch (error) {
+    console.error("Fehler beim Laden der Benutzer:", error);
+    res.status(500).json({ error: "Server-Fehler beim Laden der Benutzer" });
+  }
+}
+
 export function registerSuperadminRoutes(app: any) {
+  app.get('/api/superadmin/stats', getSuperadminStats);
+  app.get('/api/superadmin/users', getSuperadminUsers);
   app.post('/api/superadmin/assign-shops', assignShopsToMultiShopAdmin);
   app.post('/api/superadmin/bulk-assign', bulkAssignShops);
   app.get('/api/superadmin/permission-overview', getPermissionOverview);

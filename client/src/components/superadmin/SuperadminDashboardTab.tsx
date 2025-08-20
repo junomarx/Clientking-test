@@ -85,7 +85,7 @@ export default function SuperadminDashboardTab() {
     if (!users) return [];
     return users
       .filter(user => !user.isActive)
-      .sort((a, b) => a.username.localeCompare(b.username));
+      .sort((a, b) => (a.username || '').localeCompare(b.username || ''));
   }, [users]);
   
   // Benutzer aktivieren

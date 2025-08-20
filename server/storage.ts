@@ -6071,6 +6071,27 @@ export class DatabaseStorage implements IStorage {
 
   // Multi-Shop Admin Management Methoden
   
+  // Superadmin Statistics Methods  
+  async getTotalUsersCount(): Promise<number> {
+    const result = await db.select({ count: count() }).from(users);
+    return result[0]?.count || 0;
+  }
+
+  async getActiveUsersCount(): Promise<number> {
+    const result = await db.select({ count: count() }).from(users).where(eq(users.isActive, true));
+    return result[0]?.count || 0;
+  }
+
+  async getTotalShopsCount(): Promise<number> {
+    const result = await db.select({ count: count() }).from(users).where(isNotNull(users.shopId));
+    return result[0]?.count || 0;
+  }
+
+  async getTotalRepairsCount(): Promise<number> {
+    const result = await db.select({ count: count() }).from(repairs);
+    return result[0]?.count || 0;
+  }
+
   async getAllMultiShopAdmins(): Promise<any[]> {
     try {
       // Alle Multi-Shop Admins laden
