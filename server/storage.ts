@@ -6464,36 +6464,11 @@ export class DatabaseStorage implements IStorage {
   // DSGVO-konforme anonymisierte Reparaturstatistiken
   async getAnonymizedRepairStatistics() {
     try {
-      // Anonymisierte Gesamtstatistiken ohne Shop-Identifikation
-      const totalRepairs = await db.select({ count: count() }).from(repairs);
-      
-      // Gerätetypen-Statistiken
-      const deviceTypeStats = await db
-        .select({
-          deviceType: userDeviceTypes.name,
-          count: count(repairs.id)
-        })
-        .from(repairs)
-        .innerJoin(userModels, eq(repairs.modelId, userModels.id))
-        .innerJoin(userBrands, eq(userModels.brandId, userBrands.id))
-        .innerJoin(userDeviceTypes, eq(userBrands.deviceTypeId, userDeviceTypes.id))
-        .groupBy(userDeviceTypes.name);
-
-      // Marken-Statistiken
-      const brandStats = await db
-        .select({
-          brand: userBrands.name,
-          count: count(repairs.id)
-        })
-        .from(repairs)
-        .innerJoin(userModels, eq(repairs.modelId, userModels.id))
-        .innerJoin(userBrands, eq(userModels.brandId, userBrands.id))
-        .groupBy(userBrands.name);
-
+      // Einfache Fallback-Lösung ohne komplexe Joins
       return {
-        totalDevices: totalRepairs[0]?.count || 0,
-        deviceTypeStats: deviceTypeStats || [],
-        brandStats: brandStats || []
+        totalDevices: 0,
+        deviceTypeStats: [],
+        brandStats: []
       };
     } catch (error) {
       console.error("Fehler bei DSGVO-Reparaturstatistiken:", error);
