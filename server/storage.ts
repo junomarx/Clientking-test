@@ -6540,13 +6540,13 @@ export class DatabaseStorage implements IStorage {
       const userData = user[0];
       return {
         id: userData.id,
-        companyName: userData.companyName || null,
-        address: userData.address || null,
-        phone: userData.phone || null,
-        email: userData.email || null,
+        companyName: userData.companyName || null,           // company_name
+        address: userData.companyAddress || null,            // company_address  
+        phone: userData.companyPhone || null,                // company_phone
+        email: userData.companyEmail || null,                // company_email
         website: userData.website || null,
         taxNumber: userData.taxNumber || null,
-        vatNumber: userData.vatNumber || null,
+        vatNumber: userData.companyVatNumber || null,        // company_vat_number
         businessRegistration: userData.businessRegistration || null,
         bankName: userData.bankName || null,
         iban: userData.iban || null,
