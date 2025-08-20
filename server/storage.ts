@@ -6328,6 +6328,41 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(auditLogs.createdAt))
       .limit(limit);
   }
+
+  /**
+   * Phase 2: Audit-Log Retrieval Methoden
+   */
+  async getShopAuditLogs(shopId: number, limit: number = 50): Promise<AuditLog[]> {
+    try {
+      const logs = await db
+        .select()
+        .from(auditLogs)
+        .where(or(eq(auditLogs.shopId, shopId), eq(auditLogs.targetShopId, shopId)))
+        .orderBy(desc(auditLogs.createdAt))
+        .limit(Math.min(limit, 100));
+      
+      return logs;
+    } catch (error) {
+      console.error("Fehler beim Laden der Shop Audit-Logs:", error);
+      return [];
+    }
+  }
+
+  async getUserAuditLogs(userId: number, limit: number = 50): Promise<AuditLog[]> {
+    try {
+      const logs = await db
+        .select()
+        .from(auditLogs)
+        .where(or(eq(auditLogs.userId, userId), eq(auditLogs.targetUserId, userId)))
+        .orderBy(desc(auditLogs.createdAt))
+        .limit(Math.min(limit, 100));
+      
+      return logs;
+    } catch (error) {
+      console.error("Fehler beim Laden der User Audit-Logs:", error);
+      return [];
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();
