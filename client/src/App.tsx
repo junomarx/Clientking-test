@@ -22,6 +22,26 @@ import ResponsiveDevicesDemo from "@/pages/responsive-devices-demo";
 import ApiTest from "@/pages/api-test";
 import SignaturePage from "@/pages/signature-page";
 import { ProtectedRoute, SuperadminProtectedRoute } from "./lib/protected-route";
+
+// Smart Router Component that directs users to the right interface
+function HomeRouter() {
+  const { user } = useAuth();
+  
+  if (!user) return null;
+  
+  // Superadmin gets the SuperadminPage
+  if (user.isSuperadmin) {
+    return <SuperadminPage />;
+  }
+  
+  // Multi-Shop Admin gets redirected to multi-shop-admin page
+  if (user.isMultiShopAdmin) {
+    return <Redirect to="/multi-shop-admin" />;
+  }
+  
+  // Regular users get the Home component
+  return <Home />;
+}
 import { AuthProvider } from "./hooks/use-auth";
 import { ThemeProvider } from "./hooks/use-theme";
 import { BusinessSettingsProvider } from "./hooks/use-business-settings";
@@ -32,6 +52,8 @@ import { KioskOverlay } from "@/components/kiosk/KioskOverlay";
 import { useEffect } from "react";
 import { useTheme } from "./hooks/use-theme";
 import { clearAllBrands, clearAllModels } from '@/components/repairs/ClearCacheHelpers';
+import { useAuth } from "./hooks/use-auth";
+import { Redirect } from "wouter";
 
 function Router() {
   return (
@@ -48,9 +70,9 @@ function Router() {
       
 
       <Route path="/superadmin">
-        <ProtectedRoute path="/superadmin">
+        <SuperadminProtectedRoute path="/superadmin">
           <SuperadminPage />
-        </ProtectedRoute>
+        </SuperadminProtectedRoute>
       </Route>
       <Route path="/multi-shop-admin">
         <ProtectedRoute path="/multi-shop-admin">
@@ -70,7 +92,7 @@ function Router() {
       
       <Route path="/">
         <ProtectedRoute path="/">
-          <Home />
+          <HomeRouter />
         </ProtectedRoute>
       </Route>
       
