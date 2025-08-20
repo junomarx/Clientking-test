@@ -424,20 +424,7 @@ export function registerSuperadminRoutes(app: Express) {
   // Benutzerverwaltung (ohne Multi-Shop Admins)
   app.get("/api/superadmin/users", isSuperadmin, async (req: Request, res: Response) => {
     try {
-      const allUsers = await db.select({
-        id: users.id,
-        username: users.username,
-        email: users.email,
-        isActive: users.isActive,
-        isSuperadmin: users.isSuperadmin,
-        isMultiShopAdmin: users.isMultiShopAdmin,
-        role: users.role,
-        shopId: users.shopId,
-        packageId: users.packageId,
-        createdAt: users.createdAt,
-        lastLoginAt: users.lastLoginAt,
-        lastLogoutAt: users.lastLogoutAt,
-      }).from(users)
+      const allUsers = await db.select().from(users)
       .where(
         // Schließe Multi-Shop Admins aus: shopId = null UND isAdmin = true UND isSuperadmin = false
         or(
