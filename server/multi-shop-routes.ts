@@ -2,7 +2,7 @@ import type { Express, Request, Response } from "express";
 import { storage } from "./storage";
 import { isSuperadmin } from "./superadmin-middleware";
 import { db } from "./db";
-import { multiShopPermissions, users } from "@shared/schema";
+import { multiShopPermissions, users, userShopAccess } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 
@@ -291,6 +291,9 @@ export function registerMultiShopRoutes(app: Express) {
 
       // Alle Permissions für diesen Admin widerrufen
       await db.delete(multiShopPermissions).where(eq(multiShopPermissions.multiShopAdminId, adminId));
+      
+      // Alle user_shop_access Einträge für diesen Admin löschen
+      await db.delete(userShopAccess).where(eq(userShopAccess.userId, adminId));
       
       // Admin-Benutzer löschen
       await db.delete(users).where(eq(users.id, adminId));
