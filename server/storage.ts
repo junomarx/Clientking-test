@@ -6614,14 +6614,24 @@ export class DatabaseStorage implements IStorage {
 
   // Business Settings für einen spezifischen Benutzer aktualisieren (für Superladmin Synchronisation)  
   async updateBusinessSettingsForUser(userId: number, updateData: any): Promise<BusinessSettings | undefined> {
+    console.log(`🔍 updateBusinessSettingsForUser called for user ${userId} with data:`, updateData);
+    
     const user = await this.getUser(userId);
-    if (!user || !user.shopId) {
-      console.log(`❌ User ${userId} oder shopId nicht gefunden`);
+    console.log(`🔍 User ${userId} loaded:`, { 
+      found: !!user, 
+      username: user?.username, 
+      shopId: user?.shopId, 
+      role: user?.role 
+    });
+    
+    if (!user) {
+      console.log(`❌ User ${userId} nicht gefunden`);
       return undefined;
     }
 
-    const shopId = user.shopId;
-    console.log(`✅ Superladmin synchronisiert Business Settings für User ${userId} (Shop ${shopId})`);
+    // Fallback: Wenn User keine shopId hat, verwende userId als shopId
+    const shopId = user.shopId || userId;
+    console.log(`🔍 Verwende shopId: ${shopId} für User ${userId}`);
     
     try {
       // Prüfe, ob bereits Einstellungen existieren
@@ -6631,8 +6641,14 @@ export class DatabaseStorage implements IStorage {
         .where(eq(businessSettings.shopId, shopId))
         .limit(1);
 
+      console.log(`🔍 Existing settings check for shopId ${shopId}:`, {
+        found: !!existingSettings,
+        settingsId: existingSettings?.id
+      });
+
       if (existingSettings) {
         // Aktualisiere bestehende Einstellungen
+        console.log(`🔄 Updating existing settings ${existingSettings.id} with:`, updateData);
         const [updatedSettings] = await db
           .update(businessSettings)
           .set({
@@ -6642,23 +6658,41 @@ export class DatabaseStorage implements IStorage {
           .where(eq(businessSettings.shopId, shopId))
           .returning();
         
-        console.log(`✅ Business Settings für Shop ${shopId} aktualisiert`);
+        console.log(`✅ Business Settings für Shop ${shopId} aktualisiert:`, updatedSettings);
         return updatedSettings;
       } else {
         // Erstelle neue Einstellungen
+        console.log(`🔄 Creating new settings for shopId ${shopId} with:`, updateData);
+        const insertData = {
+          shopId,
+          businessName: updateData.businessName || '',
+          ownerFirstName: updateData.ownerFirstName || '',
+          ownerLastName: updateData.ownerLastName || '', 
+          streetAddress: updateData.streetAddress || '',
+          zipCode: updateData.zipCode || '',
+          city: updateData.city || '',
+          country: updateData.country || 'Deutschland',
+          phone: updateData.phone || '',
+          email: user.email || '',
+          taxId: updateData.taxId || '',
+          website: updateData.website || '',
+          userId: userId,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        
+        console.log(`🔍 Insert data prepared:`, insertData);
         const [newSettings] = await db
           .insert(businessSettings)
-          .values({
-            shopId,
-            ...updateData,
-          })
+          .values(insertData)
           .returning();
         
-        console.log(`✅ Neue Business Settings für Shop ${shopId} erstellt`);
+        console.log(`✅ Neue Business Settings für Shop ${shopId} erstellt:`, newSettings);
         return newSettings;
       }
     } catch (error) {
-      console.error(`Fehler beim Aktualisieren der Business Settings für User ${userId}:`, error);
+      console.error(`❌ Fehler beim Aktualisieren der Business Settings für User ${userId}:`, error);
+      console.error(`❌ Error details:`, error);
       return undefined;
     }
   }

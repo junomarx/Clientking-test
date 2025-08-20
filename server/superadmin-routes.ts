@@ -863,8 +863,13 @@ export async function updateSuperadminUser(req: Request, res: Response) {
         });
 
         if (Object.keys(businessUpdateData).length > 0) {
-          await storage.updateBusinessSettingsForUser(userId, businessUpdateData);
-          console.log(`✅ Business Settings für Benutzer ${userId} synchronisiert`);
+          console.log(`🔄 Starting Business Settings sync for user ${userId}:`, businessUpdateData);
+          const syncResult = await storage.updateBusinessSettingsForUser(userId, businessUpdateData);
+          if (syncResult) {
+            console.log(`✅ Business Settings für Benutzer ${userId} erfolgreich synchronisiert:`, syncResult);
+          } else {
+            console.log(`❌ Business Settings Synchronisation für Benutzer ${userId} fehlgeschlagen`);
+          }
         }
       } catch (error) {
         console.log(`⚠️ Warnung: Business Settings konnten nicht synchronisiert werden:`, error);
