@@ -52,6 +52,7 @@ import { setupEmployeeRoutes } from "./employee-routes";
 import { registerMultiShopRoutes } from "./multi-shop-routes";
 import { multiShopService } from "./multi-shop-service";
 import { registerTwoFARoutes } from "./two-fa-routes";
+import { registerMultiShopAdminRoutes } from "./multi-shop-admin-routes";
 import path from 'path';
 import fs from 'fs';
 // jsPDF will be imported dynamically
@@ -859,6 +860,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Set up multi-shop routes
   registerMultiShopRoutes(app);
+  
+  // Set up multi-shop admin routes
+  registerMultiShopAdminRoutes(app);
 
   // Set up 2FA routes
   registerTwoFARoutes(app);

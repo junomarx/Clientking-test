@@ -8,7 +8,7 @@ import { StatisticsTabRebuilt as StatisticsTab } from '@/components/statistics/S
 import { CostEstimatesTab } from '@/components/cost-estimates/CostEstimatesTab';
 import { OrdersTab } from '@/components/orders/OrdersTab';
 import { NewOrderModal } from '@/components/NewOrderModal';
-import { useLocation, useParams } from 'wouter';
+import { useLocation, useParams, Redirect } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import PermissionDialog from '@/components/permissions/PermissionDialog';
@@ -44,6 +44,11 @@ export default function Home() {
   
   // Auth Hook für User-Informationen
   const { user } = useAuth();
+
+  // Multi-Shop Admin automatisch zur neuen Seite weiterleiten
+  if (user && user.isMultiShopAdmin && location === '/') {
+    return <Redirect to="/multi-shop-admin" />;
+  }
 
   // Permission-Anfragen für Shop-Owner laden
   const { data: pendingPermissions = [], refetch: refetchPermissions } = useQuery({
