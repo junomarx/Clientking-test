@@ -258,7 +258,7 @@ function ShopsOverview() {
 
   return (
     <div className="space-y-6">
-      {/* KPI Cards */}
+      {/* KPI Cards - Echte Daten */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -268,8 +268,10 @@ function ShopsOverview() {
             <Euro className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">€ 86.200</div>
-            <p className="text-xs text-green-600 mt-1">+1.8% vs Vormonat</p>
+            <div className="text-2xl font-bold text-gray-900">
+              € {shops?.reduce((total: number, shop: any) => total + (shop.totalRevenue || 0), 0)?.toLocaleString() || '0'}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Nur berechtigte Shops</p>
           </CardContent>
         </Card>
 
@@ -281,8 +283,10 @@ function ShopsOverview() {
             <Users className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">18</div>
-            <p className="text-xs text-gray-500 mt-1">Alle Standorte</p>
+            <div className="text-2xl font-bold text-gray-900">
+              {shops?.reduce((total: number, shop: any) => total + (shop.employeeCount || 0), 0) || '0'}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Berechtigte Shops</p>
           </CardContent>
         </Card>
 
@@ -294,157 +298,71 @@ function ShopsOverview() {
             <Clock className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">47</div>
-            <p className="text-xs text-orange-600 mt-1">Alle Standorte</p>
+            <div className="text-2xl font-bold text-gray-900">
+              {shops?.reduce((total: number, shop: any) => total + (shop.openRepairs || 0), 0) || '0'}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Berechtigte Shops</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Shop Cards */}
+      {/* Echte Shop Cards - nur berechtigte Shops */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg font-semibold">Shop Wien</CardTitle>
-              <Badge className="bg-green-100 text-green-700 hover:bg-green-100">ONLINE</Badge>
-            </div>
-            <CardDescription>Verwaltung und Übersicht aller Shop-Standorte</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-gray-600">Gesamtumsatz</p>
-                <p className="text-xl font-bold">€35.200</p>
-                <p className="text-xs text-green-600">+5.2% vs VM</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Mitarbeiter</p>
-                <p className="text-xl font-bold">8</p>
-                <p className="text-xs text-gray-500">+12.5% Auslastung</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-gray-600">Offen:</span>
-                <span className="ml-2 font-semibold text-orange-600">15</span>
-              </div>
-              <div>
-                <span className="text-gray-600">Erledigt:</span>
-                <span className="ml-2 font-semibold text-green-600">67</span>
-              </div>
-            </div>
-            <div className="text-sm text-gray-600">
-              <span>Manager: </span>
-              <span className="font-medium">Thomas Miller</span>
-            </div>
-            <div className="flex gap-2 pt-2">
-              <Button variant="outline" size="sm" className="flex-1">
-                <Eye className="h-4 w-4 mr-1" />
-                Details
-              </Button>
-              <Button variant="outline" size="sm" className="flex-1">
-                <Edit3 className="h-4 w-4 mr-1" />
-                Bearbeiten
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg font-semibold">Shop Graz</CardTitle>
-              <Badge className="bg-green-100 text-green-700 hover:bg-green-100">ONLINE</Badge>
-            </div>
-            <CardDescription>Verwaltung und Übersicht aller Shop-Standorte</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-gray-600">Gesamtumsatz</p>
-                <p className="text-xl font-bold">€28.800</p>
-                <p className="text-xs text-green-600">+2.1% vs VM</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Mitarbeiter</p>
-                <p className="text-xl font-bold">6</p>
-                <p className="text-xs text-gray-500">+8.3% Auslastung</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-gray-600">Offen:</span>
-                <span className="ml-2 font-semibold text-orange-600">20</span>
-              </div>
-              <div>
-                <span className="text-gray-600">Erledigt:</span>
-                <span className="ml-2 font-semibold text-green-600">52</span>
-              </div>
-            </div>
-            <div className="text-sm text-gray-600">
-              <span>Manager: </span>
-              <span className="font-medium">Anna Schmidt</span>
-            </div>
-            <div className="flex gap-2 pt-2">
-              <Button variant="outline" size="sm" className="flex-1">
-                <Eye className="h-4 w-4 mr-1" />
-                Details
-              </Button>
-              <Button variant="outline" size="sm" className="flex-1">
-                <Edit3 className="h-4 w-4 mr-1" />
-                Bearbeiten
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg font-semibold">Shop Linz</CardTitle>
-              <Badge className="bg-green-100 text-green-700 hover:bg-green-100">ONLINE</Badge>
-            </div>
-            <CardDescription>Verwaltung und Übersicht aller Shop-Standorte</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-gray-600">Gesamtumsatz</p>
-                <p className="text-xl font-bold">€22.100</p>
-                <p className="text-xs text-green-600">+1.7% vs VM</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Mitarbeiter</p>
-                <p className="text-xl font-bold">4</p>
-                <p className="text-xs text-gray-500">+6.2% Auslastung</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-gray-600">Offen:</span>
-                <span className="ml-2 font-semibold text-orange-600">12</span>
-              </div>
-              <div>
-                <span className="text-gray-600">Erledigt:</span>
-                <span className="ml-2 font-semibold text-green-600">37</span>
-              </div>
-            </div>
-            <div className="text-sm text-gray-600">
-              <span>Manager: </span>
-              <span className="font-medium">Michael Weber</span>
-            </div>
-            <div className="flex gap-2 pt-2">
-              <Button variant="outline" size="sm" className="flex-1">
-                <Eye className="h-4 w-4 mr-1" />
-                Details
-              </Button>
-              <Button variant="outline" size="sm" className="flex-1">
-                <Edit3 className="h-4 w-4 mr-1" />
-                Bearbeiten
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        {shops && shops.length > 0 ? (
+          shops.map((shop: any, index: number) => (
+            <Card key={shop.shopId}>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg font-semibold">{shop.businessName}</CardTitle>
+                  <Badge className={shop.isActive ? "bg-green-100 text-green-700 hover:bg-green-100" : "bg-gray-100 text-gray-700"}>
+                    {shop.isActive ? 'ONLINE' : 'OFFLINE'}
+                  </Badge>
+                </div>
+                <CardDescription>Shop ID: {shop.shopId}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Gesamtumsatz</p>
+                    <p className="text-xl font-bold">€{shop.totalRevenue?.toLocaleString() || '0'}</p>
+                    <p className="text-xs text-gray-500">{shop.revenueChange || '0.0'}% vs VM</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Mitarbeiter</p>
+                    <p className="text-xl font-bold">{shop.employeeCount || 0}</p>
+                    <p className="text-xs text-gray-500">Anzahl</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-600">Offen:</span>
+                    <span className="ml-2 font-semibold text-orange-600">{shop.openRepairs || 0}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Erledigt:</span>
+                    <span className="ml-2 font-semibold text-green-600">{shop.completedRepairs || 0}</span>
+                  </div>
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <Button variant="outline" size="sm" className="flex-1" disabled>
+                    <Eye className="h-4 w-4 mr-1" />
+                    Details
+                  </Button>
+                  <Button variant="outline" size="sm" className="flex-1" disabled>
+                    <Edit3 className="h-4 w-4 mr-1" />
+                    Bearbeiten
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <div className="col-span-full text-center py-12">
+            <Building2 className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+            <p className="text-gray-500 text-lg">Keine berechtigten Shops verfügbar</p>
+            <p className="text-sm text-gray-400">Sie haben keine Berechtigung für Shops</p>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -462,7 +380,7 @@ function EmployeesOverview() {
 
   return (
     <div className="space-y-6">
-      {/* KPI Cards */}
+      {/* Echte KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -472,8 +390,8 @@ function EmployeesOverview() {
             <Users className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">6</div>
-            <p className="text-xs text-gray-500 mt-1">Alle Standorte</p>
+            <div className="text-2xl font-bold text-gray-900">{employees?.length || 0}</div>
+            <p className="text-xs text-gray-500 mt-1">Berechtigte Shops</p>
           </CardContent>
         </Card>
 
@@ -485,8 +403,12 @@ function EmployeesOverview() {
             <Star className="h-4 w-4 text-yellow-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">4.7</div>
-            <p className="text-xs text-green-600 mt-1">★★★★★</p>
+            <div className="text-2xl font-bold text-gray-900">
+              {employees?.length > 0 
+                ? (employees.reduce((sum: number, emp: any) => sum + parseFloat(emp.rating || '0'), 0) / employees.length).toFixed(1)
+                : '0.0'}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Durchschnitt</p>
           </CardContent>
         </Card>
 
@@ -498,21 +420,25 @@ function EmployeesOverview() {
             <Activity className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">969</div>
-            <p className="text-xs text-gray-500 mt-1">Letzter Monat</p>
+            <div className="text-2xl font-bold text-gray-900">
+              {employees?.reduce((sum: number, emp: any) => sum + (emp.repairCount || 0), 0) || 0}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Alle Mitarbeiter</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">
-              Standorte
+              Berechtigte Shops
             </CardTitle>
             <Building2 className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">3</div>
-            <p className="text-xs text-blue-600 mt-1">Wien, Graz, Linz</p>
+            <div className="text-2xl font-bold text-gray-900">
+              {employees ? [...new Set(employees.map((emp: any) => emp.shopId))].length : 0}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Mit Zugriff</p>
           </CardContent>
         </Card>
       </div>
@@ -523,146 +449,97 @@ function EmployeesOverview() {
           <CardTitle>Mitarbeiterübersicht</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Mitarbeiter</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Position</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Shop</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Seit</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Reparaturen</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Bewertung</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Aktionen</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-b hover:bg-gray-50">
-                  <td className="py-3 px-4">
-                    <div>
-                      <p className="font-medium">Max Mustermann</p>
-                      <p className="text-sm text-gray-500">max.mustermann@clientking.at • +43 1 234 567 8</p>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <Badge variant="outline" className="bg-blue-50 text-blue-700">Senior Techniker</Badge>
-                  </td>
-                  <td className="py-3 px-4">
-                    <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">Shop Wien</Badge>
-                  </td>
-                  <td className="py-3 px-4">
-                    <div>
-                      <p className="font-medium">15.3.2020</p>
-                      <p className="text-sm text-gray-500">3 Jahre</p>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <div>
-                      <p className="font-medium">245</p>
-                      <p className="text-sm text-gray-500">abgeschlossen</p>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="font-medium">4.8</span>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <Button variant="ghost" size="sm">
-                      <Edit3 className="h-4 w-4 mr-1" />
-                      Verwalten
-                    </Button>
-                  </td>
-                </tr>
-                <tr className="border-b hover:bg-gray-50">
-                  <td className="py-3 px-4">
-                    <div>
-                      <p className="font-medium">Lisa Huber</p>
-                      <p className="text-sm text-gray-500">lisa.huber@clientking.at • +43 1 234 567 9</p>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <Badge variant="outline" className="bg-green-50 text-green-700">Techniker</Badge>
-                  </td>
-                  <td className="py-3 px-4">
-                    <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">Shop Wien</Badge>
-                  </td>
-                  <td className="py-3 px-4">
-                    <div>
-                      <p className="font-medium">22.7.2021</p>
-                      <p className="text-sm text-gray-500">2 Jahre</p>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <div>
-                      <p className="font-medium">189</p>
-                      <p className="text-sm text-gray-500">abgeschlossen</p>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="font-medium">4.6</span>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <Button variant="ghost" size="sm">
-                      <Edit3 className="h-4 w-4 mr-1" />
-                      Verwalten
-                    </Button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          {employees && employees.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Mitarbeiter</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Role</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Shop</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Seit</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Reparaturen</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {employees.map((employee: any) => (
+                    <tr key={employee.id} className="border-b hover:bg-gray-50">
+                      <td className="py-3 px-4">
+                        <div>
+                          <p className="font-medium">{employee.username || 'Unbekannt'}</p>
+                          <p className="text-sm text-gray-500">{employee.email || 'Keine E-Mail'}</p>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                          {employee.role === 'kiosk' ? 'Kiosk' : employee.role === 'employee' ? 'Mitarbeiter' : 'Owner'}
+                        </Badge>
+                      </td>
+                      <td className="py-3 px-4">
+                        <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">
+                          Shop {employee.shopId || 'N/A'}
+                        </Badge>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div>
+                          <p className="font-medium">
+                            {new Date(employee.createdAt).toLocaleDateString('de-DE')}
+                          </p>
+                          <p className="text-sm text-gray-500">{employee.yearsOfService} Jahre</p>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div>
+                          <p className="font-medium">{employee.repairCount || 0}</p>
+                          <p className="text-sm text-gray-500">abgeschlossen</p>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <Badge className={employee.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}>
+                          {employee.isActive ? 'Aktiv' : 'Inaktiv'}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+              <p className="text-gray-500 text-lg">Keine Mitarbeiter verfügbar</p>
+              <p className="text-sm text-gray-400">Sie haben keine Berechtigung für Mitarbeiter-Daten</p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Shop Statistiken */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Shop Wien</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center space-y-2">
-              <div className="text-3xl font-bold">2</div>
-              <p className="text-sm text-gray-600">Mitarbeiter</p>
-              <div className="text-lg font-semibold text-green-600">434</div>
-              <p className="text-xs text-gray-500">Reparaturen gesamt</p>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Shop Graz</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center space-y-2">
-              <div className="text-3xl font-bold">2</div>
-              <p className="text-sm text-gray-600">Mitarbeiter</p>
-              <div className="text-lg font-semibold text-green-600">290</div>
-              <p className="text-xs text-gray-500">Reparaturen gesamt</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Shop Linz</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center space-y-2">
-              <div className="text-3xl font-bold">2</div>
-              <p className="text-sm text-gray-600">Mitarbeiter</p>
-              <div className="text-lg font-semibold text-green-600">245</div>
-              <p className="text-xs text-gray-500">Reparaturen gesamt</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Echte Shop-Mitarbeiter Statistiken */}
+      {employees && employees.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[...new Set(employees.map((emp: any) => emp.shopId))].map((shopId: number) => {
+            const shopEmployees = employees.filter((emp: any) => emp.shopId === shopId);
+            const totalRepairs = shopEmployees.reduce((sum: number, emp: any) => sum + (emp.repairCount || 0), 0);
+            
+            return (
+              <Card key={shopId}>
+                <CardHeader>
+                  <CardTitle>Shop {shopId}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center space-y-2">
+                    <div className="text-3xl font-bold">{shopEmployees.length}</div>
+                    <p className="text-sm text-gray-600">Mitarbeiter</p>
+                    <div className="text-lg font-semibold text-green-600">{totalRepairs}</div>
+                    <p className="text-xs text-gray-500">Reparaturen gesamt</p>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
