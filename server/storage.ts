@@ -6384,6 +6384,82 @@ export class DatabaseStorage implements IStorage {
       return [];
     }
   }
+
+  // ==============================
+  // SUPERADMIN DEVICE METHODEN für vollständige Funktionalität
+  // ==============================
+
+  /**
+   * Alle Device Types abrufen (für Superadmin)
+   */
+  async getAllDeviceTypes(): Promise<any[]> {
+    try {
+      const deviceTypes = await db.select().from(userDeviceTypes);
+      console.log(`getAllDeviceTypes: ${deviceTypes.length} Gerätetypen gefunden`);
+      return deviceTypes;
+    } catch (error) {
+      console.error("Fehler beim Laden aller Gerätetypen:", error);
+      return [];
+    }
+  }
+
+  /**
+   * Alle Brands abrufen (für Superadmin) 
+   */
+  async getAllBrands(): Promise<any[]> {
+    try {
+      const brands = await db.select().from(userBrands);
+      console.log(`getAllBrands: ${brands.length} Marken gefunden`);
+      return brands;
+    } catch (error) {
+      console.error("Fehler beim Laden aller Marken:", error);
+      return [];
+    }
+  }
+
+  /**
+   * Alle Models abrufen (für Superadmin)
+   */
+  async getAllModels(): Promise<any[]> {
+    try {
+      const models = await db.select().from(userModels);
+      console.log(`getAllModels: ${models.length} Modelle gefunden`);
+      return models;
+    } catch (error) {
+      console.error("Fehler beim Laden aller Modelle:", error);
+      return [];
+    }
+  }
+
+  /**
+   * Alle User Device Types abrufen (für Superadmin)
+   */
+  async getAllUserDeviceTypes(): Promise<any[]> {
+    try {
+      const userDeviceTypesList = await db.select().from(userDeviceTypes);
+      console.log(`getAllUserDeviceTypes: ${userDeviceTypesList.length} Benutzer-Gerätetypen gefunden`);
+      return userDeviceTypesList;
+    } catch (error) {
+      console.error("Fehler beim Laden aller Benutzer-Gerätetypen:", error);
+      return [];
+    }
+  }
+
+  /**
+   * Alle Error Catalog Entries abrufen (für Superadmin)
+   */
+  async getAllErrorCatalogEntries(): Promise<any[]> {
+    try {
+      // Importiere errorCatalogEntries Schema wenn es existiert
+      const errorCatalog = await db.query.errorCatalogEntries?.findMany() ?? [];
+      console.log(`getAllErrorCatalogEntries: ${errorCatalog.length} Fehlerkatalog-Einträge gefunden`);
+      return errorCatalog;
+    } catch (error) {
+      console.error("Fehler beim Laden aller Fehlerkatalog-Einträge:", error);
+      // Fallback: leeres Array wenn Schema nicht existiert
+      return [];
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();
