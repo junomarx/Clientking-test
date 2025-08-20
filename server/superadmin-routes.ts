@@ -429,7 +429,6 @@ export function registerSuperadminRoutes(app: Express) {
         username: users.username,
         email: users.email,
         isActive: users.isActive,
-        isAdmin: users.isAdmin,
         isSuperadmin: users.isSuperadmin,
         isMultiShopAdmin: users.isMultiShopAdmin,
         role: users.role,
