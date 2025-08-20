@@ -461,6 +461,8 @@ export function registerSuperadminRoutes(app: any) {
   app.get('/api/superadmin/repair-statistics', getSuperadminRepairStatistics);
   app.get('/api/superadmin/device-statistics', getSuperadminDeviceStatistics);
   app.get('/api/superadmin/multi-shop-admins', getSuperadminMultiShopAdmins);
+  app.get('/api/superadmin/stats-dsgvo', getSuperadminStatsDsgvo);
+  app.get('/api/superadmin/user-business-settings/:id', getSuperadminUserBusinessSettings);
   
   console.log('✅ Superadmin routes registered');
 }
@@ -492,6 +494,68 @@ export async function getSuperadminMultiShopAdmins(req: Request, res: Response) 
     res.json(multiShopAdmins);
   } catch (error) {
     console.error("Fehler beim Laden der Multi-Shop-Admins:", error);
+    res.status(500).json({ error: "Server-Fehler" });
+  }
+}
+
+// DSGVO Statistics Route
+export async function getSuperadminStatsDsgvo(req: Request, res: Response) {
+  try {
+    // Header-Fallback für Authentifizierung
+    const customUserId = req.headers['x-user-id'];
+    if (customUserId && !req.user) {
+      try {
+        const userId = parseInt(customUserId.toString());
+        const user = await storage.getUser(userId);
+        if (user && user.isSuperadmin) {
+          req.user = user;
+        }
+      } catch (error) {
+        console.error('Fehler beim X-User-ID Header:', error);
+      }
+    }
+
+    if (!req.user || !req.user.isSuperadmin) {
+      return res.status(403).json({ error: "Superadmin-Berechtigung erforderlich" });
+    }
+
+    // DSGVO-konforme anonymisierte Statistiken abrufen
+    const dsgvoStats = await storage.getAnonymizedRepairStatistics();
+    console.log(`getSuperadminStatsDsgvo: DSGVO-Statistiken geladen`);
+    res.json(dsgvoStats);
+  } catch (error) {
+    console.error("Fehler beim Laden der DSGVO-Statistiken:", error);
+    res.status(500).json({ error: "Server-Fehler" });
+  }
+}
+
+// User Business Settings Route
+export async function getSuperadminUserBusinessSettings(req: Request, res: Response) {
+  try {
+    // Header-Fallback für Authentifizierung
+    const customUserId = req.headers['x-user-id'];
+    if (customUserId && !req.user) {
+      try {
+        const userId = parseInt(customUserId.toString());
+        const user = await storage.getUser(userId);
+        if (user && user.isSuperadmin) {
+          req.user = user;
+        }
+      } catch (error) {
+        console.error('Fehler beim X-User-ID Header:', error);
+      }
+    }
+
+    if (!req.user || !req.user.isSuperadmin) {
+      return res.status(403).json({ error: "Superadmin-Berechtigung erforderlich" });
+    }
+
+    const userId = parseInt(req.params.id);
+    const businessSettings = await storage.getBusinessSettingsForUser(userId);
+    console.log(`getSuperadminUserBusinessSettings: Geschäftsdaten für Benutzer ${userId} geladen`);
+    res.json(businessSettings);
+  } catch (error) {
+    console.error("Fehler beim Laden der Benutzer-Geschäftsdaten:", error);
     res.status(500).json({ error: "Server-Fehler" });
   }
 }

@@ -6529,6 +6529,35 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  // Geschäftsdaten für Benutzer abrufen
+  async getBusinessSettingsForUser(userId: number) {
+    try {
+      const user = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+      if (!user.length) {
+        return null;
+      }
+
+      const userData = user[0];
+      return {
+        id: userData.id,
+        companyName: userData.companyName || null,
+        address: userData.address || null,
+        phone: userData.phone || null,
+        email: userData.email || null,
+        website: userData.website || null,
+        taxNumber: userData.taxNumber || null,
+        vatNumber: userData.vatNumber || null,
+        businessRegistration: userData.businessRegistration || null,
+        bankName: userData.bankName || null,
+        iban: userData.iban || null,
+        bic: userData.bic || null
+      };
+    } catch (error) {
+      console.error("Fehler beim Laden der Geschäftsdaten:", error);
+      return null;
+    }
+  }
+
   // Multi-Shop Admins mit Shops abrufen für Superadmin
   async getAllMultiShopAdminsWithShops() {
     try {
