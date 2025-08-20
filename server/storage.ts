@@ -6540,13 +6540,23 @@ export class DatabaseStorage implements IStorage {
       const userData = user[0];
       return {
         id: userData.id,
-        companyName: userData.companyName || null,           // company_name
-        address: userData.companyAddress || null,            // company_address  
-        phone: userData.companyPhone || null,                // company_phone
-        email: userData.companyEmail || null,                // company_email
+        businessName: userData.companyName || null,           // Frontend erwartet businessName
+        streetAddress: userData.companyAddress || null,       // Frontend erwartet streetAddress
+        phone: userData.companyPhone || null,                 
+        email: userData.companyEmail || null,                
         website: userData.website || null,
+        taxId: userData.companyVatNumber || null,            // Frontend erwartet taxId für UID
+        // Zusätzliche Felder für Frontend-Kompatibilität
+        ownerFirstName: userData.ownerFirstName || null,
+        ownerLastName: userData.ownerLastName || null,
+        zipCode: userData.zipCode || null,
+        city: userData.city || null,
+        country: userData.country || null,
+        // Legacy API-Felder beibehalten
+        companyName: userData.companyName || null,
+        address: userData.companyAddress || null,
+        vatNumber: userData.companyVatNumber || null,
         taxNumber: userData.taxNumber || null,
-        vatNumber: userData.companyVatNumber || null,        // company_vat_number
         businessRegistration: userData.businessRegistration || null,
         bankName: userData.bankName || null,
         iban: userData.iban || null,
