@@ -6460,6 +6460,143 @@ export class DatabaseStorage implements IStorage {
       return [];
     }
   }
+
+  // DSGVO-konforme anonymisierte Reparaturstatistiken
+  async getAnonymizedRepairStatistics() {
+    try {
+      // Anonymisierte Gesamtstatistiken ohne Shop-Identifikation
+      const totalRepairs = await db.select({ count: count() }).from(repairs);
+      
+      // Gerätetypen-Statistiken
+      const deviceTypeStats = await db
+        .select({
+          deviceType: userDeviceTypes.name,
+          count: count(repairs.id)
+        })
+        .from(repairs)
+        .innerJoin(userModels, eq(repairs.modelId, userModels.id))
+        .innerJoin(userBrands, eq(userModels.brandId, userBrands.id))
+        .innerJoin(userDeviceTypes, eq(userBrands.deviceTypeId, userDeviceTypes.id))
+        .groupBy(userDeviceTypes.name);
+
+      // Marken-Statistiken
+      const brandStats = await db
+        .select({
+          brand: userBrands.name,
+          count: count(repairs.id)
+        })
+        .from(repairs)
+        .innerJoin(userModels, eq(repairs.modelId, userModels.id))
+        .innerJoin(userBrands, eq(userModels.brandId, userBrands.id))
+        .groupBy(userBrands.name);
+
+      return {
+        totalDevices: totalRepairs[0]?.count || 0,
+        deviceTypeStats: deviceTypeStats || [],
+        brandStats: brandStats || []
+      };
+    } catch (error) {
+      console.error("Fehler bei DSGVO-Reparaturstatistiken:", error);
+      return {
+        totalDevices: 0,
+        deviceTypeStats: [],
+        brandStats: []
+      };
+    }
+  }
+
+  // Gerätestatistiken für Superadmin
+  async getDeviceStatistics() {
+    try {
+      // Anzahl pro Gerätetyp
+      const deviceTypeStats = await db
+        .select({
+          name: userDeviceTypes.name,
+          count: count()
+        })
+        .from(userDeviceTypes)
+        .groupBy(userDeviceTypes.name);
+
+      // Anzahl pro Marke
+      const brandStats = await db
+        .select({
+          name: userBrands.name,
+          deviceType: userDeviceTypes.name,
+          count: count()
+        })
+        .from(userBrands)
+        .innerJoin(userDeviceTypes, eq(userBrands.deviceTypeId, userDeviceTypes.id))
+        .groupBy(userBrands.name, userDeviceTypes.name);
+
+      // Modell-Statistiken
+      const modelStats = await db
+        .select({
+          count: count()
+        })
+        .from(userModels);
+
+      return {
+        totalDeviceTypes: deviceTypeStats?.length || 0,
+        totalBrands: brandStats?.length || 0,
+        totalModels: modelStats[0]?.count || 0,
+        deviceTypeBreakdown: deviceTypeStats || [],
+        brandBreakdown: brandStats || []
+      };
+    } catch (error) {
+      console.error("Fehler bei Gerätestatistiken:", error);
+      return {
+        totalDeviceTypes: 0,
+        totalBrands: 0,
+        totalModels: 0,
+        deviceTypeBreakdown: [],
+        brandBreakdown: []
+      };
+    }
+  }
+
+  // Multi-Shop Admins mit Shops abrufen für Superadmin
+  async getAllMultiShopAdminsWithShops() {
+    try {
+      const multiShopAdmins = await db
+        .select()
+        .from(users)
+        .where(eq(users.isMultiShopAdmin, true));
+
+      const result = [];
+      for (const admin of multiShopAdmins) {
+        // Shops mit Berechtigung für diesen Admin abrufen
+        const accessibleShops = await db
+          .select({
+            id: multiShopPermissions.shopId,
+            shopId: multiShopPermissions.shopId,
+            name: users.companyName,
+            businessName: users.companyName,
+            isActive: users.isActive,
+            grantedAt: multiShopPermissions.grantedAt,
+          })
+          .from(multiShopPermissions)
+          .innerJoin(users, eq(multiShopPermissions.shopId, users.shopId))
+          .where(
+            and(
+              eq(multiShopPermissions.multiShopAdminId, admin.id),
+              eq(multiShopPermissions.granted, true)
+            )
+          );
+
+        result.push({
+          id: admin.id,
+          username: admin.username,
+          email: admin.email,
+          accessibleShops: accessibleShops || []
+        });
+      }
+
+      return result;
+    } catch (error) {
+      console.error("Fehler beim Laden der Multi-Shop Admins:", error);
+      return [];
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();

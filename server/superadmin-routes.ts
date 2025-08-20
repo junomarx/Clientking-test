@@ -458,8 +458,42 @@ export function registerSuperadminRoutes(app: any) {
   // User details route
   app.get('/api/superadmin/users/:id', getSuperadminUserDetails);
   app.patch('/api/superadmin/users/:id', updateSuperadminUser);
+  app.get('/api/superadmin/repair-statistics', getSuperadminRepairStatistics);
+  app.get('/api/superadmin/device-statistics', getSuperadminDeviceStatistics);
+  app.get('/api/superadmin/multi-shop-admins', getSuperadminMultiShopAdmins);
   
   console.log('✅ Superadmin routes registered');
+}
+
+// Multi-Shop Admins Route
+export async function getSuperadminMultiShopAdmins(req: Request, res: Response) {
+  try {
+    // Header-Fallback für Authentifizierung
+    const customUserId = req.headers['x-user-id'];
+    if (customUserId && !req.user) {
+      try {
+        const userId = parseInt(customUserId.toString());
+        const user = await storage.getUser(userId);
+        if (user && user.isSuperadmin) {
+          req.user = user;
+        }
+      } catch (error) {
+        console.error('Fehler beim X-User-ID Header:', error);
+      }
+    }
+
+    if (!req.user || !req.user.isSuperadmin) {
+      return res.status(403).json({ error: "Superadmin-Berechtigung erforderlich" });
+    }
+
+    // Multi-Shop-Admins mit ihren zugänglichen Shops abrufen
+    const multiShopAdmins = await storage.getAllMultiShopAdminsWithShops();
+    console.log(`getSuperadminMultiShopAdmins: ${multiShopAdmins.length} Multi-Shop-Admins geladen`);
+    res.json(multiShopAdmins);
+  } catch (error) {
+    console.error("Fehler beim Laden der Multi-Shop-Admins:", error);
+    res.status(500).json({ error: "Server-Fehler" });
+  }
 }
 
 // Device Types Route
@@ -547,6 +581,68 @@ export async function getSuperadminModels(req: Request, res: Response) {
     res.json(models);
   } catch (error) {
     console.error("Fehler beim Laden der Modelle:", error);
+    res.status(500).json({ error: "Server-Fehler" });
+  }
+}
+
+// Repair Statistics Route - DSGVO konform
+export async function getSuperadminRepairStatistics(req: Request, res: Response) {
+  try {
+    // Header-Fallback für Authentifizierung
+    const customUserId = req.headers['x-user-id'];
+    if (customUserId && !req.user) {
+      try {
+        const userId = parseInt(customUserId.toString());
+        const user = await storage.getUser(userId);
+        if (user && user.isSuperadmin) {
+          req.user = user;
+        }
+      } catch (error) {
+        console.error('Fehler beim X-User-ID Header:', error);
+      }
+    }
+
+    if (!req.user || !req.user.isSuperadmin) {
+      return res.status(403).json({ error: "Superadmin-Berechtigung erforderlich" });
+    }
+
+    // DSGVO-konforme anonymisierte Statistiken aller Reparaturen 
+    const repairStats = await storage.getAnonymizedRepairStatistics();
+    console.log(`getSuperadminRepairStatistics: Anonymisierte Statistiken generiert`);
+    res.json(repairStats);
+  } catch (error) {
+    console.error("Fehler beim Laden der Reparaturstatistiken:", error);
+    res.status(500).json({ error: "Server-Fehler" });
+  }
+}
+
+// Device Statistics Route  
+export async function getSuperadminDeviceStatistics(req: Request, res: Response) {
+  try {
+    // Header-Fallback für Authentifizierung
+    const customUserId = req.headers['x-user-id'];
+    if (customUserId && !req.user) {
+      try {
+        const userId = parseInt(customUserId.toString());
+        const user = await storage.getUser(userId);
+        if (user && user.isSuperadmin) {
+          req.user = user;
+        }
+      } catch (error) {
+        console.error('Fehler beim X-User-ID Header:', error);
+      }
+    }
+
+    if (!req.user || !req.user.isSuperadmin) {
+      return res.status(403).json({ error: "Superadmin-Berechtigung erforderlich" });
+    }
+
+    // Gerätestatistiken abrufen
+    const deviceStats = await storage.getDeviceStatistics();
+    console.log(`getSuperadminDeviceStatistics: Device-Statistiken geladen`);
+    res.json(deviceStats);
+  } catch (error) {
+    console.error("Fehler beim Laden der Gerätestatistiken:", error);
     res.status(500).json({ error: "Server-Fehler" });
   }
 }
