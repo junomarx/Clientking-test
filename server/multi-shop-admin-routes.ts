@@ -59,8 +59,11 @@ export function registerMultiShopAdminRoutes(app: Express) {
       // Berechtigte Shops zählen
       const activeShops = shopIds.length;
 
+      // Echte Umsätze berechnen (vereinfacht für Demo - normalerweise aus payments/invoices)
+      const totalRevenue = 0; // TODO: Echte Umsatzdaten aus payments implementieren
+
       res.json({
-        totalRevenue: Math.floor(Math.random() * 100000) + 50000, // Mock für Demo
+        totalRevenue: totalRevenue,
         openRepairs: openRepairsResult.count,
         completedRepairs: completedRepairsResult.count,
         activeShops: activeShops
@@ -172,8 +175,8 @@ export function registerMultiShopAdminRoutes(app: Express) {
             openRepairs: openRepairs.count,
             completedRepairs: completedRepairs.count,
             employeeCount: employeeCount.count,
-            totalRevenue: Math.floor(Math.random() * 50000) + 20000, // Mock für Demo
-            revenueChange: (Math.random() * 10 - 2).toFixed(1) // Mock für Demo
+            totalRevenue: 0, // TODO: Echte Umsätze aus payments implementieren
+            revenueChange: "0.0" // TODO: Echte Umsatzänderung berechnen
           };
         })
       );
@@ -232,8 +235,8 @@ export function registerMultiShopAdminRoutes(app: Express) {
 
           return {
             ...employee,
-            repairCount: Math.floor(repairCount.count * Math.random()) + 50, // Mock-Verteilung
-            rating: (4.2 + Math.random() * 0.8).toFixed(1), // Mock-Rating
+            repairCount: repairCount.count, // Echte Reparaturanzahl
+            rating: "0.0", // TODO: Echtes Rating-System implementieren
             yearsOfService: Math.max(1, new Date().getFullYear() - new Date(employee.createdAt).getFullYear())
           };
         })
@@ -243,6 +246,61 @@ export function registerMultiShopAdminRoutes(app: Express) {
     } catch (error) {
       console.error("Employees overview error:", error);
       res.status(500).json({ error: "Fehler beim Laden der Mitarbeiter-Übersicht" });
+    }
+  });
+
+  // Monthly Revenue Chart Data - NUR für berechtigte Shops
+  app.get("/api/multi-shop/monthly-revenue", protectMultiShopAdmin, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      
+      // DSGVO-KONFORM: Nur berechtigte Shops laden
+      const accessibleShops = await storage.getUserAccessibleShops(userId);
+      const shopIds = accessibleShops.map(shop => shop.shopId);
+      
+      if (shopIds.length === 0) {
+        return res.json([]);
+      }
+
+      console.log(`🔐 PERMISSION-CHECK: Multi-Shop Admin ${userId} lädt Chart-Daten für berechtigte Shops: [${shopIds.join(', ')}]`);
+
+      // Echte Chart-Daten basierend auf berechtigten Shops
+      // TODO: Implementiere echte Umsatzdaten aus payments/invoices
+      const chartData = accessibleShops.map((shop: any) => ({
+        name: shop.businessName,
+        value: 0, // TODO: Echte Umsätze berechnen
+        color: '#3b82f6' // Blau für alle Shops
+      }));
+
+      res.json(chartData);
+    } catch (error) {
+      console.error("Monthly revenue chart error:", error);
+      res.status(500).json({ error: "Fehler beim Laden der Chart-Daten" });
+    }
+  });
+
+  // Recent Activities - NUR für berechtigte Shops
+  app.get("/api/multi-shop/recent-activities", protectMultiShopAdmin, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      
+      // DSGVO-KONFORM: Nur berechtigte Shops laden
+      const accessibleShops = await storage.getUserAccessibleShops(userId);
+      const shopIds = accessibleShops.map(shop => shop.shopId);
+      
+      if (shopIds.length === 0) {
+        return res.json([]);
+      }
+
+      console.log(`🔐 PERMISSION-CHECK: Multi-Shop Admin ${userId} lädt Aktivitäten für berechtigte Shops: [${shopIds.join(', ')}]`);
+
+      // TODO: Echte Aktivitäten aus audit_logs oder repairs implementieren
+      // Derzeit leere Liste - keine Mock-Daten mehr!
+      res.json([]);
+      
+    } catch (error) {
+      console.error("Recent activities error:", error);
+      res.status(500).json({ error: "Fehler beim Laden der Aktivitäten" });
     }
   });
 

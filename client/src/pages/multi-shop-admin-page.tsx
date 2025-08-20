@@ -59,10 +59,10 @@ function DashboardStats() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              € {stats?.totalRevenue?.toLocaleString() || '89.420'}
+              € {stats?.totalRevenue?.toLocaleString() || '0'}
             </div>
-            <p className="text-xs text-green-600 mt-1">
-              +7.2% vs Vormonat
+            <p className="text-xs text-gray-500 mt-1">
+              Nur berechtigte Shops
             </p>
           </CardContent>
         </Card>
@@ -76,10 +76,10 @@ function DashboardStats() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              {stats?.openRepairs || '47'}
+              {stats?.openRepairs || '0'}
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              Alle Standorte
+              Nur berechtigte Shops
             </p>
           </CardContent>
         </Card>
@@ -93,10 +93,10 @@ function DashboardStats() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              {stats?.completedRepairs || '156'}
+              {stats?.completedRepairs || '0'}
             </div>
-            <p className="text-xs text-green-600 mt-1">
-              +8% vs Vormonat
+            <p className="text-xs text-gray-500 mt-1">
+              Nur berechtigte Shops
             </p>
           </CardContent>
         </Card>
@@ -110,84 +110,81 @@ function DashboardStats() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              {stats?.activeShops || '3'}
+              {stats?.activeShops || '0'}
             </div>
-            <p className="text-xs text-blue-600 mt-1">
-              Alle online
+            <p className="text-xs text-gray-500 mt-1">
+              Mit Berechtigung
             </p>
           </CardContent>
         </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Monatsumsätze Chart */}
+        {/* Echte Chart-Daten basierend auf berechtigten Shops */}
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5" />
-              Monatsumsätze nach Shop
+              Umsätze - Berechtigte Shops
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-80 flex items-end justify-around gap-4 p-4">
-              {/* Placeholder für Chart - wird später durch echtes Chart ersetzt */}
-              <div className="flex flex-col items-center gap-2">
-                <div className="bg-blue-500 w-12 h-32 rounded-t"></div>
-                <div className="bg-green-500 w-12 h-24 rounded-t"></div>
-                <div className="bg-orange-500 w-12 h-20 rounded-t"></div>
-                <span className="text-xs text-gray-600">Shop Wien</span>
+            {chartData && chartData.length > 0 ? (
+              <div className="h-80 flex items-end justify-around gap-4 p-4">
+                {chartData.map((shop, index) => (
+                  <div key={index} className="flex flex-col items-center gap-2">
+                    <div 
+                      className="bg-blue-500 w-16 rounded-t flex items-end justify-center text-white text-xs font-semibold p-1"
+                      style={{ height: shop.value > 0 ? `${Math.max(20, (shop.value / 1000))}px` : '20px' }}
+                    >
+                      {shop.value > 0 ? `€${shop.value.toLocaleString()}` : 'Keine Daten'}
+                    </div>
+                    <span className="text-xs text-gray-600 text-center">{shop.name}</span>
+                  </div>
+                ))}
               </div>
-              <div className="flex flex-col items-center gap-2">
-                <div className="bg-blue-500 w-12 h-40 rounded-t"></div>
-                <div className="bg-green-500 w-12 h-28 rounded-t"></div>
-                <div className="bg-orange-500 w-12 h-24 rounded-t"></div>
-                <span className="text-xs text-gray-600">Shop Graz</span>
+            ) : (
+              <div className="h-80 flex items-center justify-center text-gray-500">
+                <div className="text-center">
+                  <BarChart3 className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                  <p>Keine Umsatzdaten verfügbar</p>
+                  <p className="text-sm">für berechtigte Shops</p>
+                </div>
               </div>
-              <div className="flex flex-col items-center gap-2">
-                <div className="bg-blue-500 w-12 h-48 rounded-t"></div>
-                <div className="bg-green-500 w-12 h-32 rounded-t"></div>
-                <div className="bg-orange-500 w-12 h-28 rounded-t"></div>
-                <span className="text-xs text-gray-600">Shop Linz</span>
-              </div>
-            </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Umsatzverteilung */}
+        {/* Berechtigte Shops Liste */}
         <Card>
           <CardHeader>
-            <CardTitle>Umsatzverteilung nach Shop</CardTitle>
+            <CardTitle>Berechtigte Shops</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                  Shop Wien
-                </span>
-                <span className="font-semibold">45%</span>
+            {chartData && chartData.length > 0 ? (
+              <div className="space-y-4">
+                {chartData.map((shop, index) => (
+                  <div key={index} className="flex items-center justify-between">
+                    <span className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                      {shop.name}
+                    </span>
+                    <span className="font-semibold text-sm">€{shop.value?.toLocaleString() || '0'}</span>
+                  </div>
+                ))}
               </div>
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                  Shop Graz
-                </span>
-                <span className="font-semibold">35%</span>
+            ) : (
+              <div className="text-center text-gray-500 py-8">
+                <Building2 className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                <p>Keine Shops verfügbar</p>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-orange-500"></div>
-                  Shop Linz
-                </span>
-                <span className="font-semibold">20%</span>
-              </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Schnellübersicht */}
+        {/* Echte Schnellübersicht - nur berechtigte Shops */}
         <Card>
           <CardHeader>
             <CardTitle>Schnellübersicht</CardTitle>
@@ -196,63 +193,52 @@ function DashboardStats() {
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <div className="flex items-center gap-3">
                 <Users className="h-5 w-5 text-blue-600" />
-                <span>Mitarbeiter gesamt</span>
+                <span>Offene Reparaturen</span>
               </div>
-              <Badge variant="outline" className="font-semibold">18</Badge>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
-              <div className="flex items-center gap-3">
-                <Package className="h-5 w-5 text-orange-600" />
-                <span>Lagerbestände niedrig</span>
-              </div>
-              <Badge variant="outline" className="font-semibold text-orange-600">5</Badge>
+              <Badge variant="outline" className="font-semibold">{stats?.openRepairs || '0'}</Badge>
             </div>
             <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
               <div className="flex items-center gap-3">
                 <CheckCircle className="h-5 w-5 text-green-600" />
-                <span>Heute abgeschlossen</span>
+                <span>Abgeschlossene Reparaturen</span>
               </div>
-              <Badge variant="outline" className="font-semibold text-green-600">12</Badge>
+              <Badge variant="outline" className="font-semibold text-green-600">{stats?.completedRepairs || '0'}</Badge>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <Building2 className="h-5 w-5 text-blue-600" />
+                <span>Berechtigte Shops</span>
+              </div>
+              <Badge variant="outline" className="font-semibold text-blue-600">{stats?.activeShops || '0'}</Badge>
             </div>
           </CardContent>
         </Card>
 
-        {/* Letzte Aktivitäten */}
+        {/* Echte Aktivitäten - nur für berechtigte Shops */}
         <Card>
           <CardHeader>
             <CardTitle>Letzte Aktivitäten</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Neue Reparatur eingegangen</p>
-                  <p className="text-sm text-gray-500">Shop Wien</p>
-                </div>
-                <span className="text-xs text-gray-400">vor 5 Min</span>
+            {activities && activities.length > 0 ? (
+              <div className="space-y-4">
+                {activities.slice(0, 4).map((activity: any, index: number) => (
+                  <div key={index} className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">{activity.action}</p>
+                      <p className="text-sm text-gray-500">{activity.shopName}</p>
+                    </div>
+                    <span className="text-xs text-gray-400">{activity.timeAgo}</span>
+                  </div>
+                ))}
               </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Displaytausch abgeschlossen</p>
-                  <p className="text-sm text-gray-500">Shop Graz</p>
-                </div>
-                <span className="text-xs text-gray-400">vor 15 Min</span>
+            ) : (
+              <div className="text-center text-gray-500 py-8">
+                <Activity className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                <p>Keine aktuellen Aktivitäten</p>
+                <p className="text-sm">für berechtigte Shops</p>
               </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Ersatzteil bestellt</p>
-                  <p className="text-sm text-gray-500">Shop Linz</p>
-                </div>
-                <span className="text-xs text-gray-400">vor 1h 30m</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Mitarbeiter Max verschickt</p>
-                  <p className="text-sm text-gray-500">Shop Wien</p>
-                </div>
-                <span className="text-xs text-gray-400">vor 1 Tag</span>
-              </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>
