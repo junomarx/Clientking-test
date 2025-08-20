@@ -804,7 +804,7 @@ export async function getSuperadminUserDetails(req: Request, res: Response) {
   }
 }
 
-// Update User Route
+// Update User Route mit Business Settings Synchronisation
 export async function updateSuperadminUser(req: Request, res: Response) {
   try {
     // Header-Fallback für Authentifizierung
@@ -828,10 +828,48 @@ export async function updateSuperadminUser(req: Request, res: Response) {
     const userId = parseInt(req.params.id);
     const updateData = req.body;
     
+    // 1. Benutzer-Daten aktualisieren
     const updatedUser = await storage.updateUser(userId, updateData);
     
     if (!updatedUser) {
       return res.status(404).json({ error: "Benutzer nicht gefunden" });
+    }
+
+    // 2. Business Settings synchronisieren (falls relevant)
+    if (updateData.businessName || updateData.ownerFirstName || updateData.ownerLastName || 
+        updateData.streetAddress || updateData.zipCode || updateData.city || 
+        updateData.country || updateData.phone || updateData.taxId || updateData.website) {
+      
+      try {
+        // Versuche Business Settings zu aktualisieren
+        const businessUpdateData = {
+          businessName: updateData.businessName,
+          ownerFirstName: updateData.ownerFirstName, 
+          ownerLastName: updateData.ownerLastName,
+          streetAddress: updateData.streetAddress,
+          zipCode: updateData.zipCode,
+          city: updateData.city,
+          country: updateData.country,
+          phone: updateData.phone,
+          taxId: updateData.taxId,
+          website: updateData.website
+        };
+
+        // Entferne undefined-Werte 
+        Object.keys(businessUpdateData).forEach(key => {
+          if ((businessUpdateData as any)[key] === undefined) {
+            delete (businessUpdateData as any)[key];
+          }
+        });
+
+        if (Object.keys(businessUpdateData).length > 0) {
+          await storage.updateBusinessSettingsForUser(userId, businessUpdateData);
+          console.log(`✅ Business Settings für Benutzer ${userId} synchronisiert`);
+        }
+      } catch (error) {
+        console.log(`⚠️ Warnung: Business Settings konnten nicht synchronisiert werden:`, error);
+        // Fehler bei Business Settings sind nicht kritisch - User Update war erfolgreich
+      }
     }
 
     res.json(updatedUser);

@@ -82,32 +82,6 @@ function getUserStatusBadge(isActive: boolean, isAdmin: boolean, isSuperadmin: b
 }
 
 export function UserDetailsDialog({ open, onClose, userId, onEdit, onToggleActive }: UserDetailsDialogProps) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editableSettings, setEditableSettings] = useState<any>({});
-  const { toast } = useToast();
-  
-  const updateUserMutation = useMutation({
-    mutationFn: async (updateData: any) => {
-      const res = await apiRequest('PATCH', `/api/superadmin/users/${userId}`, updateData);
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/superadmin/users/${userId}`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/superadmin/user-business-settings/${userId}`] });
-      setIsEditing(false);
-      toast({
-        title: "Erfolgreich gespeichert",
-        description: "Die Benutzerdaten wurden aktualisiert.",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Fehler beim Speichern",
-        description: "Die Änderungen konnten nicht gespeichert werden.",
-        variant: "destructive",
-      });
-    },
-  });
   
   const { data: user, isLoading, error } = useQuery<UserWithBusinessSettings>({
     queryKey: [`/api/superadmin/users/${userId}`],
@@ -336,178 +310,57 @@ export function UserDetailsDialog({ open, onClose, userId, onEdit, onToggleActiv
 
             {/* Geschäftsinformationen */}
             <div className="bg-green-50 dark:bg-green-950 p-4 rounded-lg">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold flex items-center gap-2">
-                  <Building className="h-4 w-4 text-green-600" />
-                  Geschäftsinformationen
-                </h3>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    if (isEditing) {
-                      setIsEditing(false);
-                    } else {
-                      setIsEditing(true);
-                      setEditableSettings({
-                        businessName: settings.businessName || '',
-                        ownerFirstName: settings.ownerFirstName || '',
-                        ownerLastName: settings.ownerLastName || '', 
-                        streetAddress: settings.streetAddress || '',
-                        zipCode: settings.zipCode || '',
-                        city: settings.city || '',
-                        country: settings.country || '',
-                        phone: settings.phone || '',
-                        taxId: settings.taxId || '',
-                        website: settings.website || '',
-                      });
-                    }
-                  }}
-                >
-                  {isEditing ? 'Abbrechen' : 'Bearbeiten'}
-                </Button>
-              </div>
+              <h3 className="font-semibold mb-3 flex items-center gap-2">
+                <Building className="h-4 w-4 text-green-600" />
+                Geschäftsinformationen
+              </h3>
               
               {settings && Object.keys(settings).length > 0 ? (
                 <div className="space-y-3">
                   <div>
                     <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Geschäftsname:</span>
-                    {isEditing ? (
-                      <Input
-                        value={editableSettings.businessName || ''}
-                        onChange={(e) => setEditableSettings(prev => ({...prev, businessName: e.target.value}))}
-                        className="mt-1"
-                      />
-                    ) : (
-                      <p className="text-sm">{settings.businessName || "Nicht angegeben"}</p>
-                    )}
+                    <p className="text-sm">{settings.businessName || "Nicht angegeben"}</p>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Vorname:</span>
-                      {isEditing ? (
-                        <Input
-                          value={editableSettings.ownerFirstName || ''}
-                          onChange={(e) => setEditableSettings(prev => ({...prev, ownerFirstName: e.target.value}))}
-                          className="mt-1"
-                        />
-                      ) : (
-                        <p className="text-sm">{settings.ownerFirstName || "Nicht angegeben"}</p>
-                      )}
+                      <p className="text-sm">{settings.ownerFirstName || "Nicht angegeben"}</p>
                     </div>
                     <div>
                       <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Nachname:</span>
-                      {isEditing ? (
-                        <Input
-                          value={editableSettings.ownerLastName || ''}
-                          onChange={(e) => setEditableSettings(prev => ({...prev, ownerLastName: e.target.value}))}
-                          className="mt-1"
-                        />
-                      ) : (
-                        <p className="text-sm">{settings.ownerLastName || "Nicht angegeben"}</p>
-                      )}
+                      <p className="text-sm">{settings.ownerLastName || "Nicht angegeben"}</p>
                     </div>
                   </div>
                   <div>
                     <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Adresse:</span>
-                    {isEditing ? (
-                      <Input
-                        value={editableSettings.streetAddress || ''}
-                        onChange={(e) => setEditableSettings(prev => ({...prev, streetAddress: e.target.value}))}
-                        className="mt-1"
-                      />
-                    ) : (
-                      <p className="text-sm">{settings.streetAddress || "Nicht angegeben"}</p>
-                    )}
+                    <p className="text-sm">{settings.streetAddress || "Nicht angegeben"}</p>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <span className="text-sm font-medium text-gray-600 dark:text-gray-400">PLZ:</span>
-                      {isEditing ? (
-                        <Input
-                          value={editableSettings.zipCode || ''}
-                          onChange={(e) => setEditableSettings(prev => ({...prev, zipCode: e.target.value}))}
-                          className="mt-1"
-                        />
-                      ) : (
-                        <p className="text-sm">{settings.zipCode || "Nicht angegeben"}</p>
-                      )}
+                      <p className="text-sm">{settings.zipCode || "Nicht angegeben"}</p>
                     </div>
                     <div>
                       <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Ort:</span>
-                      {isEditing ? (
-                        <Input
-                          value={editableSettings.city || ''}
-                          onChange={(e) => setEditableSettings(prev => ({...prev, city: e.target.value}))}
-                          className="mt-1"
-                        />
-                      ) : (
-                        <p className="text-sm">{settings.city || "Nicht angegeben"}</p>
-                      )}
+                      <p className="text-sm">{settings.city || "Nicht angegeben"}</p>
                     </div>
                   </div>
                   <div>
                     <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Land:</span>
-                    {isEditing ? (
-                      <Input
-                        value={editableSettings.country || ''}
-                        onChange={(e) => setEditableSettings(prev => ({...prev, country: e.target.value}))}
-                        className="mt-1"
-                      />
-                    ) : (
-                      <p className="text-sm">{settings.country || "Nicht angegeben"}</p>
-                    )}
+                    <p className="text-sm">{settings.country || "Nicht angegeben"}</p>
                   </div>
                   <div>
                     <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Telefon:</span>
-                    {isEditing ? (
-                      <Input
-                        value={editableSettings.phone || ''}
-                        onChange={(e) => setEditableSettings(prev => ({...prev, phone: e.target.value}))}
-                        className="mt-1"
-                      />
-                    ) : (
-                      <p className="text-sm">{settings.phone || "Nicht angegeben"}</p>
-                    )}
+                    <p className="text-sm">{settings.phone || "Nicht angegeben"}</p>
                   </div>
                   <div>
                     <span className="text-sm font-medium text-gray-600 dark:text-gray-400">UID:</span>
-                    {isEditing ? (
-                      <Input
-                        value={editableSettings.taxId || ''}
-                        onChange={(e) => setEditableSettings(prev => ({...prev, taxId: e.target.value}))}
-                        className="mt-1"
-                      />
-                    ) : (
-                      <p className="text-sm">{settings.taxId || "Nicht angegeben"}</p>
-                    )}
+                    <p className="text-sm">{settings.taxId || "Nicht angegeben"}</p>
                   </div>
                   <div>
                     <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Website:</span>
-                    {isEditing ? (
-                      <Input
-                        value={editableSettings.website || ''}
-                        onChange={(e) => setEditableSettings(prev => ({...prev, website: e.target.value}))}
-                        className="mt-1"
-                      />
-                    ) : (
-                      <p className="text-sm">{settings.website || "Nicht angegeben"}</p>
-                    )}
+                    <p className="text-sm">{settings.website || "Nicht angegeben"}</p>
                   </div>
-
-                  {isEditing && (
-                    <div className="flex gap-2 pt-3 border-t">
-                      <Button 
-                        onClick={() => updateUserMutation.mutate(editableSettings)}
-                        disabled={updateUserMutation.isPending}
-                      >
-                        {updateUserMutation.isPending ? 'Speichern...' : 'Speichern'}
-                      </Button>
-                      <Button variant="outline" onClick={() => setIsEditing(false)}>
-                        Abbrechen
-                      </Button>
-                    </div>
-                  )}
                 </div>
               ) : (
                 <p className="text-sm text-gray-500">Keine Geschäftsinformationen verfügbar</p>

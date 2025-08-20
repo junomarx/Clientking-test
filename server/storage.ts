@@ -6611,6 +6611,57 @@ export class DatabaseStorage implements IStorage {
       return [];
     }
   }
+
+  // Business Settings für einen spezifischen Benutzer aktualisieren (für Superladmin Synchronisation)  
+  async updateBusinessSettingsForUser(userId: number, updateData: any): Promise<BusinessSettings | undefined> {
+    const user = await this.getUser(userId);
+    if (!user || !user.shopId) {
+      console.log(`❌ User ${userId} oder shopId nicht gefunden`);
+      return undefined;
+    }
+
+    const shopId = user.shopId;
+    console.log(`✅ Superladmin synchronisiert Business Settings für User ${userId} (Shop ${shopId})`);
+    
+    try {
+      // Prüfe, ob bereits Einstellungen existieren
+      const [existingSettings] = await db
+        .select()
+        .from(businessSettings)
+        .where(eq(businessSettings.shopId, shopId))
+        .limit(1);
+
+      if (existingSettings) {
+        // Aktualisiere bestehende Einstellungen
+        const [updatedSettings] = await db
+          .update(businessSettings)
+          .set({
+            ...updateData,
+            updatedAt: new Date(),
+          })
+          .where(eq(businessSettings.shopId, shopId))
+          .returning();
+        
+        console.log(`✅ Business Settings für Shop ${shopId} aktualisiert`);
+        return updatedSettings;
+      } else {
+        // Erstelle neue Einstellungen
+        const [newSettings] = await db
+          .insert(businessSettings)
+          .values({
+            shopId,
+            ...updateData,
+          })
+          .returning();
+        
+        console.log(`✅ Neue Business Settings für Shop ${shopId} erstellt`);
+        return newSettings;
+      }
+    } catch (error) {
+      console.error(`Fehler beim Aktualisieren der Business Settings für User ${userId}:`, error);
+      return undefined;
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();
