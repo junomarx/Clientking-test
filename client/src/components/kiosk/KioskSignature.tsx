@@ -145,117 +145,148 @@ export function KioskSignature({ onCancel, onSuccess }: KioskSignatureProps) {
   // Schritt 1: Reparaturbedingungen und Kundendaten
   if (currentStep === "terms") {
     return (
-      <div className="fixed inset-0 bg-white z-50 flex items-center justify-center p-4">
-        <Card className="w-full max-w-4xl h-full max-h-[90vh] flex flex-col">
-          <CardHeader className="text-center pb-6">
-            <CardTitle className="text-center text-2xl">
-              Reparaturauftrag und Geschäftsbedingungen
-            </CardTitle>
-            <p className="text-center text-gray-600 text-sm">
-              {signatureRequest?.shopName || 'Handyshop'}
+      <div className="fixed inset-0 bg-gray-50 z-50 min-h-screen">
+        <div className="max-w-6xl mx-auto p-6">
+          {/* Header */}
+          <div className="text-center mb-10 pb-6 border-b-2 border-gray-200">
+            <h1 className="text-4xl font-bold text-gray-700 mb-2 tracking-tight">
+              Reparaturauftrag
+            </h1>
+            <p className="text-gray-500 text-lg">
+              Auftragsbestätigung & Bedingungen
             </p>
-          </CardHeader>
-          
-          <CardContent className="flex-1 flex flex-col space-y-6 overflow-y-auto">
-            {/* Kundendaten */}
-            <div className="space-y-4">
-              <h3 className="font-semibold text-lg">
-                Kundendaten
-              </h3>
-              <div className="p-4 bg-gray-50 rounded-lg space-y-2">
-                <div className="font-medium text-lg">
-                  {signatureRequest.customerName}
+            {signatureRequest?.shopName && (
+              <p className="text-gray-600 text-base mt-1">
+                {signatureRequest.shopName}
+              </p>
+            )}
+          </div>
+
+          {/* Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            {/* Kundendaten Card */}
+            <div className="bg-white rounded-2xl p-7 border border-gray-200 shadow-sm">
+              <div className="flex items-center mb-5 pb-4 border-b border-gray-100">
+                <svg className="w-6 h-6 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                <h2 className="text-xl font-semibold text-gray-700">Kundendaten</h2>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium text-gray-500 mb-1 uppercase tracking-wider">Name</span>
+                  <span className="text-base text-gray-900 font-medium">{signatureRequest.customerName}</span>
                 </div>
                 {signatureRequest.customerPhone && (
-                  <div className="text-sm text-gray-600">
-                    {signatureRequest.customerPhone}
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-gray-500 mb-1 uppercase tracking-wider">Telefon</span>
+                    <span className="text-base text-gray-900 font-medium">{signatureRequest.customerPhone}</span>
                   </div>
                 )}
                 {signatureRequest.customerEmail && (
-                  <div className="text-sm text-gray-600">
-                    {signatureRequest.customerEmail}
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-gray-500 mb-1 uppercase tracking-wider">E-Mail</span>
+                    <span className="text-base text-gray-900 font-medium">{signatureRequest.customerEmail}</span>
                   </div>
                 )}
                 {signatureRequest.customerAddress && (
-                  <div className="text-sm text-gray-600">
-                    {signatureRequest.customerAddress}
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-gray-500 mb-1 uppercase tracking-wider">Adresse</span>
+                    <span className="text-base text-gray-900 font-medium">{signatureRequest.customerAddress}</span>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Reparaturdaten */}
-            <div className="space-y-4">
-              <h3 className="font-semibold text-lg">
-                Reparaturdetails
-              </h3>
-              <div className="p-4 bg-blue-50 rounded-lg space-y-3">
-                <div className="font-medium text-blue-900">
-                  {signatureRequest.repairDetails}
+            {/* Reparaturdetails Card */}
+            <div className="bg-white rounded-2xl p-7 border border-gray-200 shadow-sm">
+              <div className="flex items-center mb-5 pb-4 border-b border-gray-100">
+                <svg className="w-6 h-6 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+                <h2 className="text-xl font-semibold text-gray-700">Reparaturdetails</h2>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  {signatureRequest.deviceInfo && (
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-gray-500 mb-1 uppercase tracking-wider">Gerät</span>
+                      <span className="text-base text-gray-900 font-medium">{signatureRequest.deviceInfo}</span>
+                    </div>
+                  )}
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-gray-500 mb-1 uppercase tracking-wider">Fehler</span>
+                    <span className="text-base text-gray-900 font-medium">{signatureRequest.repairDetails}</span>
+                  </div>
+                  {signatureRequest.orderCode && (
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-gray-500 mb-1 uppercase tracking-wider">Auftragsnummer</span>
+                      <span className="text-base text-gray-900 font-medium">{signatureRequest.orderCode}</span>
+                    </div>
+                  )}
+                  {signatureRequest.estimatedCost && (
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-gray-500 mb-1 uppercase tracking-wider">Kosten</span>
+                      <span className="text-base text-gray-900 font-medium">{signatureRequest.estimatedCost}€</span>
+                    </div>
+                  )}
                 </div>
-                {signatureRequest.deviceInfo && (
-                  <div className="text-sm text-blue-700">
-                    {signatureRequest.deviceInfo}
-                  </div>
-                )}
-                {signatureRequest.orderCode && (
-                  <div className="text-sm text-blue-700">
-                    Auftragsnummer: {signatureRequest.orderCode}
-                  </div>
-                )}
-                {signatureRequest.estimatedCost && (
-                  <div className="text-sm text-blue-700">
-                    Geschätzte Kosten: {signatureRequest.estimatedCost}€
-                  </div>
-                )}
                 {signatureRequest.status && (
-                  <div className="text-sm text-blue-700">
-                    Status: {signatureRequest.status}
+                  <div className="mt-4">
+                    <span className="text-sm font-medium text-gray-500 mb-2 uppercase tracking-wider block">Status</span>
+                    <span className="inline-block px-3 py-1.5 bg-blue-100 text-blue-600 rounded-full text-sm font-medium capitalize">
+                      {signatureRequest.status}
+                    </span>
                   </div>
                 )}
               </div>
             </div>
+          </div>
 
-            {/* Reparaturbedingungen */}
-            <div className="space-y-4">
-              <h3 className="font-semibold text-lg">Reparaturbedingungen</h3>
-              <div className="p-4 border rounded-lg bg-gray-50">
-                <div className="text-sm whitespace-pre-wrap">
-                  {signatureRequest?.repairTerms || 'Es wurden keine spezifischen Reparaturbedingungen hinterlegt.'}
-                </div>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="terms" 
-                  checked={termsAccepted}
-                  onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
-                />
-                <Label htmlFor="terms" className="text-sm">
-                  Ich habe die Reparaturbedingungen gelesen und stimme diesen zu.
-                </Label>
-              </div>
+          {/* Reparaturbedingungen - Full Width */}
+          <div className="bg-white rounded-2xl p-7 border border-gray-200 shadow-sm mb-8">
+            <div className="flex items-center mb-5 pb-4 border-b border-gray-100">
+              <svg className="w-6 h-6 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <h2 className="text-xl font-semibold text-gray-700">Reparaturbedingungen</h2>
             </div>
+            <div className="text-base text-gray-800 leading-relaxed whitespace-pre-wrap">
+              {signatureRequest?.repairTerms || 'Es wurden keine spezifischen Reparaturbedingungen hinterlegt.'}
+            </div>
+          </div>
 
-            <div className="flex gap-4 pt-4">
+          {/* Footer Section */}
+          <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
+            <div className="flex items-start p-5 mb-7 bg-gray-50 rounded-xl border-2 border-gray-200 hover:border-blue-300 transition-colors">
+              <Checkbox 
+                id="terms" 
+                checked={termsAccepted}
+                onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
+                className="w-5 h-5 mr-4 mt-0.5 flex-shrink-0"
+              />
+              <Label htmlFor="terms" className="text-base text-gray-700 font-medium cursor-pointer">
+                Ich habe die Reparaturbedingungen gelesen und stimme diesen zu.
+              </Label>
+            </div>
+            <div className="flex gap-4">
               <Button
                 variant="outline"
                 onClick={handleCancel}
-                className="flex-1"
+                className="flex-1 h-14 text-lg font-semibold border-2 hover:bg-gray-50"
               >
                 Abbrechen
               </Button>
-              
               <Button
                 onClick={handleTermsComplete}
                 disabled={!termsAccepted}
-                className="flex-1"
+                className="flex-1 h-14 text-lg font-semibold disabled:opacity-50 bg-blue-600 hover:bg-blue-700"
               >
                 Weiter zur Gerätecode-Eingabe
               </Button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     );
   }
