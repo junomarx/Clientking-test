@@ -50,22 +50,21 @@ interface UserWithBusinessSettings {
   shopId: number | null;
   createdAt: string;
   trialExpiresAt: string | null;
-  lastLoginAt?: string | null;
-  lastLogoutAt?: string | null;
-  // Geschäftsdaten direkt im user-Objekt (aus /api/superadmin/users/:id)
-  companyName?: string;
-  companyAddress?: string;
-  companyPhone?: string;  
-  companyEmail?: string;
-  companyVatNumber?: string;
-  ownerFirstName?: string;
-  ownerLastName?: string;
-  streetAddress?: string;
-  zipCode?: string;
-  city?: string;
-  country?: string;
-  website?: string;
-  taxId?: string;
+  businessSettings?: {
+    businessName: string;
+    ownerFirstName: string;
+    ownerLastName: string;
+    streetAddress: string;
+    zipCode: string;
+    city: string;
+    country: string;
+    email: string;
+    phone: string;
+    taxId: string;
+    website: string;
+    vatNumber: string;
+    maxEmployees: number;
+  };
 }
 
 function getUserStatusBadge(isActive: boolean, isAdmin: boolean, isSuperadmin: boolean) {
@@ -82,7 +81,6 @@ function getUserStatusBadge(isActive: boolean, isAdmin: boolean, isSuperadmin: b
 }
 
 export function UserDetailsDialog({ open, onClose, userId, onEdit, onToggleActive }: UserDetailsDialogProps) {
-  
   const { data: user, isLoading, error } = useQuery<UserWithBusinessSettings>({
     queryKey: [`/api/superadmin/users/${userId}`],
     enabled: open && !!userId,
@@ -141,37 +139,18 @@ export function UserDetailsDialog({ open, onClose, userId, onEdit, onToggleActiv
     );
   }
 
-  // IMMER die businessSettings API als primäre Quelle verwenden!
-  // Das businessSettings-Objekt enthält die aktuellsten Daten
-  const settings = businessSettings || {
-    // Einfacher Fallback wenn API nicht lädt
-    businessName: "Wird geladen...",
-    streetAddress: "Wird geladen...", 
-    phone: "Wird geladen...",
-    email: "Wird geladen...",
-    website: "Wird geladen...",
-    taxId: "Wird geladen...",
-    ownerFirstName: "Wird geladen...",
-    ownerLastName: "Wird geladen...",
-    zipCode: "Wird geladen...",
-    city: "Wird geladen...",
-    country: "Wird geladen..."
-  };
+  // Für inaktive Benutzer: Zeige Registrierungsdaten aus der users-Tabelle
+  // Für aktive Benutzer: Zeige business_settings
+  const settings = businessSettings || user.businessSettings || {};
   
   // Debug: Log die empfangenen Daten
   console.log('🔍 UserDetailsDialog Debug:', {
+    isActive: user.isActive,
+    businessSettings,
+    userBusinessSettings: user.businessSettings,
+    finalSettings: settings,
     userId: user.id,
-    username: user.username,
-    businessSettings_available: !!businessSettings,
-    businessSettings_data: businessSettings,
-    user_company_data: {
-      companyName: user.companyName,
-      ownerFirstName: user.ownerFirstName,
-      ownerLastName: user.ownerLastName,
-      zipCode: user.zipCode,
-      city: user.city
-    },
-    finalSettings: settings
+    username: user.username
   });
 
   return (
@@ -314,36 +293,23 @@ export function UserDetailsDialog({ open, onClose, userId, onEdit, onToggleActiv
                 <Building className="h-4 w-4 text-green-600" />
                 Geschäftsinformationen
               </h3>
-              
               {settings && Object.keys(settings).length > 0 ? (
                 <div className="space-y-3">
                   <div>
                     <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Geschäftsname:</span>
                     <p className="text-sm">{settings.businessName || "Nicht angegeben"}</p>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Vorname:</span>
-                      <p className="text-sm">{settings.ownerFirstName || "Nicht angegeben"}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Nachname:</span>
-                      <p className="text-sm">{settings.ownerLastName || "Nicht angegeben"}</p>
-                    </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Inhaber:</span>
+                    <p className="text-sm">{settings.ownerFirstName && settings.ownerLastName ? `${settings.ownerFirstName} ${settings.ownerLastName}` : "Nicht angegeben"}</p>
                   </div>
                   <div>
                     <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Adresse:</span>
                     <p className="text-sm">{settings.streetAddress || "Nicht angegeben"}</p>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">PLZ:</span>
-                      <p className="text-sm">{settings.zipCode || "Nicht angegeben"}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Ort:</span>
-                      <p className="text-sm">{settings.city || "Nicht angegeben"}</p>
-                    </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Ort:</span>
+                    <p className="text-sm">{settings.zipCode || settings.city ? `${settings.zipCode || ""} ${settings.city || ""}`.trim() : "Nicht angegeben"}</p>
                   </div>
                   <div>
                     <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Land:</span>
@@ -361,6 +327,7 @@ export function UserDetailsDialog({ open, onClose, userId, onEdit, onToggleActiv
                     <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Website:</span>
                     <p className="text-sm">{settings.website || "Nicht angegeben"}</p>
                   </div>
+
                 </div>
               ) : (
                 <p className="text-sm text-gray-500">Keine Geschäftsinformationen verfügbar</p>

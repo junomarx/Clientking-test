@@ -16,18 +16,9 @@ import {
   Clock,
   Star,
   Eye,
-  Edit3,
-  Shield,
-  Settings,
-  ArrowRightLeft,
-  LogOut
+  Edit3
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
-import { ShopOwnerPermissionDialog } from "@/components/multi-shop/ShopOwnerPermissionDialog";
-import { SuperadminAssignmentPanel } from "@/components/multi-shop/SuperadminAssignmentPanel";
-import { SessionContextManager } from "@/components/multi-shop/SessionContextManager";
-import { useMultiShopPermissions } from "@/hooks/use-multi-shop-permissions";
-import { useAuth } from "@/hooks/use-auth";
 
 // Dashboard Statistiken
 function DashboardStats() {
@@ -68,10 +59,10 @@ function DashboardStats() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              € {stats?.totalRevenue?.toLocaleString() || '0'}
+              € {stats?.totalRevenue?.toLocaleString() || '89.420'}
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Nur berechtigte Shops
+            <p className="text-xs text-green-600 mt-1">
+              +7.2% vs Vormonat
             </p>
           </CardContent>
         </Card>
@@ -85,10 +76,10 @@ function DashboardStats() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              {stats?.openRepairs || '0'}
+              {stats?.openRepairs || '47'}
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              Nur berechtigte Shops
+              Alle Standorte
             </p>
           </CardContent>
         </Card>
@@ -102,10 +93,10 @@ function DashboardStats() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              {stats?.completedRepairs || '0'}
+              {stats?.completedRepairs || '156'}
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Nur berechtigte Shops
+            <p className="text-xs text-green-600 mt-1">
+              +8% vs Vormonat
             </p>
           </CardContent>
         </Card>
@@ -119,81 +110,84 @@ function DashboardStats() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              {stats?.activeShops || '0'}
+              {stats?.activeShops || '3'}
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Mit Berechtigung
+            <p className="text-xs text-blue-600 mt-1">
+              Alle online
             </p>
           </CardContent>
         </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Echte Chart-Daten basierend auf berechtigten Shops */}
+        {/* Monatsumsätze Chart */}
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5" />
-              Umsätze - Berechtigte Shops
+              Monatsumsätze nach Shop
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {chartData && chartData.length > 0 ? (
-              <div className="h-80 flex items-end justify-around gap-4 p-4">
-                {chartData.map((shop, index) => (
-                  <div key={index} className="flex flex-col items-center gap-2">
-                    <div 
-                      className="bg-blue-500 w-16 rounded-t flex items-end justify-center text-white text-xs font-semibold p-1"
-                      style={{ height: shop.value > 0 ? `${Math.max(20, (shop.value / 1000))}px` : '20px' }}
-                    >
-                      {shop.value > 0 ? `€${shop.value.toLocaleString()}` : 'Keine Daten'}
-                    </div>
-                    <span className="text-xs text-gray-600 text-center">{shop.name}</span>
-                  </div>
-                ))}
+            <div className="h-80 flex items-end justify-around gap-4 p-4">
+              {/* Placeholder für Chart - wird später durch echtes Chart ersetzt */}
+              <div className="flex flex-col items-center gap-2">
+                <div className="bg-blue-500 w-12 h-32 rounded-t"></div>
+                <div className="bg-green-500 w-12 h-24 rounded-t"></div>
+                <div className="bg-orange-500 w-12 h-20 rounded-t"></div>
+                <span className="text-xs text-gray-600">Shop Wien</span>
               </div>
-            ) : (
-              <div className="h-80 flex items-center justify-center text-gray-500">
-                <div className="text-center">
-                  <BarChart3 className="h-12 w-12 mx-auto mb-2 text-gray-300" />
-                  <p>Keine Umsatzdaten verfügbar</p>
-                  <p className="text-sm">für berechtigte Shops</p>
-                </div>
+              <div className="flex flex-col items-center gap-2">
+                <div className="bg-blue-500 w-12 h-40 rounded-t"></div>
+                <div className="bg-green-500 w-12 h-28 rounded-t"></div>
+                <div className="bg-orange-500 w-12 h-24 rounded-t"></div>
+                <span className="text-xs text-gray-600">Shop Graz</span>
               </div>
-            )}
+              <div className="flex flex-col items-center gap-2">
+                <div className="bg-blue-500 w-12 h-48 rounded-t"></div>
+                <div className="bg-green-500 w-12 h-32 rounded-t"></div>
+                <div className="bg-orange-500 w-12 h-28 rounded-t"></div>
+                <span className="text-xs text-gray-600">Shop Linz</span>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
-        {/* Berechtigte Shops Liste */}
+        {/* Umsatzverteilung */}
         <Card>
           <CardHeader>
-            <CardTitle>Berechtigte Shops</CardTitle>
+            <CardTitle>Umsatzverteilung nach Shop</CardTitle>
           </CardHeader>
           <CardContent>
-            {chartData && chartData.length > 0 ? (
-              <div className="space-y-4">
-                {chartData.map((shop, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <span className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                      {shop.name}
-                    </span>
-                    <span className="font-semibold text-sm">€{shop.value?.toLocaleString() || '0'}</span>
-                  </div>
-                ))}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                  Shop Wien
+                </span>
+                <span className="font-semibold">45%</span>
               </div>
-            ) : (
-              <div className="text-center text-gray-500 py-8">
-                <Building2 className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-                <p>Keine Shops verfügbar</p>
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                  Shop Graz
+                </span>
+                <span className="font-semibold">35%</span>
               </div>
-            )}
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+                  Shop Linz
+                </span>
+                <span className="font-semibold">20%</span>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Echte Schnellübersicht - nur berechtigte Shops */}
+        {/* Schnellübersicht */}
         <Card>
           <CardHeader>
             <CardTitle>Schnellübersicht</CardTitle>
@@ -202,52 +196,63 @@ function DashboardStats() {
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <div className="flex items-center gap-3">
                 <Users className="h-5 w-5 text-blue-600" />
-                <span>Offene Reparaturen</span>
+                <span>Mitarbeiter gesamt</span>
               </div>
-              <Badge variant="outline" className="font-semibold">{stats?.openRepairs || '0'}</Badge>
+              <Badge variant="outline" className="font-semibold">18</Badge>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <Package className="h-5 w-5 text-orange-600" />
+                <span>Lagerbestände niedrig</span>
+              </div>
+              <Badge variant="outline" className="font-semibold text-orange-600">5</Badge>
             </div>
             <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
               <div className="flex items-center gap-3">
                 <CheckCircle className="h-5 w-5 text-green-600" />
-                <span>Abgeschlossene Reparaturen</span>
+                <span>Heute abgeschlossen</span>
               </div>
-              <Badge variant="outline" className="font-semibold text-green-600">{stats?.completedRepairs || '0'}</Badge>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-              <div className="flex items-center gap-3">
-                <Building2 className="h-5 w-5 text-blue-600" />
-                <span>Berechtigte Shops</span>
-              </div>
-              <Badge variant="outline" className="font-semibold text-blue-600">{stats?.activeShops || '0'}</Badge>
+              <Badge variant="outline" className="font-semibold text-green-600">12</Badge>
             </div>
           </CardContent>
         </Card>
 
-        {/* Echte Aktivitäten - nur für berechtigte Shops */}
+        {/* Letzte Aktivitäten */}
         <Card>
           <CardHeader>
             <CardTitle>Letzte Aktivitäten</CardTitle>
           </CardHeader>
           <CardContent>
-            {activities && activities.length > 0 ? (
-              <div className="space-y-4">
-                {activities.slice(0, 4).map((activity: any, index: number) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">{activity.action}</p>
-                      <p className="text-sm text-gray-500">{activity.shopName}</p>
-                    </div>
-                    <span className="text-xs text-gray-400">{activity.timeAgo}</span>
-                  </div>
-                ))}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Neue Reparatur eingegangen</p>
+                  <p className="text-sm text-gray-500">Shop Wien</p>
+                </div>
+                <span className="text-xs text-gray-400">vor 5 Min</span>
               </div>
-            ) : (
-              <div className="text-center text-gray-500 py-8">
-                <Activity className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-                <p>Keine aktuellen Aktivitäten</p>
-                <p className="text-sm">für berechtigte Shops</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Displaytausch abgeschlossen</p>
+                  <p className="text-sm text-gray-500">Shop Graz</p>
+                </div>
+                <span className="text-xs text-gray-400">vor 15 Min</span>
               </div>
-            )}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Ersatzteil bestellt</p>
+                  <p className="text-sm text-gray-500">Shop Linz</p>
+                </div>
+                <span className="text-xs text-gray-400">vor 1h 30m</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Mitarbeiter Max verschickt</p>
+                  <p className="text-sm text-gray-500">Shop Wien</p>
+                </div>
+                <span className="text-xs text-gray-400">vor 1 Tag</span>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -267,7 +272,7 @@ function ShopsOverview() {
 
   return (
     <div className="space-y-6">
-      {/* KPI Cards - Echte Daten */}
+      {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -277,10 +282,8 @@ function ShopsOverview() {
             <Euro className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">
-              € {shops?.reduce((total: number, shop: any) => total + (shop.totalRevenue || 0), 0)?.toLocaleString() || '0'}
-            </div>
-            <p className="text-xs text-gray-500 mt-1">Nur berechtigte Shops</p>
+            <div className="text-2xl font-bold text-gray-900">€ 86.200</div>
+            <p className="text-xs text-green-600 mt-1">+1.8% vs Vormonat</p>
           </CardContent>
         </Card>
 
@@ -292,10 +295,8 @@ function ShopsOverview() {
             <Users className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">
-              {shops?.reduce((total: number, shop: any) => total + (shop.employeeCount || 0), 0) || '0'}
-            </div>
-            <p className="text-xs text-gray-500 mt-1">Berechtigte Shops</p>
+            <div className="text-2xl font-bold text-gray-900">18</div>
+            <p className="text-xs text-gray-500 mt-1">Alle Standorte</p>
           </CardContent>
         </Card>
 
@@ -307,71 +308,157 @@ function ShopsOverview() {
             <Clock className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">
-              {shops?.reduce((total: number, shop: any) => total + (shop.openRepairs || 0), 0) || '0'}
-            </div>
-            <p className="text-xs text-gray-500 mt-1">Berechtigte Shops</p>
+            <div className="text-2xl font-bold text-gray-900">47</div>
+            <p className="text-xs text-orange-600 mt-1">Alle Standorte</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Echte Shop Cards - nur berechtigte Shops */}
+      {/* Shop Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {shops && shops.length > 0 ? (
-          shops.map((shop: any, index: number) => (
-            <Card key={shop.shopId}>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg font-semibold">{shop.businessName}</CardTitle>
-                  <Badge className={shop.isActive ? "bg-green-100 text-green-700 hover:bg-green-100" : "bg-gray-100 text-gray-700"}>
-                    {shop.isActive ? 'ONLINE' : 'OFFLINE'}
-                  </Badge>
-                </div>
-                <CardDescription>Shop ID: {shop.shopId}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-600">Gesamtumsatz</p>
-                    <p className="text-xl font-bold">€{shop.totalRevenue?.toLocaleString() || '0'}</p>
-                    <p className="text-xs text-gray-500">{shop.revenueChange || '0.0'}% vs VM</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Mitarbeiter</p>
-                    <p className="text-xl font-bold">{shop.employeeCount || 0}</p>
-                    <p className="text-xs text-gray-500">Anzahl</p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-gray-600">Offen:</span>
-                    <span className="ml-2 font-semibold text-orange-600">{shop.openRepairs || 0}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Erledigt:</span>
-                    <span className="ml-2 font-semibold text-green-600">{shop.completedRepairs || 0}</span>
-                  </div>
-                </div>
-                <div className="flex gap-2 pt-2">
-                  <Button variant="outline" size="sm" className="flex-1" disabled>
-                    <Eye className="h-4 w-4 mr-1" />
-                    Details
-                  </Button>
-                  <Button variant="outline" size="sm" className="flex-1" disabled>
-                    <Edit3 className="h-4 w-4 mr-1" />
-                    Bearbeiten
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        ) : (
-          <div className="col-span-full text-center py-12">
-            <Building2 className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-            <p className="text-gray-500 text-lg">Keine berechtigten Shops verfügbar</p>
-            <p className="text-sm text-gray-400">Sie haben keine Berechtigung für Shops</p>
-          </div>
-        )}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-semibold">Shop Wien</CardTitle>
+              <Badge className="bg-green-100 text-green-700 hover:bg-green-100">ONLINE</Badge>
+            </div>
+            <CardDescription>Verwaltung und Übersicht aller Shop-Standorte</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-gray-600">Gesamtumsatz</p>
+                <p className="text-xl font-bold">€35.200</p>
+                <p className="text-xs text-green-600">+5.2% vs VM</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Mitarbeiter</p>
+                <p className="text-xl font-bold">8</p>
+                <p className="text-xs text-gray-500">+12.5% Auslastung</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="text-gray-600">Offen:</span>
+                <span className="ml-2 font-semibold text-orange-600">15</span>
+              </div>
+              <div>
+                <span className="text-gray-600">Erledigt:</span>
+                <span className="ml-2 font-semibold text-green-600">67</span>
+              </div>
+            </div>
+            <div className="text-sm text-gray-600">
+              <span>Manager: </span>
+              <span className="font-medium">Thomas Miller</span>
+            </div>
+            <div className="flex gap-2 pt-2">
+              <Button variant="outline" size="sm" className="flex-1">
+                <Eye className="h-4 w-4 mr-1" />
+                Details
+              </Button>
+              <Button variant="outline" size="sm" className="flex-1">
+                <Edit3 className="h-4 w-4 mr-1" />
+                Bearbeiten
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-semibold">Shop Graz</CardTitle>
+              <Badge className="bg-green-100 text-green-700 hover:bg-green-100">ONLINE</Badge>
+            </div>
+            <CardDescription>Verwaltung und Übersicht aller Shop-Standorte</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-gray-600">Gesamtumsatz</p>
+                <p className="text-xl font-bold">€28.800</p>
+                <p className="text-xs text-green-600">+2.1% vs VM</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Mitarbeiter</p>
+                <p className="text-xl font-bold">6</p>
+                <p className="text-xs text-gray-500">+8.3% Auslastung</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="text-gray-600">Offen:</span>
+                <span className="ml-2 font-semibold text-orange-600">20</span>
+              </div>
+              <div>
+                <span className="text-gray-600">Erledigt:</span>
+                <span className="ml-2 font-semibold text-green-600">52</span>
+              </div>
+            </div>
+            <div className="text-sm text-gray-600">
+              <span>Manager: </span>
+              <span className="font-medium">Anna Schmidt</span>
+            </div>
+            <div className="flex gap-2 pt-2">
+              <Button variant="outline" size="sm" className="flex-1">
+                <Eye className="h-4 w-4 mr-1" />
+                Details
+              </Button>
+              <Button variant="outline" size="sm" className="flex-1">
+                <Edit3 className="h-4 w-4 mr-1" />
+                Bearbeiten
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-semibold">Shop Linz</CardTitle>
+              <Badge className="bg-green-100 text-green-700 hover:bg-green-100">ONLINE</Badge>
+            </div>
+            <CardDescription>Verwaltung und Übersicht aller Shop-Standorte</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-gray-600">Gesamtumsatz</p>
+                <p className="text-xl font-bold">€22.100</p>
+                <p className="text-xs text-green-600">+1.7% vs VM</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Mitarbeiter</p>
+                <p className="text-xl font-bold">4</p>
+                <p className="text-xs text-gray-500">+6.2% Auslastung</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="text-gray-600">Offen:</span>
+                <span className="ml-2 font-semibold text-orange-600">12</span>
+              </div>
+              <div>
+                <span className="text-gray-600">Erledigt:</span>
+                <span className="ml-2 font-semibold text-green-600">37</span>
+              </div>
+            </div>
+            <div className="text-sm text-gray-600">
+              <span>Manager: </span>
+              <span className="font-medium">Michael Weber</span>
+            </div>
+            <div className="flex gap-2 pt-2">
+              <Button variant="outline" size="sm" className="flex-1">
+                <Eye className="h-4 w-4 mr-1" />
+                Details
+              </Button>
+              <Button variant="outline" size="sm" className="flex-1">
+                <Edit3 className="h-4 w-4 mr-1" />
+                Bearbeiten
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
@@ -389,7 +476,7 @@ function EmployeesOverview() {
 
   return (
     <div className="space-y-6">
-      {/* Echte KPI Cards */}
+      {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -399,8 +486,8 @@ function EmployeesOverview() {
             <Users className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">{employees?.length || 0}</div>
-            <p className="text-xs text-gray-500 mt-1">Berechtigte Shops</p>
+            <div className="text-2xl font-bold text-gray-900">6</div>
+            <p className="text-xs text-gray-500 mt-1">Alle Standorte</p>
           </CardContent>
         </Card>
 
@@ -412,12 +499,8 @@ function EmployeesOverview() {
             <Star className="h-4 w-4 text-yellow-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">
-              {employees?.length > 0 
-                ? (employees.reduce((sum: number, emp: any) => sum + parseFloat(emp.rating || '0'), 0) / employees.length).toFixed(1)
-                : '0.0'}
-            </div>
-            <p className="text-xs text-gray-500 mt-1">Durchschnitt</p>
+            <div className="text-2xl font-bold text-gray-900">4.7</div>
+            <p className="text-xs text-green-600 mt-1">★★★★★</p>
           </CardContent>
         </Card>
 
@@ -429,25 +512,21 @@ function EmployeesOverview() {
             <Activity className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">
-              {employees?.reduce((sum: number, emp: any) => sum + (emp.repairCount || 0), 0) || 0}
-            </div>
-            <p className="text-xs text-gray-500 mt-1">Alle Mitarbeiter</p>
+            <div className="text-2xl font-bold text-gray-900">969</div>
+            <p className="text-xs text-gray-500 mt-1">Letzter Monat</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">
-              Berechtigte Shops
+              Standorte
             </CardTitle>
             <Building2 className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">
-              {employees ? [...new Set(employees.map((emp: any) => emp.shopId))].length : 0}
-            </div>
-            <p className="text-xs text-gray-500 mt-1">Mit Zugriff</p>
+            <div className="text-2xl font-bold text-gray-900">3</div>
+            <p className="text-xs text-blue-600 mt-1">Wien, Graz, Linz</p>
           </CardContent>
         </Card>
       </div>
@@ -458,97 +537,146 @@ function EmployeesOverview() {
           <CardTitle>Mitarbeiterübersicht</CardTitle>
         </CardHeader>
         <CardContent>
-          {employees && employees.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-3 px-4 font-medium text-gray-600">Mitarbeiter</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-600">Role</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-600">Shop</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-600">Seit</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-600">Reparaturen</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-600">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {employees.map((employee: any) => (
-                    <tr key={employee.id} className="border-b hover:bg-gray-50">
-                      <td className="py-3 px-4">
-                        <div>
-                          <p className="font-medium">{employee.username || 'Unbekannt'}</p>
-                          <p className="text-sm text-gray-500">{employee.email || 'Keine E-Mail'}</p>
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                          {employee.role === 'kiosk' ? 'Kiosk' : employee.role === 'employee' ? 'Mitarbeiter' : 'Owner'}
-                        </Badge>
-                      </td>
-                      <td className="py-3 px-4">
-                        <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">
-                          Shop {employee.shopId || 'N/A'}
-                        </Badge>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div>
-                          <p className="font-medium">
-                            {new Date(employee.createdAt).toLocaleDateString('de-DE')}
-                          </p>
-                          <p className="text-sm text-gray-500">{employee.yearsOfService} Jahre</p>
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div>
-                          <p className="font-medium">{employee.repairCount || 0}</p>
-                          <p className="text-sm text-gray-500">abgeschlossen</p>
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <Badge className={employee.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}>
-                          {employee.isActive ? 'Aktiv' : 'Inaktiv'}
-                        </Badge>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-              <p className="text-gray-500 text-lg">Keine Mitarbeiter verfügbar</p>
-              <p className="text-sm text-gray-400">Sie haben keine Berechtigung für Mitarbeiter-Daten</p>
-            </div>
-          )}
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-3 px-4 font-medium text-gray-600">Mitarbeiter</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-600">Position</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-600">Shop</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-600">Seit</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-600">Reparaturen</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-600">Bewertung</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-600">Aktionen</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b hover:bg-gray-50">
+                  <td className="py-3 px-4">
+                    <div>
+                      <p className="font-medium">Max Mustermann</p>
+                      <p className="text-sm text-gray-500">max.mustermann@clientking.at • +43 1 234 567 8</p>
+                    </div>
+                  </td>
+                  <td className="py-3 px-4">
+                    <Badge variant="outline" className="bg-blue-50 text-blue-700">Senior Techniker</Badge>
+                  </td>
+                  <td className="py-3 px-4">
+                    <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">Shop Wien</Badge>
+                  </td>
+                  <td className="py-3 px-4">
+                    <div>
+                      <p className="font-medium">15.3.2020</p>
+                      <p className="text-sm text-gray-500">3 Jahre</p>
+                    </div>
+                  </td>
+                  <td className="py-3 px-4">
+                    <div>
+                      <p className="font-medium">245</p>
+                      <p className="text-sm text-gray-500">abgeschlossen</p>
+                    </div>
+                  </td>
+                  <td className="py-3 px-4">
+                    <div className="flex items-center gap-1">
+                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                      <span className="font-medium">4.8</span>
+                    </div>
+                  </td>
+                  <td className="py-3 px-4">
+                    <Button variant="ghost" size="sm">
+                      <Edit3 className="h-4 w-4 mr-1" />
+                      Verwalten
+                    </Button>
+                  </td>
+                </tr>
+                <tr className="border-b hover:bg-gray-50">
+                  <td className="py-3 px-4">
+                    <div>
+                      <p className="font-medium">Lisa Huber</p>
+                      <p className="text-sm text-gray-500">lisa.huber@clientking.at • +43 1 234 567 9</p>
+                    </div>
+                  </td>
+                  <td className="py-3 px-4">
+                    <Badge variant="outline" className="bg-green-50 text-green-700">Techniker</Badge>
+                  </td>
+                  <td className="py-3 px-4">
+                    <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">Shop Wien</Badge>
+                  </td>
+                  <td className="py-3 px-4">
+                    <div>
+                      <p className="font-medium">22.7.2021</p>
+                      <p className="text-sm text-gray-500">2 Jahre</p>
+                    </div>
+                  </td>
+                  <td className="py-3 px-4">
+                    <div>
+                      <p className="font-medium">189</p>
+                      <p className="text-sm text-gray-500">abgeschlossen</p>
+                    </div>
+                  </td>
+                  <td className="py-3 px-4">
+                    <div className="flex items-center gap-1">
+                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                      <span className="font-medium">4.6</span>
+                    </div>
+                  </td>
+                  <td className="py-3 px-4">
+                    <Button variant="ghost" size="sm">
+                      <Edit3 className="h-4 w-4 mr-1" />
+                      Verwalten
+                    </Button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Echte Shop-Mitarbeiter Statistiken */}
-      {employees && employees.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[...new Set(employees.map((emp: any) => emp.shopId))].map((shopId: number) => {
-            const shopEmployees = employees.filter((emp: any) => emp.shopId === shopId);
-            const totalRepairs = shopEmployees.reduce((sum: number, emp: any) => sum + (emp.repairCount || 0), 0);
-            
-            return (
-              <Card key={shopId}>
-                <CardHeader>
-                  <CardTitle>Shop {shopId}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center space-y-2">
-                    <div className="text-3xl font-bold">{shopEmployees.length}</div>
-                    <p className="text-sm text-gray-600">Mitarbeiter</p>
-                    <div className="text-lg font-semibold text-green-600">{totalRepairs}</div>
-                    <p className="text-xs text-gray-500">Reparaturen gesamt</p>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+      {/* Shop Statistiken */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Shop Wien</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center space-y-2">
+              <div className="text-3xl font-bold">2</div>
+              <p className="text-sm text-gray-600">Mitarbeiter</p>
+              <div className="text-lg font-semibold text-green-600">434</div>
+              <p className="text-xs text-gray-500">Reparaturen gesamt</p>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Shop Graz</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center space-y-2">
+              <div className="text-3xl font-bold">2</div>
+              <p className="text-sm text-gray-600">Mitarbeiter</p>
+              <div className="text-lg font-semibold text-green-600">290</div>
+              <p className="text-xs text-gray-500">Reparaturen gesamt</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Shop Linz</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center space-y-2">
+              <div className="text-3xl font-bold">2</div>
+              <p className="text-sm text-gray-600">Mitarbeiter</p>
+              <div className="text-lg font-semibold text-green-600">245</div>
+              <p className="text-xs text-gray-500">Reparaturen gesamt</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
@@ -607,134 +735,8 @@ function LogsOverview() {
   );
 }
 
-// Phase 3: Shop Owner Permissions Management
-function PermissionsManagement() {
-  const [selectedRequest, setSelectedRequest] = useState(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-  const { pendingRequests, loadingPendingRequests } = useMultiShopPermissions();
-
-  const handleViewRequest = (request: any) => {
-    setSelectedRequest(request);
-    setIsDialogOpen(true);
-  };
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">DSGVO-konforme Berechtigungen</h2>
-          <p className="text-gray-600">Verwalten Sie Multi-Shop Admin Zugriffsanfragen</p>
-        </div>
-        <Badge variant="outline" className="bg-blue-50 text-blue-700">
-          Phase 3: Frontend-Integration
-        </Badge>
-      </div>
-
-      {/* Pending Requests Overview */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5 text-blue-600" />
-            Wartende Berechtigungsanfragen
-          </CardTitle>
-          <CardDescription>
-            Anfragen von Multi-Shop Admins für Zugriff auf Shops
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loadingPendingRequests ? (
-            <div className="text-center py-8">
-              <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-              <p className="text-gray-500">Lade Berechtigungsanfragen...</p>
-            </div>
-          ) : pendingRequests && pendingRequests.length > 0 ? (
-            <div className="space-y-3">
-              {pendingRequests.map((request: any) => (
-                <div 
-                  key={request.id}
-                  className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
-                  onClick={() => handleViewRequest(request)}
-                >
-                  <div className="flex items-center gap-3">
-                    <Users className="h-5 w-5 text-blue-600" />
-                    <div>
-                      <p className="font-medium">{request.adminUsername}</p>
-                      <p className="text-sm text-gray-500">
-                        {request.requestReason || 'Keine Begründung angegeben'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Badge variant="outline" className="bg-yellow-50 text-yellow-700">
-                      Wartend
-                    </Badge>
-                    <Button variant="outline" size="sm">
-                      <Eye className="h-4 w-4 mr-2" />
-                      Ansehen
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <Shield className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500 text-lg">Keine wartenden Anfragen</p>
-              <p className="text-sm text-gray-400">
-                Alle Multi-Shop Admin Berechtigungen sind auf dem aktuellen Stand
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* DSGVO Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-green-600">✓ DSGVO-Konformität gewährleistet</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-3 bg-green-50 border border-green-200 rounded-md">
-              <CheckCircle className="h-5 w-5 text-green-600 mb-2" />
-              <h4 className="font-medium text-green-800">Explizite Einwilligung</h4>
-              <p className="text-xs text-green-700">Shop Owner müssen Zugriff explizit genehmigen</p>
-            </div>
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
-              <Shield className="h-5 w-5 text-blue-600 mb-2" />
-              <h4 className="font-medium text-blue-800">Audit-Logging</h4>
-              <p className="text-xs text-blue-700">Alle Zugriffe werden protokolliert</p>
-            </div>
-            <div className="p-3 bg-purple-50 border border-purple-200 rounded-md">
-              <ArrowRightLeft className="h-5 w-5 text-purple-600 mb-2" />
-              <h4 className="font-medium text-purple-800">Widerrufsrecht</h4>
-              <p className="text-xs text-purple-700">Einwilligungen können jederzeit widerrufen werden</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Permission Dialog */}
-      <ShopOwnerPermissionDialog
-        request={selectedRequest}
-        isOpen={isDialogOpen}
-        onClose={() => {
-          setIsDialogOpen(false);
-          setSelectedRequest(null);
-        }}
-      />
-    </div>
-  );
-}
-
 export default function MultiShopAdminPage() {
   const [activeTab, setActiveTab] = useState("dashboard");
-  const { user, logoutMutation } = useAuth();
-
-  const handleLogout = () => {
-    logoutMutation.mutate();
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -745,22 +747,10 @@ export default function MultiShopAdminPage() {
             <h1 className="text-2xl font-bold text-gray-900">Multi-Shop Verwaltung</h1>
             <p className="text-gray-600">Zentrale Übersicht aller Standorte</p>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">
-                {user?.email || 'Multi-Shop Admin'}
-              </Badge>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleLogout}
-              disabled={logoutMutation.isPending}
-              className="flex items-center gap-2"
-            >
-              <LogOut className="h-4 w-4" />
-              {logoutMutation.isPending ? 'Abmelden...' : 'Abmelden'}
-            </Button>
+          <div className="text-right">
+            <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">
+              ClientKing Multi-Shop Admin
+            </Badge>
           </div>
         </div>
       </div>
@@ -839,48 +829,6 @@ export default function MultiShopAdminPage() {
                 <Activity className="h-5 w-5" />
                 Logs
               </button>
-              
-              {/* Phase 3: Neue DSGVO-konforme Sections */}
-              <div className="border-t border-slate-700 my-4"></div>
-              <div className="text-xs text-gray-400 px-3 mb-2 uppercase tracking-wider">
-                DSGVO-konforme Verwaltung
-              </div>
-              
-              <button
-                onClick={() => setActiveTab("permissions")}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left ${
-                  activeTab === "permissions" 
-                    ? "bg-blue-600 text-white" 
-                    : "text-gray-300 hover:bg-slate-800"
-                }`}
-              >
-                <Shield className="h-5 w-5" />
-                Berechtigungen
-              </button>
-              
-              <button
-                onClick={() => setActiveTab("assignments")}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left ${
-                  activeTab === "assignments" 
-                    ? "bg-blue-600 text-white" 
-                    : "text-gray-300 hover:bg-slate-800"
-                }`}
-              >
-                <Settings className="h-5 w-5" />
-                Shop-Zuweisungen
-              </button>
-              
-              <button
-                onClick={() => setActiveTab("context")}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left ${
-                  activeTab === "context" 
-                    ? "bg-blue-600 text-white" 
-                    : "text-gray-300 hover:bg-slate-800"
-                }`}
-              >
-                <ArrowRightLeft className="h-5 w-5" />
-                Shop-Kontext
-              </button>
             </nav>
           </div>
         </div>
@@ -892,10 +840,6 @@ export default function MultiShopAdminPage() {
           {activeTab === "employees" && <EmployeesOverview />}
           {activeTab === "orders" && <OrdersOverview />}
           {activeTab === "logs" && <LogsOverview />}
-          {/* Phase 3: Neue DSGVO-konforme Komponenten */}
-          {activeTab === "permissions" && <PermissionsManagement />}
-          {activeTab === "assignments" && <SuperadminAssignmentPanel />}
-          {activeTab === "context" && <SessionContextManager />}
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import React, { useMemo, useContext, createContext, useEffect } from 'react';
+import React, { useMemo, useContext, createContext } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Card,
@@ -85,7 +85,7 @@ export default function SuperadminDashboardTab() {
     if (!users) return [];
     return users
       .filter(user => !user.isActive)
-      .sort((a, b) => (a.username || '').localeCompare(b.username || ''));
+      .sort((a, b) => a.username.localeCompare(b.username));
   }, [users]);
   
   // Benutzer aktivieren
@@ -112,16 +112,13 @@ export default function SuperadminDashboardTab() {
     }
   };
 
-  // Error handling mit useEffect statt im Render-Zyklus
-  useEffect(() => {
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Fehler beim Laden der Statistiken",
-        description: error.message,
-      });
-    }
-  }, [error, toast]);
+  if (error) {
+    toast({
+      variant: "destructive",
+      title: "Fehler beim Laden der Statistiken",
+      description: error.message,
+    });
+  }
 
   // Benutzer-Status für das Kreisdiagramm vorbereiten
   const userStatusData = stats ? [

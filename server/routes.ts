@@ -46,8 +46,6 @@ import { setupAuth } from "./auth";
 import { registerAdminRoutes } from "./admin-routes";
 import { supportAccessRouter } from "./support-access-routes";
 import { registerSuperadminRoutes } from "./superadmin-routes";
-import { registerShopOwnerRoutes } from "./shop-owner-routes"; 
-import { SessionContextService } from "./session-context-service";
 import { registerGlobalDeviceRoutes } from "./global-device-routes";
 import { registerSuperadminPrintTemplatesRoutes } from "./superadmin-print-templates-routes";
 import { setupEmployeeRoutes } from "./employee-routes";
@@ -859,13 +857,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Set up superadmin routes FIRST (before middleware that might interfere)
   registerSuperadminRoutes(app);
-  registerShopOwnerRoutes(app);
-  
-  // Session-Context Routes registrieren
-  app.post('/api/multi-shop/switch-shop/:shopId', SessionContextService.switchShopContext);
-  app.get('/api/multi-shop/current-context', SessionContextService.getCurrentContext);
-  app.post('/api/multi-shop/reset-context', SessionContextService.resetShopContext);
-  app.get('/api/multi-shop/context-history', SessionContextService.getContextHistory);
   
   // Set up multi-shop routes
   registerMultiShopRoutes(app);

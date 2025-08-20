@@ -326,30 +326,6 @@ export const insertMultiShopPermissionSchema = createInsertSchema(multiShopPermi
 export type MultiShopPermission = typeof multiShopPermissions.$inferSelect;
 export type InsertMultiShopPermission = z.infer<typeof insertMultiShopPermissionSchema>;
 
-// Audit-Logging für DSGVO-konforme Nachverfolgung
-export const auditLogs = pgTable("audit_logs", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
-  shopId: integer("shop_id").references(() => shops.id),
-  action: text("action").notNull(), // "shop_switch", "permission_request", "permission_grant", "permission_deny", "access_attempt"
-  targetUserId: integer("target_user_id").references(() => users.id), // Bei Permission-Aktionen
-  targetShopId: integer("target_shop_id").references(() => shops.id), // Bei Shop-bezogenen Aktionen
-  status: text("status").notNull(), // "success", "failed", "denied"
-  reason: text("reason"), // Begründung oder Fehlergrund
-  ipAddress: text("ip_address"), // IP für Sicherheit
-  userAgent: text("user_agent"), // Browser Info
-  sessionId: text("session_id"), // Session-Tracking
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
-
-export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({
-  id: true,
-  createdAt: true,
-});
-
-export type AuditLog = typeof auditLogs.$inferSelect;
-export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
-
 // Unternehmensdaten / Geschäftsinformationen
 export const businessSettings = pgTable("business_settings", {
   id: serial("id").primaryKey(),

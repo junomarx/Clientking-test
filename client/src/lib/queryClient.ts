@@ -52,15 +52,6 @@ export async function apiRequest(
     finalUrl = `${fullUrl}${separator}shopId=${selectedShopId}`;
   }
   
-  console.log('🚀 API Request:', {
-    url: finalUrl,
-    method,
-    headers: Object.keys(headers),
-    hasAuth: !!authToken,
-    hasUserId: !!userId,
-    credentials: 'include'
-  });
-
   try {
     const res = await fetch(finalUrl, {
       method,
