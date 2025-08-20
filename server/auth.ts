@@ -78,10 +78,10 @@ export function setupAuth(app: Express) {
           // E-Mail-basierte Anmeldung für Mitarbeiter und Kiosk-Mitarbeiter
           user = await storage.getUserByEmail(emailOrUsername);
           
-          // Zusätzliche Validierung: Nur Mitarbeiter und Kiosk-Mitarbeiter dürfen sich per E-Mail anmelden
-          if (user && user.role !== 'employee' && user.role !== 'kiosk') {
+          // Zusätzliche Validierung: Nur Mitarbeiter, Kiosk-Mitarbeiter und Multi-Shop Admins dürfen sich per E-Mail anmelden
+          if (user && user.role !== 'employee' && user.role !== 'kiosk' && !user.isMultiShopAdmin) {
             console.log(`❌ Login-Verstoß: Benutzer ${user.username} (role: ${user.role}) versuchte E-Mail-Login`);
-            return done(null, false, { message: 'E-Mail-Anmeldung nur für Mitarbeiter möglich' });
+            return done(null, false, { message: 'E-Mail-Anmeldung nur für Mitarbeiter und Multi-Shop Admins möglich' });
           }
         } else {
           // Benutzername-basierte Anmeldung nur für Shop-Owner
