@@ -146,7 +146,7 @@ export function KioskModeProvider({ children }: { children: ReactNode }) {
       }, 200); // Erhöhte Verzögerung für stabilere Verbindung
       
       return () => clearTimeout(registerTimer);
-    } else {
+    } else if (isKioskMode) {
       console.log('❌ Kiosk-Registrierung nicht möglich:', {
         isKioskMode,
         wsStatus,

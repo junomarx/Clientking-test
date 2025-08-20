@@ -1,0 +1,294 @@
+[Warning] 60 console messages are not shown.
+[Log] Nach Login: userId im localStorage: – null – "username:" – null (auth-page.tsx, line 140)
+[Warning] WARNUNG: userId nicht im localStorage nach Login gefunden! (auth-page.tsx, line 142)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] Login-Versuch mit Benutzername: – "office@clientking.at" (auth-page.tsx, line 135)
+[Log] 🌐 DSGVO-Multi-Shop API: Shop 999 Header gesetzt für /api/login (queryClient.ts, line 29)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Error] Failed to load resource: the server responded with a status of 500 (Internal Server Error) (login, line 0)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] Login-Versuch mit Benutzername: – "office@clientking.at" (auth-page.tsx, line 135)
+[Log] 🌐 DSGVO-Multi-Shop API: Shop 999 Header gesetzt für /api/login (queryClient.ts, line 29)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] Nach Login: userId im localStorage: – null – "username:" – null (auth-page.tsx, line 140)
+[Warning] WARNUNG: userId nicht im localStorage nach Login gefunden! (auth-page.tsx, line 142)
+[Error] Failed to load resource: the server responded with a status of 500 (Internal Server Error) (login, line 0)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] Login-Versuch mit Benutzername: – "office@clientking.at" (auth-page.tsx, line 135)
+[Log] 🌐 DSGVO-Multi-Shop API: Shop 999 Header gesetzt für /api/login (queryClient.ts, line 29)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] Nach Login: userId im localStorage: – null – "username:" – null (auth-page.tsx, line 140)
+[Warning] WARNUNG: userId nicht im localStorage nach Login gefunden! (auth-page.tsx, line 142)
+[Error] Failed to load resource: the server responded with a status of 500 (Internal Server Error) (login, line 0)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] Nach Login: userId im localStorage: – null – "username:" – null (auth-page.tsx, line 140)
+[Warning] WARNUNG: userId nicht im localStorage nach Login gefunden! (auth-page.tsx, line 142)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] Login-Versuch mit Benutzername: – "office@clientking.at" (auth-page.tsx, line 135)
+[Log] 🌐 DSGVO-Multi-Shop API: Shop 999 Header gesetzt für /api/login (queryClient.ts, line 29)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Error] Failed to load resource: the server responded with a status of 500 (Internal Server Error) (login, line 0)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] Nach Login: userId im localStorage: – null – "username:" – null (auth-page.tsx, line 140)
+[Warning] WARNUNG: userId nicht im localStorage nach Login gefunden! (auth-page.tsx, line 142)
+[Log] Login-Versuch mit Benutzername: – "office@clientking.at" (auth-page.tsx, line 135)
+[Log] 🌐 DSGVO-Multi-Shop API: Shop 999 Header gesetzt für /api/login (queryClient.ts, line 29)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Error] Failed to load resource: the server responded with a status of 500 (Internal Server Error) (login, line 0)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] Nach Login: userId im localStorage: – null – "username:" – null (auth-page.tsx, line 140)
+[Warning] WARNUNG: userId nicht im localStorage nach Login gefunden! (auth-page.tsx, line 142)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] Login-Versuch mit Benutzername: – "macnphone" (auth-page.tsx, line 135)
+[Log] 🌐 DSGVO-Multi-Shop API: Shop 999 Header gesetzt für /api/login (queryClient.ts, line 29)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Error] Failed to load resource: the server responded with a status of 401 (Unauthorized) (login, line 0)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] Nach Login: userId im localStorage: – null – "username:" – null (auth-page.tsx, line 140)
+[Warning] WARNUNG: userId nicht im localStorage nach Login gefunden! (auth-page.tsx, line 142)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] Login-Versuch mit Benutzername: – "macnphone" (auth-page.tsx, line 135)
+[Log] 🌐 DSGVO-Multi-Shop API: Shop 999 Header gesetzt für /api/login (queryClient.ts, line 29)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] UserId saved to localStorage: – 10 (use-auth.tsx, line 67)
+[Log] Username saved to localStorage: – "macnphone" (use-auth.tsx, line 71)
+[Log] 🌐 DSGVO-Query: Multi-Shop Header für Shop 999 gesetzt (queryClient.ts, line 94, x3)
+[Log] 🌐 DSGVO-Query: Multi-Shop Header für Shop 999 gesetzt (queryClient.ts, line 94)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] Verbinde WebSocket für Online-Status: – "wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/ws/status" (use-online-status.tsx, line 42)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Error] Warning: Cannot update a component (`CreateTestUserDialog`) while rendering a different component (`SuperadminDashboardTab`). To locate the bad setState() call inside `SuperadminDashboardTab`, follow the stack trace as described in https://reactjs.org/link/setstate-in-render
+SuperadminDashboardTab@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/components/superadmin/SuperadminDashboardTab.tsx:57:29
+div
+div
+Primitive.div@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=cd20fba0:43:32
+ScrollAreaViewport@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-scroll-area.js?v=cd20fba0:115:41
+div
+Primitive.div@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=cd20fba0:43:32
+ScrollAreaProvider@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-E7IAXTU4.js?v=cd20fba0:38:42
+ScrollArea@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-scroll-area.js?v=cd20fba0:58:47
+_c@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/components/ui/scroll-area.tsx:21:74
+main
+div
+div
+SuperadminPage@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/pages/superadmin-page.tsx:36:46
+ProtectedRoute@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/lib/protected-route.tsx:22:5
+Route@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=cd20fba0:266:27
+Switch@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=cd20fba0:322:27
+Router
+TooltipProviderProvider@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-E7IAXTU4.js?v=cd20fba0:38:42
+TooltipProvider@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=cd20fba0:65:43
+PrintManagerProvider@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/components/repairs/PrintOptionsManager.tsx:34:6
+ThemeProvider@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/hooks/use-theme.tsx:27:5
+BusinessSettingsProvider@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/hooks/use-business-settings.tsx:23:5
+KioskModeProvider@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/hooks/use-kiosk-mode.tsx:23:5
+OnlineStatusProvider@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/hooks/use-online-status.tsx:22:5
+AuthProvider@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/hooks/use-auth.tsx:36:6
+QueryClientProvider@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=cd20fba0:2805:9
+App
+	printWarning (chunk-RPCDYKBN.js:521)
+	error (chunk-RPCDYKBN.js:505)
+	warnAboutRenderPhaseUpdatesInDEV (chunk-RPCDYKBN.js:19793)
+	scheduleUpdateOnFiber (chunk-RPCDYKBN.js:18546)
+	dispatchSetState (chunk-RPCDYKBN.js:12403)
+	dispatchSetState
+	(anonyme Funktion) (use-toast.ts:80)
+	forEach
+	dispatch (use-toast.ts:79)
+	toast (use-toast.ts:90)
+	SuperadminDashboardTab (SuperadminDashboardTab.tsx:90)
+	renderWithHooks (chunk-RPCDYKBN.js:11548)
+	updateFunctionComponent (chunk-RPCDYKBN.js:14582)
+	beginWork$1 (chunk-RPCDYKBN.js:19753)
+	performUnitOfWork (chunk-RPCDYKBN.js:19198)
+	workLoopSync (chunk-RPCDYKBN.js:19137)
+	renderRootSync (chunk-RPCDYKBN.js:19116)
+	performSyncWorkOnRoot (chunk-RPCDYKBN.js:18874)
+	performSyncWorkOnRoot
+	flushSyncCallbacks (chunk-RPCDYKBN.js:9119)
+	(anonyme Funktion) (chunk-RPCDYKBN.js:18627)
+[Error] Error: Too many re-renders. React limits the number of renders to prevent an infinite loop.
+	renderWithHooks (chunk-RPCDYKBN.js:11555:121)
+	updateFunctionComponent (chunk-RPCDYKBN.js:14582)
+	callCallback2 (chunk-RPCDYKBN.js:3674)
+	dispatchEvent
+	invokeGuardedCallbackDev (chunk-RPCDYKBN.js:3699)
+	invokeGuardedCallback (chunk-RPCDYKBN.js:3733)
+	beginWork$1 (chunk-RPCDYKBN.js:19765)
+	performUnitOfWork (chunk-RPCDYKBN.js:19198)
+	workLoopSync (chunk-RPCDYKBN.js:19137)
+	renderRootSync (chunk-RPCDYKBN.js:19116)
+	performSyncWorkOnRoot (chunk-RPCDYKBN.js:18874)
+	performSyncWorkOnRoot
+	flushSyncCallbacks (chunk-RPCDYKBN.js:9119)
+	(anonyme Funktion) (chunk-RPCDYKBN.js:18627)
+[Error] Error: Too many re-renders. React limits the number of renders to prevent an infinite loop.
+	renderWithHooks (chunk-RPCDYKBN.js:11555:121)
+	updateFunctionComponent (chunk-RPCDYKBN.js:14582)
+	callCallback2 (chunk-RPCDYKBN.js:3674)
+	dispatchEvent
+	invokeGuardedCallbackDev (chunk-RPCDYKBN.js:3699)
+	invokeGuardedCallback (chunk-RPCDYKBN.js:3733)
+	beginWork$1 (chunk-RPCDYKBN.js:19765)
+	performUnitOfWork (chunk-RPCDYKBN.js:19198)
+	workLoopSync (chunk-RPCDYKBN.js:19137)
+	renderRootSync (chunk-RPCDYKBN.js:19116)
+	recoverFromConcurrentError (chunk-RPCDYKBN.js:18736)
+	performSyncWorkOnRoot (chunk-RPCDYKBN.js:18879)
+	performSyncWorkOnRoot
+	flushSyncCallbacks (chunk-RPCDYKBN.js:9119)
+	(anonyme Funktion) (chunk-RPCDYKBN.js:18627)
+[Error] The above error occurred in the <SuperadminDashboardTab> component:
+
+SuperadminDashboardTab@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/components/superadmin/SuperadminDashboardTab.tsx:57:29
+div
+div
+Primitive.div@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=cd20fba0:43:32
+ScrollAreaViewport@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-scroll-area.js?v=cd20fba0:115:41
+div
+Primitive.div@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=cd20fba0:43:32
+ScrollAreaProvider@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-E7IAXTU4.js?v=cd20fba0:38:42
+ScrollArea@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-scroll-area.js?v=cd20fba0:58:47
+_c@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/components/ui/scroll-area.tsx:21:74
+main
+div
+div
+SuperadminPage@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/pages/superadmin-page.tsx:36:46
+ProtectedRoute@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/lib/protected-route.tsx:22:5
+Route@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=cd20fba0:266:27
+Switch@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=cd20fba0:322:27
+Router
+TooltipProviderProvider@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-E7IAXTU4.js?v=cd20fba0:38:42
+TooltipProvider@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=cd20fba0:65:43
+PrintManagerProvider@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/components/repairs/PrintOptionsManager.tsx:34:6
+ThemeProvider@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/hooks/use-theme.tsx:27:5
+BusinessSettingsProvider@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/hooks/use-business-settings.tsx:23:5
+KioskModeProvider@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/hooks/use-kiosk-mode.tsx:23:5
+OnlineStatusProvider@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/hooks/use-online-status.tsx:22:5
+AuthProvider@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/hooks/use-auth.tsx:36:6
+QueryClientProvider@https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=cd20fba0:2805:9
+App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+	logCapturedError (chunk-RPCDYKBN.js:14032)
+	(anonyme Funktion) (chunk-RPCDYKBN.js:14052)
+	callCallback (chunk-RPCDYKBN.js:11248)
+	commitUpdateQueue (chunk-RPCDYKBN.js:11265)
+	commitLayoutEffectOnFiber (chunk-RPCDYKBN.js:17093)
+	commitLayoutMountEffects_complete (chunk-RPCDYKBN.js:17980)
+	commitLayoutEffects_begin (chunk-RPCDYKBN.js:17969)
+	commitLayoutEffects (chunk-RPCDYKBN.js:17920)
+	commitRootImpl (chunk-RPCDYKBN.js:19353)
+	commitRoot (chunk-RPCDYKBN.js:19277)
+	performSyncWorkOnRoot (chunk-RPCDYKBN.js:18895)
+	performSyncWorkOnRoot
+	flushSyncCallbacks (chunk-RPCDYKBN.js:9119)
+	(anonyme Funktion) (chunk-RPCDYKBN.js:18627)
+[Error] Error: Too many re-renders. React limits the number of renders to prevent an infinite loop.
+	flushSyncCallbacks (chunk-RPCDYKBN.js:9129)
+	(anonyme Funktion) (chunk-RPCDYKBN.js:18627)
+[Error] WebSocket connection to 'wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/ws/status' failed: WebSocket is closed before the connection is established.
+	(anonyme Funktion) (use-online-status.tsx:218)
+	safelyCallDestroy (chunk-RPCDYKBN.js:16748)
+	commitHookEffectListUnmount (chunk-RPCDYKBN.js:16875)
+	commitPassiveUnmountInsideDeletedTreeOnFiber (chunk-RPCDYKBN.js:18283)
+	commitPassiveUnmountEffectsInsideOfDeletedTree_begin (chunk-RPCDYKBN.js:18245)
+	commitPassiveUnmountEffects_begin (chunk-RPCDYKBN.js:18181)
+	commitPassiveUnmountEffects (chunk-RPCDYKBN.js:18169)
+	flushPassiveEffectsImpl (chunk-RPCDYKBN.js:19489)
+	flushPassiveEffects (chunk-RPCDYKBN.js:19447)
+	performSyncWorkOnRoot (chunk-RPCDYKBN.js:18868)
+	performSyncWorkOnRoot
+	flushSyncCallbacks (chunk-RPCDYKBN.js:9119)
+	(anonyme Funktion) (chunk-RPCDYKBN.js:18627)
+[Error] WebSocket-Fehler: – Event
+Event
+	(anonyme Funktion) (use-online-status.tsx:84)
+[Log] WebSocket-Verbindung geschlossen: – 1006 – "" (use-online-status.tsx, line 69)
+[Log] Nach Login: userId im localStorage: – "10" – "username:" – "macnphone" (auth-page.tsx, line 140)
+[Error] Failed to load resource: the server responded with a status of 403 (Forbidden) (business-settings, line 0)
+[Error] Failed to load resource: the server responded with a status of 403 (Forbidden) (business-settings, line 0)
+[Log] Versuche WebSocket-Wiederverbindung... (use-online-status.tsx, line 78)
+[Log] Verbinde WebSocket für Online-Status: – "wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/ws/status" (use-online-status.tsx, line 42)
+[Log] WebSocket-Verbindung für Online-Status hergestellt (use-online-status.tsx, line 45)
+[Log] ✅ WebSocket-Authentifizierung erfolgreich (use-online-status.tsx, line 97)
+[Log] WebSocket-Verbindung geschlossen: – 1005 – "" (use-online-status.tsx, line 69)
+> Ausgewähltes Element
+< <html lang="de" data-headlessui-focus-visible>…</html>
+[Log] Versuche WebSocket-Wiederverbindung... (use-online-status.tsx, line 78)
+[Log] Verbinde WebSocket für Online-Status: – "wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/ws/status" (use-online-status.tsx, line 42)
+[Log] WebSocket-Verbindung für Online-Status hergestellt (use-online-status.tsx, line 45)
+[Log] ✅ WebSocket-Authentifizierung erfolgreich (use-online-status.tsx, line 97)
+[Log] WebSocket-Verbindung geschlossen: – 1005 – "" (use-online-status.tsx, line 69)
+[Log] Versuche WebSocket-Wiederverbindung... (use-online-status.tsx, line 78)
+[Log] Verbinde WebSocket für Online-Status: – "wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/ws/status" (use-online-status.tsx, line 42)
+[Log] WebSocket-Verbindung für Online-Status hergestellt (use-online-status.tsx, line 45)
+[Log] ✅ WebSocket-Authentifizierung erfolgreich (use-online-status.tsx, line 97)

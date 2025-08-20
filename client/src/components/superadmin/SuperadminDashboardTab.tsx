@@ -1,4 +1,4 @@
-import React, { useMemo, useContext, createContext } from 'react';
+import React, { useMemo, useContext, createContext, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Card,
@@ -112,13 +112,16 @@ export default function SuperadminDashboardTab() {
     }
   };
 
-  if (error) {
-    toast({
-      variant: "destructive",
-      title: "Fehler beim Laden der Statistiken",
-      description: error.message,
-    });
-  }
+  // Error handling mit useEffect statt im Render-Zyklus
+  useEffect(() => {
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Fehler beim Laden der Statistiken",
+        description: error.message,
+      });
+    }
+  }, [error, toast]);
 
   // Benutzer-Status für das Kreisdiagramm vorbereiten
   const userStatusData = stats ? [
