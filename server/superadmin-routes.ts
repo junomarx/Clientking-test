@@ -424,18 +424,34 @@ export function registerSuperadminRoutes(app: Express) {
   // Benutzerverwaltung (ohne Multi-Shop Admins)
   app.get("/api/superadmin/users", isSuperadmin, async (req: Request, res: Response) => {
     try {
-      const allUsers = await db.select().from(users)
-      .where(
-        // Schließe Multi-Shop Admins aus: shopId = null UND isAdmin = true UND isSuperadmin = false
-        or(
-          // Normale Shop-Benutzer (haben shopId)
-          isNotNull(users.shopId),
-          // Superadmins (shopId = null aber isSuperadmin = true)
-          and(isNull(users.shopId), eq(users.isSuperadmin, true))
+      // Direkte SQL-Abfrage verwenden, um Drizzle-Probleme zu umgehen
+      const { pool } = await import('./db');
+      const result = await pool.query(`
+        SELECT 
+          id,
+          username,
+          email,
+          is_active as "isActive",
+          is_superadmin as "isSuperadmin", 
+          is_multi_shop_admin as "isMultiShopAdmin",
+          role,
+          shop_id as "shopId",
+          package_id as "packageId",
+          created_at as "createdAt",
+          last_login_at as "lastLoginAt",
+          last_logout_at as "lastLogoutAt",
+          company_name as "companyName",
+          owner_first_name as "ownerFirstName",
+          owner_last_name as "ownerLastName"
+        FROM users 
+        WHERE (
+          shop_id IS NOT NULL 
+          OR (shop_id IS NULL AND is_superadmin = true)
         )
-      );
+        ORDER BY username NULLS LAST
+      `);
 
-      res.json(allUsers);
+      res.json(result.rows);
     } catch (error) {
       console.error("Fehler beim Abrufen der Benutzer:", error);
       res.status(500).json({ message: "Fehler beim Abrufen der Benutzer" });
