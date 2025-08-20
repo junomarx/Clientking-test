@@ -327,7 +327,15 @@ async function processShopAssignment(
 // Superadmin Statistics Route
 export async function getSuperadminStats(req: Request, res: Response) {
   try {
-    if (!req.isAuthenticated() || !req.user!.isSuperadmin) {
+    console.log('🔍 Superadmin Stats Request:', {
+      isAuthenticated: req.isAuthenticated ? req.isAuthenticated() : 'no method',
+      user: req.user ? { id: req.user.id, username: req.user.username, isSuperadmin: req.user.isSuperadmin } : 'no user',
+      sessionID: req.sessionID,
+      cookies: req.headers.cookie
+    });
+
+    if (!req.isAuthenticated() || !req.user || !req.user.isSuperadmin) {
+      console.log('❌ Superadmin-Berechtigung verweigert');
       return res.status(403).json({ error: "Superadmin-Berechtigung erforderlich" });
     }
 
@@ -366,7 +374,15 @@ export async function getSuperadminStats(req: Request, res: Response) {
 // Superadmin Users Route
 export async function getSuperadminUsers(req: Request, res: Response) {
   try {
-    if (!req.isAuthenticated() || !req.user!.isSuperadmin) {
+    console.log('🔍 Superadmin Users Request:', {
+      isAuthenticated: req.isAuthenticated ? req.isAuthenticated() : 'no method',
+      user: req.user ? { id: req.user.id, username: req.user.username, isSuperadmin: req.user.isSuperadmin } : 'no user',
+      sessionID: req.sessionID,
+      cookies: req.headers.cookie
+    });
+
+    if (!req.isAuthenticated() || !req.user || !req.user.isSuperadmin) {
+      console.log('❌ Superadmin-Berechtigung verweigert');
       return res.status(403).json({ error: "Superadmin-Berechtigung erforderlich" });
     }
 
