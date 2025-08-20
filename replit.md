@@ -11,6 +11,15 @@ Detail-oriented: User requires pixel-perfect alignment and precision, especially
 Quality focus: Prefers comprehensive solutions that address all edge cases rather than quick fixes.
 Implementation Control: Only implement changes when explicitly commanded with "Ok leg los" - otherwise stay in advisory/brainstorming mode.
 
+## Recent Progress (August 20, 2025)
+
+### Kiosk Signature Display Bug RESOLVED (August 20, 2025)
+- **✅ Critical Bug Fixed**: FEHLER field now correctly displays only the error description (e.g., "Kamera defekt") instead of full device information
+- **✅ Data Separation**: `repairDetails` (error description) and `deviceInfo` (device details) are now properly separated in WebSocket messages
+- **✅ Real Database Integration**: System now uses actual `repair.issue` and `repair.serialNumber` data from PostgreSQL instead of hardcoded values
+- **✅ Server Logging Enhanced**: Added detailed WebSocket message logging for debugging signature requests
+- **✅ Verified Functionality**: Multi-kiosk signature collection system confirmed working correctly with proper data display
+
 ## Recent Progress (August 19, 2025)
 
 ### Revolutionary Multi-Kiosk System Implementation (August 19, 2025)
