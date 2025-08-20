@@ -5609,6 +5609,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('Sende Unterschrifts-Anfrage an alle Clients:', {
           repairId: repair.id,
           customerName: message.payload.customerName,
+          repairDetails: message.payload.repairDetails,
+          deviceInfo: message.payload.deviceInfo,
           timestamp: new Date().toISOString()
         });
         
