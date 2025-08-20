@@ -1,7 +1,8 @@
 import type { Express } from "express";
-import { eq, sql, and, count, desc } from "drizzle-orm";
+import { eq, sql, and, count, desc, inArray } from "drizzle-orm";
 import { db } from "./db";
 import { users, businessSettings, repairs, customers } from "@shared/schema";
+import { storage } from "./storage";
 
 export function registerMultiShopAdminRoutes(app: Express) {
   // Multi-Shop Admin Protection Middleware
@@ -18,34 +19,51 @@ export function registerMultiShopAdminRoutes(app: Express) {
     next();
   };
 
-  // Dashboard Statistiken
+  // Dashboard Statistiken - NUR für berechtigte Shops!
   app.get("/api/multi-shop/dashboard-stats", protectMultiShopAdmin, async (req, res) => {
     try {
-      // Gesamtumsatz berechnen (vereinfacht - normalerweise aus Rechnungen/Zahlungen)
-      const totalRevenue = 89420; // Mock-Wert für Demo
+      const userId = (req.user as any).id;
+      
+      // DSGVO-KONFORM: Nur berechtigte Shops laden
+      const accessibleShops = await storage.getUserAccessibleShops(userId);
+      const shopIds = accessibleShops.map(shop => shop.shopId);
+      
+      if (shopIds.length === 0) {
+        return res.json({
+          totalRevenue: 0,
+          openRepairs: 0,
+          completedRepairs: 0,
+          activeShops: 0
+        });
+      }
 
-      // Offene Reparaturen zählen
+      console.log(`🔐 PERMISSION-CHECK: Multi-Shop Admin ${userId} hat Zugriff auf Shops: [${shopIds.join(', ')}]`);
+
+      // Nur Reparaturen aus berechtigten Shops zählen
       const [openRepairsResult] = await db
         .select({ count: count() })
         .from(repairs)
-        .where(eq(repairs.status, "in_progress"));
+        .where(and(
+          eq(repairs.status, "in_progress"),
+          inArray(repairs.shopId, shopIds)
+        ));
 
-      // Abgeschlossene Reparaturen zählen  
       const [completedRepairsResult] = await db
         .select({ count: count() })
         .from(repairs)
-        .where(eq(repairs.status, "completed"));
+        .where(and(
+          eq(repairs.status, "completed"),
+          inArray(repairs.shopId, shopIds)
+        ));
 
-      // Aktive Shops zählen
-      const [activeShopsResult] = await db
-        .select({ count: count() })
-        .from(businessSettings);
+      // Berechtigte Shops zählen
+      const activeShops = shopIds.length;
 
       res.json({
-        totalRevenue,
+        totalRevenue: Math.floor(Math.random() * 100000) + 50000, // Mock für Demo
         openRepairs: openRepairsResult.count,
         completedRepairs: completedRepairsResult.count,
-        activeShops: activeShopsResult.count
+        activeShops: activeShops
       });
     } catch (error) {
       console.error("Dashboard stats error:", error);
@@ -53,34 +71,27 @@ export function registerMultiShopAdminRoutes(app: Express) {
     }
   });
 
-  // Monatliche Umsätze
-  app.get("/api/multi-shop/monthly-revenue", protectMultiShopAdmin, async (req, res) => {
-    try {
-      // Mock-Daten für Demo - normalerweise aus Zahlungstabelle
-      const monthlyData = [
-        { month: "Jan", shopWien: 32000, shopGraz: 25000, shopLinz: 18000 },
-        { month: "Feb", shopWien: 35000, shopGraz: 28000, shopLinz: 22000 },
-        { month: "Mar", shopWien: 38000, shopGraz: 30000, shopLinz: 25000 },
-        { month: "Apr", shopWien: 42000, shopGraz: 32000, shopLinz: 28000 },
-        { month: "Mai", shopWien: 45000, shopGraz: 35000, shopLinz: 30000 }
-      ];
-
-      res.json(monthlyData);
-    } catch (error) {
-      console.error("Monthly revenue error:", error);
-      res.status(500).json({ error: "Fehler beim Laden der monatlichen Umsätze" });
-    }
-  });
-
   // Letzte Aktivitäten
   app.get("/api/multi-shop/recent-activities", protectMultiShopAdmin, async (req, res) => {
     try {
-      // Letzte Reparaturen mit Shop-Informationen
+      const userId = (req.user as any).id;
+      
+      // DSGVO-KONFORM: Nur berechtigte Shops laden
+      const accessibleShops = await storage.getUserAccessibleShops(userId);
+      const shopIds = accessibleShops.map(shop => shop.shopId);
+      
+      if (shopIds.length === 0) {
+        return res.json([]);
+      }
+
+      console.log(`🔐 PERMISSION-CHECK: Multi-Shop Admin ${userId} lädt Aktivitäten für berechtigte Shops: [${shopIds.join(', ')}]`);
+
+      // Letzte Reparaturen mit Shop-Informationen - NUR aus berechtigten Shops
       const recentRepairs = await db
         .select({
           id: repairs.id,
-          customerName: customers.firstName, // customers hat firstName, nicht name
-          deviceName: repairs.brand, // repairs hat brand, nicht deviceName
+          customerName: customers.firstName,
+          deviceName: repairs.brand,
           status: repairs.status,
           createdAt: repairs.createdAt,
           shopId: repairs.shopId,
@@ -89,6 +100,7 @@ export function registerMultiShopAdminRoutes(app: Express) {
         .from(repairs)
         .leftJoin(customers, eq(repairs.customerId, customers.id))
         .leftJoin(businessSettings, eq(repairs.shopId, businessSettings.shopId))
+        .where(inArray(repairs.shopId, shopIds))
         .orderBy(desc(repairs.createdAt))
         .limit(10);
 
@@ -99,10 +111,22 @@ export function registerMultiShopAdminRoutes(app: Express) {
     }
   });
 
-  // Shop Übersicht
+  // Shop Übersicht - NUR BERECHTIGTE SHOPS!
   app.get("/api/multi-shop/shops", protectMultiShopAdmin, async (req, res) => {
     try {
-      // Alle Shops mit Statistiken laden
+      const userId = (req.user as any).id;
+      
+      // DSGVO-KONFORM: Nur berechtigte Shops laden
+      const accessibleShops = await storage.getUserAccessibleShops(userId);
+      const shopIds = accessibleShops.map(shop => shop.shopId);
+      
+      if (shopIds.length === 0) {
+        return res.json([]);
+      }
+
+      console.log(`🔐 PERMISSION-CHECK: Multi-Shop Admin ${userId} lädt Shop-Details für berechtigte Shops: [${shopIds.join(', ')}]`);
+
+      // NUR berechtigte Shops mit Statistiken laden
       const shopsData = await db
         .select({
           shopId: businessSettings.shopId,
@@ -110,11 +134,12 @@ export function registerMultiShopAdminRoutes(app: Express) {
           email: businessSettings.email,
           phone: businessSettings.phone
         })
-        .from(businessSettings);
+        .from(businessSettings)
+        .where(inArray(businessSettings.shopId, shopIds));
 
-      // Für jeden Shop Statistiken berechnen
+      // Für jeden berechtigten Shop Statistiken berechnen
       const shopsWithStats = await Promise.all(
-        shopsData.map(async (shop) => {
+        shopsData.map(async (shop: any) => {
           // Offene Reparaturen für diesen Shop
           const [openRepairs] = await db
             .select({ count: count() })
@@ -160,10 +185,22 @@ export function registerMultiShopAdminRoutes(app: Express) {
     }
   });
 
-  // Mitarbeiter Übersicht
+  // Mitarbeiter Übersicht - NUR BERECHTIGTE SHOPS!
   app.get("/api/multi-shop/employees", protectMultiShopAdmin, async (req, res) => {
     try {
-      // Alle Mitarbeiter mit Shop-Informationen laden
+      const userId = (req.user as any).id;
+      
+      // DSGVO-KONFORM: Nur berechtigte Shops laden
+      const accessibleShops = await storage.getUserAccessibleShops(userId);
+      const shopIds = accessibleShops.map(shop => shop.shopId);
+      
+      if (shopIds.length === 0) {
+        return res.json([]);
+      }
+
+      console.log(`🔐 PERMISSION-CHECK: Multi-Shop Admin ${userId} lädt Mitarbeiter für berechtigte Shops: [${shopIds.join(', ')}]`);
+
+      // NUR Mitarbeiter aus berechtigten Shops laden
       const employees = await db
         .select({
           id: users.id,
@@ -180,17 +217,18 @@ export function registerMultiShopAdminRoutes(app: Express) {
         .where(and(
           eq(users.isActive, true),
           eq(users.isSuperadmin, false),
-          eq(users.isMultiShopAdmin, false)
+          eq(users.isMultiShopAdmin, false),
+          inArray(users.shopId, shopIds)
         ));
 
       // Für jeden Mitarbeiter Reparatur-Statistiken berechnen
       const employeesWithStats = await Promise.all(
-        employees.map(async (employee) => {
+        employees.map(async (employee: any) => {
           // Reparaturen für diesen Mitarbeiter (vereinfacht - normalerweise über assignedTo)
           const [repairCount] = await db
             .select({ count: count() })
             .from(repairs)
-            .where(eq(repairs.shopId, employee.shopId));
+            .where(eq(repairs.shopId, employee.shopId || 0));
 
           return {
             ...employee,
