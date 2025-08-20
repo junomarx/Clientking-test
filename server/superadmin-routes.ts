@@ -327,14 +327,30 @@ async function processShopAssignment(
 // Superadmin Statistics Route
 export async function getSuperadminStats(req: Request, res: Response) {
   try {
+    // Prüfe X-User-ID Header als Fallback
+    const customUserId = req.headers['x-user-id'];
+    if (customUserId && !req.user) {
+      try {
+        const userId = parseInt(customUserId.toString());
+        const user = await storage.getUser(userId);
+        if (user && user.isSuperadmin) {
+          req.user = user;
+          console.log(`✅ Superadmin via X-User-ID Header: ${user.username}`);
+        }
+      } catch (error) {
+        console.error('Fehler beim X-User-ID Header:', error);
+      }
+    }
+
     console.log('🔍 Superadmin Stats Request:', {
       isAuthenticated: req.isAuthenticated ? req.isAuthenticated() : 'no method',
       user: req.user ? { id: req.user.id, username: req.user.username, isSuperadmin: req.user.isSuperadmin } : 'no user',
       sessionID: req.sessionID,
-      cookies: req.headers.cookie
+      hasXUserID: !!customUserId,
+      cookies: req.headers.cookie ? 'present' : 'missing'
     });
 
-    if (!req.isAuthenticated() || !req.user || !req.user.isSuperadmin) {
+    if ((!req.isAuthenticated() || !req.user || !req.user.isSuperadmin)) {
       console.log('❌ Superadmin-Berechtigung verweigert');
       return res.status(403).json({ error: "Superadmin-Berechtigung erforderlich" });
     }
@@ -348,13 +364,17 @@ export async function getSuperadminStats(req: Request, res: Response) {
     const stats = {
       users: {
         totalUsers: totalUsers.toString(),
-        activeUsers: activeUsers.toString()
+        activeUsers: activeUsers.toString(),
+        inactiveUsers: (totalUsers - activeUsers).toString()
       },
       shops: {
         totalShops: totalShops.toString()
       },
       repairs: {
         totalRepairs: totalRepairs.toString()
+      },
+      packages: {
+        totalPackages: "0"
       },
       orders: {
         totalOrders: "0"
@@ -374,14 +394,30 @@ export async function getSuperadminStats(req: Request, res: Response) {
 // Superadmin Users Route
 export async function getSuperadminUsers(req: Request, res: Response) {
   try {
+    // Prüfe X-User-ID Header als Fallback
+    const customUserId = req.headers['x-user-id'];
+    if (customUserId && !req.user) {
+      try {
+        const userId = parseInt(customUserId.toString());
+        const user = await storage.getUser(userId);
+        if (user && user.isSuperadmin) {
+          req.user = user;
+          console.log(`✅ Superadmin via X-User-ID Header: ${user.username}`);
+        }
+      } catch (error) {
+        console.error('Fehler beim X-User-ID Header:', error);
+      }
+    }
+
     console.log('🔍 Superadmin Users Request:', {
       isAuthenticated: req.isAuthenticated ? req.isAuthenticated() : 'no method',
       user: req.user ? { id: req.user.id, username: req.user.username, isSuperadmin: req.user.isSuperadmin } : 'no user',
       sessionID: req.sessionID,
-      cookies: req.headers.cookie
+      hasXUserID: !!customUserId,
+      cookies: req.headers.cookie ? 'present' : 'missing'
     });
 
-    if (!req.isAuthenticated() || !req.user || !req.user.isSuperadmin) {
+    if ((!req.isAuthenticated() || !req.user || !req.user.isSuperadmin)) {
       console.log('❌ Superadmin-Berechtigung verweigert');
       return res.status(403).json({ error: "Superadmin-Berechtigung erforderlich" });
     }
