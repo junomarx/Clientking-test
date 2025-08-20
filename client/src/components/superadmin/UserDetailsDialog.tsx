@@ -50,21 +50,22 @@ interface UserWithBusinessSettings {
   shopId: number | null;
   createdAt: string;
   trialExpiresAt: string | null;
-  businessSettings?: {
-    businessName: string;
-    ownerFirstName: string;
-    ownerLastName: string;
-    streetAddress: string;
-    zipCode: string;
-    city: string;
-    country: string;
-    email: string;
-    phone: string;
-    taxId: string;
-    website: string;
-    vatNumber: string;
-    maxEmployees: number;
-  };
+  lastLoginAt?: string | null;
+  lastLogoutAt?: string | null;
+  // Geschäftsdaten direkt im user-Objekt (aus /api/superadmin/users/:id)
+  companyName?: string;
+  companyAddress?: string;
+  companyPhone?: string;  
+  companyEmail?: string;
+  companyVatNumber?: string;
+  ownerFirstName?: string;
+  ownerLastName?: string;
+  streetAddress?: string;
+  zipCode?: string;
+  city?: string;
+  country?: string;
+  website?: string;
+  taxId?: string;
 }
 
 function getUserStatusBadge(isActive: boolean, isAdmin: boolean, isSuperadmin: boolean) {
@@ -166,36 +167,37 @@ export function UserDetailsDialog({ open, onClose, userId, onEdit, onToggleActiv
     );
   }
 
-  // Die aktuellen Geschäftsdaten sind in businessSettings (separate API-Abfrage)
-  // Fallback zu user-Objekt falls businessSettings nicht verfügbar
+  // IMMER die businessSettings API als primäre Quelle verwenden!
+  // Das businessSettings-Objekt enthält die aktuellsten Daten
   const settings = businessSettings || {
-    businessName: user.companyName,
-    streetAddress: user.companyAddress, 
-    phone: user.companyPhone,
-    email: user.companyEmail,
-    website: user.website,
-    taxId: user.companyVatNumber,
-    ownerFirstName: user.ownerFirstName,
-    ownerLastName: user.ownerLastName,
-    zipCode: user.zipCode,
-    city: user.city,
-    country: user.country
+    // Einfacher Fallback wenn API nicht lädt
+    businessName: "Wird geladen...",
+    streetAddress: "Wird geladen...", 
+    phone: "Wird geladen...",
+    email: "Wird geladen...",
+    website: "Wird geladen...",
+    taxId: "Wird geladen...",
+    ownerFirstName: "Wird geladen...",
+    ownerLastName: "Wird geladen...",
+    zipCode: "Wird geladen...",
+    city: "Wird geladen...",
+    country: "Wird geladen..."
   };
   
   // Debug: Log die empfangenen Daten
   console.log('🔍 UserDetailsDialog Debug:', {
-    isActive: user.isActive,
-    businessSettings,
-    userFallback: {
-      businessName: user.companyName,
+    userId: user.id,
+    username: user.username,
+    businessSettings_available: !!businessSettings,
+    businessSettings_data: businessSettings,
+    user_company_data: {
+      companyName: user.companyName,
       ownerFirstName: user.ownerFirstName,
       ownerLastName: user.ownerLastName,
       zipCode: user.zipCode,
       city: user.city
     },
-    finalSettings: settings,
-    userId: user.id,
-    username: user.username
+    finalSettings: settings
   });
 
   return (
