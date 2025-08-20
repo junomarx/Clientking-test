@@ -5904,7 +5904,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           customerPhone: customer.phone,
           customerEmail: customer.email,
           customerAddress: customer.address,
-          repairDetails: `${repair.deviceType} ${repair.brand} ${repair.model} - ${repair.issue}`,
+          repairDetails: repair.issue,
           deviceInfo: `${repair.brand} ${repair.model} (${repair.deviceType})`,
           orderCode: repair.orderCode,
           estimatedCost: repair.estimatedCost,
