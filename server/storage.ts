@@ -63,6 +63,9 @@ import {
   multiShopPermissions,
   type MultiShopPermission,
   type InsertMultiShopPermission,
+  auditLogs,
+  type AuditLog,
+  type InsertAuditLog,
 } from "@shared/schema";
 import crypto from "crypto";
 import { db } from "./db";
@@ -133,6 +136,11 @@ export interface IStorage {
   getShopPermissions(shopOwnerId: number): Promise<MultiShopPermission[]>;
   hasShopPermission(multiShopAdminId: number, shopId: number): Promise<boolean>;
   getPendingPermissions(shopOwnerId: number): Promise<MultiShopPermission[]>;
+  
+  // Audit-Log Methoden für DSGVO-Compliance
+  createAuditLog(auditData: InsertAuditLog): Promise<AuditLog>;
+  getAuditLogsForShop(shopId: number, limit?: number): Promise<AuditLog[]>;
+  getAuditLogsForUser(userId: number, limit?: number): Promise<AuditLog[]>;
   
   // Shop Metrics and Analytics
   getShopMetrics(shopId: number): Promise<{
@@ -6281,6 +6289,44 @@ export class DatabaseStorage implements IStorage {
       console.error("Fehler beim Löschen des Kiosk-Mitarbeiters:", error);
       throw error;
     }
+  }
+  // =====================================
+  // AUDIT-LOG METHODEN für DSGVO-Compliance
+  // =====================================
+
+  /**
+   * Audit-Log erstellen
+   */
+  async createAuditLog(auditData: InsertAuditLog): Promise<AuditLog> {
+    const [auditLog] = await db
+      .insert(auditLogs)
+      .values(auditData)
+      .returning();
+    return auditLog;
+  }
+
+  /**
+   * Audit-Logs für einen Shop abrufen (für Shop Owner Transparenz)
+   */
+  async getAuditLogsForShop(shopId: number, limit: number = 100): Promise<AuditLog[]> {
+    return await db
+      .select()
+      .from(auditLogs)
+      .where(or(eq(auditLogs.shopId, shopId), eq(auditLogs.targetShopId, shopId)))
+      .orderBy(desc(auditLogs.createdAt))
+      .limit(limit);
+  }
+
+  /**
+   * Audit-Logs für einen User abrufen
+   */
+  async getAuditLogsForUser(userId: number, limit: number = 100): Promise<AuditLog[]> {
+    return await db
+      .select()
+      .from(auditLogs)
+      .where(or(eq(auditLogs.userId, userId), eq(auditLogs.targetUserId, userId)))
+      .orderBy(desc(auditLogs.createdAt))
+      .limit(limit);
   }
 }
 
