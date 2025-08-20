@@ -19,13 +19,15 @@ import {
   Edit3,
   Shield,
   Settings,
-  ArrowRightLeft
+  ArrowRightLeft,
+  LogOut
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { ShopOwnerPermissionDialog } from "@/components/multi-shop/ShopOwnerPermissionDialog";
 import { SuperadminAssignmentPanel } from "@/components/multi-shop/SuperadminAssignmentPanel";
 import { SessionContextManager } from "@/components/multi-shop/SessionContextManager";
 import { useMultiShopPermissions } from "@/hooks/use-multi-shop-permissions";
+import { useAuth } from "@/hooks/use-auth";
 
 // Dashboard Statistiken
 function DashboardStats() {
@@ -728,6 +730,11 @@ function PermissionsManagement() {
 
 export default function MultiShopAdminPage() {
   const [activeTab, setActiveTab] = useState("dashboard");
+  const { user, logoutMutation } = useAuth();
+
+  const handleLogout = () => {
+    logoutMutation.mutate();
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -738,10 +745,22 @@ export default function MultiShopAdminPage() {
             <h1 className="text-2xl font-bold text-gray-900">Multi-Shop Verwaltung</h1>
             <p className="text-gray-600">Zentrale Übersicht aller Standorte</p>
           </div>
-          <div className="text-right">
-            <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">
-              ClientKing Multi-Shop Admin
-            </Badge>
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">
+                {user?.email || 'Multi-Shop Admin'}
+              </Badge>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleLogout}
+              disabled={logoutMutation.isPending}
+              className="flex items-center gap-2"
+            >
+              <LogOut className="h-4 w-4" />
+              {logoutMutation.isPending ? 'Abmelden...' : 'Abmelden'}
+            </Button>
           </div>
         </div>
       </div>
