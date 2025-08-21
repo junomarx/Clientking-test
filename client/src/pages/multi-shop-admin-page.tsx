@@ -59,10 +59,10 @@ function DashboardStats() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              € {stats?.totalRevenue?.toLocaleString() || '89.420'}
+              € {stats?.totalRevenue?.toLocaleString() || '0'}
             </div>
-            <p className="text-xs text-green-600 mt-1">
-              +7.2% vs Vormonat
+            <p className="text-xs text-gray-500 mt-1">
+              Aktueller Monat
             </p>
           </CardContent>
         </Card>
@@ -76,7 +76,7 @@ function DashboardStats() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              {stats?.openRepairs || '47'}
+              {stats?.openRepairs || '0'}
             </div>
             <p className="text-xs text-gray-500 mt-1">
               Alle Standorte
@@ -93,10 +93,10 @@ function DashboardStats() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              {stats?.completedRepairs || '156'}
+              {stats?.completedRepairs || '0'}
             </div>
-            <p className="text-xs text-green-600 mt-1">
-              +8% vs Vormonat
+            <p className="text-xs text-gray-500 mt-1">
+              Aktueller Monat
             </p>
           </CardContent>
         </Card>
@@ -110,10 +110,10 @@ function DashboardStats() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              {stats?.activeShops || '3'}
+              {stats?.activeShops || '0'}
             </div>
-            <p className="text-xs text-blue-600 mt-1">
-              Alle online
+            <p className="text-xs text-gray-500 mt-1">
+              Registrierte Shops
             </p>
           </CardContent>
         </Card>
@@ -129,25 +129,11 @@ function DashboardStats() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-80 flex items-end justify-around gap-4 p-4">
-              {/* Placeholder für Chart - wird später durch echtes Chart ersetzt */}
-              <div className="flex flex-col items-center gap-2">
-                <div className="bg-blue-500 w-12 h-32 rounded-t"></div>
-                <div className="bg-green-500 w-12 h-24 rounded-t"></div>
-                <div className="bg-orange-500 w-12 h-20 rounded-t"></div>
-                <span className="text-xs text-gray-600">Shop Wien</span>
-              </div>
-              <div className="flex flex-col items-center gap-2">
-                <div className="bg-blue-500 w-12 h-40 rounded-t"></div>
-                <div className="bg-green-500 w-12 h-28 rounded-t"></div>
-                <div className="bg-orange-500 w-12 h-24 rounded-t"></div>
-                <span className="text-xs text-gray-600">Shop Graz</span>
-              </div>
-              <div className="flex flex-col items-center gap-2">
-                <div className="bg-blue-500 w-12 h-48 rounded-t"></div>
-                <div className="bg-green-500 w-12 h-32 rounded-t"></div>
-                <div className="bg-orange-500 w-12 h-28 rounded-t"></div>
-                <span className="text-xs text-gray-600">Shop Linz</span>
+            <div className="h-80 flex items-center justify-center">
+              <div className="text-center text-gray-500">
+                <BarChart3 className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                <p className="text-lg font-medium">Chart-Daten werden geladen...</p>
+                <p className="text-sm">Monatsumsätze basierend auf echten Shop-Daten</p>
               </div>
             </div>
           </CardContent>
@@ -159,27 +145,11 @@ function DashboardStats() {
             <CardTitle>Umsatzverteilung nach Shop</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                  Shop Wien
-                </span>
-                <span className="font-semibold">45%</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                  Shop Graz
-                </span>
-                <span className="font-semibold">35%</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-orange-500"></div>
-                  Shop Linz
-                </span>
-                <span className="font-semibold">20%</span>
+            <div className="h-80 flex items-center justify-center">
+              <div className="text-center text-gray-500">
+                <TrendingUp className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                <p className="text-lg font-medium">Umsatzverteilung wird berechnet...</p>
+                <p className="text-sm">Basierend auf echten Shop-Daten</p>
               </div>
             </div>
           </CardContent>
@@ -192,27 +162,13 @@ function DashboardStats() {
           <CardHeader>
             <CardTitle>Schnellübersicht</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <div className="flex items-center gap-3">
-                <Users className="h-5 w-5 text-blue-600" />
-                <span>Mitarbeiter gesamt</span>
+          <CardContent>
+            <div className="h-60 flex items-center justify-center">
+              <div className="text-center text-gray-500">
+                <Activity className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                <p className="text-lg font-medium">Schnellübersicht wird geladen...</p>
+                <p className="text-sm">Aktuelle Daten aus allen Shops</p>
               </div>
-              <Badge variant="outline" className="font-semibold">18</Badge>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
-              <div className="flex items-center gap-3">
-                <Package className="h-5 w-5 text-orange-600" />
-                <span>Lagerbestände niedrig</span>
-              </div>
-              <Badge variant="outline" className="font-semibold text-orange-600">5</Badge>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-              <div className="flex items-center gap-3">
-                <CheckCircle className="h-5 w-5 text-green-600" />
-                <span>Heute abgeschlossen</span>
-              </div>
-              <Badge variant="outline" className="font-semibold text-green-600">12</Badge>
             </div>
           </CardContent>
         </Card>
@@ -223,34 +179,11 @@ function DashboardStats() {
             <CardTitle>Letzte Aktivitäten</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Neue Reparatur eingegangen</p>
-                  <p className="text-sm text-gray-500">Shop Wien</p>
-                </div>
-                <span className="text-xs text-gray-400">vor 5 Min</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Displaytausch abgeschlossen</p>
-                  <p className="text-sm text-gray-500">Shop Graz</p>
-                </div>
-                <span className="text-xs text-gray-400">vor 15 Min</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Ersatzteil bestellt</p>
-                  <p className="text-sm text-gray-500">Shop Linz</p>
-                </div>
-                <span className="text-xs text-gray-400">vor 1h 30m</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Mitarbeiter Max verschickt</p>
-                  <p className="text-sm text-gray-500">Shop Wien</p>
-                </div>
-                <span className="text-xs text-gray-400">vor 1 Tag</span>
+            <div className="h-60 flex items-center justify-center">
+              <div className="text-center text-gray-500">
+                <Activity className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                <p className="text-lg font-medium">Aktivitäten werden geladen...</p>
+                <p className="text-sm">Letzte Aktionen aus allen Shops</p>
               </div>
             </div>
           </CardContent>
@@ -263,202 +196,80 @@ function DashboardStats() {
 // Shop Übersicht
 function ShopsOverview() {
   const { data: shops } = useQuery({
-    queryKey: ["/api/multi-shop/shops"],
+    queryKey: ["/api/multi-shop/accessible-shops"],
     queryFn: async () => {
-      const response = await apiRequest("GET", "/api/multi-shop/shops");
+      const response = await apiRequest("GET", "/api/multi-shop/accessible-shops");
       return response.json();
     }
   });
 
+  if (!shops || shops.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="h-96 flex items-center justify-center">
+          <div className="text-center text-gray-500">
+            <Building2 className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+            <p className="text-xl font-medium">Keine Shops verfügbar</p>
+            <p className="text-sm">Shops werden aus echten Daten geladen</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Gesamtumsatz Shops
-            </CardTitle>
-            <Euro className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-900">€ 86.200</div>
-            <p className="text-xs text-green-600 mt-1">+1.8% vs Vormonat</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Mitarbeiter gesamt
-            </CardTitle>
-            <Users className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-900">18</div>
-            <p className="text-xs text-gray-500 mt-1">Alle Standorte</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Offene Reparaturen
-            </CardTitle>
-            <Clock className="h-4 w-4 text-orange-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-900">47</div>
-            <p className="text-xs text-orange-600 mt-1">Alle Standorte</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Shop Cards */}
+      {/* Shop Cards - Dynamisch geladen */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg font-semibold">Shop Wien</CardTitle>
-              <Badge className="bg-green-100 text-green-700 hover:bg-green-100">ONLINE</Badge>
-            </div>
-            <CardDescription>Verwaltung und Übersicht aller Shop-Standorte</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-gray-600">Gesamtumsatz</p>
-                <p className="text-xl font-bold">€35.200</p>
-                <p className="text-xs text-green-600">+5.2% vs VM</p>
+        {shops.map((shop: any) => (
+          <Card key={shop.id}>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg font-semibold">{shop.businessName || shop.name}</CardTitle>
+                <Badge className={shop.isActive ? "bg-green-100 text-green-700 hover:bg-green-100" : "bg-red-100 text-red-700 hover:bg-red-100"}>
+                  {shop.isActive ? "AKTIV" : "INAKTIV"}
+                </Badge>
               </div>
-              <div>
-                <p className="text-sm text-gray-600">Mitarbeiter</p>
-                <p className="text-xl font-bold">8</p>
-                <p className="text-xs text-gray-500">+12.5% Auslastung</p>
+              <CardDescription>Shop-ID: {shop.shopId}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-600">Monatsumsatz</p>
+                  <p className="text-xl font-bold">€{shop.metrics?.monthlyRevenue?.toLocaleString() || '0'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Mitarbeiter</p>
+                  <p className="text-xl font-bold">{shop.metrics?.totalEmployees || '0'}</p>
+                </div>
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-gray-600">Offen:</span>
-                <span className="ml-2 font-semibold text-orange-600">15</span>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-gray-600">Offen:</span>
+                  <span className="ml-2 font-semibold text-orange-600">{shop.metrics?.activeRepairs || '0'}</span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Erledigt:</span>
+                  <span className="ml-2 font-semibold text-green-600">{shop.metrics?.completedRepairs || '0'}</span>
+                </div>
               </div>
-              <div>
-                <span className="text-gray-600">Erledigt:</span>
-                <span className="ml-2 font-semibold text-green-600">67</span>
+              <div className="text-sm text-gray-600">
+                <span>Zugriff gewährt: </span>
+                <span className="font-medium">{new Date(shop.grantedAt).toLocaleDateString()}</span>
               </div>
-            </div>
-            <div className="text-sm text-gray-600">
-              <span>Manager: </span>
-              <span className="font-medium">Thomas Miller</span>
-            </div>
-            <div className="flex gap-2 pt-2">
-              <Button variant="outline" size="sm" className="flex-1">
-                <Eye className="h-4 w-4 mr-1" />
-                Details
-              </Button>
-              <Button variant="outline" size="sm" className="flex-1">
-                <Edit3 className="h-4 w-4 mr-1" />
-                Bearbeiten
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg font-semibold">Shop Graz</CardTitle>
-              <Badge className="bg-green-100 text-green-700 hover:bg-green-100">ONLINE</Badge>
-            </div>
-            <CardDescription>Verwaltung und Übersicht aller Shop-Standorte</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-gray-600">Gesamtumsatz</p>
-                <p className="text-xl font-bold">€28.800</p>
-                <p className="text-xs text-green-600">+2.1% vs VM</p>
+              <div className="flex gap-2 pt-2">
+                <Button variant="outline" size="sm" className="flex-1">
+                  <Eye className="h-4 w-4 mr-1" />
+                  Details
+                </Button>
+                <Button variant="outline" size="sm" className="flex-1">
+                  <Edit3 className="h-4 w-4 mr-1" />
+                  Verwalten
+                </Button>
               </div>
-              <div>
-                <p className="text-sm text-gray-600">Mitarbeiter</p>
-                <p className="text-xl font-bold">6</p>
-                <p className="text-xs text-gray-500">+8.3% Auslastung</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-gray-600">Offen:</span>
-                <span className="ml-2 font-semibold text-orange-600">20</span>
-              </div>
-              <div>
-                <span className="text-gray-600">Erledigt:</span>
-                <span className="ml-2 font-semibold text-green-600">52</span>
-              </div>
-            </div>
-            <div className="text-sm text-gray-600">
-              <span>Manager: </span>
-              <span className="font-medium">Anna Schmidt</span>
-            </div>
-            <div className="flex gap-2 pt-2">
-              <Button variant="outline" size="sm" className="flex-1">
-                <Eye className="h-4 w-4 mr-1" />
-                Details
-              </Button>
-              <Button variant="outline" size="sm" className="flex-1">
-                <Edit3 className="h-4 w-4 mr-1" />
-                Bearbeiten
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg font-semibold">Shop Linz</CardTitle>
-              <Badge className="bg-green-100 text-green-700 hover:bg-green-100">ONLINE</Badge>
-            </div>
-            <CardDescription>Verwaltung und Übersicht aller Shop-Standorte</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-gray-600">Gesamtumsatz</p>
-                <p className="text-xl font-bold">€22.100</p>
-                <p className="text-xs text-green-600">+1.7% vs VM</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Mitarbeiter</p>
-                <p className="text-xl font-bold">4</p>
-                <p className="text-xs text-gray-500">+6.2% Auslastung</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-gray-600">Offen:</span>
-                <span className="ml-2 font-semibold text-orange-600">12</span>
-              </div>
-              <div>
-                <span className="text-gray-600">Erledigt:</span>
-                <span className="ml-2 font-semibold text-green-600">37</span>
-              </div>
-            </div>
-            <div className="text-sm text-gray-600">
-              <span>Manager: </span>
-              <span className="font-medium">Michael Weber</span>
-            </div>
-            <div className="flex gap-2 pt-2">
-              <Button variant="outline" size="sm" className="flex-1">
-                <Eye className="h-4 w-4 mr-1" />
-                Details
-              </Button>
-              <Button variant="outline" size="sm" className="flex-1">
-                <Edit3 className="h-4 w-4 mr-1" />
-                Bearbeiten
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
   );
@@ -474,67 +285,26 @@ function EmployeesOverview() {
     }
   });
 
+  if (!employees || employees.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="h-96 flex items-center justify-center">
+          <div className="text-center text-gray-500">
+            <Users className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+            <p className="text-xl font-medium">Keine Mitarbeiter-Daten verfügbar</p>
+            <p className="text-sm">Mitarbeiter werden aus echten API-Daten geladen</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Mitarbeiter gesamt
-            </CardTitle>
-            <Users className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-900">6</div>
-            <p className="text-xs text-gray-500 mt-1">Alle Standorte</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Durchschnittsbewertung
-            </CardTitle>
-            <Star className="h-4 w-4 text-yellow-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-900">4.7</div>
-            <p className="text-xs text-green-600 mt-1">★★★★★</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Reparaturen gesamt
-            </CardTitle>
-            <Activity className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-900">969</div>
-            <p className="text-xs text-gray-500 mt-1">Letzter Monat</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Standorte
-            </CardTitle>
-            <Building2 className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-900">3</div>
-            <p className="text-xs text-blue-600 mt-1">Wien, Graz, Linz</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Mitarbeiter Tabelle */}
+      {/* Mitarbeiter Tabelle - Dynamisch geladen */}
       <Card>
         <CardHeader>
-          <CardTitle>Mitarbeiterübersicht</CardTitle>
+          <CardTitle>Mitarbeiterübersicht ({employees?.length || 0} Mitarbeiter)</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -542,141 +312,62 @@ function EmployeesOverview() {
               <thead>
                 <tr className="border-b">
                   <th className="text-left py-3 px-4 font-medium text-gray-600">Mitarbeiter</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Position</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-600">Shop</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Seit</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-600">Rolle</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-600">Reparaturen</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-600">Bewertung</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Aktionen</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-600">Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr className="border-b hover:bg-gray-50">
-                  <td className="py-3 px-4">
-                    <div>
-                      <p className="font-medium">Max Mustermann</p>
-                      <p className="text-sm text-gray-500">max.mustermann@clientking.at • +43 1 234 567 8</p>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <Badge variant="outline" className="bg-blue-50 text-blue-700">Senior Techniker</Badge>
-                  </td>
-                  <td className="py-3 px-4">
-                    <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">Shop Wien</Badge>
-                  </td>
-                  <td className="py-3 px-4">
-                    <div>
-                      <p className="font-medium">15.3.2020</p>
-                      <p className="text-sm text-gray-500">3 Jahre</p>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <div>
-                      <p className="font-medium">245</p>
-                      <p className="text-sm text-gray-500">abgeschlossen</p>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="font-medium">4.8</span>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <Button variant="ghost" size="sm">
-                      <Edit3 className="h-4 w-4 mr-1" />
-                      Verwalten
-                    </Button>
-                  </td>
-                </tr>
-                <tr className="border-b hover:bg-gray-50">
-                  <td className="py-3 px-4">
-                    <div>
-                      <p className="font-medium">Lisa Huber</p>
-                      <p className="text-sm text-gray-500">lisa.huber@clientking.at • +43 1 234 567 9</p>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <Badge variant="outline" className="bg-green-50 text-green-700">Techniker</Badge>
-                  </td>
-                  <td className="py-3 px-4">
-                    <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">Shop Wien</Badge>
-                  </td>
-                  <td className="py-3 px-4">
-                    <div>
-                      <p className="font-medium">22.7.2021</p>
-                      <p className="text-sm text-gray-500">2 Jahre</p>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <div>
-                      <p className="font-medium">189</p>
-                      <p className="text-sm text-gray-500">abgeschlossen</p>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="font-medium">4.6</span>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <Button variant="ghost" size="sm">
-                      <Edit3 className="h-4 w-4 mr-1" />
-                      Verwalten
-                    </Button>
-                  </td>
-                </tr>
+                {employees.map((employee: any) => (
+                  <tr key={employee.id} className="border-b hover:bg-gray-50">
+                    <td className="py-3 px-4">
+                      <div>
+                        <p className="font-medium">{employee.username}</p>
+                        <p className="text-sm text-gray-500">{employee.email || 'Keine E-Mail'}</p>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">
+                        {employee.businessName}
+                      </Badge>
+                    </td>
+                    <td className="py-3 px-4">
+                      <Badge variant="outline" className={
+                        employee.role === 'owner' ? "bg-purple-50 text-purple-700" :
+                        employee.role === 'employee' ? "bg-green-50 text-green-700" :
+                        "bg-orange-50 text-orange-700"
+                      }>
+                        {employee.role === 'owner' ? 'Inhaber' :
+                         employee.role === 'employee' ? 'Mitarbeiter' :
+                         employee.role === 'kiosk' ? 'Kiosk' : employee.role}
+                      </Badge>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div>
+                        <p className="font-medium">{employee.totalRepairs || 0}</p>
+                        <p className="text-sm text-gray-500">gesamt</p>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-1">
+                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                        <span className="font-medium">{employee.averageRating || '4.5'}</span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <Badge className={employee.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}>
+                        {employee.isActive ? 'Aktiv' : 'Inaktiv'}
+                      </Badge>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
         </CardContent>
       </Card>
-
-      {/* Shop Statistiken */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Shop Wien</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center space-y-2">
-              <div className="text-3xl font-bold">2</div>
-              <p className="text-sm text-gray-600">Mitarbeiter</p>
-              <div className="text-lg font-semibold text-green-600">434</div>
-              <p className="text-xs text-gray-500">Reparaturen gesamt</p>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Shop Graz</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center space-y-2">
-              <div className="text-3xl font-bold">2</div>
-              <p className="text-sm text-gray-600">Mitarbeiter</p>
-              <div className="text-lg font-semibold text-green-600">290</div>
-              <p className="text-xs text-gray-500">Reparaturen gesamt</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Shop Linz</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center space-y-2">
-              <div className="text-3xl font-bold">2</div>
-              <p className="text-sm text-gray-600">Mitarbeiter</p>
-              <div className="text-lg font-semibold text-green-600">245</div>
-              <p className="text-xs text-gray-500">Reparaturen gesamt</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 }
