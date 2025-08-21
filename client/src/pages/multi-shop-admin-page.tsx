@@ -360,25 +360,201 @@ function EmployeesOverview() {
 
 // Bestellungen Übersicht
 function OrdersOverview() {
+  const { data: orders = [], isLoading } = useQuery({
+    queryKey: ["/api/multi-shop/orders"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/multi-shop/orders");
+      return response.json();
+    },
+    refetchInterval: 5000, // Alle 5 Sekunden aktualisieren
+  });
+
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Filter die Bestellungen
+  const filteredOrders = orders.filter(order => {
+    const matchesStatus = statusFilter === "all" || order.status === statusFilter;
+    const matchesSearch = !searchTerm || 
+      order.partName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.deviceInfo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.orderCode.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesStatus && matchesSearch;
+  });
+
+  // Status Badge Komponente
+  const StatusBadge = ({ status }: { status: string }) => {
+    const colors = {
+      'bestellen': 'bg-red-100 text-red-800',
+      'bestellt': 'bg-yellow-100 text-yellow-800',
+      'eingetroffen': 'bg-blue-100 text-blue-800',
+      'erledigt': 'bg-green-100 text-green-800'
+    };
+    
+    return (
+      <Badge className={colors[status] || 'bg-gray-100 text-gray-800'}>
+        {status.toUpperCase()}
+      </Badge>
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Bestellungen - Zentrale Ersatzteil-Verwaltung</CardTitle>
+            <CardDescription>Lade Ersatzteilbestellungen...</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-12">
+              <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
+              <p className="text-gray-500 mt-4">Ersatzteilbestellungen werden geladen...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>Bestellungen - Zentrale Ersatzteil-Verwaltung</CardTitle>
           <CardDescription>
-            Verwalten Sie Ersatzteilbestellungen für alle Standorte zentral
+            Verwalten Sie Ersatzteilbestellungen für alle Standorte zentral ({filteredOrders.length} von {orders.length} Ersatzteilen)
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-12">
-            <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Bestellungsmanagement
-            </h3>
-            <p className="text-gray-500">
-              Diese Funktion wird implementiert und ermöglicht zentrale Ersatzteilbestellungen für alle Shops.
-            </p>
+          {/* Filter und Suche */}
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            <div className="flex-1">
+              <input
+                type="text"
+                placeholder="Suchen nach Ersatzteil, Kunde, Gerät oder Order-Code..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div className="sm:w-48">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">Alle Status</option>
+                <option value="bestellen">Zu bestellen</option>
+                <option value="bestellt">Bestellt</option>
+                <option value="eingetroffen">Eingetroffen</option>
+                <option value="erledigt">Erledigt</option>
+              </select>
+            </div>
           </div>
+
+          {filteredOrders.length === 0 ? (
+            <div className="text-center py-12">
+              <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                {orders.length === 0 ? "Keine Ersatzteile gefunden" : "Keine passenden Ersatzteile"}
+              </h3>
+              <p className="text-gray-500">
+                {orders.length === 0 
+                  ? "Es gibt derzeit keine Ersatzteilbestellungen in den Shops."
+                  : "Keine Ersatzteile entsprechen den aktuellen Filterkriterien."
+                }
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Ersatzteil
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Kunde & Gerät
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Shop
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Order-Code
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Aktionen
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredOrders.map((order) => (
+                    <tr key={order.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-4">
+                        <div>
+                          <p className="font-medium text-gray-900">{order.partName}</p>
+                          <p className="text-sm text-gray-500">ID: {order.id}</p>
+                          {order.notes && (
+                            <p className="text-sm text-blue-600 mt-1">{order.notes}</p>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4">
+                        <div>
+                          <p className="font-medium text-gray-900">{order.customerName}</p>
+                          <p className="text-sm text-gray-500">{order.deviceInfo}</p>
+                          <p className="text-sm text-gray-500">{order.repairIssue}</p>
+                          {order.customerPhone && (
+                            <p className="text-sm text-blue-600">{order.customerPhone}</p>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4">
+                        <StatusBadge status={order.status} />
+                        {order.orderDate && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            Bestellt: {new Date(order.orderDate).toLocaleDateString('de-DE')}
+                          </p>
+                        )}
+                        {order.deliveryDate && (
+                          <p className="text-xs text-green-600 mt-1">
+                            Geliefert: {new Date(order.deliveryDate).toLocaleDateString('de-DE')}
+                          </p>
+                        )}
+                      </td>
+                      <td className="px-4 py-4">
+                        <p className="font-medium text-gray-900">{order.businessName}</p>
+                        <p className="text-sm text-gray-500">Shop ID: {order.shopId}</p>
+                      </td>
+                      <td className="px-4 py-4">
+                        <p className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
+                          {order.orderCode}
+                        </p>
+                      </td>
+                      <td className="px-4 py-4">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            // Details anzeigen
+                            console.log('Zeige Details für Ersatzteil:', order);
+                          }}
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          Details
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
