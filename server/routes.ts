@@ -852,17 +852,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication
   setupAuth(app);
   
-  // Set up employee routes (must be after authentication)
-  setupEmployeeRoutes(app);
-  
-  // Set up superadmin routes FIRST (before middleware that might interfere)
-  registerSuperadminRoutes(app);
-  
-  // Set up multi-shop routes
+  // Set up multi-shop routes FIRST (before any middleware that might interfere)
   registerMultiShopRoutes(app);
   
   // Set up multi-shop admin routes
   registerMultiShopAdminRoutes(app);
+  
+  // Set up employee routes (must be after authentication)
+  setupEmployeeRoutes(app);
+  
+  // Set up superadmin routes
+  registerSuperadminRoutes(app);
 
   // Set up 2FA routes
   registerTwoFARoutes(app);

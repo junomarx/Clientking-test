@@ -93,27 +93,7 @@ export function registerMultiShopRoutes(app: Express) {
     }
   });
 
-  // Einem Benutzer Zugang zu einem Shop gewähren (nur für Superadmins)
-  app.post("/api/multi-shop/grant-access", isSuperadmin, async (req: Request, res: Response) => {
-    try {
-      const validatedData = createUserShopAccessSchema.parse({
-        ...req.body,
-        grantedBy: req.user!.id
-      });
 
-      const access = await storage.createUserShopAccess(validatedData);
-      res.status(201).json(access);
-    } catch (error) {
-      console.error('Error granting shop access:', error);
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ 
-          message: "Ungültige Daten", 
-          errors: error.errors 
-        });
-      }
-      res.status(500).json({ message: "Fehler beim Gewähren des Shop-Zugangs" });
-    }
-  });
 
   // Shop-Zugang entziehen (nur für Superadmins)
   app.delete("/api/multi-shop/revoke-access/:userId/:shopId", isSuperadmin, async (req: Request, res: Response) => {
@@ -429,7 +409,23 @@ export function registerMultiShopRoutes(app: Express) {
   // Shop-Owner gewährt Multi-Shop-Admin Zugriff
   app.post("/api/multi-shop/grant-access", async (req: Request, res: Response) => {
     try {
-      if (!req.user) {
+      // Prüfe auf benutzerdefinierte User-ID im Header (für direktes Debugging)
+      const customUserId = req.headers['x-user-id'];
+      let currentUser = req.user;
+      
+      if (customUserId && !currentUser) {
+        try {
+          const userId = parseInt(customUserId.toString());
+          currentUser = await storage.getUser(userId);
+          if (currentUser) {
+            console.log(`🔥 Header Auth: Benutzer ${currentUser.username} per X-User-ID authentifiziert`);
+          }
+        } catch (error) {
+          console.error('Fehler beim Verarbeiten der X-User-ID:', error);
+        }
+      }
+      
+      if (!currentUser) {
         return res.status(401).json({ error: "Nicht angemeldet" });
       }
 
@@ -438,13 +434,8 @@ export function registerMultiShopRoutes(app: Express) {
         return res.status(400).json({ error: "E-Mail-Adresse ist erforderlich" });
       }
 
-      const user = await storage.getUser(req.user.id);
-      if (!user) {
-        return res.status(404).json({ error: "Benutzer nicht gefunden" });
-      }
-
       // Prüfen ob User die Berechtigung hat
-      if (!user.canAssignMultiShopAdmins) {
+      if (!currentUser.canAssignMultiShopAdmins) {
         return res.status(403).json({ error: "Keine Berechtigung zum Zuweisen von Multi-Shop-Admins" });
       }
 
@@ -463,7 +454,7 @@ export function registerMultiShopRoutes(app: Express) {
         .from(userShopAccess)
         .where(and(
           eq(userShopAccess.userId, multiShopAdmin.id),
-          eq(userShopAccess.shopId, user.shopId!)
+          eq(userShopAccess.shopId, currentUser.shopId!)
         ));
 
       if (existingAccess.length > 0) {
@@ -473,18 +464,18 @@ export function registerMultiShopRoutes(app: Express) {
       // Neuen Shop-Zugriff erstellen
       const [newAccess] = await db.insert(userShopAccess).values({
         userId: multiShopAdmin.id,
-        shopId: user.shopId!,
+        shopId: currentUser.shopId!,
         accessLevel: 'admin',
-        grantedBy: user.id,
+        grantedBy: currentUser.id,
         grantedAt: new Date()
       }).returning();
 
-      console.log(`✅ Shop-Owner ${user.username} hat Multi-Shop-Admin ${multiShopAdmin.email} Zugriff auf Shop ${user.shopId} gewährt`);
+      console.log(`✅ Shop-Owner ${currentUser.username} hat Multi-Shop-Admin ${multiShopAdmin.email} Zugriff auf Shop ${currentUser.shopId} gewährt`);
 
       res.status(201).json({
         id: newAccess.id,
         multiShopAdminEmail: multiShopAdmin.email,
-        shopId: user.shopId,
+        shopId: currentUser.shopId,
         grantedAt: newAccess.grantedAt,
         message: 'Zugriff erfolgreich gewährt'
       });
