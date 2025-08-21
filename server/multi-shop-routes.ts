@@ -273,8 +273,54 @@ export function registerMultiShopRoutes(app: Express) {
     }
   });
 
+  // Multi-Shop-Admins für einen bestimmten Shop abrufen
+  app.get("/api/multi-shop/admins", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentifizierung erforderlich" });
+      }
+
+      const user = req.user;
+      console.log(`[MULTI-SHOP] Benutzer ${user.username} (${user.id}) fragt Multi-Shop-Admins ab`);
+
+      // Nur Shop-Owner mit Multi-Shop-Admin-Berechtigung können Multi-Shop-Admins abrufen
+      if (!user.canAssignMultiShopAdmins) {
+        return res.status(403).json({ 
+          message: "Keine Berechtigung für Multi-Shop-Admin-Verwaltung" 
+        });
+      }
+
+      // Multi-Shop-Admins mit Zugriff auf diesen Shop abrufen
+      const multiShopAdmins = await db.select({
+        id: users.id,
+        username: users.username,
+        email: users.email,
+        isActive: users.isActive,
+        createdAt: users.createdAt,
+      }).from(users)
+        .innerJoin(multiShopPermissions, eq(multiShopPermissions.userId, users.id))
+        .where(
+          and(
+            eq(users.isMultiShopAdmin, true),
+            eq(multiShopPermissions.shopId, user.shopId),
+            eq(multiShopPermissions.status, 'granted')
+          )
+        );
+
+      console.log(`[MULTI-SHOP] ${multiShopAdmins.length} Multi-Shop-Admins für Shop ${user.shopId} gefunden`);
+      
+      res.json(multiShopAdmins);
+    } catch (error: any) {
+      console.error('Fehler beim Abrufen der Multi-Shop-Admins:', error);
+      res.status(500).json({ 
+        message: 'Interner Serverfehler beim Abrufen der Multi-Shop-Admins',
+        error: error.message 
+      });
+    }
+  });
+
   // Multi-Shop Admin löschen
-  app.delete("/api/multi-shop/admin/:adminId", isSuperadmin, async (req: Request, res: Response) => {
+  app.delete("/api/multi-shop/admin/:adminId", async (req: Request, res: Response) => {
     try {
       const adminId = parseInt(req.params.adminId);
 

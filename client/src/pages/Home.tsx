@@ -22,9 +22,10 @@ import { SubscriptionSettingsTab } from '@/components/settings/SubscriptionSetti
 import { UserSettingsTab } from '@/components/settings/UserSettingsTab';
 import EmployeesPage from '@/pages/employees-page';
 import { LoanerDevicesTab } from '@/components/loaner-devices/LoanerDevicesTab';
+import { MultiShopAdminManagement } from '@/components/MultiShopAdminManagement';
 
 type Tab = 'dashboard' | 'repairs' | 'orders' | 'customers' | 'statistics' | 'cost-estimates' | 'loaner-devices' |
-          'business-settings' | 'email-settings' | 'print-settings' | 'subscription-settings' | 'user-settings' | 'employees';
+          'business-settings' | 'email-settings' | 'print-settings' | 'subscription-settings' | 'user-settings' | 'employees' | 'multi-shop-admin';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
@@ -51,7 +52,7 @@ export default function Home() {
   }
 
   // Permission-Anfragen für Shop-Owner laden
-  const { data: pendingPermissions = [], refetch: refetchPermissions } = useQuery({
+  const { data: pendingPermissions = [], refetch: refetchPermissions } = useQuery<any[]>({
     queryKey: ['/api/permissions/pending'],
     enabled: !!user && !user.isMultiShopAdmin, // Nur für normale Shop-Owner laden
     refetchInterval: 30000, // Alle 30 Sekunden prüfen
@@ -93,7 +94,7 @@ export default function Home() {
     if (tabParam) {
       const validTabs = [
         'dashboard', 'repairs', 'orders', 'customers', 'statistics', 'cost-estimates', 'loaner-devices',
-        'business-settings', 'email-settings', 'print-settings', 'subscription-settings', 'user-settings', 'employees'
+        'business-settings', 'email-settings', 'print-settings', 'subscription-settings', 'user-settings', 'employees', 'multi-shop-admin'
       ];
       if (validTabs.includes(tabParam)) {
         setActiveTab(tabParam as Tab);
@@ -244,6 +245,10 @@ export default function Home() {
               
               {activeTab === 'employees' && (
                 <EmployeesPage />
+              )}
+              
+              {activeTab === 'multi-shop-admin' && (
+                <MultiShopAdminManagement />
               )}
             </div>
           </ScrollArea>

@@ -249,6 +249,21 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
           </Button>
         )}
         
+        {/* Multi-Shop-Admin Verwaltung - nur für berechtigte Shop-Owner */}
+        {user && user.role === 'owner' && user.canAssignMultiShopAdmins && (
+          <Button 
+            variant={activeTab === 'multi-shop-admin' ? 'default' : 'ghost'}
+            className="w-full justify-start"
+            onClick={() => {
+              onTabChange('multi-shop-admin');
+              if (isMobile) closeMenu();
+            }}
+          >
+            <Shield className="h-5 w-5 mr-2" />
+            Multi-Shop-Admin
+          </Button>
+        )}
+        
         {/* Kiosk-Modus Aktivierung */}
         <div className="pt-2 border-t">
           <KioskActivationButton />
