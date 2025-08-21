@@ -550,6 +550,28 @@ export function registerMultiShopAdminRoutes(app: Express) {
         })
         .where(eq(spareParts.id, parseInt(id)));
 
+      // WICHTIG: Automatische Reparatur-Status-Aktualisierung aufrufen
+      // Diese Logik prüft alle Ersatzteile der Reparatur und aktualisiert den Reparatur-Status entsprechend
+      if (sparePart.repairId) {
+        const { storage } = await import('./storage');
+        
+        // Wir brauchen eine gültige User-ID für die Storage-Funktion
+        // Da Multi-Shop Admins auf mehrere Shops zugreifen können, verwenden wir den Shop-Owner
+        const [shopOwner] = await db
+          .select({ id: users.id })
+          .from(users)
+          .where(and(
+            eq(users.shopId, sparePart.shopId),
+            or(eq(users.role, 'admin'), eq(users.role, 'owner'))
+          ))
+          .limit(1);
+
+        if (shopOwner) {
+          await storage.checkAndUpdateRepairStatus(sparePart.repairId, shopOwner.id);
+          console.log(`Reparatur-Status-Check ausgeführt für Reparatur ${sparePart.repairId} nach Multi-Shop Admin Status-Änderung`);
+        }
+      }
+
       // WebSocket-Nachricht an alle Shops senden
       const { broadcastSparePartUpdate } = await import('./websocket-server');
       broadcastSparePartUpdate({
@@ -557,6 +579,7 @@ export function registerMultiShopAdminRoutes(app: Express) {
         status,
         archived: shouldArchive ? true : (shouldUnarchive ? false : sparePart.archived),
         shopId: sparePart.shopId,
+        repairId: sparePart.repairId,
         updatedBy: `Multi-Shop Admin (${req.user!.username})`
       });
 

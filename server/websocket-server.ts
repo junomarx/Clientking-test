@@ -688,6 +688,7 @@ export function broadcastSparePartUpdate(updateData: {
   status: string;
   archived: boolean;
   shopId: number;
+  repairId?: number;
   updatedBy: string;
 }) {
   if (!onlineStatusManager) {
