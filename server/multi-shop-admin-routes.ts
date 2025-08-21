@@ -340,6 +340,73 @@ export function registerMultiShopAdminRoutes(app: Express) {
     }
   });
 
+  // Archivierte Ersatzteil-Bestellungen Übersicht (Multi-Shop Admin)
+  app.get("/api/multi-shop/orders/archived", protectMultiShopAdmin, async (req, res) => {
+    try {
+      const currentUserId = req.user!.id;
+
+      // Erst die authorisierten Shop-IDs für diesen Multi-Shop Admin holen
+      const authorizedShops = await db
+        .select({ shopId: userShopAccess.shopId })
+        .from(userShopAccess)
+        .where(and(
+          eq(userShopAccess.userId, currentUserId),
+          eq(userShopAccess.isActive, true)
+        ));
+
+      const authorizedShopIds = authorizedShops.map(shop => shop.shopId);
+
+      if (authorizedShopIds.length === 0) {
+        return res.json([]); // Keine authorisierten Shops = keine Bestellungen
+      }
+
+      // Archivierte Ersatzteile mit allen relevanten Daten aus authorisierten Shops laden
+      const archivedSparePartOrders = await db
+        .select({
+          id: spareParts.id,
+          partName: spareParts.partName,
+          supplier: spareParts.supplier,
+          cost: spareParts.cost,
+          status: spareParts.status,
+          orderDate: spareParts.orderDate,
+          deliveryDate: spareParts.deliveryDate,
+          notes: spareParts.notes,
+          createdAt: spareParts.createdAt,
+          updatedAt: spareParts.updatedAt,
+          shopId: spareParts.shopId,
+          repairId: spareParts.repairId,
+          // Reparatur-Details
+          orderCode: repairs.orderCode,
+          deviceInfo: sql<string>`${repairs.brand} || ' ' || ${repairs.model}`,
+          repairIssue: repairs.issue,
+          repairStatus: repairs.status,
+          // Kunden-Details
+          customerName: sql<string>`COALESCE(${customers.firstName}, '') || ' ' || COALESCE(${customers.lastName}, '')`,
+          customerPhone: customers.phone,
+          // Shop-Details
+          businessName: businessSettings.businessName
+        })
+        .from(spareParts)
+        .leftJoin(repairs, eq(spareParts.repairId, repairs.id))
+        .leftJoin(customers, eq(repairs.customerId, customers.id))
+        .leftJoin(businessSettings, eq(spareParts.shopId, businessSettings.shopId))
+        .where(and(
+          // Nur aus authorisierten Shops
+          authorizedShopIds.length === 1 ? 
+            eq(spareParts.shopId, authorizedShopIds[0]) :
+            sql`${spareParts.shopId} IN (${authorizedShopIds.join(',')})`,
+          // Nur archivierte Ersatzteile anzeigen
+          eq(spareParts.archived, true)
+        ))
+        .orderBy(desc(spareParts.updatedAt)); // Nach letztem Update sortieren
+
+      res.json(archivedSparePartOrders);
+    } catch (error) {
+      console.error("Archived spare parts orders error:", error);
+      res.status(500).json({ error: "Fehler beim Laden der archivierten Ersatzteil-Bestellungen" });
+    }
+  });
+
   // Ersatzteil-Status aktualisieren (Multi-Shop Admin)
   app.patch("/api/multi-shop/spare-part/:id", protectMultiShopAdmin, async (req, res) => {
     try {

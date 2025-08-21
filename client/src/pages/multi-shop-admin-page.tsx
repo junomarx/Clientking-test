@@ -360,6 +360,8 @@ function EmployeesOverview() {
 
 // Bestellungen Übersicht
 function OrdersOverview() {
+  const [activeOrdersTab, setActiveOrdersTab] = useState<"active" | "archived">("active");
+
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ["/api/multi-shop/orders"],
     queryFn: async () => {
@@ -369,10 +371,19 @@ function OrdersOverview() {
     refetchInterval: 5000, // Alle 5 Sekunden aktualisieren
   });
 
+  const { data: archivedOrders = [], isLoading: isLoadingArchived } = useQuery({
+    queryKey: ["/api/multi-shop/orders/archived"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/multi-shop/orders/archived");
+      return response.json();
+    },
+    refetchInterval: 10000, // Alle 10 Sekunden aktualisieren
+  });
+
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Filter die Bestellungen
+  // Filter die aktiven Bestellungen
   const filteredOrders = orders.filter(order => {
     const matchesStatus = statusFilter === "all" || order.status === statusFilter;
     const matchesSearch = !searchTerm || 
@@ -381,6 +392,16 @@ function OrdersOverview() {
       order.deviceInfo.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.orderCode.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesStatus && matchesSearch;
+  });
+
+  // Filter die archivierten Bestellungen
+  const filteredArchivedOrders = archivedOrders.filter(order => {
+    const matchesSearch = !searchTerm || 
+      order.partName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.deviceInfo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.orderCode.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesSearch;
   });
 
   // Status Badge Komponente
@@ -424,8 +445,36 @@ function OrdersOverview() {
         <CardHeader>
           <CardTitle>Bestellungen - Zentrale Ersatzteil-Verwaltung</CardTitle>
           <CardDescription>
-            Verwalten Sie Ersatzteilbestellungen für alle Standorte zentral ({filteredOrders.length} von {orders.length} Ersatzteilen)
+            Verwalten Sie Ersatzteilbestellungen für alle Standorte zentral
           </CardDescription>
+          
+          {/* Tab Navigation */}
+          <div className="flex space-x-1 mt-4">
+            <Button
+              variant={activeOrdersTab === "active" ? "default" : "outline"}
+              onClick={() => setActiveOrdersTab("active")}
+              className="flex items-center gap-2"
+              size="sm"
+            >
+              <Package className="h-4 w-4" />
+              Aktive Bestellungen
+              <Badge variant="secondary" className="ml-2">
+                {filteredOrders.length}
+              </Badge>
+            </Button>
+            <Button
+              variant={activeOrdersTab === "archived" ? "default" : "outline"}
+              onClick={() => setActiveOrdersTab("archived")}
+              className="flex items-center gap-2"
+              size="sm"
+            >
+              <CheckCircle className="h-4 w-4" />
+              Archivierte Bestellungen
+              <Badge variant="secondary" className="ml-2">
+                {filteredArchivedOrders.length}
+              </Badge>
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {/* Filter und Suche */}
@@ -439,22 +488,27 @@ function OrdersOverview() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-            <div className="sm:w-48">
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="all">Alle Status</option>
-                <option value="bestellen">Zu bestellen</option>
-                <option value="bestellt">Bestellt</option>
-                <option value="eingetroffen">Eingetroffen</option>
-                <option value="erledigt">Erledigt</option>
-              </select>
-            </div>
+            {activeOrdersTab === "active" && (
+              <div className="sm:w-48">
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="all">Alle Status</option>
+                  <option value="bestellen">Zu bestellen</option>
+                  <option value="bestellt">Bestellt</option>
+                  <option value="eingetroffen">Eingetroffen</option>
+                  <option value="erledigt">Erledigt</option>
+                </select>
+              </div>
+            )}
           </div>
 
-          {filteredOrders.length === 0 ? (
+          {/* Aktive Bestellungen Tab */}
+          {activeOrdersTab === "active" && (
+            <>
+              {filteredOrders.length === 0 ? (
             <div className="text-center py-12">
               <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -554,6 +608,102 @@ function OrdersOverview() {
                 </tbody>
               </table>
             </div>
+          )}
+          </>
+          )}
+
+          {/* Archivierte Bestellungen Tab */}
+          {activeOrdersTab === "archived" && (
+            <>
+              {filteredArchivedOrders.length === 0 ? (
+                <div className="text-center py-12">
+                  <CheckCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    Keine archivierten Bestellungen gefunden
+                  </h3>
+                  <p className="text-gray-500">
+                    Bestellungen werden automatisch archiviert, wenn sie als "eingetroffen" oder "erledigt" markiert werden.
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Ersatzteil
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Kunde & Gerät
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Shop
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Order-Code
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Archiviert am
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {filteredArchivedOrders.map((order) => (
+                        <tr key={order.id} className="hover:bg-gray-50">
+                          <td className="px-4 py-4">
+                            <div>
+                              <p className="font-medium text-gray-900">{order.partName}</p>
+                              {order.supplier && (
+                                <p className="text-sm text-gray-500">
+                                  Lieferant: {order.supplier}
+                                </p>
+                              )}
+                              {order.partNumber && (
+                                <p className="text-xs text-gray-400">
+                                  Teil-Nr: {order.partNumber}
+                                </p>
+                              )}
+                              {order.notes && (
+                                <p className="text-xs text-gray-500 mt-1">{order.notes}</p>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-4 py-4">
+                            <div>
+                              <p className="font-medium text-gray-900">{order.customerName}</p>
+                              {order.customerPhone && (
+                                <p className="text-sm text-gray-500">{order.customerPhone}</p>
+                              )}
+                              <p className="text-sm text-gray-500 mt-1">{order.deviceInfo}</p>
+                            </div>
+                          </td>
+                          <td className="px-4 py-4">
+                            <StatusBadge status={order.status} />
+                          </td>
+                          <td className="px-4 py-4">
+                            <p className="font-medium text-gray-900">{order.businessName}</p>
+                            <p className="text-sm text-gray-500">Shop ID: {order.shopId}</p>
+                          </td>
+                          <td className="px-4 py-4">
+                            <p className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
+                              {order.orderCode}
+                            </p>
+                          </td>
+                          <td className="px-4 py-4">
+                            <p className="text-sm text-gray-500">
+                              {new Date(order.updatedAt).toLocaleDateString('de-DE')} {new Date(order.updatedAt).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>

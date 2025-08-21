@@ -107,7 +107,7 @@ export function OrdersTab() {
   const [isSparePartsDialogOpen, setIsSparePartsDialogOpen] = useState(false);
   const [isAddSparePartDialogOpen, setIsAddSparePartDialogOpen] = useState(false);
   const [isAddAccessoryDialogOpen, setIsAddAccessoryDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"spare-parts" | "accessories">("spare-parts");
+  const [activeTab, setActiveTab] = useState<"spare-parts" | "accessories" | "archived">("spare-parts");
   const [isRepairDetailsOpen, setIsRepairDetailsOpen] = useState(false);
   
   // Native Browser-Modal State - ALLE React-Modals entfernt
@@ -147,8 +147,15 @@ export function OrdersTab() {
     refetchInterval: 5000,
   });
 
-  const isLoading = isLoadingSpareParts || isLoadingRepairs || isLoadingAccessories || isLoadingAllRepairs;
-  const error = sparePartsError || repairsError || accessoriesError;
+  // Archivierte Bestellungen abrufen (nur im Multi-Shop Admin Interface)
+  const { data: archivedOrders = [], isLoading: isLoadingArchived, error: archivedError } = useQuery<any[]>({
+    queryKey: ['/api/multi-shop/orders/archived'],
+    refetchInterval: 10000,
+    enabled: user?.role === 'owner' && user?.username === 'multishop-admin', // Nur für Multi-Shop Admin
+  });
+
+  const isLoading = isLoadingSpareParts || isLoadingRepairs || isLoadingAccessories || isLoadingAllRepairs || isLoadingArchived;
+  const error = sparePartsError || repairsError || accessoriesError || archivedError;
 
   const handleManageParts = (repairId: number) => {
     setSelectedRepairId(repairId);
@@ -1109,6 +1116,20 @@ export function OrdersTab() {
             {accessories.length}
           </Badge>
         </Button>
+        {/* Archiv-Tab nur für Multi-Shop Admin */}
+        {user?.role === 'owner' && user?.username === 'multishop-admin' && (
+          <Button
+            variant={activeTab === "archived" ? "default" : "outline"}
+            onClick={() => setActiveTab("archived")}
+            className="flex items-center gap-2"
+          >
+            <FileText className="h-4 w-4" />
+            Archivierte Bestellungen
+            <Badge variant="secondary" className="ml-2">
+              {archivedOrders.length}
+            </Badge>
+          </Button>
+        )}
       </div>
 
       {/* Erweiterte Filter- und Suchleiste */}
@@ -1722,7 +1743,85 @@ export function OrdersTab() {
         </Card>
       )}
 
-
+      {/* Archivierte Bestellungen Tab */}
+      {activeTab === "archived" && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Archivierte Bestellungen
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {archivedOrders.length > 0 ? (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Artikel</TableHead>
+                      <TableHead>Kunde</TableHead>
+                      <TableHead>Gerät</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Shop</TableHead>
+                      <TableHead>Archiviert am</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {archivedOrders.map((order) => (
+                      <TableRow key={`archived-${order.id}`}>
+                        <TableCell className="font-medium">
+                          <div>
+                            <div>{order.partName}</div>
+                            {order.notes && (
+                              <div className="text-xs text-gray-500 mt-1">{order.notes}</div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{order.customerName}</div>
+                            {order.customerPhone && (
+                              <div className="text-xs text-gray-500">{order.customerPhone}</div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{order.orderCode}</div>
+                            <div className="text-xs text-gray-500">{order.deviceInfo}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant={order.status === "eingetroffen" ? "secondary" : "default"}
+                            className="text-xs"
+                          >
+                            {order.status === "eingetroffen" ? "Eingetroffen" : "Erledigt"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm">{order.businessName}</div>
+                        </TableCell>
+                        <TableCell className="text-sm text-gray-500">
+                          {format(new Date(order.updatedAt), 'dd.MM.yyyy HH:mm', { locale: de })}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+                <FileText className="h-12 w-12 mb-4 text-gray-400" />
+                <p className="text-sm font-medium">Keine archivierten Bestellungen</p>
+                <p className="text-xs text-gray-400 mt-1 text-center">
+                  Bestellungen werden automatisch archiviert, wenn sie als "eingetroffen" oder "erledigt" markiert werden
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {selectedRepairId && (
         <SparePartsManagementDialog
