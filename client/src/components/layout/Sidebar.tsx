@@ -287,7 +287,7 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
           </nav>
           <div className="px-2 mt-6 mb-4">
             {/* Admin-Bereich-Button */}
-            {user && user.isAdmin && (
+            {user && (user.isAdmin || user.isSuperadmin) && (
               <Button 
                 variant="outline" 
                 className="w-full justify-start mb-2"
@@ -351,7 +351,7 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
             <Separator className="my-4" />
             <div className="space-y-2 px-1">
               {/* Admin-Bereich-Button */}
-              {user && user.isAdmin && (
+              {user && (user.isAdmin || user.isSuperadmin) && (
                 <Button 
                   variant="outline" 
                   className="w-full justify-start mb-2"
