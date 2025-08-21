@@ -1,5 +1,5 @@
 import type { Express } from "express";
-import { eq, sql, and, count, desc, inArray } from "drizzle-orm";
+import { eq, sql, and, or, count, desc, inArray } from "drizzle-orm";
 import { db } from "./db";
 import { users, businessSettings, repairs, customers, userShopAccess, spareParts } from "@shared/schema";
 
