@@ -496,5 +496,80 @@ export function registerMultiShopAdminRoutes(app: Express) {
     }
   });
 
+  // Status einer Bestellung ändern (sowohl aktive als auch archivierte)
+  app.patch("/api/multi-shop/orders/:id/status", protectMultiShopAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+      const currentUserId = req.user!.id;
+
+      if (!status || !["bestellen", "bestellt", "eingetroffen", "erledigt"].includes(status)) {
+        return res.status(400).json({ error: "Ungültiger Status" });
+      }
+
+      // Authorisierte Shop-IDs für diesen Multi-Shop Admin holen
+      const authorizedShops = await db
+        .select({ shopId: userShopAccess.shopId })
+        .from(userShopAccess)
+        .where(and(
+          eq(userShopAccess.userId, currentUserId),
+          eq(userShopAccess.isActive, true)
+        ));
+
+      const authorizedShopIds = authorizedShops.map(shop => shop.shopId);
+
+      if (authorizedShopIds.length === 0) {
+        return res.status(403).json({ error: "Keine Shop-Berechtigungen gefunden" });
+      }
+
+      // Ersatzteil finden (sowohl aktive als auch archivierte)
+      const [sparePart] = await db
+        .select()
+        .from(spareParts)
+        .where(and(
+          eq(spareParts.id, parseInt(id)),
+          inArray(spareParts.shopId, authorizedShopIds)
+        ));
+
+      if (!sparePart) {
+        return res.status(404).json({ error: "Ersatzteil nicht gefunden oder keine Berechtigung" });
+      }
+
+      // Status aktualisieren
+      const oldStatus = sparePart.status;
+      const shouldArchive = status === "eingetroffen" || status === "erledigt";
+      const shouldUnarchive = (oldStatus === "eingetroffen" || oldStatus === "erledigt") && 
+                              (status === "bestellen" || status === "bestellt");
+
+      await db
+        .update(spareParts)
+        .set({
+          status,
+          archived: shouldArchive ? true : (shouldUnarchive ? false : sparePart.archived),
+          updatedAt: new Date()
+        })
+        .where(eq(spareParts.id, parseInt(id)));
+
+      // WebSocket-Nachricht an alle Shops senden
+      const { broadcastSparePartUpdate } = await import('./websocket-server');
+      broadcastSparePartUpdate({
+        id: sparePart.id,
+        status,
+        archived: shouldArchive ? true : (shouldUnarchive ? false : sparePart.archived),
+        shopId: sparePart.shopId,
+        updatedBy: `Multi-Shop Admin (${req.user!.username})`
+      });
+
+      res.json({ 
+        success: true, 
+        message: `Status von "${oldStatus}" zu "${status}" geändert`,
+        archived: shouldArchive ? true : (shouldUnarchive ? false : sparePart.archived)
+      });
+    } catch (error) {
+      console.error("Fehler beim Ändern des Ersatzteil-Status:", error);
+      res.status(500).json({ error: "Fehler beim Ändern des Status" });
+    }
+  });
+
   console.log("✅ Multi-Shop Admin routes registered");
 }

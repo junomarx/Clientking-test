@@ -681,3 +681,25 @@ export function initializeWebSocketServer(server: Server): OnlineStatusManager {
 export function getOnlineStatusManager(): OnlineStatusManager | null {
   return onlineStatusManager;
 }
+
+// Broadcast-Funktion für Ersatzteil-Updates
+export function broadcastSparePartUpdate(updateData: {
+  id: number;
+  status: string;
+  archived: boolean;
+  shopId: number;
+  updatedBy: string;
+}) {
+  if (!onlineStatusManager) {
+    console.warn('WebSocket-Manager nicht initialisiert');
+    return;
+  }
+
+  const message = {
+    type: 'spare-part-update',
+    data: updateData
+  };
+
+  onlineStatusManager.broadcast(message);
+  console.log(`Ersatzteil-Update gesendet für Shop ${updateData.shopId}:`, updateData);
+}

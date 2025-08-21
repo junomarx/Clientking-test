@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 import { 
   BarChart3, 
   Building2, 
@@ -19,7 +21,7 @@ import {
   Edit3,
   LogOut
 } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 
 // Dashboard Statistiken
@@ -361,6 +363,7 @@ function EmployeesOverview() {
 // Bestellungen Übersicht
 function OrdersOverview() {
   const [activeOrdersTab, setActiveOrdersTab] = useState<"active" | "archived">("active");
+  const { toast } = useToast();
 
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ["/api/multi-shop/orders"],
@@ -382,6 +385,30 @@ function OrdersOverview() {
 
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Status-Change-Mutation
+  const changeStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: number, status: string }) => {
+      const response = await apiRequest("PATCH", `/api/multi-shop/orders/${id}/status`, { status });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Status geändert",
+        description: data.message,
+      });
+      // Cache invalidieren um aktuelle Daten zu laden
+      queryClient.invalidateQueries({ queryKey: ["/api/multi-shop/orders"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/multi-shop/orders/archived"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Fehler beim Ändern des Status",
+        description: error.message || "Unbekannter Fehler",
+        variant: "destructive",
+      });
+    },
+  });
 
   // Filter die aktiven Bestellungen
   const filteredOrders = orders.filter(order => {
@@ -569,17 +596,35 @@ function OrdersOverview() {
                         </div>
                       </td>
                       <td className="px-4 py-4">
-                        <StatusBadge status={order.status} />
-                        {order.orderDate && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            Bestellt: {new Date(order.orderDate).toLocaleDateString('de-DE')}
-                          </p>
-                        )}
-                        {order.deliveryDate && (
-                          <p className="text-xs text-green-600 mt-1">
-                            Geliefert: {new Date(order.deliveryDate).toLocaleDateString('de-DE')}
-                          </p>
-                        )}
+                        <div className="space-y-2">
+                          <Select
+                            value={order.status}
+                            onValueChange={(newStatus) => {
+                              changeStatusMutation.mutate({ id: order.id, status: newStatus });
+                            }}
+                            disabled={changeStatusMutation.isPending}
+                          >
+                            <SelectTrigger className="w-40">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="bestellen">Zu bestellen</SelectItem>
+                              <SelectItem value="bestellt">Bestellt</SelectItem>
+                              <SelectItem value="eingetroffen">Eingetroffen</SelectItem>
+                              <SelectItem value="erledigt">Erledigt</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          {order.orderDate && (
+                            <p className="text-xs text-gray-500">
+                              Bestellt: {new Date(order.orderDate).toLocaleDateString('de-DE')}
+                            </p>
+                          )}
+                          {order.deliveryDate && (
+                            <p className="text-xs text-green-600">
+                              Geliefert: {new Date(order.deliveryDate).toLocaleDateString('de-DE')}
+                            </p>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-4">
                         <p className="font-medium text-gray-900">{order.businessName}</p>
@@ -681,7 +726,25 @@ function OrdersOverview() {
                             </div>
                           </td>
                           <td className="px-4 py-4">
-                            <StatusBadge status={order.status} />
+                            <div className="space-y-2">
+                              <Select
+                                value={order.status}
+                                onValueChange={(newStatus) => {
+                                  changeStatusMutation.mutate({ id: order.id, status: newStatus });
+                                }}
+                                disabled={changeStatusMutation.isPending}
+                              >
+                                <SelectTrigger className="w-40">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="bestellen">Zu bestellen</SelectItem>
+                                  <SelectItem value="bestellt">Bestellt</SelectItem>
+                                  <SelectItem value="eingetroffen">Eingetroffen</SelectItem>
+                                  <SelectItem value="erledigt">Erledigt</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
                           </td>
                           <td className="px-4 py-4">
                             <p className="font-medium text-gray-900">{order.businessName}</p>
