@@ -42,12 +42,12 @@ export function registerMultiShopAdminRoutes(app: Express) {
         });
       }
 
-      // Offene Reparaturen zählen (nur aus authorisierten Shops)
+      // Offene Reparaturen zählen (nur aus authorisierten Shops) - alle außer abgeholt
       const [openRepairsResult] = await db
         .select({ count: count() })
         .from(repairs)
         .where(and(
-          eq(repairs.status, "in_progress"),
+          sql`${repairs.status} != 'abgeholt'`,
           inArray(repairs.shopId, authorizedShopIds)
         ));
 
@@ -56,7 +56,7 @@ export function registerMultiShopAdminRoutes(app: Express) {
         .select({ count: count() })
         .from(repairs)
         .where(and(
-          eq(repairs.status, "completed"),
+          eq(repairs.status, "abgeholt"),
           inArray(repairs.shopId, authorizedShopIds)
         ));
 
@@ -176,13 +176,13 @@ export function registerMultiShopAdminRoutes(app: Express) {
       // Für jeden Shop Statistiken berechnen
       const shopsWithStats = await Promise.all(
         shopsData.map(async (shop) => {
-          // Offene Reparaturen für diesen Shop
+          // Offene Reparaturen für diesen Shop (alle außer abgeholt)
           const [openRepairs] = await db
             .select({ count: count() })
             .from(repairs)
             .where(and(
               eq(repairs.shopId, shop.shopId),
-              eq(repairs.status, "in_progress")
+              sql`${repairs.status} != 'abgeholt'`
             ));
 
           // Abgeschlossene Reparaturen für diesen Shop
@@ -191,7 +191,7 @@ export function registerMultiShopAdminRoutes(app: Express) {
             .from(repairs)
             .where(and(
               eq(repairs.shopId, shop.shopId),
-              eq(repairs.status, "completed")
+              eq(repairs.status, "abgeholt")
             ));
 
           // Mitarbeiter für diesen Shop
