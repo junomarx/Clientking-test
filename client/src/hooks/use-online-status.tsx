@@ -42,10 +42,10 @@ export function OnlineStatusProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      // WebSocket-URL dynamisch erstellen
+      // Vereinfachte WebSocket-URL (ohne Token)
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const host = window.location.host;
-      const wsUrl = `${protocol}//${host}/ws/status`;
+      const wsUrl = `${protocol}//${host}/ws`;
       
       console.log('Verbinde WebSocket für Online-Status:', wsUrl);
       
