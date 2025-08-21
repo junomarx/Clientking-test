@@ -425,4 +425,108 @@ export function registerMultiShopRoutes(app: Express) {
       });
     }
   });
+
+  // Shop-Owner gewährt Multi-Shop-Admin Zugriff
+  app.post("/api/multi-shop/grant-access", async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: "Nicht angemeldet" });
+      }
+
+      const { email } = req.body;
+      if (!email) {
+        return res.status(400).json({ error: "E-Mail-Adresse ist erforderlich" });
+      }
+
+      const user = await storage.getUser(req.user.id);
+      if (!user) {
+        return res.status(404).json({ error: "Benutzer nicht gefunden" });
+      }
+
+      // Prüfen ob User die Berechtigung hat
+      if (!user.canAssignMultiShopAdmins) {
+        return res.status(403).json({ error: "Keine Berechtigung zum Zuweisen von Multi-Shop-Admins" });
+      }
+
+      // Multi-Shop-Admin per E-Mail finden
+      const multiShopAdmin = await storage.getUserByEmail(email);
+      if (!multiShopAdmin) {
+        return res.status(404).json({ error: "Multi-Shop-Admin mit dieser E-Mail-Adresse nicht gefunden" });
+      }
+
+      if (!multiShopAdmin.isMultiShopAdmin) {
+        return res.status(400).json({ error: "Benutzer ist kein Multi-Shop-Admin" });
+      }
+
+      // Prüfen ob Zugriff bereits gewährt wurde
+      const existingAccess = await db.select()
+        .from(userShopAccess)
+        .where(and(
+          eq(userShopAccess.userId, multiShopAdmin.id),
+          eq(userShopAccess.shopId, user.shopId!)
+        ));
+
+      if (existingAccess.length > 0) {
+        return res.status(400).json({ error: "Zugriff wurde bereits gewährt" });
+      }
+
+      // Neuen Shop-Zugriff erstellen
+      const [newAccess] = await db.insert(userShopAccess).values({
+        userId: multiShopAdmin.id,
+        shopId: user.shopId!,
+        accessLevel: 'admin',
+        grantedBy: user.id,
+        grantedAt: new Date()
+      }).returning();
+
+      console.log(`✅ Shop-Owner ${user.username} hat Multi-Shop-Admin ${multiShopAdmin.email} Zugriff auf Shop ${user.shopId} gewährt`);
+
+      res.status(201).json({
+        id: newAccess.id,
+        multiShopAdminEmail: multiShopAdmin.email,
+        shopId: user.shopId,
+        grantedAt: newAccess.grantedAt,
+        message: 'Zugriff erfolgreich gewährt'
+      });
+    } catch (error: any) {
+      console.error('Fehler beim Gewähren des Zugriffs:', error);
+      res.status(500).json({ error: 'Interner Serverfehler beim Gewähren des Zugriffs' });
+    }
+  });
+
+  // Gewährte Zugänge für Shop-Owner abrufen
+  app.get("/api/multi-shop/granted-accesses", async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: "Nicht angemeldet" });
+      }
+
+      const user = await storage.getUser(req.user.id);
+      if (!user || !user.shopId) {
+        return res.status(404).json({ error: "Benutzer oder Shop nicht gefunden" });
+      }
+
+      // Alle gewährten Zugänge für diesen Shop abrufen
+      const grantedAccesses = await db.select({
+        id: userShopAccess.id,
+        userId: userShopAccess.userId,
+        shopId: userShopAccess.shopId,
+        accessLevel: userShopAccess.accessLevel,
+        grantedAt: userShopAccess.grantedAt,
+        multiShopAdminEmail: users.email,
+        multiShopAdminUsername: users.username
+      })
+      .from(userShopAccess)
+      .leftJoin(users, eq(userShopAccess.userId, users.id))
+      .where(and(
+        eq(userShopAccess.shopId, user.shopId),
+        eq(userShopAccess.grantedBy, user.id)
+      ));
+
+      res.json(grantedAccesses);
+    } catch (error: any) {
+      console.error('Fehler beim Abrufen der gewährten Zugänge:', error);
+      res.status(500).json({ error: 'Interner Serverfehler beim Abrufen der gewährten Zugänge' });
+    }
+  });
 }

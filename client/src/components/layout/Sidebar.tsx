@@ -250,6 +250,21 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
           </Button>
         )}
         
+        {/* Multi-Shop-Admin Verwaltung - nur für Shop-Owner mit Berechtigung */}
+        {user && user.role === 'owner' && user.canAssignMultiShopAdmins && (
+          <Button 
+            variant={activeTab === 'multi-shop-admin' ? 'default' : 'ghost'}
+            className="w-full justify-start"
+            onClick={() => {
+              onTabChange('multi-shop-admin');
+              if (isMobile) closeMenu();
+            }}
+          >
+            <Building2 className="h-5 w-5 mr-2" />
+            Multishop-Admin
+          </Button>
+        )}
+        
         {/* Kiosk-Modus Aktivierung */}
         <div className="pt-2 border-t">
           <KioskActivationButton />
@@ -300,19 +315,7 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
               </Button>
             )}
             
-            {/* Multi-Shop-Bereich-Button für Shop-Owner mit Berechtigung */}
-            {user && user.canAssignMultiShopAdmins && (
-              <Button 
-                variant="outline" 
-                className="w-full justify-start mb-2"
-                asChild
-              >
-                <Link href="/multi-shop">
-                  <Building2 className="h-5 w-5 mr-2 text-purple-600" />
-                  <span className="text-purple-600">Multi-Shop</span>
-                </Link>
-              </Button>
-            )}
+
             <Button 
               variant="outline" 
               className="w-full justify-start"
