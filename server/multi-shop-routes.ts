@@ -56,7 +56,7 @@ export function registerMultiShopRoutes(app: Express) {
       // Für jeden Shop zusätzliche Metriken laden
       const shopsWithMetrics = await Promise.all(accessibleShops.map(async (shop) => {
         try {
-          const metrics = await storage.getShopMetrics(shop.shopId);
+          const metrics = await storage.getShopMetrics(shop.id);
           return {
             ...shop,
             metrics: metrics || {
@@ -70,7 +70,7 @@ export function registerMultiShopRoutes(app: Express) {
             }
           };
         } catch (error) {
-          console.error(`Fehler beim Laden der Metriken für Shop ${shop.shopId}:`, error);
+          console.error(`Fehler beim Laden der Metriken für Shop ${shop.id}:`, error);
           return {
             ...shop,
             metrics: {
@@ -142,7 +142,7 @@ export function registerMultiShopRoutes(app: Express) {
   app.get("/api/multi-shop/admins", isSuperadmin, async (req: Request, res: Response) => {
     try {
       console.log('DEBUG: Multi-Shop Admins Request - User:', req.user?.username, 'ID:', req.user?.id);
-      const multiShopAdmins = await storage.getMultiShopAdmins();
+      const multiShopAdmins = await storage.getAllMultiShopAdmins();
       console.log('DEBUG: Multi-Shop Admins Result:', multiShopAdmins.length, 'admins found');
       res.json(multiShopAdmins);
     } catch (error) {
