@@ -239,7 +239,7 @@ export function UserDetailsDialog({ open, onClose, userId, onEdit, onToggleActiv
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-semibold flex items-center gap-2">
                       <Users className="h-4 w-4 text-yellow-600" />
-                      Mitarbeiter ({employees.length})
+                      Mitarbeiter & Kiosk-Geräte ({employees.length})
                     </h3>
                     <MaxEmployeesInput 
                       shopId={user.shopId} 
@@ -260,7 +260,9 @@ export function UserDetailsDialog({ open, onClose, userId, onEdit, onToggleActiv
                             <div>
                               <div className="text-sm font-medium">
                                 {employee.username || (
-                                  <span className="text-muted-foreground italic">Mitarbeiter</span>
+                                  <span className="text-muted-foreground italic">
+                                    {employee.role === 'kiosk' ? 'Kiosk-Gerät' : 'Mitarbeiter'}
+                                  </span>
                                 )}
                               </div>
                               <div className="text-xs text-gray-500">{employee.email}</div>
@@ -281,7 +283,7 @@ export function UserDetailsDialog({ open, onClose, userId, onEdit, onToggleActiv
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-500">Keine Mitarbeiter registriert</p>
+                    <p className="text-sm text-gray-500">Keine Mitarbeiter oder Kiosk-Geräte registriert</p>
                   )}
                 </div>
               )}
