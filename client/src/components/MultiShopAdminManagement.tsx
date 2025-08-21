@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { UserPlus, Mail, Shield, Info } from 'lucide-react';
+import { UserPlus, Mail, Shield, Info, Check, Calendar, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import {
@@ -24,6 +24,20 @@ export default function MultiShopAdminManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Gewährte Zugriffe abrufen
+  const { data: grantedAccess = [], isLoading } = useQuery({
+    queryKey: ['/api/multi-shop/granted-access'],
+    queryFn: async () => {
+      const response = await fetch('/api/multi-shop/granted-access', {
+        credentials: 'include'
+      });
+      if (!response.ok) {
+        throw new Error('Fehler beim Abrufen der gewährten Zugriffe');
+      }
+      return response.json();
+    }
+  });
+
   // Multi-Shop-Admin Zugriff gewähren per E-Mail
   const grantAccessMutation = useMutation({
     mutationFn: async (email: string) => {
@@ -32,6 +46,7 @@ export default function MultiShopAdminManagement() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/multi-shop'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/multi-shop/granted-access'] });
       setIsGrantAccessDialogOpen(false);
       setAdminEmail('');
       toast({
@@ -146,6 +161,57 @@ export default function MultiShopAdminManagement() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Gewährte Zugriffe */}
+      {grantedAccess.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Check className="h-5 w-5 text-green-600" />
+              Gewährte Zugriffe
+            </CardTitle>
+            <CardDescription>
+              Multi-Shop-Admins mit Zugriff auf Ihre Shop-Daten (DSGVO-konform anonymisiert).
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {grantedAccess.map((access: any) => (
+                <div key={access.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center">
+                      <User className="h-4 w-4 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium">{access.adminUsername}</p>
+                      <p className="text-sm text-muted-foreground">{access.adminEmailHint}</p>
+                    </div>
+                  </div>
+                  <div className="text-right text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      {new Date(access.grantedAt).toLocaleDateString('de-DE')}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Hinweis bei keinen gewährten Zugriffen */}
+      {grantedAccess.length === 0 && !isLoading && (
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-8">
+            <Shield className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="font-medium text-center mb-2">Keine gewährten Zugriffe</h3>
+            <p className="text-sm text-muted-foreground text-center max-w-sm">
+              Sie haben noch keinem Multi-Shop-Admin Zugriff auf Ihre Shop-Daten gewährt.
+            </p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

@@ -94,4 +94,56 @@ export function registerMultiShopRoutes(app: Express) {
     }
   });
 
+  // Gewährte Multi-Shop-Admin-Zugriffe abrufen (DSGVO-konform)
+  app.get("/api/multi-shop/granted-access", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentifizierung erforderlich" });
+      }
+
+      const user = req.user;
+
+      // Nur Shop-Owner mit Multi-Shop-Admin-Berechtigung
+      if (!user.canAssignMultiShopAdmins) {
+        return res.status(403).json({ 
+          message: "Keine Berechtigung für Multi-Shop-Admin-Verwaltung" 
+        });
+      }
+
+      // Gewährte Zugriffe für diesen Shop abrufen
+      const grantedAccess = await db.select({
+        id: multiShopPermissions.id,
+        adminUsername: users.username,
+        adminEmail: users.email,
+        grantedAt: multiShopPermissions.grantedAt,
+        granted: multiShopPermissions.granted
+      })
+      .from(multiShopPermissions)
+      .innerJoin(users, eq(multiShopPermissions.multiShopAdminId, users.id))
+      .where(
+        and(
+          eq(multiShopPermissions.shopId, user.shopId),
+          eq(multiShopPermissions.granted, true)
+        )
+      );
+
+      console.log(`[MULTI-SHOP] Shop ${user.shopId} hat ${grantedAccess.length} gewährte Zugriffe`);
+
+      res.json(grantedAccess.map(access => ({
+        id: access.id,
+        adminUsername: access.adminUsername,
+        // E-Mail wird aus DSGVO-Gründen nicht vollständig angezeigt
+        adminEmailHint: access.adminEmail ? `${access.adminEmail.substring(0, 3)}***@${access.adminEmail.split('@')[1]}` : null,
+        grantedAt: access.grantedAt,
+        granted: access.granted
+      })));
+    } catch (error: any) {
+      console.error('Fehler beim Abrufen der gewährten Zugriffe:', error);
+      res.status(500).json({ 
+        message: 'Interner Serverfehler',
+        error: error.message 
+      });
+    }
+  });
+
 }
