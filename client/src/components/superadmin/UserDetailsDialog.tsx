@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import {
   User,
@@ -46,10 +47,12 @@ interface UserWithBusinessSettings {
   isActive: boolean;
   isAdmin: boolean;
   isSuperadmin: boolean;
+  canAssignMultiShopAdmins: boolean;
   pricingPlan: string | null;
   shopId: number | null;
   createdAt: string;
   trialExpiresAt: string | null;
+  lastLoginAt: string | null;
   businessSettings?: {
     businessName: string;
     ownerFirstName: string;
@@ -81,9 +84,36 @@ function getUserStatusBadge(isActive: boolean, isAdmin: boolean, isSuperadmin: b
 }
 
 export function UserDetailsDialog({ open, onClose, userId, onEdit, onToggleActive }: UserDetailsDialogProps) {
+  const { toast } = useToast();
+  
   const { data: user, isLoading, error } = useQuery<UserWithBusinessSettings>({
     queryKey: [`/api/superadmin/users/${userId}`],
     enabled: open && !!userId,
+  });
+
+  // Mutation für Multi-Shop-Berechtigung Update
+  const updateMultiShopPermissionMutation = useMutation({
+    mutationFn: async ({ userId, canAssignMultiShopAdmins }: { userId: number; canAssignMultiShopAdmins: boolean }) => {
+      const response = await apiRequest('PATCH', `/api/superadmin/users/${userId}/multishop-permission`, {
+        canAssignMultiShopAdmins
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Berechtigung aktualisiert",
+        description: "Multi-Shop-Berechtigung wurde erfolgreich geändert",
+      });
+      // Cache invalidieren um neue Daten zu laden
+      queryClient.invalidateQueries({ queryKey: [`/api/superadmin/users/${userId}`] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Fehler",
+        description: error.message || "Fehler beim Aktualisieren der Multi-Shop-Berechtigung",
+        variant: "destructive",
+      });
+    },
   });
 
   const { data: businessSettings } = useQuery<any>({
@@ -335,6 +365,38 @@ export function UserDetailsDialog({ open, onClose, userId, onEdit, onToggleActiv
                 <p className="text-sm text-gray-500">Keine Geschäftsinformationen verfügbar</p>
               )}
             </div>
+
+            {/* Multi-Shop-Berechtigung (nur für Shop-Owner, nicht für Kiosk/Employee) */}
+            {user.shopId && !user.isAdmin && !user.isSuperadmin && (
+              <div className="bg-purple-50 dark:bg-purple-950 p-4 rounded-lg">
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-purple-600" />
+                  Multi-Shop Berechtigung
+                </h3>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="canAssignMultiShopAdmins"
+                    checked={user.canAssignMultiShopAdmins || false}
+                    onCheckedChange={(checked) => {
+                      updateMultiShopPermissionMutation.mutate({
+                        userId: user.id,
+                        canAssignMultiShopAdmins: !!checked
+                      });
+                    }}
+                    disabled={updateMultiShopPermissionMutation.isPending}
+                  />
+                  <label 
+                    htmlFor="canAssignMultiShopAdmins" 
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Kann Multi-Shop-Admins zuweisen
+                  </label>
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  Erlaubt diesem Shop-Owner, Multi-Shop-Admins zuzuweisen und damit externen Administratoren Zugriff zu gewähren.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Action Buttons */}

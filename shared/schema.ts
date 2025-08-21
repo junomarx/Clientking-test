@@ -217,6 +217,7 @@ export const users = pgTable("users", {
 
   isSuperadmin: boolean("is_superadmin").default(false).notNull(), // Superadmin-Rechte (kann alle Shops verwalten)
   isMultiShopAdmin: boolean("is_multi_shop_admin").default(false).notNull(), // Multi-Shop Admin-Rechte (kann mehrere Shops verwalten)
+  canAssignMultiShopAdmins: boolean("can_assign_multi_shop_admins").default(false).notNull(), // Shop-Owner kann Multi-Shop-Admins zuweisen (von Superadmin freigeschaltet)
   
   // Mitarbeiter-System
   role: text("role").default("owner").notNull(), // "owner", "employee", oder "kiosk"
