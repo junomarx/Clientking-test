@@ -22,7 +22,7 @@ import { SubscriptionSettingsTab } from '@/components/settings/SubscriptionSetti
 import { UserSettingsTab } from '@/components/settings/UserSettingsTab';
 import EmployeesPage from '@/pages/employees-page';
 import { LoanerDevicesTab } from '@/components/loaner-devices/LoanerDevicesTab';
-import { MultiShopAdminManagement } from '@/components/MultiShopAdminManagement';
+import MultiShopAdminManagement from '@/components/MultiShopAdminManagement';
 
 type Tab = 'dashboard' | 'repairs' | 'orders' | 'customers' | 'statistics' | 'cost-estimates' | 'loaner-devices' |
           'business-settings' | 'email-settings' | 'print-settings' | 'subscription-settings' | 'user-settings' | 'employees' | 'multi-shop-admin';

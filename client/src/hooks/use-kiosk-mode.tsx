@@ -1,6 +1,7 @@
 import { createContext, ReactNode, useContext, useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { useOnlineStatus } from "@/hooks/use-online-status";
+// Temporär deaktiviert
+// import { useOnlineStatus } from "@/hooks/use-online-status";
 
 interface KioskModeContextType {
   isKioskMode: boolean;
@@ -54,7 +55,10 @@ export function KioskModeProvider({ children }: { children: ReactNode }) {
   }, []);
   const [signatureRequest, setSignatureRequest] = useState<SignatureRequest | null>(null);
   const { user } = useAuth();
-  const { wsStatus, sendMessage } = useOnlineStatus();
+  // Temporär deaktiviert
+  // const { wsStatus, sendMessage } = useOnlineStatus();
+  const wsStatus = 'disconnected';
+  const sendMessage = () => {};
 
   // WebSocket-Listener für eingehende Unterschrifts-Anfragen über das Online-Status-System
   useEffect(() => {
