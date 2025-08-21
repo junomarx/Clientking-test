@@ -17,6 +17,7 @@ import {
   Shield,
   PlusCircle,
   Building,
+  Building2,
   Mail,
   Printer,
   Package,
@@ -271,16 +272,16 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
             <NavItems />
           </nav>
           <div className="px-2 mt-6 mb-4">
-            {/* Admin-Bereich-Button */}
-            {user && user.isAdmin && (
+            {/* Multi-Shop-Admin-Bereich-Button */}
+            {user && user.isMultiShopAdmin && (
               <Button 
                 variant="outline" 
                 className="w-full justify-start mb-2"
                 asChild
               >
-                <Link href="/admin">
-                  <Shield className="h-5 w-5 mr-2" />
-                  Admin-Bereich
+                <Link href="/multi-shop-admin">
+                  <Shield className="h-5 w-5 mr-2 text-blue-500" />
+                  <span className="text-blue-500">Multi-Shop Admin</span>
                 </Link>
               </Button>
             )}
@@ -295,6 +296,20 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
                 <Link href="/superadmin">
                   <Shield className="h-5 w-5 mr-2 text-red-500" />
                   <span className="text-red-500">Superadmin</span>
+                </Link>
+              </Button>
+            )}
+            
+            {/* Multi-Shop-Bereich-Button für Shop-Owner mit Berechtigung */}
+            {user && user.canAssignMultiShopAdmins && (
+              <Button 
+                variant="outline" 
+                className="w-full justify-start mb-2"
+                asChild
+              >
+                <Link href="/multi-shop">
+                  <Building2 className="h-5 w-5 mr-2 text-purple-600" />
+                  <span className="text-purple-600">Multi-Shop</span>
                 </Link>
               </Button>
             )}
@@ -335,16 +350,30 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
             </nav>
             <Separator className="my-4" />
             <div className="space-y-2 px-1">
-              {/* Admin-Bereich-Button */}
-              {user && user.isAdmin && (
+              {/* Multi-Shop-Admin-Bereich-Button für Mobile */}
+              {user && user.isMultiShopAdmin && (
                 <Button 
                   variant="outline" 
                   className="w-full justify-start mb-2"
                   asChild
                 >
-                  <Link href="/admin">
-                    <Shield className="h-5 w-5 mr-2" />
-                    Admin-Bereich
+                  <Link href="/multi-shop-admin">
+                    <Shield className="h-5 w-5 mr-2 text-blue-500" />
+                    <span className="text-blue-500">Multi-Shop Admin</span>
+                  </Link>
+                </Button>
+              )}
+              
+              {/* Multi-Shop-Bereich-Button für Mobile */}
+              {user && user.canAssignMultiShopAdmins && (
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start mb-2"
+                  asChild
+                >
+                  <Link href="/multi-shop">
+                    <Building2 className="h-5 w-5 mr-2 text-purple-600" />
+                    <span className="text-purple-600">Multi-Shop</span>
                   </Link>
                 </Button>
               )}
