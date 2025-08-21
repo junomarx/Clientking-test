@@ -415,9 +415,10 @@ function OrdersOverview() {
     const matchesStatus = statusFilter === "all" || order.status === statusFilter;
     const matchesSearch = !searchTerm || 
       order.partName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.deviceInfo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.orderCode.toLowerCase().includes(searchTerm.toLowerCase());
+      order.orderCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (order.supplier && order.supplier.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (order.businessName && order.businessName.toLowerCase().includes(searchTerm.toLowerCase()));
     return matchesStatus && matchesSearch;
   });
 
@@ -425,9 +426,10 @@ function OrdersOverview() {
   const filteredArchivedOrders = archivedOrders.filter(order => {
     const matchesSearch = !searchTerm || 
       order.partName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.deviceInfo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.orderCode.toLowerCase().includes(searchTerm.toLowerCase());
+      order.orderCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (order.supplier && order.supplier.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (order.businessName && order.businessName.toLowerCase().includes(searchTerm.toLowerCase()));
     return matchesSearch;
   });
 
@@ -509,7 +511,7 @@ function OrdersOverview() {
             <div className="flex-1">
               <input
                 type="text"
-                placeholder="Suchen nach Ersatzteil, Kunde, Gerät oder Order-Code..."
+                placeholder="Suchen nach Ersatzteil, Hersteller, Modell, Shop oder Order-Code..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -557,7 +559,7 @@ function OrdersOverview() {
                       Ersatzteil
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Kunde & Gerät
+                      Hersteller & Modell
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
@@ -568,85 +570,55 @@ function OrdersOverview() {
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Order-Code
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Aktionen
-                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredOrders.map((order) => (
                     <tr key={order.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-4">
+                      <td className="px-4 py-3">
                         <div>
                           <p className="font-medium text-gray-900">{order.partName}</p>
                           <p className="text-sm text-gray-500">ID: {order.id}</p>
-                          {order.notes && (
-                            <p className="text-sm text-blue-600 mt-1">{order.notes}</p>
+                          {order.supplier && (
+                            <p className="text-sm text-blue-600">{order.supplier}</p>
                           )}
                         </div>
                       </td>
-                      <td className="px-4 py-4">
+                      <td className="px-4 py-3">
                         <div>
-                          <p className="font-medium text-gray-900">{order.customerName}</p>
-                          <p className="text-sm text-gray-500">{order.deviceInfo}</p>
-                          <p className="text-sm text-gray-500">{order.repairIssue}</p>
-                          {order.customerPhone && (
-                            <p className="text-sm text-blue-600">{order.customerPhone}</p>
+                          <p className="font-medium text-gray-900">{order.deviceInfo}</p>
+                          {order.notes && (
+                            <p className="text-sm text-gray-500 mt-1">{order.notes}</p>
                           )}
                         </div>
                       </td>
-                      <td className="px-4 py-4">
-                        <div className="space-y-2">
-                          <Select
-                            value={order.status}
-                            onValueChange={(newStatus) => {
-                              changeStatusMutation.mutate({ id: order.id, status: newStatus });
-                            }}
-                            disabled={changeStatusMutation.isPending}
-                          >
-                            <SelectTrigger className="w-40">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="bestellen">Zu bestellen</SelectItem>
-                              <SelectItem value="bestellt">Bestellt</SelectItem>
-                              <SelectItem value="eingetroffen">Eingetroffen</SelectItem>
-                              <SelectItem value="erledigt">Erledigt</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          {order.orderDate && (
-                            <p className="text-xs text-gray-500">
-                              Bestellt: {new Date(order.orderDate).toLocaleDateString('de-DE')}
-                            </p>
-                          )}
-                          {order.deliveryDate && (
-                            <p className="text-xs text-green-600">
-                              Geliefert: {new Date(order.deliveryDate).toLocaleDateString('de-DE')}
-                            </p>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-4 py-4">
-                        <p className="font-medium text-gray-900">{order.businessName}</p>
-                        <p className="text-sm text-gray-500">Shop ID: {order.shopId}</p>
-                      </td>
-                      <td className="px-4 py-4">
-                        <p className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
-                          {order.orderCode}
-                        </p>
-                      </td>
-                      <td className="px-4 py-4">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            // Details anzeigen
-                            console.log('Zeige Details für Ersatzteil:', order);
+                      <td className="px-4 py-3">
+                        <Select
+                          value={order.status}
+                          onValueChange={(newStatus) => {
+                            changeStatusMutation.mutate({ id: order.id, status: newStatus });
                           }}
+                          disabled={changeStatusMutation.isPending}
                         >
-                          <Eye className="h-4 w-4 mr-1" />
-                          Details
-                        </Button>
+                          <SelectTrigger className="w-36">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="bestellen">Zu bestellen</SelectItem>
+                            <SelectItem value="bestellt">Bestellt</SelectItem>
+                            <SelectItem value="eingetroffen">Eingetroffen</SelectItem>
+                            <SelectItem value="erledigt">Erledigt</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div>
+                          <p className="font-medium text-gray-900">{order.businessName}</p>
+                          <p className="text-sm text-gray-500">Shop ID: {order.shopId}</p>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="font-mono text-sm text-gray-900">{order.orderCode}</span>
                       </td>
                     </tr>
                   ))}
@@ -679,7 +651,7 @@ function OrdersOverview() {
                           Ersatzteil
                         </th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Kunde & Gerät
+                          Hersteller & Modell
                         </th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Status
@@ -698,66 +670,54 @@ function OrdersOverview() {
                     <tbody className="bg-white divide-y divide-gray-200">
                       {filteredArchivedOrders.map((order) => (
                         <tr key={order.id} className="hover:bg-gray-50">
-                          <td className="px-4 py-4">
+                          <td className="px-4 py-3">
                             <div>
                               <p className="font-medium text-gray-900">{order.partName}</p>
+                              <p className="text-sm text-gray-500">ID: {order.id}</p>
                               {order.supplier && (
-                                <p className="text-sm text-gray-500">
-                                  Lieferant: {order.supplier}
-                                </p>
-                              )}
-                              {order.partNumber && (
-                                <p className="text-xs text-gray-400">
-                                  Teil-Nr: {order.partNumber}
-                                </p>
-                              )}
-                              {order.notes && (
-                                <p className="text-xs text-gray-500 mt-1">{order.notes}</p>
+                                <p className="text-sm text-blue-600">{order.supplier}</p>
                               )}
                             </div>
                           </td>
-                          <td className="px-4 py-4">
+                          <td className="px-4 py-3">
                             <div>
-                              <p className="font-medium text-gray-900">{order.customerName}</p>
-                              {order.customerPhone && (
-                                <p className="text-sm text-gray-500">{order.customerPhone}</p>
+                              <p className="font-medium text-gray-900">{order.deviceInfo}</p>
+                              {order.notes && (
+                                <p className="text-sm text-gray-500 mt-1">{order.notes}</p>
                               )}
-                              <p className="text-sm text-gray-500 mt-1">{order.deviceInfo}</p>
                             </div>
                           </td>
-                          <td className="px-4 py-4">
-                            <div className="space-y-2">
-                              <Select
-                                value={order.status}
-                                onValueChange={(newStatus) => {
-                                  changeStatusMutation.mutate({ id: order.id, status: newStatus });
-                                }}
-                                disabled={changeStatusMutation.isPending}
-                              >
-                                <SelectTrigger className="w-40">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="bestellen">Zu bestellen</SelectItem>
-                                  <SelectItem value="bestellt">Bestellt</SelectItem>
-                                  <SelectItem value="eingetroffen">Eingetroffen</SelectItem>
-                                  <SelectItem value="erledigt">Erledigt</SelectItem>
-                                </SelectContent>
-                              </Select>
+                          <td className="px-4 py-3">
+                            <Select
+                              value={order.status}
+                              onValueChange={(newStatus) => {
+                                changeStatusMutation.mutate({ id: order.id, status: newStatus });
+                              }}
+                              disabled={changeStatusMutation.isPending}
+                            >
+                              <SelectTrigger className="w-36">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="bestellen">Zu bestellen</SelectItem>
+                                <SelectItem value="bestellt">Bestellt</SelectItem>
+                                <SelectItem value="eingetroffen">Eingetroffen</SelectItem>
+                                <SelectItem value="erledigt">Erledigt</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div>
+                              <p className="font-medium text-gray-900">{order.businessName}</p>
+                              <p className="text-sm text-gray-500">Shop ID: {order.shopId}</p>
                             </div>
                           </td>
-                          <td className="px-4 py-4">
-                            <p className="font-medium text-gray-900">{order.businessName}</p>
-                            <p className="text-sm text-gray-500">Shop ID: {order.shopId}</p>
+                          <td className="px-4 py-3">
+                            <span className="font-mono text-sm text-gray-900">{order.orderCode}</span>
                           </td>
-                          <td className="px-4 py-4">
-                            <p className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
-                              {order.orderCode}
-                            </p>
-                          </td>
-                          <td className="px-4 py-4">
+                          <td className="px-4 py-3">
                             <p className="text-sm text-gray-500">
-                              {new Date(order.updatedAt).toLocaleDateString('de-DE')} {new Date(order.updatedAt).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
+                              {new Date(order.updatedAt).toLocaleDateString('de-DE')}
                             </p>
                           </td>
                         </tr>
