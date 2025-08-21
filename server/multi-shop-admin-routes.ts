@@ -180,7 +180,8 @@ export function registerMultiShopAdminRoutes(app: Express) {
         .where(and(
           eq(users.isActive, true),
           eq(users.isSuperadmin, false),
-          eq(users.isMultiShopAdmin, false)
+          eq(users.isMultiShopAdmin, false),
+          eq(users.role, 'employee') // NUR echte Mitarbeiter, nicht Owner oder Kiosk
         ));
 
       // Für jeden Mitarbeiter Reparatur-Statistiken berechnen

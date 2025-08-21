@@ -16,9 +16,11 @@ import {
   Clock,
   Star,
   Eye,
-  Edit3
+  Edit3,
+  LogOut
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
 
 // Dashboard Statistiken
 function DashboardStats() {
@@ -49,23 +51,7 @@ function DashboardStats() {
   return (
     <div className="space-y-6">
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Gesamtumsatz Monat
-            </CardTitle>
-            <Euro className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-900">
-              € {stats?.totalRevenue?.toLocaleString() || '0'}
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Aktueller Monat
-            </p>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -428,6 +414,11 @@ function LogsOverview() {
 
 export default function MultiShopAdminPage() {
   const [activeTab, setActiveTab] = useState("dashboard");
+  const { logoutMutation } = useAuth();
+
+  const handleLogout = () => {
+    logoutMutation.mutate();
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -438,10 +429,19 @@ export default function MultiShopAdminPage() {
             <h1 className="text-2xl font-bold text-gray-900">Multi-Shop Verwaltung</h1>
             <p className="text-gray-600">Zentrale Übersicht aller Standorte</p>
           </div>
-          <div className="text-right">
+          <div className="flex items-center gap-4">
             <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">
               ClientKing Multi-Shop Admin
             </Badge>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleLogout}
+              className="flex items-center gap-2"
+            >
+              <LogOut className="h-4 w-4" />
+              Abmelden
+            </Button>
           </div>
         </div>
       </div>
