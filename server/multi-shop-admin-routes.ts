@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { eq, sql, and, count, desc, inArray } from "drizzle-orm";
 import { db } from "./db";
-import { users, businessSettings, repairs, customers, userShopAccess } from "@shared/schema";
+import { users, businessSettings, repairs, customers, userShopAccess, spareParts } from "@shared/schema";
 
 export function registerMultiShopAdminRoutes(app: Express) {
   // Multi-Shop Admin Protection Middleware with Header Authentication
@@ -273,49 +273,152 @@ export function registerMultiShopAdminRoutes(app: Express) {
     }
   });
 
-  // Bestellungen/Reparaturen Übersicht
-  app.get("/api/multi-shop/orders", protectMultiShopAdmin, (req, res) => {
-    // Demo-Bestellungen für Shop 1 (ohne DB-Abfragen)
-    const demoOrders = [
-      {
-        id: 1120,
-        customerName: "Max Mustermann",
-        device: "iPhone",
-        model: "iPhone 14 Pro",
-        issue: "Display defekt",
-        status: "eingegangen",
-        totalCost: 250.00,
-        createdAt: "2025-08-21T10:30:00Z",
-        shopId: 1,
-        businessName: "Mac and Phone Doc"
-      },
-      {
-        id: 1119,
-        customerName: "Anna Schmidt",
-        device: "Samsung",
-        model: "Galaxy S23",
-        issue: "Akku tauschen",
-        status: "ersatzteile_besteller",
-        totalCost: 120.00,
-        createdAt: "2025-08-20T14:15:00Z",
-        shopId: 1,
-        businessName: "Mac and Phone Doc"
-      },
-      {
-        id: 1118,
-        customerName: "Peter Weber",
-        device: "iPhone",
-        model: "iPhone 13",
-        issue: "Kamera reparieren",
-        status: "abgeholt",
-        totalCost: 180.00,
-        createdAt: "2025-08-19T09:45:00Z",
-        shopId: 1,
-        businessName: "Mac and Phone Doc"
-      }
-    ];
+  // Ersatzteil-Bestellungen Übersicht (Echtzeitdaten)
+  app.get("/api/multi-shop/orders", protectMultiShopAdmin, async (req, res) => {
+    try {
+      const currentUserId = req.user!.id;
 
-    res.json(demoOrders);
+      // Erst die authorisierten Shop-IDs für diesen Multi-Shop Admin holen
+      const authorizedShops = await db
+        .select({ shopId: userShopAccess.shopId })
+        .from(userShopAccess)
+        .where(and(
+          eq(userShopAccess.userId, currentUserId),
+          eq(userShopAccess.isActive, true)
+        ));
+
+      const authorizedShopIds = authorizedShops.map(shop => shop.shopId);
+
+      if (authorizedShopIds.length === 0) {
+        return res.json([]); // Keine authorisierten Shops = keine Bestellungen
+      }
+
+      // Ersatzteile mit allen relevanten Daten aus authorisierten Shops laden
+      const sparePartOrders = await db
+        .select({
+          id: spareParts.id,
+          partName: spareParts.partName,
+          supplier: spareParts.supplier,
+          cost: spareParts.cost,
+          status: spareParts.status,
+          orderDate: spareParts.orderDate,
+          deliveryDate: spareParts.deliveryDate,
+          notes: spareParts.notes,
+          createdAt: spareParts.createdAt,
+          updatedAt: spareParts.updatedAt,
+          shopId: spareParts.shopId,
+          repairId: spareParts.repairId,
+          // Reparatur-Details
+          orderCode: repairs.orderCode,
+          deviceInfo: sql<string>`${repairs.brand} || ' ' || ${repairs.model}`,
+          repairIssue: repairs.issue,
+          repairStatus: repairs.status,
+          // Kunden-Details
+          customerName: sql<string>`COALESCE(${customers.firstName}, '') || ' ' || COALESCE(${customers.lastName}, '')`,
+          customerPhone: customers.phone,
+          // Shop-Details
+          businessName: businessSettings.businessName
+        })
+        .from(spareParts)
+        .leftJoin(repairs, eq(spareParts.repairId, repairs.id))
+        .leftJoin(customers, eq(repairs.customerId, customers.id))
+        .leftJoin(businessSettings, eq(spareParts.shopId, businessSettings.shopId))
+        .where(and(
+          // Nur aus authorisierten Shops
+          authorizedShopIds.length === 1 ? 
+            eq(spareParts.shopId, authorizedShopIds[0]) :
+            sql`${spareParts.shopId} IN (${authorizedShopIds.join(',')})`
+        ))
+        .orderBy(desc(spareParts.createdAt));
+
+      res.json(sparePartOrders);
+    } catch (error) {
+      console.error("Spare parts orders error:", error);
+      res.status(500).json({ error: "Fehler beim Laden der Ersatzteil-Bestellungen" });
+    }
+  });
+
+  // Ersatzteil-Status aktualisieren (Multi-Shop Admin)
+  app.patch("/api/multi-shop/spare-part/:id", protectMultiShopAdmin, async (req, res) => {
+    try {
+      const sparePartId = parseInt(req.params.id);
+      const { status, orderDate, deliveryDate, notes } = req.body;
+
+      if (!sparePartId || isNaN(sparePartId)) {
+        return res.status(400).json({ error: "Ungültige Ersatzteil-ID" });
+      }
+
+      // Prüfen, ob das Ersatzteil zu einem authorisierten Shop gehört
+      const currentUserId = req.user!.id;
+      const authorizedShops = await db
+        .select({ shopId: userShopAccess.shopId })
+        .from(userShopAccess)
+        .where(and(
+          eq(userShopAccess.userId, currentUserId),
+          eq(userShopAccess.isActive, true)
+        ));
+
+      const authorizedShopIds = authorizedShops.map(shop => shop.shopId);
+
+      // Ersatzteil holen und Shop-Zuordnung prüfen
+      const [existingSparePart] = await db
+        .select({ 
+          id: spareParts.id, 
+          shopId: spareParts.shopId,
+          repairId: spareParts.repairId 
+        })
+        .from(spareParts)
+        .where(eq(spareParts.id, sparePartId));
+
+      if (!existingSparePart) {
+        return res.status(404).json({ error: "Ersatzteil nicht gefunden" });
+      }
+
+      if (!authorizedShopIds.includes(existingSparePart.shopId)) {
+        return res.status(403).json({ error: "Zugriff auf dieses Ersatzteil nicht authorisiert" });
+      }
+
+      // Status aktualisieren
+      const updateData: any = { updatedAt: sql`NOW()` };
+      if (status) updateData.status = status;
+      if (orderDate) updateData.orderDate = new Date(orderDate);
+      if (deliveryDate) updateData.deliveryDate = new Date(deliveryDate);
+      if (notes !== undefined) updateData.notes = notes;
+
+      const [updatedSparePart] = await db
+        .update(spareParts)
+        .set(updateData)
+        .where(eq(spareParts.id, sparePartId))
+        .returning();
+
+      // WebSocket-Update an alle Clients im Shop senden
+      const { getOnlineStatusManager } = await import('./websocket-server');
+      const onlineStatusManager = getOnlineStatusManager();
+      if (onlineStatusManager) {
+        const updateMessage = {
+          type: 'spare-part-updated',
+          payload: {
+            sparePartId: updatedSparePart.id,
+            repairId: existingSparePart.repairId,
+            status: updatedSparePart.status,
+            orderDate: updatedSparePart.orderDate,
+            deliveryDate: updatedSparePart.deliveryDate,
+            notes: updatedSparePart.notes,
+            updatedBy: 'Multi-Shop Admin',
+            timestamp: Date.now()
+          }
+        };
+        
+        // An alle Clients im betroffenen Shop senden
+        onlineStatusManager.broadcastToShop(existingSparePart.shopId, updateMessage);
+        console.log(`📡 Ersatzteil-Update an Shop ${existingSparePart.shopId} gesendet`);
+      }
+
+      res.json(updatedSparePart);
+    } catch (error) {
+      console.error("Spare part update error:", error);
+      res.status(500).json({ error: "Fehler beim Aktualisieren des Ersatzteils" });
+    }
   });
 
   console.log("✅ Multi-Shop Admin routes registered");

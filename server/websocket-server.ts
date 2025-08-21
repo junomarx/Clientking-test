@@ -622,6 +622,33 @@ class OnlineStatusManager {
     return hasValidSocket && isRecentlyActive;
   }
 
+  // Broadcast an alle Clients eines bestimmten Shops
+  async broadcastToShop(shopId: number, message: any): Promise<void> {
+    try {
+      let sentCount = 0;
+      
+      // Iteriere über alle verbundenen Benutzer und prüfe ihre Shop-Zugehörigkeit
+      for (const connectedUser of this.connectedUsers.values()) {
+        if (connectedUser.socket.readyState === 1) {
+          try {
+            // Prüfe Shop-Zugehörigkeit über die Datenbank
+            const user = await storage.getUser(connectedUser.userId);
+            if (user && user.shopId === shopId) {
+              connectedUser.socket.send(JSON.stringify(message));
+              sentCount++;
+            }
+          } catch (error) {
+            console.error(`Fehler beim Senden an User ${connectedUser.userId}:`, error);
+          }
+        }
+      }
+      
+      console.log(`📡 Nachricht an ${sentCount} Clients in Shop ${shopId} gesendet`);
+    } catch (error) {
+      console.error(`Fehler beim Shop-Broadcast für Shop ${shopId}:`, error);
+    }
+  }
+
   // Cleanup-Methode
   shutdown() {
     if (this.heartbeatInterval) {
