@@ -238,47 +238,122 @@ export function registerMultiShopRoutes(app: Express) {
     }
   });
 
-  // Multi-Shop-Admins für einen bestimmten Shop abrufen
-  app.get("/api/multi-shop/admins", async (req: Request, res: Response) => {
+  // Verfügbare Multi-Shop-Admins für Shop-Owner abrufen (zum Zugriff gewähren)
+  app.get("/api/multi-shop/available-admins", async (req: Request, res: Response) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Authentifizierung erforderlich" });
       }
 
       const user = req.user;
-      console.log(`[MULTI-SHOP] Benutzer ${user.username} (${user.id}) fragt Multi-Shop-Admins ab`);
+      console.log(`[MULTI-SHOP] Shop-Owner ${user.username} (${user.id}) fragt verfügbare Multi-Shop-Admins ab`);
 
-      // Nur Shop-Owner mit Multi-Shop-Admin-Berechtigung können Multi-Shop-Admins abrufen
+      // Nur Shop-Owner mit Multi-Shop-Admin-Berechtigung
       if (!user.canAssignMultiShopAdmins) {
         return res.status(403).json({ 
           message: "Keine Berechtigung für Multi-Shop-Admin-Verwaltung" 
         });
       }
 
-      // Multi-Shop-Admins mit Zugriff auf diesen Shop abrufen
-      const multiShopAdmins = await db.select({
+      // Alle Multi-Shop-Admins laden, die noch keinen Zugriff auf diesen Shop haben
+      const allMultiShopAdmins = await db.select({
         id: users.id,
         username: users.username,
         email: users.email,
         isActive: users.isActive,
         createdAt: users.createdAt,
       }).from(users)
-        .innerJoin(multiShopPermissions, eq(multiShopPermissions.userId, users.id))
+        .where(eq(users.isMultiShopAdmin, true));
+
+      // Prüfen, welche bereits Zugriff haben
+      const existingPermissions = await db.select({
+        userId: multiShopPermissions.userId
+      }).from(multiShopPermissions)
         .where(
           and(
-            eq(users.isMultiShopAdmin, true),
             eq(multiShopPermissions.shopId, user.shopId),
             eq(multiShopPermissions.status, 'granted')
           )
         );
 
-      console.log(`[MULTI-SHOP] ${multiShopAdmins.length} Multi-Shop-Admins für Shop ${user.shopId} gefunden`);
+      const existingUserIds = new Set(existingPermissions.map(p => p.userId));
+      const availableAdmins = allMultiShopAdmins.filter(admin => !existingUserIds.has(admin.id));
+
+      console.log(`[MULTI-SHOP] ${availableAdmins.length} verfügbare Multi-Shop-Admins für Shop ${user.shopId}`);
       
-      res.json(multiShopAdmins);
+      res.json(availableAdmins);
     } catch (error: any) {
-      console.error('Fehler beim Abrufen der Multi-Shop-Admins:', error);
+      console.error('Fehler beim Abrufen der verfügbaren Multi-Shop-Admins:', error);
       res.status(500).json({ 
-        message: 'Interner Serverfehler beim Abrufen der Multi-Shop-Admins',
+        message: 'Interner Serverfehler',
+        error: error.message 
+      });
+    }
+  });
+
+  // Multi-Shop-Admin Zugriff gewähren
+  app.post("/api/multi-shop/grant-access", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentifizierung erforderlich" });
+      }
+
+      const user = req.user;
+      const { adminId } = req.body;
+
+      if (!user.canAssignMultiShopAdmins) {
+        return res.status(403).json({ 
+          message: "Keine Berechtigung für Multi-Shop-Admin-Verwaltung" 
+        });
+      }
+
+      if (!adminId) {
+        return res.status(400).json({ message: "Admin-ID ist erforderlich" });
+      }
+
+      // Prüfen ob der Admin existiert und Multi-Shop-Admin ist
+      const admin = await db.select().from(users).where(eq(users.id, adminId)).limit(1);
+      if (admin.length === 0 || !admin[0].isMultiShopAdmin) {
+        return res.status(404).json({ message: "Multi-Shop-Admin nicht gefunden" });
+      }
+
+      // Prüfen ob bereits Zugriff besteht
+      const existingPermission = await db.select()
+        .from(multiShopPermissions)
+        .where(
+          and(
+            eq(multiShopPermissions.userId, adminId),
+            eq(multiShopPermissions.shopId, user.shopId)
+          )
+        ).limit(1);
+
+      if (existingPermission.length > 0) {
+        return res.status(409).json({ message: "Zugriff bereits gewährt" });
+      }
+
+      // Zugriff gewähren
+      await db.insert(multiShopPermissions).values({
+        userId: adminId,
+        shopId: user.shopId,
+        grantedBy: user.id,
+        status: 'granted',
+        grantedAt: new Date(),
+      });
+
+      console.log(`[MULTI-SHOP] Shop-Owner ${user.username} gewährt Admin ${admin[0].username} Zugriff auf Shop ${user.shopId}`);
+      
+      res.json({ 
+        message: 'Zugriff erfolgreich gewährt',
+        admin: {
+          id: admin[0].id,
+          username: admin[0].username,
+          email: admin[0].email
+        }
+      });
+    } catch (error: any) {
+      console.error('Fehler beim Gewähren des Zugriffs:', error);
+      res.status(500).json({ 
+        message: 'Interner Serverfehler',
         error: error.message 
       });
     }
