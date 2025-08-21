@@ -2235,12 +2235,17 @@ export class DatabaseStorage implements IStorage {
       
       console.log(`bulkUpdateAccessoryStatus: Aktualisiere ${accessoryIds.length} Zubehör-Artikel für Benutzer ${userId} (Shop ${user.shopId}) auf Status '${status}'`);
       
-      // AUTO-DELETE: If status is "erledigt", delete instead of update
+      // AUTO-ARCHIVE: If status is "erledigt", archive instead of delete
       if (status === "erledigt") {
-        console.log(`🗑️ SERVER: Auto-deleting ${accessoryIds.length} accessories with status "erledigt"`);
+        console.log(`🗃️ SERVER: Auto-archiving ${accessoryIds.length} accessories with status "erledigt"`);
         
-        const deleteResult = await db
-          .delete(accessories)
+        const archiveResult = await db
+          .update(accessories)
+          .set({ 
+            status: status,
+            archived: true, // Automatische Archivierung
+            updatedAt: new Date()
+          })
           .where(
             and(
               inArray(accessories.id, accessoryIds),
@@ -2248,9 +2253,9 @@ export class DatabaseStorage implements IStorage {
             )
           );
         
-        const deletedCount = deleteResult.rowCount;
-        console.log(`✅ SERVER: Auto-deleted ${deletedCount} accessories with "erledigt" status`);
-        return deletedCount > 0;
+        const archivedCount = archiveResult.rowCount;
+        console.log(`✅ SERVER: Auto-archived ${archivedCount} accessories with "erledigt" status`);
+        return archivedCount > 0;
       }
       
       // Regular status update for non-"erledigt" statuses
@@ -4466,6 +4471,7 @@ export class DatabaseStorage implements IStorage {
         .from(spareParts)
         .where(and(
           eq(spareParts.shopId, shopId),
+          eq(spareParts.archived, false), // Nur nicht-archivierte Ersatzteile anzeigen
           not(eq(spareParts.status, 'erledigt')),
           not(eq(spareParts.status, 'eingetroffen')) // Eingetroffene Ersatzteile aus Bestellungen-Liste ausblenden
         ))
@@ -4509,6 +4515,7 @@ export class DatabaseStorage implements IStorage {
         .innerJoin(repairs, eq(spareParts.repairId, repairs.id))
         .where(and(
           eq(spareParts.shopId, shopId),
+          eq(spareParts.archived, false), // Nur nicht-archivierte Ersatzteile anzeigen
           eq(repairs.status, 'warten_auf_ersatzteile'),
           not(eq(spareParts.status, 'eingetroffen')) // Eingetroffene Ersatzteile aus Bestellungen-Liste ausblenden
         ))
@@ -4877,7 +4884,10 @@ export class DatabaseStorage implements IStorage {
         })
         .from(accessories)
         .leftJoin(customers, eq(accessories.customerId, customers.id))
-        .where(eq(accessories.shopId, shopId))
+        .where(and(
+          eq(accessories.shopId, shopId),
+          eq(accessories.archived, false) // Nur nicht-archivierte Zubehörteile anzeigen
+        ))
         .orderBy(desc(accessories.createdAt));
       
       console.log(`✅ ${accessoryList.length} Zubehör-Bestellungen für Benutzer ${userId} abgerufen`);
@@ -4917,12 +4927,20 @@ export class DatabaseStorage implements IStorage {
       
       const shopId = user.shopId || 1;
       
+      // Automatische Archivierung bei Status "eingetroffen" oder "erledigt"
+      const updateData: any = {
+        ...accessoryData,
+        updatedAt: new Date()
+      };
+      
+      if (accessoryData.status && (accessoryData.status === "eingetroffen" || accessoryData.status === "erledigt")) {
+        updateData.archived = true;
+        console.log(`🗃️ Zubehör ${id} wird automatisch archiviert (Status: ${accessoryData.status})`);
+      }
+
       const [updatedAccessory] = await db
         .update(accessories)
-        .set({
-          ...accessoryData,
-          updatedAt: new Date()
-        })
+        .set(updateData)
         .where(and(
           eq(accessories.id, id),
           eq(accessories.shopId, shopId)

@@ -881,6 +881,7 @@ export const spareParts = pgTable("spare_parts", {
   orderDate: timestamp("order_date"), // Bestelldatum
   deliveryDate: timestamp("delivery_date"), // Lieferdatum
   notes: text("notes"), // Notizen
+  archived: boolean("archived").notNull().default(false), // Archiviert wenn Status "eingetroffen" oder "erledigt"
   userId: integer("user_id").notNull().references(() => users.id),
   shopId: integer("shop_id").notNull().default(1),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -935,6 +936,9 @@ export const accessories = pgTable("accessories", {
   
   // Notizen
   notes: text("notes"),
+  
+  // Archivierung für erledigte Zubehör-Artikel
+  archived: boolean("archived").notNull().default(false),
   
   // Zugehörigkeit zu Benutzer und Shop
   userId: integer("user_id").references(() => users.id),

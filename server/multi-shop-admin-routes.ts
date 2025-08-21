@@ -327,7 +327,9 @@ export function registerMultiShopAdminRoutes(app: Express) {
           // Nur aus authorisierten Shops
           authorizedShopIds.length === 1 ? 
             eq(spareParts.shopId, authorizedShopIds[0]) :
-            sql`${spareParts.shopId} IN (${authorizedShopIds.join(',')})`
+            sql`${spareParts.shopId} IN (${authorizedShopIds.join(',')})`,
+          // Archivierte Ersatzteile ausblenden
+          eq(spareParts.archived, false)
         ))
         .orderBy(desc(spareParts.createdAt));
 
@@ -384,6 +386,12 @@ export function registerMultiShopAdminRoutes(app: Express) {
       if (orderDate) updateData.orderDate = new Date(orderDate);
       if (deliveryDate) updateData.deliveryDate = new Date(deliveryDate);
       if (notes !== undefined) updateData.notes = notes;
+
+      // Automatische Archivierung bei Status "eingetroffen" oder "erledigt"
+      if (status === "eingetroffen" || status === "erledigt") {
+        updateData.archived = true;
+        console.log(`🗃️ Ersatzteil ${sparePartId} wird automatisch archiviert (Status: ${status})`);
+      }
 
       const [updatedSparePart] = await db
         .update(spareParts)
