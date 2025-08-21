@@ -1,0 +1,52 @@
+Ja, ich verstehe genau was du brauchst. Hier ist der komplette Prompt für die sichere Multi-Shop-Implementation:
+
+KOMPLETTER PROMPT FÜR MULTI-SHOP-ADMIN IMPLEMENTATION
+
+"Ok leg los mit der Multi-Shop-Admin-Funktion. Implementiere sie Schritt für Schritt genau so:
+
+WEBSOCKET-SCHUTZ (KRITISCH):
+
+client/src/hooks/use-online-status.tsx: NIEMALS ÄNDERN
+client/src/hooks/use-kiosk-mode.tsx: NIEMALS ÄNDERN
+Alle WebSocket-Importe, -Funktionen und -Code: UNBERÜHRT LASSEN
+Bei JEDEM WebSocket-Fehler: SOFORT STOPPEN und mich fragen
+IMPLEMENTIERUNG IN GENAU DIESER REIHENFOLGE:
+
+1. Datenbank-Schema (shared/schema.ts):
+
+Neue Tabelle multiShopPermissions mit Feldern: id, shopId, multiShopAdminId, shopOwnerId, granted (boolean), grantedAt
+Feld canAssignMultiShopAdmins zu users-Tabelle (boolean, default false)
+TESTE nach Änderung: npm run db:push
+2. Backend Multi-Shop-Routes (server/multi-shop-routes.ts - NEUE DATEI):
+
+POST /api/multi-shop/grant-access-by-email (DSGVO-konform: nur E-Mail-Input, keine Listen)
+GET /api/multi-shop/granted-access (zeigt gewährte Zugriffe anonymisiert)
+GET /api/multi-shop/accessible-shops (für Multi-Shop-Admin: seine zugänglichen Shops)
+GET /api/multi-shop/dashboard-stats (NUR aus zugänglichen Shops über multiShopPermissions-Tabelle)
+GET /api/multi-shop/employees (NUR aus zugänglichen Shops)
+Korrekte Deutsche Status-Werte: 'abgeholt' für completed, alle anderen für open
+3. Superadmin-Funktion (server/routes.ts):
+
+PUT /api/superadmin/toggle-multishop-permission/:userId (Superadmin kann canAssignMultiShopAdmins setzen)
+4. Frontend Multi-Shop-Admin-Management (client/src/components/MultiShopAdminManagement.tsx):
+
+DSGVO-konform: Nur E-Mail-Input zum Zugriff gewähren, KEINE Listen von verfügbaren Multi-Shop-Admins
+Anzeige gewährter Zugriffe (anonymisiert)
+Warnung über DSGVO-Datenschutz
+5. Multi-Shop-Admin-Interface:
+
+Dashboard mit Statistiken AUS DEN ZUGÄNGLICHEN SHOPS (nicht falsche userShopAccess-Tabelle!)
+Shop-Übersicht nur für zugängliche Shops
+Mitarbeiter-Übersicht nur aus zugänglichen Shops
+KRITISCHE ANFORDERUNGEN:
+
+Verwende IMMER multiShopPermissions-Tabelle, NIEMALS userShopAccess
+Korrekte Status-Mapping: 'abgeholt' = completed, andere = open
+DSGVO-konform: Shop-Owner sehen KEINE Listen von Multi-Shop-Admins
+Teste nach JEDEM Schritt die Kiosk-Online-Anzeige und WebSocket-Funktionen
+BEI PROBLEMEN:
+
+STOPPE sofort bei WebSocket-Fehlern
+STOPPE bei falschen Daten (wie userShopAccess statt multiShopPermissions)
+Frage mich bei Unklarheiten
+Beginne jetzt mit Schritt 1 (Schema) und bestätige mir jeden Schritt einzeln."
