@@ -26,8 +26,7 @@ import { AuthProvider } from "./hooks/use-auth";
 import { ThemeProvider } from "./hooks/use-theme";
 import { BusinessSettingsProvider } from "./hooks/use-business-settings";
 import { PrintManagerProvider } from "@/components/repairs/PrintOptionsManager";
-// Temporär deaktiviert für Debugging
-// import { OnlineStatusProvider } from "./hooks/use-online-status";
+import { OnlineStatusProvider } from "./hooks/use-online-status";
 import { KioskModeProvider } from "./hooks/use-kiosk-mode";
 import { KioskOverlay } from "@/components/kiosk/KioskOverlay";
 import { useEffect } from "react";
@@ -159,8 +158,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        {/* Temporär deaktiviert */}
-        <div>
+        <OnlineStatusProvider>
           <KioskModeProvider>
             <BusinessSettingsProvider>
               <ThemeProvider>
@@ -176,7 +174,7 @@ function App() {
               </ThemeProvider>
             </BusinessSettingsProvider>
           </KioskModeProvider>
-        </div>
+        </OnlineStatusProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

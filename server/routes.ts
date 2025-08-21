@@ -2,8 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import * as emailService from "./email-service";
-// Temporär deaktiviert für Debugging
-// import { initializeWebSocketServer, getOnlineStatusManager } from "./websocket-server";
+import { initializeWebSocketServer, getOnlineStatusManager } from "./websocket-server";
 import { isSuperadmin } from "./superadmin-middleware";
 // Import der Berechtigungsprüfung aus permissions.ts
 import { hasAccess, hasAccessAsync } from './permissions';
@@ -7382,9 +7381,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
   
   // WebSocket-Server initialisieren
-  // Temporär deaktiviert für Debugging
-  // const onlineStatusManager = initializeWebSocketServer(httpServer);
-  // console.log("WebSocket-Server für Online-Status initialisiert");
+  const onlineStatusManager = initializeWebSocketServer(httpServer);
+  console.log("WebSocket-Server für Online-Status initialisiert");
 
   return httpServer;
 }

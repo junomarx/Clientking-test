@@ -249,21 +249,6 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
           </Button>
         )}
         
-        {/* Multi-Shop-Admin Verwaltung - nur für berechtigte Shop-Owner */}
-        {user && user.role === 'owner' && user.canAssignMultiShopAdmins && (
-          <Button 
-            variant={activeTab === 'multi-shop-admin' ? 'default' : 'ghost'}
-            className="w-full justify-start"
-            onClick={() => {
-              onTabChange('multi-shop-admin');
-              if (isMobile) closeMenu();
-            }}
-          >
-            <Shield className="h-5 w-5 mr-2" />
-            Multi-Shop-Admin
-          </Button>
-        )}
-        
         {/* Kiosk-Modus Aktivierung */}
         <div className="pt-2 border-t">
           <KioskActivationButton />
@@ -287,7 +272,7 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
           </nav>
           <div className="px-2 mt-6 mb-4">
             {/* Admin-Bereich-Button */}
-            {user && (user.isAdmin || user.isSuperadmin) && (
+            {user && user.isAdmin && (
               <Button 
                 variant="outline" 
                 className="w-full justify-start mb-2"
@@ -351,7 +336,7 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
             <Separator className="my-4" />
             <div className="space-y-2 px-1">
               {/* Admin-Bereich-Button */}
-              {user && (user.isAdmin || user.isSuperadmin) && (
+              {user && user.isAdmin && (
                 <Button 
                   variant="outline" 
                   className="w-full justify-start mb-2"
