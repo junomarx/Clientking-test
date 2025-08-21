@@ -8,32 +8,25 @@ export function registerMultiShopAdminRoutes(app: Express) {
   const protectMultiShopAdmin = async (req: any, res: any, next: any) => {
     // Header-basierte Authentifizierung für Multi-Shop Admins
     const customUserId = req.headers['x-user-id'];
-    console.log(`🔐 Multi-Shop Admin Auth - X-User-ID: ${customUserId}`);
-    
     if (customUserId) {
       const { storage } = await import('./storage');
       const userId = parseInt(customUserId.toString());
       const user = await storage.getUser(userId);
-      console.log(`🔍 User gefunden via Header: ${user ? user.username : 'nicht gefunden'}`);
       if (user) {
         req.user = user;
-        console.log(`✅ User ${user.username} gesetzt - isMultiShopAdmin: ${user.isMultiShopAdmin}, isSuperadmin: ${user.isSuperadmin}`);
       }
     }
 
     // Prüfung auf Session-basierte Authentifizierung oder Header-User
     if (!req.user && (!req.isAuthenticated || !req.isAuthenticated())) {
-      console.log(`❌ Multi-Shop Admin Auth fehlgeschlagen - kein User gesetzt`);
       return res.status(401).json({ error: "Nicht angemeldet" });
     }
 
     const user = req.user;
     if (!user || (!user.isMultiShopAdmin && !user.isSuperadmin)) {
-      console.log(`❌ Multi-Shop Admin Berechtigung fehlgeschlagen - User: ${user?.username}, isMultiShopAdmin: ${user?.isMultiShopAdmin}, isSuperadmin: ${user?.isSuperadmin}`);
       return res.status(403).json({ error: "Zugriff verweigert: Multi-Shop Admin erforderlich" });
     }
 
-    console.log(`✅ Multi-Shop Admin Auth erfolgreich für ${user.username}`);
     next();
   };
 
