@@ -109,7 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLocation('/superadmin');
       } else if (data.isMultiShopAdmin) {
         // Multi-Shop Admin - explizit via isMultiShopAdmin Flag
-        setLocation('/multi-shop');
+        setLocation('/multi-shop-admin');
       } else if (data.role === 'kiosk') {
         // Kiosk-Benutzer bleiben auf der Startseite, aber im Kiosk-Modus
         console.log('🎯 Kiosk-Benutzer bleibt auf Startseite im Kiosk-Modus');
