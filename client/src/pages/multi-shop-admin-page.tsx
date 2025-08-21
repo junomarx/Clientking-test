@@ -578,7 +578,6 @@ function OrdersOverview() {
                       <td className="px-4 py-3">
                         <div>
                           <p className="font-medium text-gray-900">{order.partName}</p>
-                          <p className="text-sm text-gray-500">ID: {order.id}</p>
                           {order.supplier && (
                             <p className="text-sm text-blue-600">{order.supplier}</p>
                           )}
@@ -673,7 +672,6 @@ function OrdersOverview() {
                           <td className="px-4 py-3">
                             <div>
                               <p className="font-medium text-gray-900">{order.partName}</p>
-                              <p className="text-sm text-gray-500">ID: {order.id}</p>
                               {order.supplier && (
                                 <p className="text-sm text-blue-600">{order.supplier}</p>
                               )}
