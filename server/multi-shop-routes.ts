@@ -47,11 +47,25 @@ export function registerMultiShopRoutes(app: Express) {
   // Abrufen der zugänglichen Shops für einen Benutzer
   app.get("/api/multi-shop/accessible-shops", async (req: Request, res: Response) => {
     try {
-      if (!req.user) {
+      // Header-basierte Authentifizierung für Multi-Shop Admins
+      const customUserId = req.headers['x-user-id'];
+      let userId: number;
+      
+      if (customUserId) {
+        console.log(`X-User-ID Header gefunden: ${customUserId}`);
+        userId = parseInt(customUserId.toString());
+        const user = await storage.getUser(userId);
+        if (!user) {
+          return res.status(401).json({ message: "Benutzer nicht gefunden" });
+        }
+        req.user = user as any;
+      } else if (req.user) {
+        userId = req.user.id;
+      } else {
         return res.status(401).json({ message: "Nicht angemeldet" });
       }
 
-      const accessibleShops = await storage.getUserAccessibleShops(req.user.id);
+      const accessibleShops = await storage.getUserAccessibleShops(userId);
       
       // Für jeden Shop zusätzliche Metriken laden
       const shopsWithMetrics = await Promise.all(accessibleShops.map(async (shop) => {
