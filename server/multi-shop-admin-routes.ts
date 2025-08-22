@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { eq, sql, and, or, count, desc, inArray } from "drizzle-orm";
 import { db } from "./db";
-import { users, businessSettings, repairs, customers, userShopAccess, spareParts } from "@shared/schema";
+import { users, businessSettings, repairs, customers, userShopAccess, spareParts, multiShopPermissions } from "@shared/schema";
 
 export function registerMultiShopAdminRoutes(app: Express) {
   // Multi-Shop Admin Protection Middleware with Header Authentication
@@ -709,7 +709,7 @@ export function registerMultiShopAdminRoutes(app: Express) {
   });
 
   // Route: Mitarbeiter bearbeiten
-  app.put("/api/multi-shop/employees/:employeeId", async (req, res) => {
+  app.put("/api/multi-shop/employees/:employeeId", protectMultiShopAdmin, async (req, res) => {
     try {
       const { employeeId } = req.params;
       const { firstName, lastName, email, isActive } = req.body;
@@ -732,16 +732,16 @@ export function registerMultiShopAdminRoutes(app: Express) {
 
       // Berechtigung für den Shop prüfen
       const authorizedShops = await db
-        .select({ shopId: multiShopPermissions.shopId })
-        .from(multiShopPermissions)
+        .select({ shopId: userShopAccess.shopId })
+        .from(userShopAccess)
         .where(and(
-          eq(multiShopPermissions.multiShopAdminId, req.user.id),
-          eq(multiShopPermissions.isApproved, true)
+          eq(userShopAccess.userId, req.user.id),
+          eq(userShopAccess.isActive, true)
         ));
 
       const authorizedShopIds = authorizedShops.map(shop => shop.shopId);
       
-      if (!authorizedShopIds.includes(employee.shopId)) {
+      if (!authorizedShopIds.includes(employee.shopId!)) {
         return res.status(403).json({ error: "Keine Berechtigung für diesen Shop" });
       }
 
@@ -785,7 +785,7 @@ export function registerMultiShopAdminRoutes(app: Express) {
   });
 
   // Route: Mitarbeiter löschen
-  app.delete("/api/multi-shop/employees/:employeeId", async (req, res) => {
+  app.delete("/api/multi-shop/employees/:employeeId", protectMultiShopAdmin, async (req, res) => {
     try {
       const { employeeId } = req.params;
       
@@ -807,20 +807,21 @@ export function registerMultiShopAdminRoutes(app: Express) {
 
       // Berechtigung für den Shop prüfen
       const authorizedShops = await db
-        .select({ shopId: multiShopPermissions.shopId })
-        .from(multiShopPermissions)
+        .select({ shopId: userShopAccess.shopId })
+        .from(userShopAccess)
         .where(and(
-          eq(multiShopPermissions.multiShopAdminId, req.user.id),
-          eq(multiShopPermissions.isApproved, true)
+          eq(userShopAccess.userId, req.user.id),
+          eq(userShopAccess.isActive, true)
         ));
 
       const authorizedShopIds = authorizedShops.map(shop => shop.shopId);
       
-      if (!authorizedShopIds.includes(employee.shopId)) {
+      if (!authorizedShopIds.includes(employee.shopId!)) {
         return res.status(403).json({ error: "Keine Berechtigung für diesen Shop" });
       }
 
       // Vollständige Löschung über Storage-Interface
+      const { storage } = await import('./storage');
       const success = await storage.deleteEmployee(parseInt(employeeId));
 
       if (success) {
@@ -836,7 +837,7 @@ export function registerMultiShopAdminRoutes(app: Express) {
   });
 
   // Route: Mitarbeiter aktivieren/deaktivieren
-  app.patch("/api/multi-shop/employees/:employeeId/status", async (req, res) => {
+  app.patch("/api/multi-shop/employees/:employeeId/status", protectMultiShopAdmin, async (req, res) => {
     try {
       const { employeeId } = req.params;
       const { isActive } = req.body;
@@ -859,16 +860,16 @@ export function registerMultiShopAdminRoutes(app: Express) {
 
       // Berechtigung für den Shop prüfen
       const authorizedShops = await db
-        .select({ shopId: multiShopPermissions.shopId })
-        .from(multiShopPermissions)
+        .select({ shopId: userShopAccess.shopId })
+        .from(userShopAccess)
         .where(and(
-          eq(multiShopPermissions.multiShopAdminId, req.user.id),
-          eq(multiShopPermissions.isApproved, true)
+          eq(userShopAccess.userId, req.user.id),
+          eq(userShopAccess.isActive, true)
         ));
 
       const authorizedShopIds = authorizedShops.map(shop => shop.shopId);
       
-      if (!authorizedShopIds.includes(employee.shopId)) {
+      if (!authorizedShopIds.includes(employee.shopId!)) {
         return res.status(403).json({ error: "Keine Berechtigung für diesen Shop" });
       }
 
