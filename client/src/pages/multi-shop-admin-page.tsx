@@ -233,7 +233,7 @@ function ShopsOverview() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-600">Monatsumsatz</p>
-                  <p className="text-xl font-bold">€{shop.metrics?.monthlyRevenue?.toLocaleString() || '0'}</p>
+                  <p className="text-xl font-bold">€{shop.metrics?.totalRevenue?.toLocaleString() || '0'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Mitarbeiter</p>
@@ -260,8 +260,8 @@ function ShopsOverview() {
                   size="sm" 
                   className="flex-1"
                   onClick={() => {
-                    // TODO: Implementiere Shop-Details Modal/Page
                     console.log(`Zeige Details für Shop ${shop.shopId}:`, shop);
+                    alert(`Shop-Details für ${shop.businessName}\n\nShop-ID: ${shop.shopId}\nUmsatz: €${shop.metrics?.totalRevenue?.toLocaleString() || '0'}\nMitarbeiter: ${shop.metrics?.totalEmployees || '0'}\nAktive Reparaturen: ${shop.metrics?.activeRepairs || '0'}\nAbgeschlossene Reparaturen: ${shop.metrics?.completedRepairs || '0'}`);
                   }}
                 >
                   <Eye className="h-4 w-4 mr-1" />
@@ -272,8 +272,8 @@ function ShopsOverview() {
                   size="sm" 
                   className="flex-1"
                   onClick={() => {
-                    // TODO: Implementiere Shop-Verwaltung Modal/Page
                     console.log(`Verwalte Shop ${shop.shopId}:`, shop);
+                    alert(`Shop-Verwaltung für ${shop.businessName}\n\nFunktionen:\n• Mitarbeiter verwalten\n• Bestellungen einsehen\n• Einstellungen bearbeiten\n• Umsatz-Reports\n\n(Funktionen werden schrittweise erweitert)`);
                   }}
                 >
                   <Edit3 className="h-4 w-4 mr-1" />
