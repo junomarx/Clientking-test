@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { 
   BarChart3, 
@@ -19,7 +22,8 @@ import {
 
   Eye,
   Edit3,
-  LogOut
+  LogOut,
+  UserPlus
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
@@ -263,6 +267,160 @@ function ShopsOverview() {
   );
 }
 
+// Neuer Mitarbeiter Dialog
+function CreateEmployeeDialog() {
+  const [open, setOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    shopId: '',
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: ''
+  });
+  const { toast } = useToast();
+
+  const { data: shops } = useQuery({
+    queryKey: ["/api/multi-shop/accessible-shops"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/multi-shop/accessible-shops");
+      return response.json();
+    }
+  });
+
+  const createEmployeeMutation = useMutation({
+    mutationFn: async (data: typeof formData) => {
+      const response = await apiRequest("POST", "/api/multi-shop/create-employee", {
+        shopId: parseInt(data.shopId),
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        password: data.password,
+        role: 'employee'
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Erfolg",
+        description: "Mitarbeiter wurde erfolgreich erstellt",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/multi-shop/employees"] });
+      setOpen(false);
+      setFormData({
+        shopId: '',
+        firstName: '',
+        lastName: '',
+        email: '',
+        password: ''
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Fehler",
+        description: error.message || "Fehler beim Erstellen des Mitarbeiters",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.shopId || !formData.firstName || !formData.lastName || !formData.email || !formData.password) {
+      toast({
+        title: "Fehler",
+        description: "Bitte füllen Sie alle Felder aus",
+        variant: "destructive",
+      });
+      return;
+    }
+    createEmployeeMutation.mutate(formData);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button className="mb-4">
+          <UserPlus className="h-4 w-4 mr-2" />
+          Neuer Mitarbeiter
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Neuen Mitarbeiter erstellen</DialogTitle>
+          <DialogDescription>
+            Erstellen Sie einen neuen Mitarbeiter für einen Ihrer Shops
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="shop">Shop auswählen</Label>
+            <Select value={formData.shopId} onValueChange={(value) => setFormData({...formData, shopId: value})}>
+              <SelectTrigger>
+                <SelectValue placeholder="Shop auswählen..." />
+              </SelectTrigger>
+              <SelectContent>
+                {shops?.map((shop: any) => (
+                  <SelectItem key={shop.shopId} value={shop.shopId.toString()}>
+                    {shop.businessName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="firstName">Vorname</Label>
+              <Input
+                id="firstName"
+                value={formData.firstName}
+                onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                placeholder="Vorname"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lastName">Nachname</Label>
+              <Input
+                id="lastName"
+                value={formData.lastName}
+                onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                placeholder="Nachname"
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="email">E-Mail-Adresse</Label>
+            <Input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({...formData, email: e.target.value})}
+              placeholder="mitarbeiter@shop.de"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="password">Passwort</Label>
+            <Input
+              id="password"
+              type="password"
+              value={formData.password}
+              onChange={(e) => setFormData({...formData, password: e.target.value})}
+              placeholder="Sicheres Passwort"
+            />
+          </div>
+          <div className="flex gap-3 pt-4">
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} className="flex-1">
+              Abbrechen
+            </Button>
+            <Button type="submit" disabled={createEmployeeMutation.isPending} className="flex-1">
+              {createEmployeeMutation.isPending ? "Erstelle..." : "Erstellen"}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // Mitarbeiter Übersicht
 function EmployeesOverview() {
   const [onlineUsers, setOnlineUsers] = useState<number[]>([]);
@@ -330,6 +488,7 @@ function EmployeesOverview() {
 
   return (
     <div className="space-y-6">
+      <CreateEmployeeDialog />
       {/* Mitarbeiter Tabelle - Dynamisch geladen */}
       <Card>
         <CardHeader>

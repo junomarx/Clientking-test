@@ -610,5 +610,88 @@ export function registerMultiShopAdminRoutes(app: Express) {
     }
   });
 
+  // Neuen Mitarbeiter erstellen (Multi-Shop Admin)
+  app.post("/api/multi-shop/create-employee", protectMultiShopAdmin, async (req, res) => {
+    try {
+      const { shopId, firstName, lastName, email, password, role = 'employee' } = req.body;
+      const currentUserId = req.user!.id;
+
+      // Validation
+      if (!shopId || !firstName || !lastName || !email || !password) {
+        return res.status(400).json({ error: "Alle Felder sind erforderlich" });
+      }
+
+      if (!['employee', 'kiosk'].includes(role)) {
+        return res.status(400).json({ error: "Ungültige Rolle. Nur 'employee' oder 'kiosk' erlaubt" });
+      }
+
+      // Prüfen, ob der Multi-Shop Admin Zugriff auf diesen Shop hat
+      const authorizedShops = await db
+        .select({ shopId: userShopAccess.shopId })
+        .from(userShopAccess)
+        .where(and(
+          eq(userShopAccess.userId, currentUserId),
+          eq(userShopAccess.isActive, true)
+        ));
+
+      const authorizedShopIds = authorizedShops.map(shop => shop.shopId);
+
+      if (!authorizedShopIds.includes(parseInt(shopId))) {
+        return res.status(403).json({ error: "Keine Berechtigung für diesen Shop" });
+      }
+
+      // Prüfen, ob E-Mail bereits existiert
+      const [existingUser] = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.email, email))
+        .limit(1);
+
+      if (existingUser) {
+        return res.status(400).json({ error: "Ein Benutzer mit dieser E-Mail-Adresse existiert bereits" });
+      }
+
+      // Passwort hashen
+      const { scrypt, randomBytes } = await import('crypto');
+      const { promisify } = await import('util');
+      const scryptAsync = promisify(scrypt);
+      
+      const salt = randomBytes(16).toString("hex");
+      const hashedPassword = (await scryptAsync(password, salt, 64)) as Buffer;
+      const finalPassword = `${hashedPassword.toString("hex")}.${salt}`;
+
+      // Benutzername aus Vor- und Nachname generieren
+      const username = `${firstName.toLowerCase()}.${lastName.toLowerCase()}`.replace(/[^a-z.]/g, '');
+
+      // Neuen Mitarbeiter erstellen
+      const [newEmployee] = await db
+        .insert(users)
+        .values({
+          username: username,
+          email: email,
+          password: finalPassword,
+          role: role,
+          shopId: parseInt(shopId),
+          isActive: true,
+          firstName: firstName,
+          lastName: lastName,
+          createdAt: new Date()
+        })
+        .returning();
+
+      // Erfolgreiche Antwort (ohne Passwort)
+      const { password: _, ...employeeResponse } = newEmployee;
+      
+      res.status(201).json({
+        ...employeeResponse,
+        message: `Mitarbeiter ${firstName} ${lastName} wurde erfolgreich erstellt`
+      });
+
+    } catch (error) {
+      console.error("Create employee error:", error);
+      res.status(500).json({ error: "Fehler beim Erstellen des Mitarbeiters" });
+    }
+  });
+
   console.log("✅ Multi-Shop Admin routes registered");
 }
