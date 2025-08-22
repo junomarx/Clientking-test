@@ -1,7 +1,7 @@
 import type { Express } from "express";
-import { eq, sql, and, or, count, desc, inArray } from "drizzle-orm";
+import { eq, sql, and, or, count, desc, inArray, isNull } from "drizzle-orm";
 import { db } from "./db";
-import { users, businessSettings, repairs, customers, userShopAccess, spareParts, multiShopPermissions, msaProfiles, businessDataSchema } from "@shared/schema";
+import { users, businessSettings, repairs, customers, userShopAccess, spareParts, multiShopPermissions, msaProfiles, msaPricing, businessDataSchema } from "@shared/schema";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 
@@ -1063,6 +1063,38 @@ export function registerMultiShopAdminRoutes(app: Express) {
         .from(msaProfiles)
         .where(eq(msaProfiles.userId, userId));
 
+      // MSA Pricing abrufen
+      const [pricing_record] = await db
+        .select()
+        .from(msaPricing)
+        .where(eq(msaPricing.userId, userId));
+
+      // Multi-Shop Permissions für Preisberechnung abrufen
+      const permissions = await db
+        .select()
+        .from(multiShopPermissions)
+        .where(and(
+          eq(multiShopPermissions.multiShopAdminId, userId),
+          eq(multiShopPermissions.granted, true),
+          isNull(multiShopPermissions.revokedAt)
+        ));
+
+      let pricing = null;
+      if (pricing_record) {
+        const totalShops = permissions.length;
+        const monthlyTotal = totalShops * pricing_record.pricePerShop * (1 - pricing_record.discountPercent / 100);
+        
+        pricing = {
+          pricePerShop: pricing_record.pricePerShop,
+          currency: pricing_record.currency,
+          billingCycle: pricing_record.billingCycle,
+          discountPercent: pricing_record.discountPercent,
+          monthlyTotal: parseFloat(monthlyTotal.toFixed(2)),
+          totalShops: totalShops,
+          notes: pricing_record.notes
+        };
+      }
+
       // Kombinierte Profile-Daten zurückgeben
       const profileData = {
         id: user.id,
@@ -1071,7 +1103,8 @@ export function registerMultiShopAdminRoutes(app: Express) {
         firstName: msaProfile?.firstName || user.firstName,
         lastName: msaProfile?.lastName || user.lastName,
         phone: msaProfile?.phone,
-        businessData: msaProfile?.businessData || {}
+        businessData: msaProfile?.businessData || {},
+        pricing: pricing
       };
 
       res.json(profileData);

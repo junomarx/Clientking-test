@@ -2129,15 +2129,27 @@ function MSASettings() {
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span>Aktive Shops:</span>
-                          <span className="font-medium">2 Shops</span>
+                          <span className="font-medium">
+                            {msaProfile?.pricing?.totalShops || 2} Shops
+                          </span>
                         </div>
                         <div className="flex justify-between">
                           <span>Preis pro Shop:</span>
-                          <span className="font-medium">€29,90/Monat</span>
+                          <span className="font-medium">
+                            {msaProfile?.pricing 
+                              ? `€${msaProfile.pricing.pricePerShop},00/Monat`
+                              : "€29,90/Monat"
+                            }
+                          </span>
                         </div>
                         <div className="flex justify-between border-t border-blue-200 pt-2">
                           <span className="font-medium">Gesamt monatlich:</span>
-                          <span className="font-bold">€59,80</span>
+                          <span className="font-bold">
+                            {msaProfile?.pricing 
+                              ? `€${msaProfile.pricing.monthlyTotal}`
+                              : "€59,80"
+                            }
+                          </span>
                         </div>
                       </div>
                     </div>
