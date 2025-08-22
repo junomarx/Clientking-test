@@ -695,11 +695,21 @@ function EmployeeActionsDropdown({ employee }: { employee: any }) {
 // Mitarbeiter Übersicht
 function EmployeesOverview() {
   const [onlineUsers, setOnlineUsers] = useState<number[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedShop, setSelectedShop] = useState<string>("all");
   
   const { data: employees, isLoading, error } = useQuery({
     queryKey: ["/api/multi-shop/employees"],
     queryFn: async () => {
       const response = await apiRequest("GET", "/api/multi-shop/employees");
+      return response.json();
+    }
+  });
+
+  const { data: shops } = useQuery({
+    queryKey: ["/api/multi-shop/accessible-shops"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/multi-shop/accessible-shops");
       return response.json();
     }
   });
@@ -787,95 +797,184 @@ function EmployeesOverview() {
     );
   }
 
+  // Filter- und Suchlogik
+  const filteredEmployees = React.useMemo(() => {
+    if (!employees) return [];
+    
+    let filtered = [...employees];
+    
+    // Nach Shop filtern
+    if (selectedShop !== "all") {
+      filtered = filtered.filter(emp => emp.shopId === parseInt(selectedShop));
+    }
+    
+    // Nach Suchterm filtern
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(emp => {
+        const name = emp.username || `${emp.firstName || ''} ${emp.lastName || ''}`.trim();
+        return name.toLowerCase().includes(term) || 
+               emp.email.toLowerCase().includes(term);
+      });
+    }
+    
+    return filtered;
+  }, [employees, selectedShop, searchTerm]);
+
+  // Nach Shops gruppieren
+  const employeesByShop = React.useMemo(() => {
+    const grouped = new Map();
+    
+    filteredEmployees.forEach(employee => {
+      const shopName = employee.businessName;
+      if (!grouped.has(shopName)) {
+        grouped.set(shopName, []);
+      }
+      grouped.get(shopName).push(employee);
+    });
+    
+    // Sortiere Shops alphabetisch
+    return Array.from(grouped.entries()).sort(([a], [b]) => a.localeCompare(b));
+  }, [filteredEmployees]);
+
   return (
     <div className="space-y-6">
       <CreateEmployeeDialog />
-      {/* Mitarbeiter Tabelle - Dynamisch geladen */}
+      
+      {/* Filter und Suche */}
       <Card>
         <CardHeader>
-          <CardTitle>Mitarbeiterübersicht ({employees?.length || 0} Mitarbeiter)</CardTitle>
+          <CardTitle>Mitarbeiterübersicht ({filteredEmployees?.length || 0} von {employees?.length || 0} Mitarbeitern)</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Mitarbeiter</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Shop</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Rolle</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Status</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Online</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Aktionen</th>
-                </tr>
-              </thead>
-              <tbody>
-                {employees.map((employee: any) => (
-                  <tr key={employee.id} className="border-b hover:bg-gray-50">
-                    <td className="py-3 px-4">
-                      <div>
-                        <p className="font-medium">
-                          {employee.username 
-                            ? employee.username 
-                            : (employee.firstName || employee.lastName) 
-                              ? `${employee.firstName || ''} ${employee.lastName || ''}`.trim() 
-                              : employee.email || 'Unbekannt'}
-                        </p>
-                        <p className="text-sm text-gray-500">{employee.email}</p>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">
-                        {employee.businessName}
-                      </Badge>
-                    </td>
-                    <td className="py-3 px-4">
-                      <Badge variant="outline" className={
-                        employee.role === 'owner' ? "bg-purple-50 text-purple-700" :
-                        employee.role === 'employee' ? "bg-green-50 text-green-700" :
-                        "bg-orange-50 text-orange-700"
-                      }>
-                        {employee.role === 'owner' ? 'Inhaber' :
-                         employee.role === 'employee' ? 'Mitarbeiter' :
-                         employee.role === 'kiosk' ? 'Kiosk' : employee.role}
-                      </Badge>
-                    </td>
-                    <td className="py-3 px-4">
-                      <Badge variant="outline" className={
-                        employee.isActive ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
-                      }>
-                        {employee.isActive ? 'Aktiv' : 'Inaktiv'}
-                      </Badge>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2">
-                        {(() => {
-                          // Fallback: Wenn WebSocket noch keine Daten hat, verwende API-Daten
-                          const isOnlineLive = onlineUsers.length > 0 
-                            ? onlineUsers.includes(employee.id) 
-                            : employee.isOnline;
-                          return (
-                            <>
-                              <div className={`w-3 h-3 rounded-full ${isOnlineLive ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                              <Badge className={isOnlineLive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}>
-                                {isOnlineLive ? 'Online' : 'Offline'}
-                              </Badge>
-                            </>
-                          );
-                        })()}
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <EmployeeActionsDropdown employee={employee} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            {/* Suchfeld */}
+            <div className="flex-1">
+              <Input
+                placeholder="Nach Name oder E-Mail suchen..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full"
+              />
+            </div>
+            
+            {/* Shop-Filter */}
+            <div className="w-full sm:w-64">
+              <Select value={selectedShop} onValueChange={setSelectedShop}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Shop auswählen" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Alle Shops</SelectItem>
+                  {shops?.map((shop: any) => (
+                    <SelectItem key={shop.shopId} value={shop.shopId.toString()}>
+                      {shop.businessName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardContent>
       </Card>
+
+      {/* Mitarbeiter nach Shops gruppiert */}
+      {employeesByShop.length === 0 ? (
+        <Card>
+          <CardContent className="py-12">
+            <div className="text-center text-gray-500">
+              <Users className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+              <p className="text-xl font-medium">Keine Mitarbeiter gefunden</p>
+              <p className="text-sm">Passen Sie Ihre Suchkriterien an</p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        employeesByShop.map(([shopName, shopEmployees]) => (
+          <Card key={shopName}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5" />
+                {shopName} ({shopEmployees.length} Mitarbeiter)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left py-3 px-4 font-medium text-gray-600">Mitarbeiter</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-600">Rolle</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-600">Status</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-600">Online</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-600">Aktionen</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {shopEmployees.map((employee: any) => (
+                      <tr key={employee.id} className="border-b hover:bg-gray-50">
+                        <td className="py-3 px-4">
+                          <div>
+                            <p className="font-medium">
+                              {employee.username 
+                                ? employee.username 
+                                : (employee.firstName || employee.lastName) 
+                                  ? `${employee.firstName || ''} ${employee.lastName || ''}`.trim() 
+                                  : employee.email || 'Unbekannt'}
+                            </p>
+                            <p className="text-sm text-gray-500">{employee.email}</p>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <Badge variant="outline" className={
+                            employee.role === 'owner' ? "bg-purple-50 text-purple-700" :
+                            employee.role === 'employee' ? "bg-green-50 text-green-700" :
+                            "bg-orange-50 text-orange-700"
+                          }>
+                            {employee.role === 'owner' ? 'Inhaber' :
+                             employee.role === 'employee' ? 'Mitarbeiter' :
+                             employee.role === 'kiosk' ? 'Kiosk' : employee.role}
+                          </Badge>
+                        </td>
+                        <td className="py-3 px-4">
+                          <Badge variant="outline" className={
+                            employee.isActive ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
+                          }>
+                            {employee.isActive ? 'Aktiv' : 'Inaktiv'}
+                          </Badge>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-2">
+                            {(() => {
+                              const isOnlineLive = onlineUsers.length > 0 
+                                ? onlineUsers.includes(employee.id) 
+                                : employee.isOnline;
+                              return (
+                                <>
+                                  <div className={`w-3 h-3 rounded-full ${isOnlineLive ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                                  <Badge className={isOnlineLive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}>
+                                    {isOnlineLive ? 'Online' : 'Offline'}
+                                  </Badge>
+                                </>
+                              );
+                            })()}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <EmployeeActionsDropdown employee={employee} />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        ))
+      )}
     </div>
   );
+
 }
 
 // Bestellungen Übersicht
