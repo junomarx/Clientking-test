@@ -283,6 +283,8 @@ function EmployeesOverview() {
 
     socket.onopen = () => {
       console.log("🔗 WebSocket-Verbindung für Online-Status hergestellt");
+      // Initiale Status-Anfrage senden
+      socket.send(JSON.stringify({ type: 'request_status' }));
     };
 
     socket.onmessage = (event) => {
@@ -349,8 +351,10 @@ function EmployeesOverview() {
                   <tr key={employee.id} className="border-b hover:bg-gray-50">
                     <td className="py-3 px-4">
                       <div>
-                        <p className="font-medium">{employee.username}</p>
-                        <p className="text-sm text-gray-500">{employee.email || 'Keine E-Mail'}</p>
+                        <p className="font-medium">{employee.username || employee.email || 'Unbekannt'}</p>
+                        {employee.username && employee.email && (
+                          <p className="text-sm text-gray-500">{employee.email}</p>
+                        )}
                       </div>
                     </td>
                     <td className="py-3 px-4">
@@ -372,13 +376,19 @@ function EmployeesOverview() {
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
                         {(() => {
-                          const isOnlineLive = onlineUsers.includes(employee.id);
+                          // Fallback: Wenn WebSocket noch keine Daten hat, verwende API-Daten
+                          const isOnlineLive = onlineUsers.length > 0 
+                            ? onlineUsers.includes(employee.id) 
+                            : employee.isOnline;
                           return (
                             <>
                               <div className={`w-3 h-3 rounded-full ${isOnlineLive ? 'bg-green-500' : 'bg-gray-300'}`}></div>
                               <Badge className={isOnlineLive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}>
                                 {isOnlineLive ? 'Online' : 'Offline'}
                               </Badge>
+                              {onlineUsers.length === 0 && (
+                                <span className="text-xs text-gray-400">API</span>
+                              )}
                             </>
                           );
                         })()}

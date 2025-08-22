@@ -90,6 +90,10 @@ class OnlineStatusManager {
         await this.handleSignatureComplete(ws, message);
         break;
       
+      case 'request_status':
+        this.sendCurrentStatus(ws);
+        break;
+      
       default:
         console.log('Unknown message type:', message.type, message);
     }
@@ -274,6 +278,28 @@ class OnlineStatusManager {
   // API-Methoden für externe Nutzung
   getOnlineUsers(): number[] {
     return Array.from(this.connectedUsers.keys());
+  }
+
+  private sendCurrentStatus(ws: WebSocket) {
+    const onlineUsers = Array.from(this.connectedUsers.values()).map(user => ({
+      userId: user.userId,
+      username: user.username,
+      isActive: user.isActive,
+      lastSeen: user.lastHeartbeat.toISOString()
+    }));
+
+    const statusMessage = JSON.stringify({
+      type: 'status_update',
+      onlineUsers,
+      timestamp: new Date().toISOString()
+    });
+
+    try {
+      ws.send(statusMessage);
+      console.log(`📡 Status gesendet an Client: ${onlineUsers.length} online Benutzer`);
+    } catch (error) {
+      console.error('Error sending current status:', error);
+    }
   }
 
   isUserOnline(userId: number): boolean {
