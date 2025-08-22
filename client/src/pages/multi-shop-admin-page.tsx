@@ -193,9 +193,9 @@ function DashboardStats() {
 // Shop Übersicht
 function ShopsOverview() {
   const { data: shops } = useQuery({
-    queryKey: ["/api/multi-shop/accessible-shops"],
+    queryKey: ["/api/multi-shop/shops"],
     queryFn: async () => {
-      const response = await apiRequest("GET", "/api/multi-shop/accessible-shops");
+      const response = await apiRequest("GET", "/api/multi-shop/shops");
       return response.json();
     }
   });
@@ -219,12 +219,12 @@ function ShopsOverview() {
       {/* Shop Cards - Dynamisch geladen */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {shops.map((shop: any) => (
-          <Card key={shop.id}>
+          <Card key={shop.shopId}>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-semibold">{shop.businessName || shop.name}</CardTitle>
-                <Badge className={shop.isActive ? "bg-green-100 text-green-700 hover:bg-green-100" : "bg-red-100 text-red-700 hover:bg-red-100"}>
-                  {shop.isActive ? "AKTIV" : "INAKTIV"}
+                <CardTitle className="text-lg font-semibold">{shop.businessName}</CardTitle>
+                <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
+                  AKTIV
                 </Badge>
               </div>
               <CardDescription>Shop-ID: {shop.shopId}</CardDescription>
@@ -233,33 +233,49 @@ function ShopsOverview() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-600">Monatsumsatz</p>
-                  <p className="text-xl font-bold">€{shop.metrics?.monthlyRevenue?.toLocaleString() || '0'}</p>
+                  <p className="text-xl font-bold">€{shop.monthlyRevenue?.toLocaleString() || '0'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Mitarbeiter</p>
-                  <p className="text-xl font-bold">{shop.metrics?.totalEmployees || '0'}</p>
+                  <p className="text-xl font-bold">{shop.employeeCount || '0'}</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-gray-600">Offen:</span>
-                  <span className="ml-2 font-semibold text-orange-600">{shop.metrics?.activeRepairs || '0'}</span>
+                  <span className="ml-2 font-semibold text-orange-600">{shop.openRepairs || '0'}</span>
                 </div>
                 <div>
                   <span className="text-gray-600">Erledigt:</span>
-                  <span className="ml-2 font-semibold text-green-600">{shop.metrics?.completedRepairs || '0'}</span>
+                  <span className="ml-2 font-semibold text-green-600">{shop.completedRepairs || '0'}</span>
                 </div>
               </div>
               <div className="text-sm text-gray-600">
                 <span>Zugriff gewährt: </span>
-                <span className="font-medium">{new Date(shop.grantedAt).toLocaleDateString()}</span>
+                <span className="font-medium">{new Date().toLocaleDateString()}</span>
               </div>
               <div className="flex gap-2 pt-2">
-                <Button variant="outline" size="sm" className="flex-1">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1"
+                  onClick={() => {
+                    // TODO: Implementiere Shop-Details Modal/Page
+                    console.log(`Zeige Details für Shop ${shop.shopId}:`, shop);
+                  }}
+                >
                   <Eye className="h-4 w-4 mr-1" />
                   Details
                 </Button>
-                <Button variant="outline" size="sm" className="flex-1">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1"
+                  onClick={() => {
+                    // TODO: Implementiere Shop-Verwaltung Modal/Page
+                    console.log(`Verwalte Shop ${shop.shopId}:`, shop);
+                  }}
+                >
                   <Edit3 className="h-4 w-4 mr-1" />
                   Verwalten
                 </Button>

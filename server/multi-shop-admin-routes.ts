@@ -186,21 +186,70 @@ export function registerMultiShopAdminRoutes(app: Express) {
         .from(businessSettings)
         .where(inArray(businessSettings.shopId, authorizedShopIds));
 
-      // Für jeden Shop Statistiken berechnen
+      // Für jeden Shop echte Statistiken berechnen
       const shopsWithStats = await Promise.all(
         shopsData.map(async (shop) => {
-          // Einfache direkte SQL-Abfragen mit bekannten korrekten Werten
-          const openRepairsCount = shop.shopId === 1 ? 7 : 0; // Basierend auf unserer früheren Analyse
-          const completedRepairsCount = shop.shopId === 1 ? 77 : 0; // Basierend auf unserer früheren Analyse
-          const employeeCountValue = shop.shopId === 1 ? 2 : 0; // bugi + kiosk user
+          // Offene Reparaturen zählen
+          const [openRepairsResult] = await db
+            .select({ count: count() })
+            .from(repairs)
+            .where(and(
+              inArray(repairs.status, ["eingegangen", "ersatzteile_bestellen", "ersatzteil_eingetroffen", "ausser_haus"]),
+              eq(repairs.shopId, shop.shopId)
+            ));
+
+          // Abgeschlossene Reparaturen zählen
+          const [completedRepairsResult] = await db
+            .select({ count: count() })
+            .from(repairs)
+            .where(and(
+              eq(repairs.status, "abgeholt"),
+              eq(repairs.shopId, shop.shopId)
+            ));
+
+          // Mitarbeiter zählen
+          const [employeeCountResult] = await db
+            .select({ count: count() })
+            .from(users)
+            .where(and(
+              eq(users.shopId, shop.shopId),
+              eq(users.role, 'employee'),
+              eq(users.isActive, true)
+            ));
+
+          // Monatsumsatz berechnen (basierend auf abgeholten Reparaturen mit Preisen)
+          const currentMonth = new Date();
+          currentMonth.setDate(1);
+          currentMonth.setHours(0, 0, 0, 0);
+          
+          const [revenueResult] = await db
+            .select({ 
+              sum: sql<string>`COALESCE(SUM(CAST(${repairs.totalCost} AS DECIMAL)), 0)` 
+            })
+            .from(repairs)
+            .where(and(
+              eq(repairs.shopId, shop.shopId),
+              eq(repairs.status, "abgeholt"),
+              sql`${repairs.pickupDate} >= ${currentMonth.toISOString()}`
+            ));
+
+          const monthlyRevenue = parseFloat(revenueResult.sum || "0");
 
           return {
-            ...shop,
-            openRepairs: openRepairsCount,
-            completedRepairs: completedRepairsCount,
-            employeeCount: employeeCountValue,
-            totalRevenue: Math.floor(Math.random() * 50000) + 20000, // Mock für Demo
-            revenueChange: (Math.random() * 10 - 2).toFixed(1) // Mock für Demo
+            id: shop.shopId,
+            shopId: shop.shopId,
+            businessName: shop.businessName,
+            name: shop.businessName,
+            email: shop.email,
+            phone: shop.phone,
+            isActive: true,
+            grantedAt: new Date().toISOString(),
+            metrics: {
+              activeRepairs: openRepairsResult.count || 0,
+              completedRepairs: completedRepairsResult.count || 0,
+              totalEmployees: employeeCountResult.count || 0,
+              monthlyRevenue: monthlyRevenue
+            }
           };
         })
       );
