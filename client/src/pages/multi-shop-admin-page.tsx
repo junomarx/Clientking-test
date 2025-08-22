@@ -192,13 +192,24 @@ function DashboardStats() {
 
 // Shop Übersicht
 function ShopsOverview() {
-  const { data: shops } = useQuery({
-    queryKey: ["/api/multi-shop/accessible-shops"],
+  const [selectedPeriod, setSelectedPeriod] = useState<'day' | 'week' | 'month' | 'quarter' | 'year' | 'all'>('month');
+  
+  const { data: shops, isLoading } = useQuery({
+    queryKey: ["/api/multi-shop/accessible-shops", selectedPeriod],
     queryFn: async () => {
-      const response = await apiRequest("GET", "/api/multi-shop/accessible-shops");
+      const response = await apiRequest("GET", `/api/multi-shop/accessible-shops?period=${selectedPeriod}`);
       return response.json();
     }
   });
+
+  const periodLabels = {
+    'day': 'Heute',
+    'week': 'Diese Woche', 
+    'month': 'Dieser Monat',
+    'quarter': 'Dieses Quartal',
+    'year': 'Dieses Jahr',
+    'all': 'Gesamtzeitraum'
+  };
 
   if (!shops || shops.length === 0) {
     return (
@@ -214,8 +225,47 @@ function ShopsOverview() {
     );
   }
 
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="h-96 flex items-center justify-center">
+          <div className="text-center text-gray-500">
+            <Building2 className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+            <p className="text-xl font-medium">Lade Shop-Statistiken...</p>
+            <p className="text-sm">Daten werden berechnet für: {periodLabels[selectedPeriod]}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
+      {/* Zeitraum-Filter */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Shop-Übersicht</CardTitle>
+              <CardDescription>Statistiken für {periodLabels[selectedPeriod]}</CardDescription>
+            </div>
+            <Select value={selectedPeriod} onValueChange={(value: any) => setSelectedPeriod(value)}>
+              <SelectTrigger className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="day">Heute</SelectItem>
+                <SelectItem value="week">Diese Woche</SelectItem>
+                <SelectItem value="month">Dieser Monat</SelectItem>
+                <SelectItem value="quarter">Dieses Quartal</SelectItem>
+                <SelectItem value="year">Dieses Jahr</SelectItem>
+                <SelectItem value="all">Gesamtzeitraum</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardHeader>
+      </Card>
+
       {/* Shop Cards - Dynamisch geladen */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {shops.map((shop: any) => (
@@ -232,8 +282,13 @@ function ShopsOverview() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-gray-600">Monatsumsatz</p>
-                  <p className="text-xl font-bold">€{shop.metrics?.totalRevenue?.toLocaleString() || '0'}</p>
+                  <p className="text-sm text-gray-600">{selectedPeriod === 'all' ? 'Gesamtumsatz' : `Umsatz (${periodLabels[selectedPeriod]})`}</p>
+                  <p className="text-xl font-bold">€{(selectedPeriod === 'all' ? shop.metrics?.totalRevenue : shop.metrics?.periodRevenue)?.toLocaleString() || '0'}</p>
+                  {selectedPeriod !== 'all' && (
+                    <p className="text-xs text-gray-500">
+                      Gesamt: €{shop.metrics?.totalRevenue?.toLocaleString() || '0'}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Mitarbeiter</p>
@@ -246,8 +301,15 @@ function ShopsOverview() {
                   <span className="ml-2 font-semibold text-orange-600">{shop.metrics?.activeRepairs || '0'}</span>
                 </div>
                 <div>
-                  <span className="text-gray-600">Erledigt:</span>
-                  <span className="ml-2 font-semibold text-green-600">{shop.metrics?.completedRepairs || '0'}</span>
+                  <span className="text-gray-600">Erledigt ({selectedPeriod === 'all' ? 'Gesamt' : periodLabels[selectedPeriod]}):</span>
+                  <span className="ml-2 font-semibold text-green-600">
+                    {selectedPeriod === 'all' ? shop.metrics?.completedRepairs : shop.metrics?.periodCompletedRepairs || '0'}
+                  </span>
+                  {selectedPeriod !== 'all' && (
+                    <div className="text-xs text-gray-500 mt-1">
+                      Gesamt: {shop.metrics?.completedRepairs || '0'}
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="text-sm text-gray-600">

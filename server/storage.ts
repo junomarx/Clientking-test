@@ -5779,7 +5779,7 @@ export class DatabaseStorage implements IStorage {
     return codes;
   }
   // Shop Metrics and Analytics Implementation
-  async getShopMetrics(shopId: number) {
+  async getShopMetrics(shopId: number, timeRange?: { start?: Date; end?: Date; period?: 'day' | 'week' | 'month' | 'quarter' | 'year' | 'all' }) {
     try {
       console.log(`📊 Lade Metriken für Shop ${shopId}`);
       
@@ -5831,31 +5831,92 @@ export class DatabaseStorage implements IStorage {
       const avgRepairPrice = 89.99; // Durchschnittlicher Reparaturpreis
       const totalRevenue = completedCount * avgRepairPrice;
       
-      // Monatsumsatz (letzte 30 Tage)
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      // Zeitraum-spezifische Berechnungen
+      let periodRevenue = 0;
+      let periodCompletedRepairs = 0;
       
-      const monthlyCompletedResult = await db
-        .select({ count: count() })
-        .from(repairs)
-        .where(
-          and(
-            eq(repairs.shopId, shopId),
-            inArray(repairs.status, ['completed', 'delivered']),
-            gte(repairs.updatedAt, thirtyDaysAgo)
-          )
-        );
+      if (timeRange) {
+        const { start, end, period } = timeRange;
+        let startDate = start;
+        let endDate = end || new Date();
+        
+        // Automatische Zeitraum-Berechnung basierend auf period
+        if (period && !start) {
+          const now = new Date();
+          switch (period) {
+            case 'day':
+              startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+              break;
+            case 'week':
+              startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+              break;
+            case 'month':
+              startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+              break;
+            case 'quarter':
+              const quarterStart = Math.floor(now.getMonth() / 3) * 3;
+              startDate = new Date(now.getFullYear(), quarterStart, 1);
+              break;
+            case 'year':
+              startDate = new Date(now.getFullYear(), 0, 1);
+              break;
+            case 'all':
+            default:
+              startDate = null;
+              break;
+          }
+        }
+        
+        if (startDate) {
+          const periodCompletedResult = await db
+            .select({ count: count() })
+            .from(repairs)
+            .where(
+              and(
+                eq(repairs.shopId, shopId),
+                eq(repairs.status, 'abgeholt'),
+                gte(repairs.updatedAt, startDate),
+                lte(repairs.updatedAt, endDate)
+              )
+            );
+          
+          periodCompletedRepairs = periodCompletedResult[0]?.count || 0;
+          periodRevenue = periodCompletedRepairs * avgRepairPrice;
+        } else {
+          // Fallback für 'all' oder wenn kein Zeitraum definiert
+          periodCompletedRepairs = completedCount;
+          periodRevenue = totalRevenue;
+        }
+      } else {
+        // Standard: Monatsumsatz (letzte 30 Tage)
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        const monthlyCompletedResult = await db
+          .select({ count: count() })
+          .from(repairs)
+          .where(
+            and(
+              eq(repairs.shopId, shopId),
+              eq(repairs.status, 'abgeholt'),
+              gte(repairs.updatedAt, thirtyDaysAgo)
+            )
+          );
 
-      const monthlyRevenue = (monthlyCompletedResult[0]?.count || 0) * avgRepairPrice;
+        periodRevenue = (monthlyCompletedResult[0]?.count || 0) * avgRepairPrice;
+        periodCompletedRepairs = monthlyCompletedResult[0]?.count || 0;
+      }
 
       const metrics = {
         totalRepairs: totalRepairsResult[0]?.count || 0,
         activeRepairs: activeRepairsResult[0]?.count || 0,
         completedRepairs: completedRepairsResult[0]?.count || 0,
         totalRevenue: Math.round(totalRevenue),
-        monthlyRevenue: Math.round(monthlyRevenue),
+        periodRevenue: Math.round(periodRevenue),
+        periodCompletedRepairs: periodCompletedRepairs,
         totalEmployees: employeesResult[0]?.count || 0,
-        pendingOrders: 0 // Placeholder für zukünftige Bestellsystem-Integration
+        pendingOrders: 0,
+        timeRange: timeRange || { period: 'month' } // Dokumentiert den verwendeten Zeitraum
       };
 
       console.log(`📊 Shop ${shopId} Metriken:`, metrics);

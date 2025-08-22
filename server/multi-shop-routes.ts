@@ -67,10 +67,14 @@ export function registerMultiShopRoutes(app: Express) {
 
       const accessibleShops = await storage.getUserAccessibleShops(userId);
       
+      // Zeitraum-Parameter aus Query extrahieren
+      const period = req.query.period as string || 'month';
+      const timeRange = { period: period as 'day' | 'week' | 'month' | 'quarter' | 'year' | 'all' };
+      
       // Für jeden Shop zusätzliche Metriken laden
       const shopsWithMetrics = await Promise.all(accessibleShops.map(async (shop) => {
         try {
-          const metrics = await storage.getShopMetrics(shop.id);
+          const metrics = await storage.getShopMetrics(shop.id, timeRange);
           return {
             ...shop,
             metrics: metrics || {
@@ -78,9 +82,11 @@ export function registerMultiShopRoutes(app: Express) {
               activeRepairs: 0,
               completedRepairs: 0,
               totalRevenue: 0,
-              monthlyRevenue: 0,
+              periodRevenue: 0,
+              periodCompletedRepairs: 0,
               totalEmployees: 0,
-              pendingOrders: 0
+              pendingOrders: 0,
+              timeRange: timeRange
             }
           };
         } catch (error) {
@@ -92,9 +98,11 @@ export function registerMultiShopRoutes(app: Express) {
               activeRepairs: 0,
               completedRepairs: 0,
               totalRevenue: 0,
-              monthlyRevenue: 0,
+              periodRevenue: 0,
+              periodCompletedRepairs: 0,
               totalEmployees: 0,
-              pendingOrders: 0
+              pendingOrders: 0,
+              timeRange: timeRange
             }
           };
         }
