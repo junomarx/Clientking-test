@@ -714,6 +714,46 @@ function EmployeesOverview() {
     }
   });
 
+  // Filter- und Suchlogik (MUSS vor den bedingten Returns stehen!)
+  const filteredEmployees = React.useMemo(() => {
+    if (!employees) return [];
+    
+    let filtered = [...employees];
+    
+    // Nach Shop filtern
+    if (selectedShop !== "all") {
+      filtered = filtered.filter(emp => emp.shopId === parseInt(selectedShop));
+    }
+    
+    // Nach Suchterm filtern
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(emp => {
+        const name = emp.username || `${emp.firstName || ''} ${emp.lastName || ''}`.trim();
+        return name.toLowerCase().includes(term) || 
+               emp.email.toLowerCase().includes(term);
+      });
+    }
+    
+    return filtered;
+  }, [employees, selectedShop, searchTerm]);
+
+  // Nach Shops gruppieren (MUSS vor den bedingten Returns stehen!)
+  const employeesByShop = React.useMemo(() => {
+    const grouped = new Map();
+    
+    filteredEmployees.forEach(employee => {
+      const shopName = employee.businessName;
+      if (!grouped.has(shopName)) {
+        grouped.set(shopName, []);
+      }
+      grouped.get(shopName).push(employee);
+    });
+    
+    // Sortiere Shops alphabetisch
+    return Array.from(grouped.entries()).sort(([a], [b]) => a.localeCompare(b));
+  }, [filteredEmployees]);
+
   console.log("EmployeesOverview Debug:", { employees, isLoading, error });
 
   // WebSocket-Verbindung für Live-Updates des Online-Status
@@ -796,46 +836,6 @@ function EmployeesOverview() {
       </div>
     );
   }
-
-  // Filter- und Suchlogik
-  const filteredEmployees = React.useMemo(() => {
-    if (!employees) return [];
-    
-    let filtered = [...employees];
-    
-    // Nach Shop filtern
-    if (selectedShop !== "all") {
-      filtered = filtered.filter(emp => emp.shopId === parseInt(selectedShop));
-    }
-    
-    // Nach Suchterm filtern
-    if (searchTerm.trim()) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(emp => {
-        const name = emp.username || `${emp.firstName || ''} ${emp.lastName || ''}`.trim();
-        return name.toLowerCase().includes(term) || 
-               emp.email.toLowerCase().includes(term);
-      });
-    }
-    
-    return filtered;
-  }, [employees, selectedShop, searchTerm]);
-
-  // Nach Shops gruppieren
-  const employeesByShop = React.useMemo(() => {
-    const grouped = new Map();
-    
-    filteredEmployees.forEach(employee => {
-      const shopName = employee.businessName;
-      if (!grouped.has(shopName)) {
-        grouped.set(shopName, []);
-      }
-      grouped.get(shopName).push(employee);
-    });
-    
-    // Sortiere Shops alphabetisch
-    return Array.from(grouped.entries()).sort(([a], [b]) => a.localeCompare(b));
-  }, [filteredEmployees]);
 
   return (
     <div className="space-y-6">
