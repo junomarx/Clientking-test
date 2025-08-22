@@ -1835,6 +1835,7 @@ function MSAProfileSettings() {
                   id="firstName"
                   value={profileData.firstName}
                   onChange={(e) => setProfileData({...profileData, firstName: e.target.value})}
+                  placeholder="Vorname eingeben"
                   required
                 />
               </div>
@@ -1844,6 +1845,7 @@ function MSAProfileSettings() {
                   id="lastName"
                   value={profileData.lastName}
                   onChange={(e) => setProfileData({...profileData, lastName: e.target.value})}
+                  placeholder="Nachname eingeben"
                   required
                 />
               </div>
@@ -1855,6 +1857,7 @@ function MSAProfileSettings() {
                 type="email"
                 value={profileData.email}
                 onChange={(e) => setProfileData({...profileData, email: e.target.value})}
+                placeholder="E-Mail eingeben"
                 required
               />
             </div>
@@ -1862,8 +1865,10 @@ function MSAProfileSettings() {
               <Label htmlFor="phone">Telefonnummer</Label>
               <Input
                 id="phone"
+                type="tel"
                 value={profileData.phone}
                 onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
+                placeholder="Telefonnummer eingeben"
               />
             </div>
             <Button type="submit" disabled={updateProfileMutation.isPending}>
@@ -1959,6 +1964,7 @@ function MSABusinessSettings() {
                 id="companyName"
                 value={businessData.companyName}
                 onChange={(e) => setBusinessData({...businessData, companyName: e.target.value})}
+                placeholder="Firmenname eingeben"
                 required
               />
             </div>
@@ -1968,15 +1974,17 @@ function MSABusinessSettings() {
                 id="contactPerson"
                 value={businessData.contactPerson}
                 onChange={(e) => setBusinessData({...businessData, contactPerson: e.target.value})}
+                placeholder="Ansprechpartner eingeben"
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="street">Straße und Hausnummer</Label>
+              <Label htmlFor="street">Straße & Hausnummer</Label>
               <Input
                 id="street"
                 value={businessData.street}
                 onChange={(e) => setBusinessData({...businessData, street: e.target.value})}
+                placeholder="Straße eingeben"
                 required
               />
             </div>
@@ -1987,6 +1995,7 @@ function MSABusinessSettings() {
                   id="zipCode"
                   value={businessData.zipCode}
                   onChange={(e) => setBusinessData({...businessData, zipCode: e.target.value})}
+                  placeholder="PLZ eingeben"
                   required
                 />
               </div>
@@ -1996,6 +2005,7 @@ function MSABusinessSettings() {
                   id="city"
                   value={businessData.city}
                   onChange={(e) => setBusinessData({...businessData, city: e.target.value})}
+                  placeholder="Stadt eingeben"
                   required
                 />
               </div>
@@ -2005,6 +2015,7 @@ function MSABusinessSettings() {
                   id="country"
                   value={businessData.country}
                   onChange={(e) => setBusinessData({...businessData, country: e.target.value})}
+                  placeholder="Land eingeben"
                   required
                 />
               </div>
@@ -2016,6 +2027,7 @@ function MSABusinessSettings() {
                   id="vatNumber"
                   value={businessData.vatNumber}
                   onChange={(e) => setBusinessData({...businessData, vatNumber: e.target.value})}
+                  placeholder="USt-IdNr. eingeben"
                 />
               </div>
               <div className="space-y-2">
@@ -2024,6 +2036,7 @@ function MSABusinessSettings() {
                   id="taxNumber"
                   value={businessData.taxNumber}
                   onChange={(e) => setBusinessData({...businessData, taxNumber: e.target.value})}
+                  placeholder="Steuernummer eingeben"
                 />
               </div>
             </div>
@@ -2035,6 +2048,7 @@ function MSABusinessSettings() {
                   type="email"
                   value={businessData.email}
                   onChange={(e) => setBusinessData({...businessData, email: e.target.value})}
+                  placeholder="E-Mail eingeben"
                   required
                 />
               </div>
@@ -2044,6 +2058,7 @@ function MSABusinessSettings() {
                   id="businessPhone"
                   value={businessData.phone}
                   onChange={(e) => setBusinessData({...businessData, phone: e.target.value})}
+                  placeholder="Telefonnummer eingeben"
                   required
                 />
               </div>
