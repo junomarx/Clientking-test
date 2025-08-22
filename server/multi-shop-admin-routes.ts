@@ -712,7 +712,7 @@ export function registerMultiShopAdminRoutes(app: Express) {
   app.put("/api/multi-shop/employees/:employeeId", protectMultiShopAdmin, async (req, res) => {
     try {
       const { employeeId } = req.params;
-      const { firstName, lastName, email, isActive } = req.body;
+      const { firstName, lastName, email, password, isActive } = req.body;
       
       // Multi-Shop Admin Berechtigung prüfen
       if (!req.user || !req.user.isMultiShopAdmin) {
@@ -758,15 +758,30 @@ export function registerMultiShopAdminRoutes(app: Express) {
         }
       }
 
+      // Passwort hashen falls angegeben
+      let updateData: any = {
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        isActive: isActive
+      };
+
+      if (password && password.trim()) {
+        const { scrypt, randomBytes } = await import('crypto');
+        const { promisify } = await import('util');
+        const scryptAsync = promisify(scrypt);
+        
+        const salt = randomBytes(16).toString("hex");
+        const hashedPassword = (await scryptAsync(password, salt, 64)) as Buffer;
+        const finalPassword = `${hashedPassword.toString("hex")}.${salt}`;
+        
+        updateData.password = finalPassword;
+      }
+
       // Mitarbeiter aktualisieren
       const [updatedEmployee] = await db
         .update(users)
-        .set({
-          firstName: firstName,
-          lastName: lastName,
-          email: email,
-          isActive: isActive
-        })
+        .set(updateData)
         .where(eq(users.id, parseInt(employeeId)))
         .returning();
 

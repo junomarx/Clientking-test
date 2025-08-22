@@ -432,8 +432,10 @@ function EditEmployeeDialog({ employee, open, onOpenChange }: { employee: any, o
     firstName: employee?.firstName || '',
     lastName: employee?.lastName || '',
     email: employee?.email || '',
+    password: '',
     isActive: employee?.isActive ?? true
   });
+  const [showPasswordField, setShowPasswordField] = useState(false);
   const { toast } = useToast();
 
   const editEmployeeMutation = useMutation({
@@ -512,6 +514,27 @@ function EditEmployeeDialog({ employee, open, onOpenChange }: { employee: any, o
               onChange={(e) => setFormData({...formData, email: e.target.value})}
               required
             />
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="changePassword"
+                checked={showPasswordField}
+                onChange={(e) => setShowPasswordField(e.target.checked)}
+                className="rounded"
+              />
+              <Label htmlFor="changePassword">Passwort ändern</Label>
+            </div>
+            {showPasswordField && (
+              <Input
+                id="password"
+                type="password"
+                placeholder="Neues Passwort"
+                value={formData.password}
+                onChange={(e) => setFormData({...formData, password: e.target.value})}
+              />
+            )}
           </div>
           <div className="flex items-center space-x-2">
             <input
@@ -750,9 +773,10 @@ function EmployeesOverview() {
                     <td className="py-3 px-4">
                       <div>
                         <p className="font-medium">
-                          {employee.username || (employee.firstName && employee.lastName) 
-                            ? `${employee.firstName || ''} ${employee.lastName || ''}`.trim() 
-                            : employee.email || 'Unbekannt'}
+                          {employee.username || 
+                           (employee.firstName && employee.lastName) 
+                             ? `${employee.firstName || ''} ${employee.lastName || ''}`.trim() 
+                             : employee.email || 'Unbekannt'}
                         </p>
                         <p className="text-sm text-gray-500">{employee.email}</p>
                       </div>
