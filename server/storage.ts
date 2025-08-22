@@ -5077,9 +5077,34 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteEmployee(employeeId: number): Promise<void> {
-    await db
-      .delete(users)
-      .where(eq(users.id, employeeId));
+    // Zuerst alle Referenzen auf den Mitarbeiter entfernen
+    try {
+      // 1. Alle Kunden, die dieser Mitarbeiter erstellt hat, auf NULL setzen (userId)
+      await db
+        .update(customers)
+        .set({ userId: null })
+        .where(eq(customers.userId, employeeId));
+
+      console.log(`🗑️ Kunden-Referenzen für Mitarbeiter ${employeeId} entfernt`);
+
+      // 2. Alle Reparaturen, bei denen dieser Mitarbeiter als "createdBy" eingetragen ist, auf "GELÖSCHTER MITARBEITER" setzen
+      await db
+        .update(repairs)
+        .set({ createdBy: "GELÖSCHTER MITARBEITER" })
+        .where(eq(repairs.createdBy, employeeId.toString()));
+
+      console.log(`🗑️ Reparatur-Referenzen für Mitarbeiter ${employeeId} anonymisiert`);
+
+      // 3. Den Mitarbeiter selbst löschen
+      await db
+        .delete(users)
+        .where(eq(users.id, employeeId));
+
+      console.log(`✅ Mitarbeiter ${employeeId} erfolgreich gelöscht`);
+    } catch (error) {
+      console.error('Fehler beim Löschen des Mitarbeiters:', error);
+      throw error;
+    }
   }
 
   // Leihgeräte-Verwaltung Methoden
