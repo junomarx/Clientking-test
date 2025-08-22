@@ -9,6 +9,9 @@ import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import SuperadminPage from "@/pages/superadmin-page";
 import MultiShopAdminPage from "@/pages/multi-shop-admin-page";
+import MSAProfilePage from "@/pages/msa-profile-page";
+import MSABusinessPage from "@/pages/msa-business-page";
+import MSAPricingPage from "@/pages/msa-pricing-page";
 
 // Design Preview Imports wurden entfernt
 import SettingsPage from "@/pages/settings-page";
@@ -54,6 +57,21 @@ function Router() {
       <Route path="/multi-shop-admin">
         <ProtectedRoute path="/multi-shop-admin">
           <MultiShopAdminPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/msa/profile">
+        <ProtectedRoute path="/msa/profile">
+          <MSAProfilePage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/msa/business">
+        <ProtectedRoute path="/msa/business">
+          <MSABusinessPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/msa/pricing">
+        <ProtectedRoute path="/msa/pricing">
+          <MSAPricingPage />
         </ProtectedRoute>
       </Route>
 

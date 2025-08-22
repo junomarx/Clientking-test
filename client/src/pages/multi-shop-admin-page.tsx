@@ -29,10 +29,12 @@ import {
   Trash2,
   UserCheck,
   UserX,
-  Settings
+  Settings,
+  User
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
+import { useLocation } from "wouter";
 
 // Dashboard Statistiken mit Zeitraum-Filter
 function DashboardStats() {
@@ -1761,10 +1763,9 @@ function OrdersOverview() {
   );
 }
 
-// MSA Einstellungen
+// MSA Einstellungen - Überblick mit Navigation zu separaten Seiten
 function MSASettings() {
-  const [activeSettingsTab, setActiveSettingsTab] = useState<"profile" | "business" | "billing" | "security">("profile");
-  const { toast } = useToast();
+  const [, navigate] = useLocation();
 
   // Profil-Daten
   const [profileData, setProfileData] = useState({
