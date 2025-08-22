@@ -1763,463 +1763,84 @@ function OrdersOverview() {
   );
 }
 
-// MSA Einstellungen - Überblick mit Navigation zu separaten Seiten
+// MSA Einstellungen - Navigation zu separaten Seiten
 function MSASettings() {
   const [, navigate] = useLocation();
 
-  // Profil-Daten
-  const [profileData, setProfileData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: ''
-  });
-
-  // Geschäftsdaten für Rechnungsstellung
-  const [businessData, setBusinessData] = useState({
-    companyName: '',
-    contactPerson: '',
-    street: '',
-    city: '',
-    zipCode: '',
-    country: 'Deutschland',
-    vatNumber: '',
-    taxNumber: '',
-    email: '',
-    phone: ''
-  });
-
-  // Passwort-Änderung
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
-  });
-
-  // Lade aktuelle Daten
-  const { data: msaProfile } = useQuery({
-    queryKey: ["/api/multi-shop/profile"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/multi-shop/profile");
-      return response.json();
-    }
-  });
-
-  React.useEffect(() => {
-    if (msaProfile) {
-      setProfileData({
-        firstName: msaProfile.firstName || '',
-        lastName: msaProfile.lastName || '',
-        email: msaProfile.email || '',
-        phone: msaProfile.phone || ''
-      });
-      
-      if (msaProfile.businessData) {
-        setBusinessData({
-          companyName: msaProfile.businessData.companyName || '',
-          contactPerson: msaProfile.businessData.contactPerson || '',
-          street: msaProfile.businessData.street || '',
-          city: msaProfile.businessData.city || '',
-          zipCode: msaProfile.businessData.zipCode || '',
-          country: msaProfile.businessData.country || 'Deutschland',
-          vatNumber: msaProfile.businessData.vatNumber || '',
-          taxNumber: msaProfile.businessData.taxNumber || '',
-          email: msaProfile.businessData.email || '',
-          phone: msaProfile.businessData.phone || ''
-        });
-      }
-    }
-  }, [msaProfile]);
-
-  // Profil aktualisieren
-  const updateProfileMutation = useMutation({
-    mutationFn: async (data: typeof profileData) => {
-      const response = await apiRequest("PUT", "/api/multi-shop/profile", data);
-      return response.json();
+  const settingsOptions = [
+    {
+      id: 'profile',
+      title: 'Profil & Stammdaten',
+      description: 'Persönliche Daten und Kontaktinformationen verwalten',
+      icon: User,
+      path: '/msa/profile'
     },
-    onSuccess: () => {
-      toast({
-        title: "Profil aktualisiert",
-        description: "Ihre Profildaten wurden erfolgreich gespeichert",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/multi-shop/profile"] });
+    {
+      id: 'business',
+      title: 'Geschäftsdaten & Rechnungsstellung',
+      description: 'Firmeninformationen für die Abrechnung verwalten',
+      icon: Building2,
+      path: '/msa/business'
     },
-    onError: (error: any) => {
-      toast({
-        title: "Fehler",
-        description: error.message || "Fehler beim Speichern der Profildaten",
-        variant: "destructive",
-      });
+    {
+      id: 'pricing',
+      title: 'Preisgestaltung & Pakete',
+      description: 'Abrechnung und Preismodelle konfigurieren',
+      icon: Euro,
+      path: '/msa/pricing'
     }
-  });
-
-  // Geschäftsdaten aktualisieren
-  const updateBusinessMutation = useMutation({
-    mutationFn: async (data: typeof businessData) => {
-      const response = await apiRequest("PUT", "/api/multi-shop/business-data", data);
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Geschäftsdaten aktualisiert",
-        description: "Ihre Geschäftsdaten für die Rechnungsstellung wurden gespeichert",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/multi-shop/profile"] });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Fehler",
-        description: error.message || "Fehler beim Speichern der Geschäftsdaten",
-        variant: "destructive",
-      });
-    }
-  });
-
-  // Passwort ändern
-  const changePasswordMutation = useMutation({
-    mutationFn: async (data: typeof passwordData) => {
-      const response = await apiRequest("PUT", "/api/multi-shop/change-password", {
-        currentPassword: data.currentPassword,
-        newPassword: data.newPassword
-      });
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Passwort geändert",
-        description: "Ihr Passwort wurde erfolgreich geändert",
-      });
-      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Fehler",
-        description: error.message || "Fehler beim Ändern des Passworts",
-        variant: "destructive",
-      });
-    }
-  });
-
-  const handleProfileSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    updateProfileMutation.mutate(profileData);
-  };
-
-  const handleBusinessSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    updateBusinessMutation.mutate(businessData);
-  };
-
-  const handlePasswordSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      toast({
-        title: "Passwort-Fehler",
-        description: "Die neuen Passwörter stimmen nicht überein",
-        variant: "destructive",
-      });
-      return;
-    }
-    if (passwordData.newPassword.length < 6) {
-      toast({
-        title: "Passwort-Fehler",
-        description: "Das neue Passwort muss mindestens 6 Zeichen lang sein",
-        variant: "destructive",
-      });
-      return;
-    }
-    changePasswordMutation.mutate(passwordData);
-  };
+  ];
 
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>MSA Account Einstellungen</CardTitle>
-          <CardDescription>Verwalten Sie Ihre Multi-Shop Admin Konto-Einstellungen</CardDescription>
+          <CardTitle>MSA Einstellungen</CardTitle>
+          <CardDescription>
+            Verwalten Sie Ihre Multi-Shop Admin Einstellungen und Konfigurationen
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeSettingsTab} onValueChange={(value: any) => setActiveSettingsTab(value)}>
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="profile">Profil</TabsTrigger>
-              <TabsTrigger value="business">Geschäftsdaten</TabsTrigger>
-              <TabsTrigger value="billing">Rechnungsstellung</TabsTrigger>
-              <TabsTrigger value="security">Sicherheit</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="profile" className="space-y-6 mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Persönliche Daten</CardTitle>
-                  <CardDescription>Ihre persönlichen Kontoinformationen</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleProfileSubmit} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="firstName">Vorname</Label>
-                        <Input
-                          id="firstName"
-                          value={profileData.firstName}
-                          onChange={(e) => setProfileData({...profileData, firstName: e.target.value})}
-                          required
-                        />
+          <div className="grid gap-4">
+            {settingsOptions.map((option) => {
+              const IconComponent = option.icon;
+              return (
+                <Card 
+                  key={option.id} 
+                  className="cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => navigate(option.path)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-4">
+                      <div className="p-2 bg-blue-50 rounded-lg">
+                        <IconComponent className="h-6 w-6 text-blue-600" />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="lastName">Nachname</Label>
-                        <Input
-                          id="lastName"
-                          value={profileData.lastName}
-                          onChange={(e) => setProfileData({...profileData, lastName: e.target.value})}
-                          required
-                        />
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-900 mb-1">
+                          {option.title}
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          {option.description}
+                        </p>
+                      </div>
+                      <div className="text-gray-400">
+                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="email">E-Mail-Adresse</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={profileData.email}
-                        onChange={(e) => setProfileData({...profileData, email: e.target.value})}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Telefonnummer</Label>
-                      <Input
-                        id="phone"
-                        value={profileData.phone}
-                        onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
-                      />
-                    </div>
-                    <Button type="submit" disabled={updateProfileMutation.isPending}>
-                      {updateProfileMutation.isPending ? "Speichere..." : "Profil speichern"}
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="business" className="space-y-6 mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Geschäftsdaten für Rechnungsstellung</CardTitle>
-                  <CardDescription>
-                    Diese Daten werden für die Rechnungsstellung aller Ihrer ClientKing-Shops verwendet
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleBusinessSubmit} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="companyName">Firmenname</Label>
-                      <Input
-                        id="companyName"
-                        value={businessData.companyName}
-                        onChange={(e) => setBusinessData({...businessData, companyName: e.target.value})}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="contactPerson">Ansprechpartner</Label>
-                      <Input
-                        id="contactPerson"
-                        value={businessData.contactPerson}
-                        onChange={(e) => setBusinessData({...businessData, contactPerson: e.target.value})}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="street">Straße und Hausnummer</Label>
-                      <Input
-                        id="street"
-                        value={businessData.street}
-                        onChange={(e) => setBusinessData({...businessData, street: e.target.value})}
-                        required
-                      />
-                    </div>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="zipCode">PLZ</Label>
-                        <Input
-                          id="zipCode"
-                          value={businessData.zipCode}
-                          onChange={(e) => setBusinessData({...businessData, zipCode: e.target.value})}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="city">Stadt</Label>
-                        <Input
-                          id="city"
-                          value={businessData.city}
-                          onChange={(e) => setBusinessData({...businessData, city: e.target.value})}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="country">Land</Label>
-                        <Input
-                          id="country"
-                          value={businessData.country}
-                          onChange={(e) => setBusinessData({...businessData, country: e.target.value})}
-                          required
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="vatNumber">USt-IdNr. (optional)</Label>
-                        <Input
-                          id="vatNumber"
-                          value={businessData.vatNumber}
-                          onChange={(e) => setBusinessData({...businessData, vatNumber: e.target.value})}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="taxNumber">Steuernummer (optional)</Label>
-                        <Input
-                          id="taxNumber"
-                          value={businessData.taxNumber}
-                          onChange={(e) => setBusinessData({...businessData, taxNumber: e.target.value})}
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="businessEmail">Geschäfts-E-Mail</Label>
-                        <Input
-                          id="businessEmail"
-                          type="email"
-                          value={businessData.email}
-                          onChange={(e) => setBusinessData({...businessData, email: e.target.value})}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="businessPhone">Geschäfts-Telefon</Label>
-                        <Input
-                          id="businessPhone"
-                          value={businessData.phone}
-                          onChange={(e) => setBusinessData({...businessData, phone: e.target.value})}
-                          required
-                        />
-                      </div>
-                    </div>
-                    <Button type="submit" disabled={updateBusinessMutation.isPending}>
-                      {updateBusinessMutation.isPending ? "Speichere..." : "Geschäftsdaten speichern"}
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="billing" className="space-y-6 mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Rechnungsstellung & Abonnement</CardTitle>
-                  <CardDescription>Übersicht Ihrer ClientKing-Abonnements und Rechnungen</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    <div className="bg-blue-50 p-4 rounded-lg">
-                      <h3 className="font-medium text-blue-900 mb-2">Multi-Shop Abonnement</h3>
-                      <p className="text-blue-800 text-sm mb-3">
-                        Sie erhalten eine zentrale Rechnung für alle Ihre ClientKing-Shops basierend auf den oben eingegebenen Geschäftsdaten.
-                      </p>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span>Aktive Shops:</span>
-                          <span className="font-medium">
-                            {msaProfile?.pricing?.totalShops || 2} Shops
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Preis pro Shop:</span>
-                          <span className="font-medium">
-                            {msaProfile?.pricing 
-                              ? `€${msaProfile.pricing.pricePerShop},00/Monat`
-                              : "€29,90/Monat"
-                            }
-                          </span>
-                        </div>
-                        <div className="flex justify-between border-t border-blue-200 pt-2">
-                          <span className="font-medium">Gesamt monatlich:</span>
-                          <span className="font-bold">
-                            {msaProfile?.pricing 
-                              ? `€${msaProfile.pricing.monthlyTotal}`
-                              : "€59,80"
-                            }
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <h3 className="font-medium mb-3">Rechnungshistorie</h3>
-                      <div className="text-center py-8 text-gray-500">
-                        <p>Rechnungshistorie wird hier angezeigt</p>
-                        <p className="text-sm mt-1">Vergangene Rechnungen und Zahlungsdetails</p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="security" className="space-y-6 mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Passwort ändern</CardTitle>
-                  <CardDescription>Ändern Sie Ihr MSA-Passwort für erhöhte Sicherheit</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handlePasswordSubmit} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="currentPassword">Aktuelles Passwort</Label>
-                      <Input
-                        id="currentPassword"
-                        type="password"
-                        value={passwordData.currentPassword}
-                        onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="newPassword">Neues Passwort</Label>
-                      <Input
-                        id="newPassword"
-                        type="password"
-                        value={passwordData.newPassword}
-                        onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
-                        required
-                        minLength={6}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="confirmPassword">Neues Passwort bestätigen</Label>
-                      <Input
-                        id="confirmPassword"
-                        type="password"
-                        value={passwordData.confirmPassword}
-                        onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
-                        required
-                        minLength={6}
-                      />
-                    </div>
-                    <Button type="submit" disabled={changePasswordMutation.isPending}>
-                      {changePasswordMutation.isPending ? "Ändere Passwort..." : "Passwort ändern"}
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
         </CardContent>
       </Card>
     </div>
   );
 }
+
+
 
 // Logs Übersicht
 function LogsOverview() {
@@ -2259,127 +1880,118 @@ export default function MultiShopAdminPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Multi-Shop Verwaltung</h1>
-            <p className="text-gray-600">Zentrale Übersicht aller Standorte</p>
-          </div>
-          <div className="flex items-center gap-4">
-            <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">
-              ClientKing Multi-Shop Admin
-            </Badge>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleLogout}
-              className="flex items-center gap-2"
-            >
-              <LogOut className="h-4 w-4" />
-              Abmelden
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Sidebar Navigation */}
-      <div className="flex">
-        <div className="w-64 bg-slate-900 text-white min-h-screen">
-          <div className="p-6">
-            <div className="flex items-center gap-3 mb-8">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <Building2 className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <h2 className="font-bold text-lg">ClientKing</h2>
-                <p className="text-xs text-gray-400">Multi-Shop Admin</p>
+      <header className="bg-white shadow">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 justify-between items-center">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <div className="bg-blue-600 p-2 rounded-lg">
+                  <Building2 className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-semibold text-gray-900">ClientKing</h1>
+                  <p className="text-sm text-gray-500">Multi-Shop Admin</p>
+                </div>
               </div>
             </div>
-            
+            <div className="flex items-center space-x-4">
+              <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                ClientKing Multi-Shop Admin
+              </span>
+              <Button variant="outline" size="sm" onClick={handleLogout}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Abmelden
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="mx-auto max-w-7xl py-8 px-4 sm:px-6 lg:px-8">
+        <div className="flex space-x-8">
+          {/* Sidebar Navigation */}
+          <div className="w-64 flex-shrink-0">
             <nav className="space-y-2">
               <button
                 onClick={() => setActiveTab("dashboard")}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left ${
-                  activeTab === "dashboard" 
-                    ? "bg-blue-600 text-white" 
-                    : "text-gray-300 hover:bg-slate-800"
+                className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                  activeTab === "dashboard"
+                    ? "bg-blue-100 text-blue-700"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                 }`}
               >
-                <BarChart3 className="h-5 w-5" />
+                <BarChart3 className="h-5 w-5 mr-3" />
                 Dashboard
               </button>
-              
               <button
                 onClick={() => setActiveTab("shops")}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left ${
-                  activeTab === "shops" 
-                    ? "bg-blue-600 text-white" 
-                    : "text-gray-300 hover:bg-slate-800"
+                className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                  activeTab === "shops"
+                    ? "bg-blue-100 text-blue-700"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                 }`}
               >
-                <Building2 className="h-5 w-5" />
+                <Building2 className="h-5 w-5 mr-3" />
                 Shops
               </button>
-              
               <button
                 onClick={() => setActiveTab("employees")}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left ${
-                  activeTab === "employees" 
-                    ? "bg-blue-600 text-white" 
-                    : "text-gray-300 hover:bg-slate-800"
+                className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                  activeTab === "employees"
+                    ? "bg-blue-100 text-blue-700"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                 }`}
               >
-                <Users className="h-5 w-5" />
+                <Users className="h-5 w-5 mr-3" />
                 Mitarbeiter
               </button>
-              
               <button
                 onClick={() => setActiveTab("orders")}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left ${
-                  activeTab === "orders" 
-                    ? "bg-blue-600 text-white" 
-                    : "text-gray-300 hover:bg-slate-800"
+                className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                  activeTab === "orders"
+                    ? "bg-blue-100 text-blue-700"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                 }`}
               >
-                <Package className="h-5 w-5" />
+                <Package className="h-5 w-5 mr-3" />
                 Bestellungen
               </button>
-              
               <button
                 onClick={() => setActiveTab("settings")}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left ${
-                  activeTab === "settings" 
-                    ? "bg-blue-600 text-white" 
-                    : "text-gray-300 hover:bg-slate-800"
+                className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                  activeTab === "settings"
+                    ? "bg-blue-100 text-blue-700"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                 }`}
               >
-                <Settings className="h-5 w-5" />
+                <Settings className="h-5 w-5 mr-3" />
                 Einstellungen
               </button>
-              
               <button
                 onClick={() => setActiveTab("logs")}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left ${
-                  activeTab === "logs" 
-                    ? "bg-blue-600 text-white" 
-                    : "text-gray-300 hover:bg-slate-800"
+                className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                  activeTab === "logs"
+                    ? "bg-blue-100 text-blue-700"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                 }`}
               >
-                <Activity className="h-5 w-5" />
+                <Activity className="h-5 w-5 mr-3" />
                 Logs
               </button>
             </nav>
           </div>
-        </div>
 
-        {/* Main Content */}
-        <div className="flex-1 p-6">
-          {activeTab === "dashboard" && <DashboardStats />}
-          {activeTab === "shops" && <ShopsOverview />}
-          {activeTab === "employees" && <EmployeesOverview />}
-          {activeTab === "orders" && <OrdersOverview />}
-          {activeTab === "settings" && <MSASettings />}
-          {activeTab === "logs" && <LogsOverview />}
+          {/* Main Content */}
+          <div className="flex-1">
+            <div className="max-w-6xl">
+              {activeTab === "dashboard" && <DashboardStats />}
+              {activeTab === "shops" && <ShopsOverview />}
+              {activeTab === "employees" && <EmployeesOverview />}
+              {activeTab === "orders" && <OrdersOverview />}
+              {activeTab === "settings" && <MSASettings />}
+              {activeTab === "logs" && <LogsOverview />}
+            </div>
+          </div>
         </div>
       </div>
     </div>
