@@ -696,13 +696,15 @@ function EmployeeActionsDropdown({ employee }: { employee: any }) {
 function EmployeesOverview() {
   const [onlineUsers, setOnlineUsers] = useState<number[]>([]);
   
-  const { data: employees } = useQuery({
+  const { data: employees, isLoading, error } = useQuery({
     queryKey: ["/api/multi-shop/employees"],
     queryFn: async () => {
       const response = await apiRequest("GET", "/api/multi-shop/employees");
       return response.json();
     }
   });
+
+  console.log("EmployeesOverview Debug:", { employees, isLoading, error });
 
   // WebSocket-Verbindung für Live-Updates des Online-Status
   useEffect(() => {
@@ -743,14 +745,42 @@ function EmployeesOverview() {
     };
   }, []);
 
-  if (!employees || employees.length === 0) {
+  if (isLoading) {
     return (
       <div className="space-y-6">
         <div className="h-96 flex items-center justify-center">
           <div className="text-center text-gray-500">
+            <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
+            <p className="text-xl font-medium">Lade Mitarbeiter-Daten...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="h-96 flex items-center justify-center">
+          <div className="text-center text-red-500">
+            <Users className="h-16 w-16 mx-auto mb-4 text-red-300" />
+            <p className="text-xl font-medium">Fehler beim Laden der Mitarbeiter</p>
+            <p className="text-sm">{error.message || "Unbekannter Fehler"}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!employees || employees.length === 0) {
+    return (
+      <div className="space-y-6">
+        <CreateEmployeeDialog />
+        <div className="h-96 flex items-center justify-center">
+          <div className="text-center text-gray-500">
             <Users className="h-16 w-16 mx-auto mb-4 text-gray-300" />
-            <p className="text-xl font-medium">Keine Mitarbeiter-Daten verfügbar</p>
-            <p className="text-sm">Mitarbeiter werden aus echten API-Daten geladen</p>
+            <p className="text-xl font-medium">Keine Mitarbeiter vorhanden</p>
+            <p className="text-sm">Erstellen Sie den ersten Mitarbeiter</p>
           </div>
         </div>
       </div>
