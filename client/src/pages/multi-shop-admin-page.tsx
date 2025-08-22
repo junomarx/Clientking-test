@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -265,6 +265,8 @@ function ShopsOverview() {
 
 // Mitarbeiter Übersicht
 function EmployeesOverview() {
+  const [onlineUsers, setOnlineUsers] = useState<number[]>([]);
+  
   const { data: employees } = useQuery({
     queryKey: ["/api/multi-shop/employees"],
     queryFn: async () => {
@@ -272,6 +274,43 @@ function EmployeesOverview() {
       return response.json();
     }
   });
+
+  // WebSocket-Verbindung für Live-Updates des Online-Status
+  useEffect(() => {
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const wsUrl = `${protocol}//${window.location.host}/ws/status`;
+    const socket = new WebSocket(wsUrl);
+
+    socket.onopen = () => {
+      console.log("🔗 WebSocket-Verbindung für Online-Status hergestellt");
+    };
+
+    socket.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data);
+        
+        if (message.type === 'status_update' && message.onlineUsers) {
+          const userIds = message.onlineUsers.map((user: any) => user.userId);
+          setOnlineUsers(userIds);
+          console.log("📡 Online-Status aktualisiert:", userIds);
+        }
+      } catch (error) {
+        console.error("Fehler beim Verarbeiten der WebSocket-Nachricht:", error);
+      }
+    };
+
+    socket.onclose = () => {
+      console.log("🔌 WebSocket-Verbindung für Online-Status geschlossen");
+    };
+
+    socket.onerror = (error) => {
+      console.error("WebSocket-Fehler:", error);
+    };
+
+    return () => {
+      socket.close();
+    };
+  }, []);
 
   if (!employees || employees.length === 0) {
     return (
@@ -332,10 +371,17 @@ function EmployeesOverview() {
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
-                        <div className={`w-3 h-3 rounded-full ${employee.isOnline ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                        <Badge className={employee.isOnline ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}>
-                          {employee.isOnline ? 'Online' : 'Offline'}
-                        </Badge>
+                        {(() => {
+                          const isOnlineLive = onlineUsers.includes(employee.id);
+                          return (
+                            <>
+                              <div className={`w-3 h-3 rounded-full ${isOnlineLive ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                              <Badge className={isOnlineLive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}>
+                                {isOnlineLive ? 'Online' : 'Offline'}
+                              </Badge>
+                            </>
+                          );
+                        })()}
                       </div>
                     </td>
                   </tr>
