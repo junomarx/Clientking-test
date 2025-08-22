@@ -232,11 +232,13 @@ export function registerMultiShopAdminRoutes(app: Express) {
         return res.json([]); // Keine authorisierten Shops = keine Mitarbeiter
       }
 
-      // Benutzer laden (nur relevante Felder)
+      // Benutzer laden (inklusive Namen)
       const usersData = await db
         .select({
           id: users.id,
           username: users.username,
+          firstName: users.firstName,
+          lastName: users.lastName,
           email: users.email,
           role: users.role,
           createdAt: users.createdAt,
@@ -272,6 +274,8 @@ export function registerMultiShopAdminRoutes(app: Express) {
         return {
           id: user.id,
           username: user.username,
+          firstName: user.firstName,
+          lastName: user.lastName,
           email: user.email,
           role: user.role,
           createdAt: user.createdAt,

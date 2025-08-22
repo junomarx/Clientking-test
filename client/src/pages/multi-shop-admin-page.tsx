@@ -435,6 +435,17 @@ function EditEmployeeDialog({ employee, open, onOpenChange }: { employee: any, o
     password: '',
     isActive: employee?.isActive ?? true
   });
+
+  // Update form data when employee changes
+  React.useEffect(() => {
+    setFormData({
+      firstName: employee?.firstName || '',
+      lastName: employee?.lastName || '',
+      email: employee?.email || '',
+      password: '',
+      isActive: employee?.isActive ?? true
+    });
+  }, [employee]);
   const [showPasswordField, setShowPasswordField] = useState(false);
   const { toast } = useToast();
 
@@ -774,7 +785,7 @@ function EmployeesOverview() {
                       <div>
                         <p className="font-medium">
                           {employee.username || 
-                           (employee.firstName && employee.lastName) 
+                           (employee.firstName || employee.lastName) 
                              ? `${employee.firstName || ''} ${employee.lastName || ''}`.trim() 
                              : employee.email || 'Unbekannt'}
                         </p>
