@@ -239,7 +239,7 @@ export function MultiShopAdminDetailsDialog({
               <TabsTrigger value="pricing">Preisgestaltung</TabsTrigger>
             </TabsList>
 
-            <div className="flex-1 overflow-y-auto mt-4 pr-2" style={{ maxHeight: 'calc(90vh - 160px)' }}>
+            <div className="flex-1 overflow-y-auto mt-4 pr-2" style={{ maxHeight: 'calc(90vh - 260px)' }}>
               {/* Übersicht Tab */}
               <TabsContent value="overview" className="space-y-4 m-0 data-[state=active]:block"
                 style={{ height: 'fit-content' }}>
