@@ -571,9 +571,125 @@ function EditEmployeeDialog({ employee, open, onOpenChange }: { employee: any, o
   );
 }
 
+// Shop-Wechsel Dialog
+function ShopReassignmentDialog({ employee, open, onOpenChange }: { 
+  employee: any; 
+  open: boolean; 
+  onOpenChange: (open: boolean) => void; 
+}) {
+  const [selectedShop, setSelectedShop] = useState("");
+  const { toast } = useToast();
+
+  const { data: shops } = useQuery({
+    queryKey: ["/api/multi-shop/accessible-shops"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/multi-shop/accessible-shops");
+      return response.json();
+    }
+  });
+
+  const reassignMutation = useMutation({
+    mutationFn: async (shopId: string) => {
+      const response = await apiRequest("PATCH", `/api/multi-shop/employees/${employee.id}/shop`, {
+        shopId: parseInt(shopId)
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Shop-Wechsel erfolgreich",
+        description: data.message,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/multi-shop/employees"] });
+      onOpenChange(false);
+      setSelectedShop("");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Fehler beim Shop-Wechsel",
+        description: error.message || "Unbekannter Fehler",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSubmit = () => {
+    if (!selectedShop) {
+      toast({
+        title: "Shop auswählen",
+        description: "Bitte wählen Sie einen Ziel-Shop aus",
+        variant: "destructive",
+      });
+      return;
+    }
+    reassignMutation.mutate(selectedShop);
+  };
+
+  // Verfügbare Shops (ohne den aktuellen Shop)
+  const availableShops = shops?.filter((shop: any) => shop.shopId !== employee.shopId) || [];
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Mitarbeiter zu anderem Shop verschieben</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label className="text-sm font-medium">Mitarbeiter</Label>
+            <div className="mt-1 p-2 bg-gray-50 rounded border">
+              {employee.username || `${employee.firstName || ''} ${employee.lastName || ''}`.trim() || employee.email}
+            </div>
+          </div>
+          
+          <div>
+            <Label className="text-sm font-medium">Aktueller Shop</Label>
+            <div className="mt-1 p-2 bg-gray-50 rounded border">
+              {employee.businessName}
+            </div>
+          </div>
+          
+          <div>
+            <Label htmlFor="targetShop" className="text-sm font-medium">Ziel-Shop</Label>
+            <Select value={selectedShop} onValueChange={setSelectedShop}>
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder="Shop auswählen..." />
+              </SelectTrigger>
+              <SelectContent>
+                {availableShops.map((shop: any) => (
+                  <SelectItem key={shop.shopId} value={shop.shopId.toString()}>
+                    {shop.businessName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-4">
+            <Button 
+              variant="outline" 
+              onClick={() => onOpenChange(false)}
+              disabled={reassignMutation.isPending}
+            >
+              Abbrechen
+            </Button>
+            <Button 
+              onClick={handleSubmit}
+              disabled={reassignMutation.isPending || !selectedShop}
+            >
+              {reassignMutation.isPending ? "Verschiebe..." : "Verschieben"}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // Employee Actions Dropdown
 function EmployeeActionsDropdown({ employee }: { employee: any }) {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [shopReassignDialogOpen, setShopReassignDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const toggleStatusMutation = useMutation({
@@ -652,6 +768,10 @@ function EmployeeActionsDropdown({ employee }: { employee: any }) {
               </>
             )}
           </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setShopReassignDialogOpen(true)}>
+            <Building2 className="h-4 w-4 mr-2" />
+            Shop wechseln
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <AlertDialog>
             <AlertDialogTrigger asChild>
@@ -687,6 +807,12 @@ function EmployeeActionsDropdown({ employee }: { employee: any }) {
         employee={employee} 
         open={editDialogOpen} 
         onOpenChange={setEditDialogOpen}
+      />
+      
+      <ShopReassignmentDialog
+        employee={employee}
+        open={shopReassignDialogOpen}
+        onOpenChange={setShopReassignDialogOpen}
       />
     </>
   );

@@ -855,6 +855,88 @@ export function registerMultiShopAdminRoutes(app: Express) {
     }
   });
 
+  // Route: Shop-Zuweisung für Mitarbeiter ändern
+  app.patch("/api/multi-shop/employees/:employeeId/shop", protectMultiShopAdmin, async (req, res) => {
+    try {
+      const { employeeId } = req.params;
+      const { shopId } = req.body;
+      
+      // Multi-Shop Admin Berechtigung prüfen
+      if (!req.user || !req.user.isMultiShopAdmin) {
+        return res.status(403).json({ error: "Multi-Shop Admin Berechtigung erforderlich" });
+      }
+
+      if (!shopId || isNaN(parseInt(shopId))) {
+        return res.status(400).json({ error: "Ungültige Shop-ID" });
+      }
+
+      const newShopId = parseInt(shopId);
+      
+      // Mitarbeiter laden
+      const [employee] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, parseInt(employeeId)))
+        .limit(1);
+
+      if (!employee) {
+        return res.status(404).json({ error: "Mitarbeiter nicht gefunden" });
+      }
+
+      // Prüfen ob Multi-Shop Admin Zugriff auf beide Shops hat (aktueller und neuer)
+      const authorizedShops = await db
+        .select({ shopId: userShopAccess.shopId })
+        .from(userShopAccess)
+        .where(and(
+          eq(userShopAccess.userId, req.user.id),
+          eq(userShopAccess.isActive, true)
+        ));
+
+      const authorizedShopIds = authorizedShops.map(shop => shop.shopId);
+      
+      // Berechtigung für aktuellen Shop prüfen
+      if (!authorizedShopIds.includes(employee.shopId!)) {
+        return res.status(403).json({ error: "Keine Berechtigung für den aktuellen Shop des Mitarbeiters" });
+      }
+      
+      // Berechtigung für Ziel-Shop prüfen
+      if (!authorizedShopIds.includes(newShopId)) {
+        return res.status(403).json({ error: "Keine Berechtigung für den Ziel-Shop" });
+      }
+
+      // Shop-Zuweisung aktualisieren
+      const [updatedEmployee] = await db
+        .update(users)
+        .set({ shopId: newShopId })
+        .where(eq(users.id, parseInt(employeeId)))
+        .returning();
+
+      // Shop-Namen für Antwort laden
+      const [oldShop] = await db
+        .select({ businessName: businessSettings.businessName })
+        .from(businessSettings)
+        .where(eq(businessSettings.shopId, employee.shopId!))
+        .limit(1);
+
+      const [newShop] = await db
+        .select({ businessName: businessSettings.businessName })
+        .from(businessSettings)
+        .where(eq(businessSettings.shopId, newShopId))
+        .limit(1);
+
+      console.log(`🔄 Mitarbeiter ${employee.username || employee.email} von Shop "${oldShop?.businessName}" zu Shop "${newShop?.businessName}" verschoben`);
+      
+      res.json({ 
+        message: `Mitarbeiter erfolgreich von "${oldShop?.businessName}" zu "${newShop?.businessName}" verschoben`,
+        employee: updatedEmployee
+      });
+
+    } catch (error) {
+      console.error("Shop reassignment error:", error);
+      res.status(500).json({ error: "Fehler beim Ändern der Shop-Zuweisung" });
+    }
+  });
+
   // Route: Mitarbeiter aktivieren/deaktivieren
   app.patch("/api/multi-shop/employees/:employeeId/status", protectMultiShopAdmin, async (req, res) => {
     try {
