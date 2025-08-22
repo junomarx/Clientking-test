@@ -814,10 +814,11 @@ function EmployeesOverview() {
                     <td className="py-3 px-4">
                       <div>
                         <p className="font-medium">
-                          {employee.username || 
-                           (employee.firstName || employee.lastName) 
-                             ? `${employee.firstName || ''} ${employee.lastName || ''}`.trim() 
-                             : employee.email || 'Unbekannt'}
+                          {employee.username 
+                            ? employee.username 
+                            : (employee.firstName || employee.lastName) 
+                              ? `${employee.firstName || ''} ${employee.lastName || ''}`.trim() 
+                              : employee.email || 'Unbekannt'}
                         </p>
                         <p className="text-sm text-gray-500">{employee.email}</p>
                       </div>
