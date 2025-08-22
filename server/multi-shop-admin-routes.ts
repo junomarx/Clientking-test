@@ -1,7 +1,24 @@
 import type { Express } from "express";
 import { eq, sql, and, or, count, desc, inArray } from "drizzle-orm";
 import { db } from "./db";
-import { users, businessSettings, repairs, customers, userShopAccess, spareParts, multiShopPermissions } from "@shared/schema";
+import { users, businessSettings, repairs, customers, userShopAccess, spareParts, multiShopPermissions, msaProfiles, businessDataSchema } from "@shared/schema";
+import { scrypt, randomBytes, timingSafeEqual } from "crypto";
+import { promisify } from "util";
+
+const scryptAsync = promisify(scrypt);
+
+async function hashPassword(password: string) {
+  const salt = randomBytes(16).toString("hex");
+  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+  return `${buf.toString("hex")}.${salt}`;
+}
+
+async function comparePasswords(supplied: string, stored: string) {
+  const [hashed, salt] = stored.split(".");
+  const hashedBuf = Buffer.from(hashed, "hex");
+  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+  return timingSafeEqual(hashedBuf, suppliedBuf);
+}
 
 export function registerMultiShopAdminRoutes(app: Express) {
   // Multi-Shop Admin Protection Middleware with Header Authentication
@@ -842,7 +859,7 @@ export function registerMultiShopAdminRoutes(app: Express) {
       const { storage } = await import('./storage');
       const success = await storage.deleteEmployee(parseInt(employeeId));
 
-      if (success) {
+      if (success === true) {
         res.json({ message: `Mitarbeiter wurde erfolgreich gelöscht` });
       } else {
         res.status(500).json({ error: "Fehler beim Löschen des Mitarbeiters" });
@@ -1014,6 +1031,209 @@ export function registerMultiShopAdminRoutes(app: Express) {
     } catch (error) {
       console.error("Update employee status error:", error);
       res.status(500).json({ error: "Fehler beim Ändern des Mitarbeiter-Status" });
+    }
+  });
+
+  // === MSA Profile Management ===
+
+  // MSA Profil abrufen
+  app.get("/api/multi-shop/profile", protectMultiShopAdmin, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+
+      // Benutzer-Grunddaten abrufen
+      const [user] = await db
+        .select({
+          id: users.id,
+          username: users.username,
+          email: users.email,
+          firstName: users.firstName,
+          lastName: users.lastName
+        })
+        .from(users)
+        .where(eq(users.id, userId));
+
+      if (!user) {
+        return res.status(404).json({ error: "Benutzer nicht gefunden" });
+      }
+
+      // MSA Profile abrufen
+      const [msaProfile] = await db
+        .select()
+        .from(msaProfiles)
+        .where(eq(msaProfiles.userId, userId));
+
+      // Kombinierte Profile-Daten zurückgeben
+      const profileData = {
+        id: user.id,
+        username: user.username,
+        email: msaProfile?.email || user.email,
+        firstName: msaProfile?.firstName || user.firstName,
+        lastName: msaProfile?.lastName || user.lastName,
+        phone: msaProfile?.phone,
+        businessData: msaProfile?.businessData || {}
+      };
+
+      res.json(profileData);
+    } catch (error) {
+      console.error("Fehler beim Abrufen des MSA-Profils:", error);
+      res.status(500).json({ error: "Fehler beim Abrufen des Profils" });
+    }
+  });
+
+  // MSA Profil-Daten aktualisieren
+  app.put("/api/multi-shop/profile", protectMultiShopAdmin, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const { firstName, lastName, email, phone } = req.body;
+
+      // Validation
+      if (!firstName || !lastName || !email) {
+        return res.status(400).json({ error: "Vorname, Nachname und E-Mail sind erforderlich" });
+      }
+
+      // Prüfen ob MSA-Profil bereits existiert
+      const [existingProfile] = await db
+        .select()
+        .from(msaProfiles)
+        .where(eq(msaProfiles.userId, userId));
+
+      if (existingProfile) {
+        // Update existierendes Profil
+        const [updatedProfile] = await db
+          .update(msaProfiles)
+          .set({
+            firstName,
+            lastName,
+            email,
+            phone,
+            updatedAt: new Date()
+          })
+          .where(eq(msaProfiles.userId, userId))
+          .returning();
+
+        res.json(updatedProfile);
+      } else {
+        // Erstelle neues MSA-Profil
+        const [newProfile] = await db
+          .insert(msaProfiles)
+          .values({
+            userId,
+            firstName,
+            lastName,
+            email,
+            phone
+          })
+          .returning();
+
+        res.json(newProfile);
+      }
+    } catch (error) {
+      console.error("Fehler beim Aktualisieren des MSA-Profils:", error);
+      res.status(500).json({ error: "Fehler beim Speichern der Profildaten" });
+    }
+  });
+
+  // MSA Geschäftsdaten aktualisieren
+  app.put("/api/multi-shop/business-data", protectMultiShopAdmin, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      
+      // Validierung der Geschäftsdaten
+      const businessDataValidation = businessDataSchema.safeParse(req.body);
+      if (!businessDataValidation.success) {
+        return res.status(400).json({ 
+          error: "Ungültige Geschäftsdaten", 
+          details: businessDataValidation.error.issues 
+        });
+      }
+
+      const businessData = businessDataValidation.data;
+
+      // Prüfen ob MSA-Profil bereits existiert
+      const [existingProfile] = await db
+        .select()
+        .from(msaProfiles)
+        .where(eq(msaProfiles.userId, userId));
+
+      if (existingProfile) {
+        // Update existierendes Profil
+        const [updatedProfile] = await db
+          .update(msaProfiles)
+          .set({
+            businessData,
+            updatedAt: new Date()
+          })
+          .where(eq(msaProfiles.userId, userId))
+          .returning();
+
+        res.json(updatedProfile);
+      } else {
+        // Erstelle neues MSA-Profil mit Geschäftsdaten
+        const [newProfile] = await db
+          .insert(msaProfiles)
+          .values({
+            userId,
+            businessData
+          })
+          .returning();
+
+        res.json(newProfile);
+      }
+    } catch (error) {
+      console.error("Fehler beim Aktualisieren der Geschäftsdaten:", error);
+      res.status(500).json({ error: "Fehler beim Speichern der Geschäftsdaten" });
+    }
+  });
+
+  // MSA Passwort ändern
+  app.put("/api/multi-shop/change-password", protectMultiShopAdmin, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const { currentPassword, newPassword } = req.body;
+
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ error: "Aktuelles und neues Passwort sind erforderlich" });
+      }
+
+      if (newPassword.length < 6) {
+        return res.status(400).json({ error: "Das neue Passwort muss mindestens 6 Zeichen lang sein" });
+      }
+
+      // Aktuellen Benutzer mit Passwort abrufen
+      const [user] = await db
+        .select({
+          id: users.id,
+          password: users.password
+        })
+        .from(users)
+        .where(eq(users.id, userId));
+
+      if (!user) {
+        return res.status(404).json({ error: "Benutzer nicht gefunden" });
+      }
+
+      // Aktuelles Passwort verifizieren
+      const isCurrentPasswordValid = await comparePasswords(currentPassword, user.password);
+      if (!isCurrentPasswordValid) {
+        return res.status(400).json({ error: "Das aktuelle Passwort ist inkorrekt" });
+      }
+
+      // Neues Passwort hashen
+      const hashedNewPassword = await hashPassword(newPassword);
+
+      // Passwort in der Datenbank aktualisieren
+      await db
+        .update(users)
+        .set({
+          password: hashedNewPassword
+        })
+        .where(eq(users.id, userId));
+
+      res.json({ success: true, message: "Passwort erfolgreich geändert" });
+    } catch (error) {
+      console.error("Fehler beim Ändern des Passworts:", error);
+      res.status(500).json({ error: "Fehler beim Ändern des Passworts" });
     }
   });
 

@@ -327,6 +327,46 @@ export const insertMultiShopPermissionSchema = createInsertSchema(multiShopPermi
 export type MultiShopPermission = typeof multiShopPermissions.$inferSelect;
 export type InsertMultiShopPermission = z.infer<typeof insertMultiShopPermissionSchema>;
 
+// MSA Profile Tabelle für Multi-Shop Admin Geschäftsdaten
+export const msaProfiles = pgTable("msa_profiles", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull().unique(),
+  // Persönliche Daten
+  firstName: text("first_name"),
+  lastName: text("last_name"),
+  email: text("email"),
+  phone: text("phone"),
+  // Geschäftsdaten für Rechnungsstellung
+  businessData: jsonb("business_data"), // JSON mit allen Geschäftsdaten
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertMSAProfileSchema = createInsertSchema(msaProfiles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type MSAProfile = typeof msaProfiles.$inferSelect;
+export type InsertMSAProfile = z.infer<typeof insertMSAProfileSchema>;
+
+// Geschäftsdaten Schema für die JSON-Struktur
+export const businessDataSchema = z.object({
+  companyName: z.string().min(1, "Firmenname ist erforderlich"),
+  contactPerson: z.string().min(1, "Ansprechpartner ist erforderlich"),
+  street: z.string().min(1, "Straße ist erforderlich"),
+  city: z.string().min(1, "Stadt ist erforderlich"),
+  zipCode: z.string().min(1, "PLZ ist erforderlich"),
+  country: z.string().min(1, "Land ist erforderlich"),
+  vatNumber: z.string().optional(),
+  taxNumber: z.string().optional(),
+  email: z.string().email("Gültige E-Mail erforderlich"),
+  phone: z.string().min(1, "Telefonnummer ist erforderlich"),
+});
+
+export type BusinessData = z.infer<typeof businessDataSchema>;
+
 // Unternehmensdaten / Geschäftsinformationen
 export const businessSettings = pgTable("business_settings", {
   id: serial("id").primaryKey(),

@@ -28,7 +28,8 @@ import {
   MoreHorizontal,
   Trash2,
   UserCheck,
-  UserX
+  UserX,
+  Settings
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
@@ -1760,6 +1761,453 @@ function OrdersOverview() {
   );
 }
 
+// MSA Einstellungen
+function MSASettings() {
+  const [activeSettingsTab, setActiveSettingsTab] = useState<"profile" | "business" | "billing" | "security">("profile");
+  const { toast } = useToast();
+
+  // Profil-Daten
+  const [profileData, setProfileData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: ''
+  });
+
+  // Geschäftsdaten für Rechnungsstellung
+  const [businessData, setBusinessData] = useState({
+    companyName: '',
+    contactPerson: '',
+    street: '',
+    city: '',
+    zipCode: '',
+    country: 'Deutschland',
+    vatNumber: '',
+    taxNumber: '',
+    email: '',
+    phone: ''
+  });
+
+  // Passwort-Änderung
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+
+  // Lade aktuelle Daten
+  const { data: msaProfile } = useQuery({
+    queryKey: ["/api/multi-shop/profile"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/multi-shop/profile");
+      return response.json();
+    }
+  });
+
+  React.useEffect(() => {
+    if (msaProfile) {
+      setProfileData({
+        firstName: msaProfile.firstName || '',
+        lastName: msaProfile.lastName || '',
+        email: msaProfile.email || '',
+        phone: msaProfile.phone || ''
+      });
+      
+      if (msaProfile.businessData) {
+        setBusinessData({
+          companyName: msaProfile.businessData.companyName || '',
+          contactPerson: msaProfile.businessData.contactPerson || '',
+          street: msaProfile.businessData.street || '',
+          city: msaProfile.businessData.city || '',
+          zipCode: msaProfile.businessData.zipCode || '',
+          country: msaProfile.businessData.country || 'Deutschland',
+          vatNumber: msaProfile.businessData.vatNumber || '',
+          taxNumber: msaProfile.businessData.taxNumber || '',
+          email: msaProfile.businessData.email || '',
+          phone: msaProfile.businessData.phone || ''
+        });
+      }
+    }
+  }, [msaProfile]);
+
+  // Profil aktualisieren
+  const updateProfileMutation = useMutation({
+    mutationFn: async (data: typeof profileData) => {
+      const response = await apiRequest("PUT", "/api/multi-shop/profile", data);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Profil aktualisiert",
+        description: "Ihre Profildaten wurden erfolgreich gespeichert",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/multi-shop/profile"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Fehler",
+        description: error.message || "Fehler beim Speichern der Profildaten",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Geschäftsdaten aktualisieren
+  const updateBusinessMutation = useMutation({
+    mutationFn: async (data: typeof businessData) => {
+      const response = await apiRequest("PUT", "/api/multi-shop/business-data", data);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Geschäftsdaten aktualisiert",
+        description: "Ihre Geschäftsdaten für die Rechnungsstellung wurden gespeichert",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/multi-shop/profile"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Fehler",
+        description: error.message || "Fehler beim Speichern der Geschäftsdaten",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Passwort ändern
+  const changePasswordMutation = useMutation({
+    mutationFn: async (data: typeof passwordData) => {
+      const response = await apiRequest("PUT", "/api/multi-shop/change-password", {
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Passwort geändert",
+        description: "Ihr Passwort wurde erfolgreich geändert",
+      });
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Fehler",
+        description: error.message || "Fehler beim Ändern des Passworts",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleProfileSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateProfileMutation.mutate(profileData);
+  };
+
+  const handleBusinessSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateBusinessMutation.mutate(businessData);
+  };
+
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast({
+        title: "Passwort-Fehler",
+        description: "Die neuen Passwörter stimmen nicht überein",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (passwordData.newPassword.length < 6) {
+      toast({
+        title: "Passwort-Fehler",
+        description: "Das neue Passwort muss mindestens 6 Zeichen lang sein",
+        variant: "destructive",
+      });
+      return;
+    }
+    changePasswordMutation.mutate(passwordData);
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>MSA Account Einstellungen</CardTitle>
+          <CardDescription>Verwalten Sie Ihre Multi-Shop Admin Konto-Einstellungen</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Tabs value={activeSettingsTab} onValueChange={(value: any) => setActiveSettingsTab(value)}>
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="profile">Profil</TabsTrigger>
+              <TabsTrigger value="business">Geschäftsdaten</TabsTrigger>
+              <TabsTrigger value="billing">Rechnungsstellung</TabsTrigger>
+              <TabsTrigger value="security">Sicherheit</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="profile" className="space-y-6 mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Persönliche Daten</CardTitle>
+                  <CardDescription>Ihre persönlichen Kontoinformationen</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleProfileSubmit} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="firstName">Vorname</Label>
+                        <Input
+                          id="firstName"
+                          value={profileData.firstName}
+                          onChange={(e) => setProfileData({...profileData, firstName: e.target.value})}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="lastName">Nachname</Label>
+                        <Input
+                          id="lastName"
+                          value={profileData.lastName}
+                          onChange={(e) => setProfileData({...profileData, lastName: e.target.value})}
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email">E-Mail-Adresse</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={profileData.email}
+                        onChange={(e) => setProfileData({...profileData, email: e.target.value})}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Telefonnummer</Label>
+                      <Input
+                        id="phone"
+                        value={profileData.phone}
+                        onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
+                      />
+                    </div>
+                    <Button type="submit" disabled={updateProfileMutation.isPending}>
+                      {updateProfileMutation.isPending ? "Speichere..." : "Profil speichern"}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="business" className="space-y-6 mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Geschäftsdaten für Rechnungsstellung</CardTitle>
+                  <CardDescription>
+                    Diese Daten werden für die Rechnungsstellung aller Ihrer ClientKing-Shops verwendet
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleBusinessSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="companyName">Firmenname</Label>
+                      <Input
+                        id="companyName"
+                        value={businessData.companyName}
+                        onChange={(e) => setBusinessData({...businessData, companyName: e.target.value})}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="contactPerson">Ansprechpartner</Label>
+                      <Input
+                        id="contactPerson"
+                        value={businessData.contactPerson}
+                        onChange={(e) => setBusinessData({...businessData, contactPerson: e.target.value})}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="street">Straße und Hausnummer</Label>
+                      <Input
+                        id="street"
+                        value={businessData.street}
+                        onChange={(e) => setBusinessData({...businessData, street: e.target.value})}
+                        required
+                      />
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="zipCode">PLZ</Label>
+                        <Input
+                          id="zipCode"
+                          value={businessData.zipCode}
+                          onChange={(e) => setBusinessData({...businessData, zipCode: e.target.value})}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="city">Stadt</Label>
+                        <Input
+                          id="city"
+                          value={businessData.city}
+                          onChange={(e) => setBusinessData({...businessData, city: e.target.value})}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="country">Land</Label>
+                        <Input
+                          id="country"
+                          value={businessData.country}
+                          onChange={(e) => setBusinessData({...businessData, country: e.target.value})}
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="vatNumber">USt-IdNr. (optional)</Label>
+                        <Input
+                          id="vatNumber"
+                          value={businessData.vatNumber}
+                          onChange={(e) => setBusinessData({...businessData, vatNumber: e.target.value})}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="taxNumber">Steuernummer (optional)</Label>
+                        <Input
+                          id="taxNumber"
+                          value={businessData.taxNumber}
+                          onChange={(e) => setBusinessData({...businessData, taxNumber: e.target.value})}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="businessEmail">Geschäfts-E-Mail</Label>
+                        <Input
+                          id="businessEmail"
+                          type="email"
+                          value={businessData.email}
+                          onChange={(e) => setBusinessData({...businessData, email: e.target.value})}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="businessPhone">Geschäfts-Telefon</Label>
+                        <Input
+                          id="businessPhone"
+                          value={businessData.phone}
+                          onChange={(e) => setBusinessData({...businessData, phone: e.target.value})}
+                          required
+                        />
+                      </div>
+                    </div>
+                    <Button type="submit" disabled={updateBusinessMutation.isPending}>
+                      {updateBusinessMutation.isPending ? "Speichere..." : "Geschäftsdaten speichern"}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="billing" className="space-y-6 mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Rechnungsstellung & Abonnement</CardTitle>
+                  <CardDescription>Übersicht Ihrer ClientKing-Abonnements und Rechnungen</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    <div className="bg-blue-50 p-4 rounded-lg">
+                      <h3 className="font-medium text-blue-900 mb-2">Multi-Shop Abonnement</h3>
+                      <p className="text-blue-800 text-sm mb-3">
+                        Sie erhalten eine zentrale Rechnung für alle Ihre ClientKing-Shops basierend auf den oben eingegebenen Geschäftsdaten.
+                      </p>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span>Aktive Shops:</span>
+                          <span className="font-medium">2 Shops</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Preis pro Shop:</span>
+                          <span className="font-medium">€29,90/Monat</span>
+                        </div>
+                        <div className="flex justify-between border-t border-blue-200 pt-2">
+                          <span className="font-medium">Gesamt monatlich:</span>
+                          <span className="font-bold">€59,80</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h3 className="font-medium mb-3">Rechnungshistorie</h3>
+                      <div className="text-center py-8 text-gray-500">
+                        <p>Rechnungshistorie wird hier angezeigt</p>
+                        <p className="text-sm mt-1">Vergangene Rechnungen und Zahlungsdetails</p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="security" className="space-y-6 mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Passwort ändern</CardTitle>
+                  <CardDescription>Ändern Sie Ihr MSA-Passwort für erhöhte Sicherheit</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="currentPassword">Aktuelles Passwort</Label>
+                      <Input
+                        id="currentPassword"
+                        type="password"
+                        value={passwordData.currentPassword}
+                        onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="newPassword">Neues Passwort</Label>
+                      <Input
+                        id="newPassword"
+                        type="password"
+                        value={passwordData.newPassword}
+                        onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
+                        required
+                        minLength={6}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="confirmPassword">Neues Passwort bestätigen</Label>
+                      <Input
+                        id="confirmPassword"
+                        type="password"
+                        value={passwordData.confirmPassword}
+                        onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
+                        required
+                        minLength={6}
+                      />
+                    </div>
+                    <Button type="submit" disabled={changePasswordMutation.isPending}>
+                      {changePasswordMutation.isPending ? "Ändere Passwort..." : "Passwort ändern"}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 // Logs Übersicht
 function LogsOverview() {
   return (
@@ -1885,6 +2333,18 @@ export default function MultiShopAdminPage() {
               </button>
               
               <button
+                onClick={() => setActiveTab("settings")}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left ${
+                  activeTab === "settings" 
+                    ? "bg-blue-600 text-white" 
+                    : "text-gray-300 hover:bg-slate-800"
+                }`}
+              >
+                <Settings className="h-5 w-5" />
+                Einstellungen
+              </button>
+              
+              <button
                 onClick={() => setActiveTab("logs")}
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left ${
                   activeTab === "logs" 
@@ -1905,6 +2365,7 @@ export default function MultiShopAdminPage() {
           {activeTab === "shops" && <ShopsOverview />}
           {activeTab === "employees" && <EmployeesOverview />}
           {activeTab === "orders" && <OrdersOverview />}
+          {activeTab === "settings" && <MSASettings />}
           {activeTab === "logs" && <LogsOverview />}
         </div>
       </div>
