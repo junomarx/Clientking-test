@@ -6237,19 +6237,38 @@ export class DatabaseStorage implements IStorage {
           );
 
           // 2. MSA-Profil laden
-          const msaProfile = await this.getMSAProfile(admin.id);
+          let msaProfile;
+          try {
+            msaProfile = await this.getMSAProfile(admin.id);
+          } catch (error) {
+            console.log('MSA-Profile-Tabelle existiert noch nicht, verwende null');
+            msaProfile = null;
+          }
           
           // 3. MSA-Preisgestaltung laden (oder Standard verwenden)
-          let msaPricing = await this.getMSAPricing(admin.id);
-          if (!msaPricing) {
-            // Standard-Pricing erstellen falls nicht vorhanden
-            msaPricing = await this.createMSAPricing({
-              userId: admin.id,
+          let msaPricing;
+          try {
+            msaPricing = await this.getMSAPricing(admin.id);
+            if (!msaPricing) {
+              // Standard-Pricing erstellen falls nicht vorhanden
+              msaPricing = await this.createMSAPricing({
+                userId: admin.id,
+                pricePerShop: 29.90,
+                currency: 'EUR',
+                billingCycle: 'monthly',
+                discountPercent: 0
+              });
+            }
+          } catch (error) {
+            console.log('MSA-Pricing-Tabelle existiert noch nicht, verwende Standard-Werte');
+            // Fallback auf Standard-Werte falls Tabelle nicht existiert
+            msaPricing = {
               pricePerShop: 29.90,
               currency: 'EUR',
               billingCycle: 'monthly',
-              discountPercent: 0
-            });
+              discountPercent: 0,
+              notes: null
+            };
           }
 
           // 4. Monatlichen Gesamtpreis berechnen
