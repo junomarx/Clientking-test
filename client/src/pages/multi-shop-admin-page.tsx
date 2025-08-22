@@ -16,7 +16,7 @@ import {
   Euro,
   CheckCircle,
   Clock,
-  Star,
+
   Eye,
   Edit3,
   LogOut
@@ -302,9 +302,7 @@ function EmployeesOverview() {
                   <th className="text-left py-3 px-4 font-medium text-gray-600">Mitarbeiter</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-600">Shop</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-600">Rolle</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Reparaturen</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Bewertung</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Status</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-600">Online-Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -333,21 +331,12 @@ function EmployeesOverview() {
                       </Badge>
                     </td>
                     <td className="py-3 px-4">
-                      <div>
-                        <p className="font-medium">{employee.totalRepairs || 0}</p>
-                        <p className="text-sm text-gray-500">gesamt</p>
+                      <div className="flex items-center gap-2">
+                        <div className={`w-3 h-3 rounded-full ${employee.isOnline ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                        <Badge className={employee.isOnline ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}>
+                          {employee.isOnline ? 'Online' : 'Offline'}
+                        </Badge>
                       </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-1">
-                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        <span className="font-medium">{employee.averageRating || '4.5'}</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <Badge className={employee.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}>
-                        {employee.isActive ? 'Aktiv' : 'Inaktiv'}
-                      </Badge>
                     </td>
                   </tr>
                 ))}

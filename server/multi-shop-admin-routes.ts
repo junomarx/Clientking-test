@@ -261,8 +261,14 @@ export function registerMultiShopAdminRoutes(app: Express) {
         businessMap.set(business.shopId, business.businessName);
       });
 
-      // Für jeden Mitarbeiter vereinfachte Statistiken hinzufügen
+      // Für jeden Mitarbeiter Online-Status hinzufügen
+      const { getOnlineStatusManager } = await import('./websocket-server');
+      const manager = getOnlineStatusManager();
+      const onlineUserIds = manager ? manager.getOnlineUsers() : [];
+      
       const employeesWithStats = usersData.map((user) => {
+        const isOnline = onlineUserIds.includes(user.id);
+        
         return {
           id: user.id,
           username: user.username,
@@ -272,9 +278,7 @@ export function registerMultiShopAdminRoutes(app: Express) {
           isActive: user.isActive,
           shopId: user.shopId,
           businessName: businessMap.get(user.shopId) || 'Unbekannt',
-          repairCount: Math.floor(Math.random() * 50) + 10,
-          rating: (4.2 + Math.random() * 0.8).toFixed(1),
-          yearsOfService: Math.max(1, new Date().getFullYear() - new Date(user.createdAt).getFullYear())
+          isOnline: isOnline
         };
       });
 
