@@ -222,7 +222,7 @@ export function MultiShopAdminDetailsDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <ShieldCheck className="h-5 w-5" />
@@ -239,7 +239,7 @@ export function MultiShopAdminDetailsDialog({
               <TabsTrigger value="pricing">Preisgestaltung</TabsTrigger>
             </TabsList>
 
-            <div className="flex-1 overflow-y-auto mt-4 space-y-4">
+            <div className="flex-1 overflow-y-auto mt-4 space-y-4 pr-2">
               {/* Übersicht Tab */}
               <TabsContent value="overview" className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -384,7 +384,7 @@ export function MultiShopAdminDetailsDialog({
               </TabsContent>
 
               {/* Profil Tab */}
-              <TabsContent value="profile" className="space-y-4">
+              <TabsContent value="profile" className="space-y-4 overflow-y-auto max-h-full">
                 <Form {...profileForm}>
                   <form onSubmit={profileForm.handleSubmit(onUpdateProfile)} className="space-y-4">
                     <Card>
@@ -543,7 +543,7 @@ export function MultiShopAdminDetailsDialog({
               </TabsContent>
 
               {/* Preisgestaltung Tab */}
-              <TabsContent value="pricing" className="space-y-4">
+              <TabsContent value="pricing" className="space-y-4 overflow-y-auto max-h-full">
                 <Form {...pricingForm}>
                   <form onSubmit={pricingForm.handleSubmit(onUpdatePricing)} className="space-y-4">
                     <Card>

@@ -1767,6 +1767,7 @@ function OrdersOverview() {
 
 // MSA Profil Einstellungen
 function MSAProfileSettings() {
+  const { toast } = useToast();
   const [profileData, setProfileData] = useState({
     firstName: '',
     lastName: '',
@@ -1883,6 +1884,7 @@ function MSAProfileSettings() {
 
 // MSA Geschäftsdaten Einstellungen  
 function MSABusinessSettings() {
+  const { toast } = useToast();
   const [businessData, setBusinessData] = useState({
     companyName: '',
     contactPerson: '',
@@ -2075,6 +2077,7 @@ function MSABusinessSettings() {
 
 // MSA Preisgestaltung Einstellungen
 function MSAPricingSettings() {
+  const { toast } = useToast();
   const { data: msaProfile } = useQuery({
     queryKey: ["/api/multi-shop/profile"],
     queryFn: async () => {
