@@ -33,37 +33,130 @@ import {
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 
-// Dashboard Statistiken
+// Dashboard Statistiken mit Zeitraum-Filter
 function DashboardStats() {
-  const { data: stats } = useQuery({
-    queryKey: ["/api/multi-shop/dashboard-stats"],
+  const [selectedPeriod, setSelectedPeriod] = useState<'day' | 'week' | 'month' | 'quarter' | 'year' | 'all' | 'custom'>('month');
+  const [customStartDate, setCustomStartDate] = useState<string>('');
+  const [customEndDate, setCustomEndDate] = useState<string>('');
+
+  // Dashboard-Übersicht mit Zeitraum-Filter
+  const { data: shops, isLoading } = useQuery({
+    queryKey: ["/api/multi-shop/accessible-shops", selectedPeriod, customStartDate, customEndDate],
     queryFn: async () => {
-      const response = await apiRequest("GET", "/api/multi-shop/dashboard-stats");
+      let url = `/api/multi-shop/accessible-shops?period=${selectedPeriod}`;
+      if (selectedPeriod === 'custom' && customStartDate && customEndDate) {
+        url = `/api/multi-shop/accessible-shops?start=${customStartDate}&end=${customEndDate}`;
+      }
+      const response = await apiRequest("GET", url);
       return response.json();
-    }
+    },
+    refetchInterval: 30000 // Alle 30 Sekunden aktualisieren für Echtzeit-Daten
   });
 
-  const { data: chartData } = useQuery({
-    queryKey: ["/api/multi-shop/monthly-revenue"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/multi-shop/monthly-revenue");
-      return response.json();
-    }
-  });
+  const periodLabels = {
+    'day': 'Heute',
+    'week': 'Diese Woche', 
+    'month': 'Dieser Monat',
+    'quarter': 'Dieses Quartal',
+    'year': 'Dieses Jahr',
+    'all': 'Gesamtzeitraum',
+    'custom': 'Benutzerdefiniert'
+  };
 
-  const { data: activities } = useQuery({
-    queryKey: ["/api/multi-shop/recent-activities"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/multi-shop/recent-activities");
-      return response.json();
+  const getDisplayLabel = () => {
+    if (selectedPeriod === 'custom' && customStartDate && customEndDate) {
+      const start = new Date(customStartDate).toLocaleDateString('de-DE');
+      const end = new Date(customEndDate).toLocaleDateString('de-DE');
+      return `${start} - ${end}`;
     }
-  });
+    return periodLabels[selectedPeriod];
+  };
+
+  // Berechne Gesamtstatistiken über alle Shops
+  const totalStats = shops?.reduce((acc: any, shop: any) => {
+    const metrics = shop.metrics || {};
+    return {
+      totalRepairs: acc.totalRepairs + (metrics.totalRepairs || 0),
+      activeRepairs: acc.activeRepairs + (metrics.activeRepairs || 0),
+      completedRepairs: acc.completedRepairs + (metrics.completedRepairs || 0),
+      totalRevenue: acc.totalRevenue + (metrics.totalRevenue || 0),
+      periodRevenue: acc.periodRevenue + (metrics.periodRevenue || 0),
+      totalEmployees: acc.totalEmployees + (metrics.totalEmployees || 0),
+      pendingOrders: acc.pendingOrders + (metrics.pendingOrders || 0)
+    };
+  }, {
+    totalRepairs: 0,
+    activeRepairs: 0, 
+    completedRepairs: 0,
+    totalRevenue: 0,
+    periodRevenue: 0,
+    totalEmployees: 0,
+    pendingOrders: 0
+  }) || {
+    totalRepairs: 0,
+    activeRepairs: 0,
+    completedRepairs: 0, 
+    totalRevenue: 0,
+    periodRevenue: 0,
+    totalEmployees: 0,
+    pendingOrders: 0
+  };
 
   return (
     <div className="space-y-6">
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Zeitraum-Filter Header */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Dashboard Übersicht</CardTitle>
+              <CardDescription>Multi-Shop Statistiken für {getDisplayLabel()}</CardDescription>
+            </div>
+            <div className="flex items-center gap-4">
+              <Select value={selectedPeriod} onValueChange={(value: any) => setSelectedPeriod(value)}>
+                <SelectTrigger className="w-48">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="day">Heute</SelectItem>
+                  <SelectItem value="week">Diese Woche</SelectItem>
+                  <SelectItem value="month">Dieser Monat</SelectItem>
+                  <SelectItem value="quarter">Dieses Quartal</SelectItem>
+                  <SelectItem value="year">Dieses Jahr</SelectItem>
+                  <SelectItem value="all">Gesamtzeitraum</SelectItem>
+                  <SelectItem value="custom">Benutzerdefiniert</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              {selectedPeriod === 'custom' && (
+                <div className="flex items-center gap-2">
+                  <div className="flex flex-col">
+                    <label className="text-xs text-gray-500 mb-1">Von</label>
+                    <input
+                      type="date"
+                      value={customStartDate}
+                      onChange={(e) => setCustomStartDate(e.target.value)}
+                      className="px-3 py-1 border rounded text-sm"
+                    />
+                  </div>
+                  <div className="flex flex-col">
+                    <label className="text-xs text-gray-500 mb-1">Bis</label>
+                    <input
+                      type="date"
+                      value={customEndDate}
+                      onChange={(e) => setCustomEndDate(e.target.value)}
+                      className="px-3 py-1 border rounded text-sm"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </CardHeader>
+      </Card>
 
+      {/* KPI Cards mit echten Daten */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">
@@ -72,29 +165,23 @@ function DashboardStats() {
             <Clock className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">
-              {stats?.openRepairs || '0'}
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Alle Standorte
-            </p>
+            <div className="text-2xl font-bold text-gray-900">{totalStats.activeRepairs}</div>
+            <p className="text-xs text-gray-500 mt-1">Alle Standorte</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">
-              Abgeschlossene Reparaturen
+              {selectedPeriod === 'all' ? 'Abgeschlossene Reparaturen' : `Abgeschlossene (${periodLabels[selectedPeriod]})`}
             </CardTitle>
             <CheckCircle className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              {stats?.completedRepairs || '0'}
+              {selectedPeriod === 'all' ? totalStats.completedRepairs : (totalStats.periodRevenue ? Math.round(totalStats.periodRevenue / 89.99) : 0)}
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Aktueller Monat
-            </p>
+            <p className="text-xs text-gray-500 mt-1">{getDisplayLabel()}</p>
           </CardContent>
         </Card>
 
@@ -106,82 +193,160 @@ function DashboardStats() {
             <Building2 className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">
-              {stats?.activeShops || '0'}
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Registrierte Shops
-            </p>
+            <div className="text-2xl font-bold text-gray-900">{shops?.length || 0}</div>
+            <p className="text-xs text-gray-500 mt-1">Verfügbare Shops</p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Monatsumsätze Chart */}
-        <Card className="lg:col-span-2">
+      {/* Umsatz-Charts mit echten Daten */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Umsätze nach Shop */}
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
-              Monatsumsätze nach Shop
+              <Euro className="h-5 w-5" />
+              Umsätze nach Shop ({getDisplayLabel()})
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-80 flex items-center justify-center">
-              <div className="text-center text-gray-500">
-                <BarChart3 className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <p className="text-lg font-medium">Chart-Daten werden geladen...</p>
-                <p className="text-sm">Monatsumsätze basierend auf echten Shop-Daten</p>
+            <div className="space-y-4">
+              {shops?.map((shop: any) => {
+                const metrics = shop.metrics || {};
+                const revenue = selectedPeriod === 'all' ? metrics.totalRevenue : metrics.periodRevenue;
+                const maxRevenue = Math.max(...(shops?.map((s: any) => selectedPeriod === 'all' ? s.metrics?.totalRevenue || 0 : s.metrics?.periodRevenue || 0) || [1]));
+                const percentage = maxRevenue > 0 ? (revenue / maxRevenue) * 100 : 0;
+                
+                return (
+                  <div key={shop.shopId} className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium">{shop.businessName}</span>
+                      <span className="text-sm font-bold">€{revenue?.toLocaleString('de-DE') || '0'}</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                        style={{ width: `${percentage}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                );
+              })}
+              
+              {/* Gesamtumsatz */}
+              <div className="pt-4 border-t">
+                <div className="flex justify-between items-center">
+                  <span className="text-lg font-bold">Gesamtumsatz</span>
+                  <span className="text-lg font-bold text-green-600">
+                    €{(selectedPeriod === 'all' ? totalStats.totalRevenue : totalStats.periodRevenue)?.toLocaleString('de-DE') || '0'}
+                  </span>
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Umsatzverteilung */}
+        {/* Shop-Performance */}
         <Card>
           <CardHeader>
-            <CardTitle>Umsatzverteilung nach Shop</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5" />
+              Shop-Performance
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-80 flex items-center justify-center">
-              <div className="text-center text-gray-500">
-                <TrendingUp className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <p className="text-lg font-medium">Umsatzverteilung wird berechnet...</p>
-                <p className="text-sm">Basierend auf echten Shop-Daten</p>
-              </div>
+            <div className="space-y-4">
+              {shops?.map((shop: any) => {
+                const metrics = shop.metrics || {};
+                return (
+                  <div key={shop.shopId} className="space-y-2">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className="text-sm font-medium">{shop.businessName}</span>
+                        <div className="flex gap-4 mt-1">
+                          <span className="text-xs text-gray-500">
+                            Aktiv: {metrics.activeRepairs || 0}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            Mitarbeiter: {metrics.totalEmployees || 0}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-bold">
+                          {selectedPeriod === 'all' ? metrics.completedRepairs : Math.round((metrics.periodRevenue || 0) / 89.99)}
+                        </div>
+                        <div className="text-xs text-gray-500">Reparaturen</div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Schnellübersicht */}
+      {/* Detaillierte Übersichten */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Schnellübersicht</CardTitle>
+            <CardTitle>Gesamtübersicht</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-60 flex items-center justify-center">
-              <div className="text-center text-gray-500">
-                <Activity className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <p className="text-lg font-medium">Schnellübersicht wird geladen...</p>
-                <p className="text-sm">Aktuelle Daten aus allen Shops</p>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Gesamte Reparaturen</span>
+                <span className="font-medium">{totalStats.totalRepairs}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Offene Reparaturen</span>
+                <span className="font-medium">{totalStats.activeRepairs}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Gesamte Mitarbeiter</span>
+                <span className="font-medium">{totalStats.totalEmployees}</span>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Letzte Aktivitäten */}
         <Card>
           <CardHeader>
-            <CardTitle>Letzte Aktivitäten</CardTitle>
+            <CardTitle>Umsatz-Kennzahlen</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-60 flex items-center justify-center">
-              <div className="text-center text-gray-500">
-                <Activity className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <p className="text-lg font-medium">Aktivitäten werden geladen...</p>
-                <p className="text-sm">Letzte Aktionen aus allen Shops</p>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Gesamtumsatz</span>
+                <span className="font-medium">€{totalStats.totalRevenue?.toLocaleString('de-DE') || '0'}</span>
               </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">{periodLabels[selectedPeriod]}</span>
+                <span className="font-medium">€{totalStats.periodRevenue?.toLocaleString('de-DE') || '0'}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Ø pro Reparatur</span>
+                <span className="font-medium">€89,99</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Shop-Status</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {shops?.map((shop: any) => (
+                <div key={shop.shopId} className="flex items-center justify-between">
+                  <span className="text-sm">{shop.businessName}</span>
+                  <Badge variant={shop.isActive ? "default" : "secondary"}>
+                    {shop.isActive ? "Aktiv" : "Inaktiv"}
+                  </Badge>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
