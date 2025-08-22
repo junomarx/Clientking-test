@@ -225,11 +225,29 @@ export function setupEmployeeRoutes(app: Express) {
 
   // Mitarbeiter löschen
   app.delete("/api/employees/:id", async (req, res) => {
-    if (!req.isAuthenticated()) {
+    let user;
+    
+    // Prüfe auf benutzerdefinierte User-ID im Header (für Shop-Owner mit Header-basierter Auth)
+    const customUserId = req.headers['x-user-id'];
+    if (customUserId) {
+      try {
+        const userId = parseInt(customUserId.toString());
+        const headerUser = await storage.getUser(userId);
+        if (headerUser) {
+          console.log(`Mitarbeiter-Löschung: Benutzer mit ID ${userId} aus Header gefunden: ${headerUser.username}`);
+          user = headerUser;
+        } else {
+          return res.status(401).json({ message: "Ungültiger Benutzer im Header" });
+        }
+      } catch (error) {
+        return res.status(401).json({ message: "Ungültige Benutzer-ID im Header" });
+      }
+    } else if (req.isAuthenticated()) {
+      user = req.user;
+    } else {
       return res.status(401).json({ message: "Nicht angemeldet" });
     }
 
-    const user = req.user;
     if (user.role !== 'owner') {
       return res.status(403).json({ message: "Keine Berechtigung" });
     }
