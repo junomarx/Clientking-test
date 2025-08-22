@@ -904,10 +904,26 @@ export function registerMultiShopAdminRoutes(app: Express) {
         return res.status(403).json({ error: "Keine Berechtigung für den Ziel-Shop" });
       }
 
-      // Shop-Zuweisung aktualisieren
+      // Shop-Zuweisung aktualisieren (sowohl shopId als auch parentUserId)
+      const [newShopOwner] = await db
+        .select()
+        .from(users)
+        .where(and(
+          eq(users.shopId, newShopId),
+          eq(users.role, 'owner')
+        ))
+        .limit(1);
+
+      if (!newShopOwner) {
+        return res.status(404).json({ error: "Ziel-Shop-Owner nicht gefunden" });
+      }
+
       const [updatedEmployee] = await db
         .update(users)
-        .set({ shopId: newShopId })
+        .set({ 
+          shopId: newShopId,
+          parentUserId: newShopOwner.id
+        })
         .where(eq(users.id, parseInt(employeeId)))
         .returning();
 
