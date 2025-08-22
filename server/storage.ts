@@ -5840,8 +5840,12 @@ export class DatabaseStorage implements IStorage {
         let startDate = start;
         let endDate = end || new Date();
         
-        // Automatische Zeitraum-Berechnung basierend auf period
-        if (period && !start) {
+        // Prüfe ob benutzerdefinierte Daten vorliegen
+        if (start && end) {
+          // Benutzerdefinierter Zeitraum - verwende direkt die übergebenen Daten
+          console.log(`📅 Benutzerdefinierter Zeitraum: ${start} bis ${end}`);
+        } else if (period && !start) {
+          // Automatische Zeitraum-Berechnung basierend auf period
           const now = new Date();
           switch (period) {
             case 'day':

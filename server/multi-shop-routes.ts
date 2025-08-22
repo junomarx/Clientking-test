@@ -69,7 +69,20 @@ export function registerMultiShopRoutes(app: Express) {
       
       // Zeitraum-Parameter aus Query extrahieren
       const period = req.query.period as string || 'month';
-      const timeRange = { period: period as 'day' | 'week' | 'month' | 'quarter' | 'year' | 'all' };
+      const startDate = req.query.start as string;
+      const endDate = req.query.end as string;
+      
+      let timeRange: any;
+      if (startDate && endDate) {
+        // Benutzerdefinierter Zeitraum
+        timeRange = {
+          start: new Date(startDate),
+          end: new Date(endDate)
+        };
+      } else {
+        // Vordefinierter Zeitraum
+        timeRange = { period: period as 'day' | 'week' | 'month' | 'quarter' | 'year' | 'all' };
+      }
       
       // Für jeden Shop zusätzliche Metriken laden
       const shopsWithMetrics = await Promise.all(accessibleShops.map(async (shop) => {

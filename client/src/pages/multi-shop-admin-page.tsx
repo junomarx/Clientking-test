@@ -192,12 +192,18 @@ function DashboardStats() {
 
 // Shop Übersicht
 function ShopsOverview() {
-  const [selectedPeriod, setSelectedPeriod] = useState<'day' | 'week' | 'month' | 'quarter' | 'year' | 'all'>('month');
+  const [selectedPeriod, setSelectedPeriod] = useState<'day' | 'week' | 'month' | 'quarter' | 'year' | 'all' | 'custom'>('month');
+  const [customStartDate, setCustomStartDate] = useState<string>('');
+  const [customEndDate, setCustomEndDate] = useState<string>('');
   
   const { data: shops, isLoading } = useQuery({
-    queryKey: ["/api/multi-shop/accessible-shops", selectedPeriod],
+    queryKey: ["/api/multi-shop/accessible-shops", selectedPeriod, customStartDate, customEndDate],
     queryFn: async () => {
-      const response = await apiRequest("GET", `/api/multi-shop/accessible-shops?period=${selectedPeriod}`);
+      let url = `/api/multi-shop/accessible-shops?period=${selectedPeriod}`;
+      if (selectedPeriod === 'custom' && customStartDate && customEndDate) {
+        url = `/api/multi-shop/accessible-shops?start=${customStartDate}&end=${customEndDate}`;
+      }
+      const response = await apiRequest("GET", url);
       return response.json();
     }
   });
@@ -208,7 +214,17 @@ function ShopsOverview() {
     'month': 'Dieser Monat',
     'quarter': 'Dieses Quartal',
     'year': 'Dieses Jahr',
-    'all': 'Gesamtzeitraum'
+    'all': 'Gesamtzeitraum',
+    'custom': 'Benutzerdefiniert'
+  };
+
+  const getDisplayLabel = () => {
+    if (selectedPeriod === 'custom' && customStartDate && customEndDate) {
+      const start = new Date(customStartDate).toLocaleDateString('de-DE');
+      const end = new Date(customEndDate).toLocaleDateString('de-DE');
+      return `${start} - ${end}`;
+    }
+    return periodLabels[selectedPeriod];
   };
 
   if (!shops || shops.length === 0) {
@@ -247,21 +263,47 @@ function ShopsOverview() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Shop-Übersicht</CardTitle>
-              <CardDescription>Statistiken für {periodLabels[selectedPeriod]}</CardDescription>
+              <CardDescription>Statistiken für {getDisplayLabel()}</CardDescription>
             </div>
-            <Select value={selectedPeriod} onValueChange={(value: any) => setSelectedPeriod(value)}>
-              <SelectTrigger className="w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="day">Heute</SelectItem>
-                <SelectItem value="week">Diese Woche</SelectItem>
-                <SelectItem value="month">Dieser Monat</SelectItem>
-                <SelectItem value="quarter">Dieses Quartal</SelectItem>
-                <SelectItem value="year">Dieses Jahr</SelectItem>
-                <SelectItem value="all">Gesamtzeitraum</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-4">
+              <Select value={selectedPeriod} onValueChange={(value: any) => setSelectedPeriod(value)}>
+                <SelectTrigger className="w-48">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="day">Heute</SelectItem>
+                  <SelectItem value="week">Diese Woche</SelectItem>
+                  <SelectItem value="month">Dieser Monat</SelectItem>
+                  <SelectItem value="quarter">Dieses Quartal</SelectItem>
+                  <SelectItem value="year">Dieses Jahr</SelectItem>
+                  <SelectItem value="all">Gesamtzeitraum</SelectItem>
+                  <SelectItem value="custom">Benutzerdefiniert</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              {selectedPeriod === 'custom' && (
+                <div className="flex items-center gap-2">
+                  <div className="flex flex-col">
+                    <label className="text-xs text-gray-500 mb-1">Von</label>
+                    <input
+                      type="date"
+                      value={customStartDate}
+                      onChange={(e) => setCustomStartDate(e.target.value)}
+                      className="px-3 py-1 border rounded text-sm"
+                    />
+                  </div>
+                  <div className="flex flex-col">
+                    <label className="text-xs text-gray-500 mb-1">Bis</label>
+                    <input
+                      type="date"
+                      value={customEndDate}
+                      onChange={(e) => setCustomEndDate(e.target.value)}
+                      className="px-3 py-1 border rounded text-sm"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </CardHeader>
       </Card>
