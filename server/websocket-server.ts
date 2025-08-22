@@ -321,6 +321,29 @@ class OnlineStatusManager {
     return this.connectedUsers.size;
   }
 
+  // Broadcast Cache-Invalidierung bei Shop-Änderungen
+  broadcastEmployeeUpdate(affectedShopIds: number[], eventType: 'transfer' | 'delete' | 'update') {
+    const message = JSON.stringify({
+      type: 'employee_update',
+      eventType,
+      affectedShopIds,
+      timestamp: new Date().toISOString()
+    });
+
+    console.log(`📢 Broadcasting employee update (${eventType}) to shops: ${affectedShopIds.join(', ')}`);
+
+    // An alle verbundenen Clients senden
+    for (const user of this.connectedUsers.values()) {
+      if (user.socket && user.socket.readyState === WebSocket.OPEN) {
+        try {
+          user.socket.send(message);
+        } catch (error) {
+          console.error('Error broadcasting employee update:', error);
+        }
+      }
+    }
+  }
+
   getUserLastSeen(userId: number): Date | null {
     const user = this.connectedUsers.get(userId);
     return user ? user.lastHeartbeat : null;

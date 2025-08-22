@@ -926,6 +926,13 @@ export function registerMultiShopAdminRoutes(app: Express) {
 
       console.log(`🔄 Mitarbeiter ${employee.username || employee.email} von Shop "${oldShop?.businessName}" zu Shop "${newShop?.businessName}" verschoben`);
       
+      // WebSocket-Broadcast für Cache-Invalidierung
+      const { getOnlineStatusManager } = await import('./websocket-server');
+      const wsManager = getOnlineStatusManager();
+      if (wsManager) {
+        wsManager.broadcastEmployeeUpdate([employee.shopId!, newShopId], 'transfer');
+      }
+      
       res.json({ 
         message: `Mitarbeiter erfolgreich von "${oldShop?.businessName}" zu "${newShop?.businessName}" verschoben`,
         employee: updatedEmployee

@@ -171,6 +171,21 @@ export function OnlineStatusProvider({ children }: { children: ReactNode }) {
         console.log('🎯 Kiosk erfolgreich registriert:', message);
         break;
         
+      case 'employee_update':
+        // Mitarbeiter-Updates (Shop-Wechsel, Löschung, etc.)
+        console.log('👥 Mitarbeiter-Update empfangen:', message);
+        
+        // Query Cache für Mitarbeiter invalidieren
+        import('@/lib/queryClient').then(({ queryClient }) => {
+          console.log('Invalidiere Mitarbeiter-Cache nach Shop-Änderung');
+          queryClient.invalidateQueries({ queryKey: ['/api/employees'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/multi-shop/employees'] });
+          
+          // Zusätzlich: Refetch erzwingen für sofortige Aktualisierung
+          queryClient.refetchQueries({ queryKey: ['/api/employees'] });
+        });
+        break;
+        
       default:
         console.log('❓ Unbekannte WebSocket-Nachricht:', message);
     }
