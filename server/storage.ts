@@ -5077,33 +5077,35 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteEmployee(employeeId: number): Promise<void> {
-    // Zuerst alle Referenzen auf den Mitarbeiter entfernen
+    // Zuerst ALLE Foreign Key Referenzen auf den Mitarbeiter entfernen
     try {
-      // 1. Alle Kunden, die dieser Mitarbeiter erstellt hat, auf NULL setzen (userId)
-      await db
-        .update(customers)
-        .set({ userId: null })
-        .where(eq(customers.userId, employeeId));
+      // Alle Tabellen mit user_id Referenzen bereinigen
+      await db.update(customers).set({ userId: null }).where(eq(customers.userId, employeeId));
+      await db.update(repairs).set({ userId: null }).where(eq(repairs.userId, employeeId));
+      await db.update(repairStatusHistory).set({ userId: null }).where(eq(repairStatusHistory.userId, employeeId));
+      await db.update(businessSettings).set({ userId: null }).where(eq(businessSettings.userId, employeeId));
+      await db.update(userDeviceTypes).set({ userId: null }).where(eq(userDeviceTypes.userId, employeeId));
+      await db.update(userBrands).set({ userId: null }).where(eq(userBrands.userId, employeeId));
+      await db.update(costEstimates).set({ userId: null }).where(eq(costEstimates.userId, employeeId));
+      await db.update(userModelSeries).set({ userId: null }).where(eq(userModelSeries.userId, employeeId));
+      await db.update(userModels).set({ userId: null }).where(eq(userModels.userId, employeeId));
+      await db.update(emailHistory).set({ userId: null }).where(eq(emailHistory.userId, employeeId));
+      await db.update(tempSignatures).set({ userId: null }).where(eq(tempSignatures.userId, employeeId));
+      await db.update(spareParts).set({ userId: null }).where(eq(spareParts.userId, employeeId));
+      await db.update(accessories).set({ userId: null }).where(eq(accessories.userId, employeeId));
+      await db.update(loanerDevices).set({ userId: null }).where(eq(loanerDevices.userId, employeeId));
+      
+      console.log(`🗑️ Alle userId-Referenzen für Mitarbeiter ${employeeId} entfernt`);
 
-      console.log(`🗑️ Kunden-Referenzen für Mitarbeiter ${employeeId} entfernt`);
-
-      // 2. Alle Reparaturen mit userId-Referenz auf NULL setzen 
-      await db
-        .update(repairs)
-        .set({ userId: null })
-        .where(eq(repairs.userId, employeeId));
-
-      console.log(`🗑️ Reparatur-userId-Referenzen für Mitarbeiter ${employeeId} entfernt`);
-
-      // 3. Alle Reparaturen, bei denen dieser Mitarbeiter als "createdBy" eingetragen ist, auf "GELÖSCHTER MITARBEITER" setzen
+      // Anonymisiere createdBy Felder
       await db
         .update(repairs)
         .set({ createdBy: "GELÖSCHTER MITARBEITER" })
         .where(eq(repairs.createdBy, employeeId.toString()));
 
-      console.log(`🗑️ Reparatur-createdBy-Referenzen für Mitarbeiter ${employeeId} anonymisiert`);
+      console.log(`🗑️ CreatedBy-Referenzen für Mitarbeiter ${employeeId} anonymisiert`);
 
-      // 4. Den Mitarbeiter selbst löschen
+      // Den Mitarbeiter selbst löschen
       await db
         .delete(users)
         .where(eq(users.id, employeeId));
