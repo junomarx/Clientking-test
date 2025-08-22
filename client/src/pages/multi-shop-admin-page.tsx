@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
@@ -19,11 +21,14 @@ import {
   Euro,
   CheckCircle,
   Clock,
-
   Eye,
   Edit3,
   LogOut,
-  UserPlus
+  UserPlus,
+  MoreHorizontal,
+  Trash2,
+  UserCheck,
+  UserX
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
@@ -421,6 +426,238 @@ function CreateEmployeeDialog() {
   );
 }
 
+// Edit Employee Dialog
+function EditEmployeeDialog({ employee, open, onOpenChange }: { employee: any, open: boolean, onOpenChange: (open: boolean) => void }) {
+  const [formData, setFormData] = useState({
+    firstName: employee?.firstName || '',
+    lastName: employee?.lastName || '',
+    email: employee?.email || '',
+    isActive: employee?.isActive ?? true
+  });
+  const { toast } = useToast();
+
+  const editEmployeeMutation = useMutation({
+    mutationFn: async (data: typeof formData) => {
+      const response = await apiRequest("PUT", `/api/multi-shop/employees/${employee.id}`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Erfolg",
+        description: "Mitarbeiter wurde erfolgreich aktualisiert",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/multi-shop/employees"] });
+      onOpenChange(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Fehler",
+        description: error.message || "Fehler beim Aktualisieren des Mitarbeiters",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.firstName || !formData.lastName || !formData.email) {
+      toast({
+        title: "Fehler",
+        description: "Bitte füllen Sie alle Felder aus",
+        variant: "destructive",
+      });
+      return;
+    }
+    editEmployeeMutation.mutate(formData);
+  };
+
+  if (!employee) return null;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Mitarbeiter bearbeiten</DialogTitle>
+          <DialogDescription>
+            Bearbeiten Sie die Daten von {employee.firstName} {employee.lastName}
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="firstName">Vorname</Label>
+              <Input
+                id="firstName"
+                value={formData.firstName}
+                onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lastName">Nachname</Label>
+              <Input
+                id="lastName"
+                value={formData.lastName}
+                onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                required
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="email">E-Mail</Label>
+            <Input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({...formData, email: e.target.value})}
+              required
+            />
+          </div>
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="isActive"
+              checked={formData.isActive}
+              onChange={(e) => setFormData({...formData, isActive: e.target.checked})}
+              className="rounded"
+            />
+            <Label htmlFor="isActive">Aktiv</Label>
+          </div>
+          <div className="flex justify-end space-x-2">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Abbrechen
+            </Button>
+            <Button type="submit" disabled={editEmployeeMutation.isPending}>
+              {editEmployeeMutation.isPending ? "Speichere..." : "Speichern"}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// Employee Actions Dropdown
+function EmployeeActionsDropdown({ employee }: { employee: any }) {
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const { toast } = useToast();
+
+  const toggleStatusMutation = useMutation({
+    mutationFn: async (isActive: boolean) => {
+      const response = await apiRequest("PATCH", `/api/multi-shop/employees/${employee.id}/status`, { isActive });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Erfolg",
+        description: data.message,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/multi-shop/employees"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Fehler",
+        description: error.message || "Fehler beim Ändern des Status",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const deleteEmployeeMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("DELETE", `/api/multi-shop/employees/${employee.id}`);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Erfolg",
+        description: data.message,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/multi-shop/employees"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Fehler",
+        description: error.message || "Fehler beim Löschen des Mitarbeiters",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Nicht für Shop-Owner
+  if (employee.role === 'owner') {
+    return null;
+  }
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => setEditDialogOpen(true)}>
+            <Edit3 className="h-4 w-4 mr-2" />
+            Bearbeiten
+          </DropdownMenuItem>
+          <DropdownMenuItem 
+            onClick={() => toggleStatusMutation.mutate(!employee.isActive)}
+            disabled={toggleStatusMutation.isPending}
+          >
+            {employee.isActive ? (
+              <>
+                <UserX className="h-4 w-4 mr-2" />
+                Deaktivieren
+              </>
+            ) : (
+              <>
+                <UserCheck className="h-4 w-4 mr-2" />
+                Aktivieren
+              </>
+            )}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                <Trash2 className="h-4 w-4 mr-2" />
+                Löschen
+              </DropdownMenuItem>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Mitarbeiter löschen</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Sind Sie sicher, dass Sie {employee.firstName} {employee.lastName} löschen möchten? 
+                  Diese Aktion kann nicht rückgängig gemacht werden und alle zugehörigen Daten werden entfernt.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                <AlertDialogAction 
+                  onClick={() => deleteEmployeeMutation.mutate()}
+                  disabled={deleteEmployeeMutation.isPending}
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  {deleteEmployeeMutation.isPending ? "Lösche..." : "Löschen"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      
+      <EditEmployeeDialog 
+        employee={employee} 
+        open={editDialogOpen} 
+        onOpenChange={setEditDialogOpen}
+      />
+    </>
+  );
+}
+
 // Mitarbeiter Übersicht
 function EmployeesOverview() {
   const [onlineUsers, setOnlineUsers] = useState<number[]>([]);
@@ -502,7 +739,9 @@ function EmployeesOverview() {
                   <th className="text-left py-3 px-4 font-medium text-gray-600">Mitarbeiter</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-600">Shop</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-600">Rolle</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Online-Status</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-600">Status</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-600">Online</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-600">Aktionen</th>
                 </tr>
               </thead>
               <tbody>
@@ -510,10 +749,12 @@ function EmployeesOverview() {
                   <tr key={employee.id} className="border-b hover:bg-gray-50">
                     <td className="py-3 px-4">
                       <div>
-                        <p className="font-medium">{employee.username || employee.email || 'Unbekannt'}</p>
-                        {employee.username && employee.email && (
-                          <p className="text-sm text-gray-500">{employee.email}</p>
-                        )}
+                        <p className="font-medium">
+                          {employee.username || (employee.firstName && employee.lastName) 
+                            ? `${employee.firstName || ''} ${employee.lastName || ''}`.trim() 
+                            : employee.email || 'Unbekannt'}
+                        </p>
+                        <p className="text-sm text-gray-500">{employee.email}</p>
                       </div>
                     </td>
                     <td className="py-3 px-4">
@@ -533,6 +774,13 @@ function EmployeesOverview() {
                       </Badge>
                     </td>
                     <td className="py-3 px-4">
+                      <Badge variant="outline" className={
+                        employee.isActive ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
+                      }>
+                        {employee.isActive ? 'Aktiv' : 'Inaktiv'}
+                      </Badge>
+                    </td>
+                    <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
                         {(() => {
                           // Fallback: Wenn WebSocket noch keine Daten hat, verwende API-Daten
@@ -545,13 +793,13 @@ function EmployeesOverview() {
                               <Badge className={isOnlineLive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}>
                                 {isOnlineLive ? 'Online' : 'Offline'}
                               </Badge>
-                              {onlineUsers.length === 0 && (
-                                <span className="text-xs text-gray-400">API</span>
-                              )}
                             </>
                           );
                         })()}
                       </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <EmployeeActionsDropdown employee={employee} />
                     </td>
                   </tr>
                 ))}

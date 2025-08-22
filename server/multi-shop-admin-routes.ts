@@ -708,5 +708,190 @@ export function registerMultiShopAdminRoutes(app: Express) {
     }
   });
 
+  // Route: Mitarbeiter bearbeiten
+  app.put("/api/multi-shop/employees/:employeeId", async (req, res) => {
+    try {
+      const { employeeId } = req.params;
+      const { firstName, lastName, email, isActive } = req.body;
+      
+      // Multi-Shop Admin Berechtigung prüfen
+      if (!req.user || !req.user.isMultiShopAdmin) {
+        return res.status(403).json({ error: "Multi-Shop Admin Berechtigung erforderlich" });
+      }
+
+      // Mitarbeiter laden und Shop-Berechtigung prüfen
+      const [employee] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, parseInt(employeeId)))
+        .limit(1);
+
+      if (!employee) {
+        return res.status(404).json({ error: "Mitarbeiter nicht gefunden" });
+      }
+
+      // Berechtigung für den Shop prüfen
+      const authorizedShops = await db
+        .select({ shopId: multiShopPermissions.shopId })
+        .from(multiShopPermissions)
+        .where(and(
+          eq(multiShopPermissions.multiShopAdminId, req.user.id),
+          eq(multiShopPermissions.isApproved, true)
+        ));
+
+      const authorizedShopIds = authorizedShops.map(shop => shop.shopId);
+      
+      if (!authorizedShopIds.includes(employee.shopId)) {
+        return res.status(403).json({ error: "Keine Berechtigung für diesen Shop" });
+      }
+
+      // E-Mail-Duplikat prüfen (außer wenn es die gleiche E-Mail ist)
+      if (email && email !== employee.email) {
+        const [existingUser] = await db
+          .select({ id: users.id })
+          .from(users)
+          .where(eq(users.email, email))
+          .limit(1);
+
+        if (existingUser) {
+          return res.status(400).json({ error: "Ein Benutzer mit dieser E-Mail-Adresse existiert bereits" });
+        }
+      }
+
+      // Mitarbeiter aktualisieren
+      const [updatedEmployee] = await db
+        .update(users)
+        .set({
+          firstName: firstName,
+          lastName: lastName,
+          email: email,
+          isActive: isActive
+        })
+        .where(eq(users.id, parseInt(employeeId)))
+        .returning();
+
+      // Erfolgreiche Antwort (ohne Passwort)
+      const { password: _, ...employeeResponse } = updatedEmployee;
+      
+      res.json({
+        ...employeeResponse,
+        message: `Mitarbeiter ${firstName} ${lastName} wurde erfolgreich aktualisiert`
+      });
+
+    } catch (error) {
+      console.error("Update employee error:", error);
+      res.status(500).json({ error: "Fehler beim Aktualisieren des Mitarbeiters" });
+    }
+  });
+
+  // Route: Mitarbeiter löschen
+  app.delete("/api/multi-shop/employees/:employeeId", async (req, res) => {
+    try {
+      const { employeeId } = req.params;
+      
+      // Multi-Shop Admin Berechtigung prüfen
+      if (!req.user || !req.user.isMultiShopAdmin) {
+        return res.status(403).json({ error: "Multi-Shop Admin Berechtigung erforderlich" });
+      }
+
+      // Mitarbeiter laden und Shop-Berechtigung prüfen
+      const [employee] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, parseInt(employeeId)))
+        .limit(1);
+
+      if (!employee) {
+        return res.status(404).json({ error: "Mitarbeiter nicht gefunden" });
+      }
+
+      // Berechtigung für den Shop prüfen
+      const authorizedShops = await db
+        .select({ shopId: multiShopPermissions.shopId })
+        .from(multiShopPermissions)
+        .where(and(
+          eq(multiShopPermissions.multiShopAdminId, req.user.id),
+          eq(multiShopPermissions.isApproved, true)
+        ));
+
+      const authorizedShopIds = authorizedShops.map(shop => shop.shopId);
+      
+      if (!authorizedShopIds.includes(employee.shopId)) {
+        return res.status(403).json({ error: "Keine Berechtigung für diesen Shop" });
+      }
+
+      // Vollständige Löschung über Storage-Interface
+      const success = await storage.deleteEmployee(parseInt(employeeId));
+
+      if (success) {
+        res.json({ message: `Mitarbeiter wurde erfolgreich gelöscht` });
+      } else {
+        res.status(500).json({ error: "Fehler beim Löschen des Mitarbeiters" });
+      }
+
+    } catch (error) {
+      console.error("Delete employee error:", error);
+      res.status(500).json({ error: "Fehler beim Löschen des Mitarbeiters" });
+    }
+  });
+
+  // Route: Mitarbeiter aktivieren/deaktivieren
+  app.patch("/api/multi-shop/employees/:employeeId/status", async (req, res) => {
+    try {
+      const { employeeId } = req.params;
+      const { isActive } = req.body;
+      
+      // Multi-Shop Admin Berechtigung prüfen
+      if (!req.user || !req.user.isMultiShopAdmin) {
+        return res.status(403).json({ error: "Multi-Shop Admin Berechtigung erforderlich" });
+      }
+
+      // Mitarbeiter laden und Shop-Berechtigung prüfen
+      const [employee] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, parseInt(employeeId)))
+        .limit(1);
+
+      if (!employee) {
+        return res.status(404).json({ error: "Mitarbeiter nicht gefunden" });
+      }
+
+      // Berechtigung für den Shop prüfen
+      const authorizedShops = await db
+        .select({ shopId: multiShopPermissions.shopId })
+        .from(multiShopPermissions)
+        .where(and(
+          eq(multiShopPermissions.multiShopAdminId, req.user.id),
+          eq(multiShopPermissions.isApproved, true)
+        ));
+
+      const authorizedShopIds = authorizedShops.map(shop => shop.shopId);
+      
+      if (!authorizedShopIds.includes(employee.shopId)) {
+        return res.status(403).json({ error: "Keine Berechtigung für diesen Shop" });
+      }
+
+      // Status aktualisieren
+      const [updatedEmployee] = await db
+        .update(users)
+        .set({ isActive: isActive })
+        .where(eq(users.id, parseInt(employeeId)))
+        .returning();
+
+      // Erfolgreiche Antwort (ohne Passwort)
+      const { password: _, ...employeeResponse } = updatedEmployee;
+      
+      res.json({
+        ...employeeResponse,
+        message: `Mitarbeiter wurde ${isActive ? 'aktiviert' : 'deaktiviert'}`
+      });
+
+    } catch (error) {
+      console.error("Update employee status error:", error);
+      res.status(500).json({ error: "Fehler beim Ändern des Mitarbeiter-Status" });
+    }
+  });
+
   console.log("✅ Multi-Shop Admin routes registered");
 }
