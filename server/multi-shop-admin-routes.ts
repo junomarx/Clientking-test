@@ -663,6 +663,20 @@ export function registerMultiShopAdminRoutes(app: Express) {
       // Benutzername aus Vor- und Nachname generieren
       const username = `${firstName.toLowerCase()}.${lastName.toLowerCase()}`.replace(/[^a-z.]/g, '');
 
+      // Shop-Owner für die parentUserId finden
+      const [shopOwner] = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(and(
+          eq(users.shopId, parseInt(shopId)),
+          eq(users.role, 'owner')
+        ))
+        .limit(1);
+
+      if (!shopOwner) {
+        return res.status(400).json({ error: "Shop-Owner für diesen Shop nicht gefunden" });
+      }
+
       // Neuen Mitarbeiter erstellen
       const [newEmployee] = await db
         .insert(users)
@@ -672,6 +686,7 @@ export function registerMultiShopAdminRoutes(app: Express) {
           password: finalPassword,
           role: role,
           shopId: parseInt(shopId),
+          parentUserId: shopOwner.id, // WICHTIG: parentUserId auf Shop-Owner setzen
           isActive: true,
           firstName: firstName,
           lastName: lastName,
