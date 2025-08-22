@@ -5789,25 +5789,25 @@ export class DatabaseStorage implements IStorage {
         .from(repairs)
         .where(eq(repairs.shopId, shopId));
       
-      // Aktive Reparaturen
+      // Aktive Reparaturen (alle Status außer abgeholt)
       const activeRepairsResult = await db
         .select({ count: count() })
         .from(repairs)
         .where(
           and(
             eq(repairs.shopId, shopId),
-            not(inArray(repairs.status, ['completed', 'delivered', 'cancelled']))
+            not(eq(repairs.status, 'abgeholt'))
           )
         );
 
-      // Abgeschlossene Reparaturen
+      // Abgeschlossene Reparaturen (nur abgeholt)
       const completedRepairsResult = await db
         .select({ count: count() })
         .from(repairs)
         .where(
           and(
             eq(repairs.shopId, shopId),
-            inArray(repairs.status, ['completed', 'delivered'])
+            eq(repairs.status, 'abgeholt')
           )
         );
 

@@ -193,9 +193,9 @@ function DashboardStats() {
 // Shop Übersicht
 function ShopsOverview() {
   const { data: shops } = useQuery({
-    queryKey: ["/api/multi-shop/shops"],
+    queryKey: ["/api/multi-shop/accessible-shops"],
     queryFn: async () => {
-      const response = await apiRequest("GET", "/api/multi-shop/shops");
+      const response = await apiRequest("GET", "/api/multi-shop/accessible-shops");
       return response.json();
     }
   });
@@ -233,21 +233,21 @@ function ShopsOverview() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-600">Monatsumsatz</p>
-                  <p className="text-xl font-bold">€{shop.monthlyRevenue?.toLocaleString() || '0'}</p>
+                  <p className="text-xl font-bold">€{shop.metrics?.monthlyRevenue?.toLocaleString() || '0'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Mitarbeiter</p>
-                  <p className="text-xl font-bold">{shop.employeeCount || '0'}</p>
+                  <p className="text-xl font-bold">{shop.metrics?.totalEmployees || '0'}</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-gray-600">Offen:</span>
-                  <span className="ml-2 font-semibold text-orange-600">{shop.openRepairs || '0'}</span>
+                  <span className="ml-2 font-semibold text-orange-600">{shop.metrics?.activeRepairs || '0'}</span>
                 </div>
                 <div>
                   <span className="text-gray-600">Erledigt:</span>
-                  <span className="ml-2 font-semibold text-green-600">{shop.completedRepairs || '0'}</span>
+                  <span className="ml-2 font-semibold text-green-600">{shop.metrics?.completedRepairs || '0'}</span>
                 </div>
               </div>
               <div className="text-sm text-gray-600">
