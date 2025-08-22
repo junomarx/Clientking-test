@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,10 +31,11 @@ import {
   UserCheck,
   UserX,
   Settings,
-  User
+  User,
+  ChevronDown,
+  ChevronRight
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 
 // Dashboard Statistiken mit Zeitraum-Filter
@@ -1763,7 +1765,375 @@ function OrdersOverview() {
   );
 }
 
-// MSA Einstellungen - Navigation zu separaten Seiten
+// MSA Profil Einstellungen
+function MSAProfileSettings() {
+  const [profileData, setProfileData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: ''
+  });
+
+  const { data: msaProfile } = useQuery({
+    queryKey: ["/api/multi-shop/profile"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/multi-shop/profile");
+      return response.json();
+    }
+  });
+
+  React.useEffect(() => {
+    if (msaProfile) {
+      setProfileData({
+        firstName: msaProfile.firstName || '',
+        lastName: msaProfile.lastName || '',
+        email: msaProfile.email || '',
+        phone: msaProfile.phone || ''
+      });
+    }
+  }, [msaProfile]);
+
+  const updateProfileMutation = useMutation({
+    mutationFn: async (data: typeof profileData) => {
+      const response = await apiRequest("PUT", "/api/multi-shop/profile", data);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Profil aktualisiert",
+        description: "Ihre Profildaten wurden erfolgreich gespeichert",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/multi-shop/profile"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Fehler",
+        description: error.message || "Fehler beim Speichern der Profildaten",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateProfileMutation.mutate(profileData);
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Profil & Stammdaten</CardTitle>
+          <CardDescription>Ihre persönlichen Kontoinformationen</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">Vorname</Label>
+                <Input
+                  id="firstName"
+                  value={profileData.firstName}
+                  onChange={(e) => setProfileData({...profileData, firstName: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Nachname</Label>
+                <Input
+                  id="lastName"
+                  value={profileData.lastName}
+                  onChange={(e) => setProfileData({...profileData, lastName: e.target.value})}
+                  required
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">E-Mail-Adresse</Label>
+              <Input
+                id="email"
+                type="email"
+                value={profileData.email}
+                onChange={(e) => setProfileData({...profileData, email: e.target.value})}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Telefonnummer</Label>
+              <Input
+                id="phone"
+                value={profileData.phone}
+                onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
+              />
+            </div>
+            <Button type="submit" disabled={updateProfileMutation.isPending}>
+              {updateProfileMutation.isPending ? "Speichere..." : "Profil speichern"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// MSA Geschäftsdaten Einstellungen  
+function MSABusinessSettings() {
+  const [businessData, setBusinessData] = useState({
+    companyName: '',
+    contactPerson: '',
+    street: '',
+    city: '',
+    zipCode: '',
+    country: 'Deutschland',
+    vatNumber: '',
+    taxNumber: '',
+    email: '',
+    phone: ''
+  });
+
+  const { data: msaProfile } = useQuery({
+    queryKey: ["/api/multi-shop/profile"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/multi-shop/profile");
+      return response.json();
+    }
+  });
+
+  React.useEffect(() => {
+    if (msaProfile?.businessData) {
+      setBusinessData({
+        companyName: msaProfile.businessData.companyName || '',
+        contactPerson: msaProfile.businessData.contactPerson || '',
+        street: msaProfile.businessData.street || '',
+        city: msaProfile.businessData.city || '',
+        zipCode: msaProfile.businessData.zipCode || '',
+        country: msaProfile.businessData.country || 'Deutschland',
+        vatNumber: msaProfile.businessData.vatNumber || '',
+        taxNumber: msaProfile.businessData.taxNumber || '',
+        email: msaProfile.businessData.email || '',
+        phone: msaProfile.businessData.phone || ''
+      });
+    }
+  }, [msaProfile]);
+
+  const updateBusinessMutation = useMutation({
+    mutationFn: async (data: typeof businessData) => {
+      const response = await apiRequest("PUT", "/api/multi-shop/business-data", data);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Geschäftsdaten aktualisiert",
+        description: "Ihre Geschäftsdaten für die Rechnungsstellung wurden gespeichert",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/multi-shop/profile"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Fehler",
+        description: error.message || "Fehler beim Speichern der Geschäftsdaten",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateBusinessMutation.mutate(businessData);
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Geschäftsdaten & Rechnungsstellung</CardTitle>
+          <CardDescription>
+            Diese Daten werden für die Rechnungsstellung aller Ihrer ClientKing-Shops verwendet
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="companyName">Firmenname</Label>
+              <Input
+                id="companyName"
+                value={businessData.companyName}
+                onChange={(e) => setBusinessData({...businessData, companyName: e.target.value})}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="contactPerson">Ansprechpartner</Label>
+              <Input
+                id="contactPerson"
+                value={businessData.contactPerson}
+                onChange={(e) => setBusinessData({...businessData, contactPerson: e.target.value})}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="street">Straße und Hausnummer</Label>
+              <Input
+                id="street"
+                value={businessData.street}
+                onChange={(e) => setBusinessData({...businessData, street: e.target.value})}
+                required
+              />
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="zipCode">PLZ</Label>
+                <Input
+                  id="zipCode"
+                  value={businessData.zipCode}
+                  onChange={(e) => setBusinessData({...businessData, zipCode: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="city">Stadt</Label>
+                <Input
+                  id="city"
+                  value={businessData.city}
+                  onChange={(e) => setBusinessData({...businessData, city: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="country">Land</Label>
+                <Input
+                  id="country"
+                  value={businessData.country}
+                  onChange={(e) => setBusinessData({...businessData, country: e.target.value})}
+                  required
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="vatNumber">USt-IdNr. (optional)</Label>
+                <Input
+                  id="vatNumber"
+                  value={businessData.vatNumber}
+                  onChange={(e) => setBusinessData({...businessData, vatNumber: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="taxNumber">Steuernummer (optional)</Label>
+                <Input
+                  id="taxNumber"
+                  value={businessData.taxNumber}
+                  onChange={(e) => setBusinessData({...businessData, taxNumber: e.target.value})}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="businessEmail">Geschäfts-E-Mail</Label>
+                <Input
+                  id="businessEmail"
+                  type="email"
+                  value={businessData.email}
+                  onChange={(e) => setBusinessData({...businessData, email: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="businessPhone">Geschäfts-Telefon</Label>
+                <Input
+                  id="businessPhone"
+                  value={businessData.phone}
+                  onChange={(e) => setBusinessData({...businessData, phone: e.target.value})}
+                  required
+                />
+              </div>
+            </div>
+            <Button type="submit" disabled={updateBusinessMutation.isPending}>
+              {updateBusinessMutation.isPending ? "Speichere..." : "Geschäftsdaten speichern"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// MSA Preisgestaltung Einstellungen
+function MSAPricingSettings() {
+  const { data: msaProfile } = useQuery({
+    queryKey: ["/api/multi-shop/profile"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/multi-shop/profile");
+      return response.json();
+    }
+  });
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Preisgestaltung & Pakete</CardTitle>
+          <CardDescription>Übersicht Ihrer ClientKing-Abonnements und Rechnungen</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <h3 className="font-medium text-blue-900 mb-2">Multi-Shop Abonnement</h3>
+              <p className="text-blue-800 text-sm mb-3">
+                Sie erhalten eine zentrale Rechnung für alle Ihre ClientKing-Shops basierend auf Ihren Geschäftsdaten.
+              </p>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span>Aktive Shops:</span>
+                  <span className="font-medium">
+                    {msaProfile?.pricing?.totalShops || 2} Shops
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Preis pro Shop:</span>
+                  <span className="font-medium">
+                    {msaProfile?.pricing 
+                      ? `€${msaProfile.pricing.pricePerShop},00/Monat`
+                      : "€29,90/Monat"
+                    }
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Gesamt pro Monat:</span>
+                  <span className="font-bold text-blue-900">
+                    {msaProfile?.pricing 
+                      ? `€${(msaProfile.pricing.pricePerShop * (msaProfile.pricing.totalShops || 2))},00`
+                      : "€59,80"
+                    }
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h3 className="font-medium text-gray-900 mb-2">Rechnungsstellung</h3>
+              <p className="text-gray-700 text-sm mb-3">
+                Rechnungen werden monatlich im Voraus gestellt und per E-Mail zugesandt.
+              </p>
+              <div className="text-sm">
+                <div className="flex justify-between mb-1">
+                  <span>Nächste Abrechnung:</span>
+                  <span className="font-medium">01.02.2024</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Zahlungsweise:</span>
+                  <span className="font-medium">SEPA-Lastschrift</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// MSA Einstellungen - Navigation zu separaten Seiten (wird nicht mehr verwendet)
 function MSASettings() {
   const [, navigate] = useLocation();
 
@@ -1871,6 +2241,7 @@ function LogsOverview() {
 
 export default function MultiShopAdminPage() {
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [settingsExpanded, setSettingsExpanded] = useState(false);
   const { logoutMutation } = useAuth();
 
   const handleLogout = () => {
@@ -1957,16 +2328,58 @@ export default function MultiShopAdminPage() {
                 Bestellungen
               </button>
               <button
-                onClick={() => setActiveTab("settings")}
-                className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                  activeTab === "settings"
-                    ? "bg-blue-100 text-blue-700"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                }`}
+                onClick={() => setSettingsExpanded(!settingsExpanded)}
+                className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-50"
               >
-                <Settings className="h-5 w-5 mr-3" />
-                Einstellungen
+                <div className="flex items-center">
+                  <Settings className="h-5 w-5 mr-3" />
+                  Einstellungen
+                </div>
+                {settingsExpanded ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
               </button>
+              
+              {/* Untermenü für Einstellungen */}
+              {settingsExpanded && (
+                <div className="ml-6 space-y-1 mt-1">
+                  <button
+                    onClick={() => setActiveTab("profile")}
+                    className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                      activeTab === "profile"
+                        ? "bg-blue-100 text-blue-700"
+                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                    }`}
+                  >
+                    <User className="h-4 w-4 mr-3" />
+                    Profil & Stammdaten
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("business")}
+                    className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                      activeTab === "business"
+                        ? "bg-blue-100 text-blue-700"
+                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                    }`}
+                  >
+                    <Building2 className="h-4 w-4 mr-3" />
+                    Geschäftsdaten & Rechnungsstellung
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("pricing")}
+                    className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                      activeTab === "pricing"
+                        ? "bg-blue-100 text-blue-700"
+                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                    }`}
+                  >
+                    <Euro className="h-4 w-4 mr-3" />
+                    Preisgestaltung & Pakete
+                  </button>
+                </div>
+              )}
               <button
                 onClick={() => setActiveTab("logs")}
                 className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
@@ -1988,7 +2401,9 @@ export default function MultiShopAdminPage() {
               {activeTab === "shops" && <ShopsOverview />}
               {activeTab === "employees" && <EmployeesOverview />}
               {activeTab === "orders" && <OrdersOverview />}
-              {activeTab === "settings" && <MSASettings />}
+              {activeTab === "profile" && <MSAProfileSettings />}
+              {activeTab === "business" && <MSABusinessSettings />}
+              {activeTab === "pricing" && <MSAPricingSettings />}
               {activeTab === "logs" && <LogsOverview />}
             </div>
           </div>
