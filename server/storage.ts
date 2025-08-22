@@ -5087,15 +5087,23 @@ export class DatabaseStorage implements IStorage {
 
       console.log(`🗑️ Kunden-Referenzen für Mitarbeiter ${employeeId} entfernt`);
 
-      // 2. Alle Reparaturen, bei denen dieser Mitarbeiter als "createdBy" eingetragen ist, auf "GELÖSCHTER MITARBEITER" setzen
+      // 2. Alle Reparaturen mit userId-Referenz auf NULL setzen 
+      await db
+        .update(repairs)
+        .set({ userId: null })
+        .where(eq(repairs.userId, employeeId));
+
+      console.log(`🗑️ Reparatur-userId-Referenzen für Mitarbeiter ${employeeId} entfernt`);
+
+      // 3. Alle Reparaturen, bei denen dieser Mitarbeiter als "createdBy" eingetragen ist, auf "GELÖSCHTER MITARBEITER" setzen
       await db
         .update(repairs)
         .set({ createdBy: "GELÖSCHTER MITARBEITER" })
         .where(eq(repairs.createdBy, employeeId.toString()));
 
-      console.log(`🗑️ Reparatur-Referenzen für Mitarbeiter ${employeeId} anonymisiert`);
+      console.log(`🗑️ Reparatur-createdBy-Referenzen für Mitarbeiter ${employeeId} anonymisiert`);
 
-      // 3. Den Mitarbeiter selbst löschen
+      // 4. Den Mitarbeiter selbst löschen
       await db
         .delete(users)
         .where(eq(users.id, employeeId));
