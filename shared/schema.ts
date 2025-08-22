@@ -367,6 +367,29 @@ export const businessDataSchema = z.object({
 
 export type BusinessData = z.infer<typeof businessDataSchema>;
 
+// MSA Pricing Tabelle für individuelle Preisgestaltung
+export const msaPricing = pgTable("msa_pricing", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull().unique(),
+  pricePerShop: doublePrecision("price_per_shop").default(29.90).notNull(), // Preis pro Shop
+  currency: text("currency").default("EUR").notNull(),
+  billingCycle: text("billing_cycle").default("monthly").notNull(), // monthly, quarterly, yearly
+  discountPercent: doublePrecision("discount_percent").default(0),
+  notes: text("notes"), // Zusätzliche Preisnotizen
+  effectiveFrom: timestamp("effective_from").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertMSAPricingSchema = createInsertSchema(msaPricing).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type MSAPricing = typeof msaPricing.$inferSelect;
+export type InsertMSAPricing = z.infer<typeof insertMSAPricingSchema>;
+
 // Unternehmensdaten / Geschäftsinformationen
 export const businessSettings = pgTable("business_settings", {
   id: serial("id").primaryKey(),

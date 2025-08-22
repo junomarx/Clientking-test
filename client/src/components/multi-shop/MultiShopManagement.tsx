@@ -12,19 +12,40 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Check, ChevronsUpDown, X } from "lucide-react";
 import { Building2, UserPlus, UserMinus, Users, ShieldCheck, Plus } from "lucide-react";
-// Lokale MultiShopAdmin Interface
+// Erweiterte MultiShopAdmin Interface
 interface MultiShopAdmin {
   id: number;
   username: string;
-  email?: string;
-  accessibleShops: {
+  email: string;
+  isActive: boolean;
+  createdAt: string;
+  accessibleShops: Array<{
     id: number;
     name: string;
     businessName: string;
-    isActive: boolean;
+    ownerName: string;
+    city: string;
+    email: string;
     shopId: number;
     grantedAt: string;
-  }[];
+    isActive: boolean;
+  }>;
+  totalShops: number;
+  profile: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    phone?: string;
+    businessData?: any;
+  } | null;
+  pricing: {
+    pricePerShop: number;
+    currency: string;
+    billingCycle: string;
+    discountPercent: number;
+    monthlyTotal: number;
+    notes?: string;
+  };
 }
 import { MultiShopAdminDetailsDialog } from "../superadmin/MultiShopAdminDetailsDialog";
 import { useForm } from "react-hook-form";
@@ -85,7 +106,8 @@ export function MultiShopManagement() {
   const [isGrantDialogOpen, setIsGrantDialogOpen] = useState(false);
   const [isCreateAdminDialogOpen, setIsCreateAdminDialogOpen] = useState(false);
   const [isShopSelectOpen, setIsShopSelectOpen] = useState(false);
-  const [selectedAdminForDetails, setSelectedAdminForDetails] = useState<number | null>(null);
+  const [selectedAdminForDetails, setSelectedAdminForDetails] = useState<MultiShopAdmin | null>(null);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
 
   // Alle Shops für Select abrufen (ohne Duplikate)
   const { data: allShopsRaw = [] } = useQuery<Shop[]>({
@@ -546,7 +568,10 @@ export function MultiShopManagement() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setSelectedAdminForDetails(admin.id)}
+                        onClick={() => {
+                          setSelectedAdminForDetails(admin);
+                          setIsDetailsDialogOpen(true);
+                        }}
                       >
                         Details
                       </Button>
@@ -600,16 +625,14 @@ export function MultiShopManagement() {
       </CardContent>
       
       {/* Multi-Shop Admin Details Dialog */}
-      {selectedAdminForDetails && (
-        <MultiShopAdminDetailsDialog
-          admin={multiShopAdmins.find(a => a.id === selectedAdminForDetails) || null}
-          isOpen={selectedAdminForDetails !== null}
-          onClose={() => setSelectedAdminForDetails(null)}
-          onRevoke={(adminId, shopId) => revokeAccessMutation.mutate({ userId: adminId, shopId })}
-          onDelete={(adminId) => deleteAdminMutation.mutate(adminId)}
-          onGrantAccess={(adminId, shopId) => grantAccessMutation.mutate({ userId: adminId, shopId })}
-        />
-      )}
+      <MultiShopAdminDetailsDialog
+        admin={selectedAdminForDetails}
+        isOpen={isDetailsDialogOpen}
+        onClose={() => {
+          setIsDetailsDialogOpen(false);
+          setSelectedAdminForDetails(null);
+        }}
+      />
     </Card>
   );
 }

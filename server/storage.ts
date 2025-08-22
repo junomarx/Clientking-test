@@ -63,6 +63,10 @@ import {
   multiShopPermissions,
   type MultiShopPermission,
   type InsertMultiShopPermission,
+  msaProfiles,
+  type MSAProfile,
+  msaPricing,
+  type MSAPricing,
 } from "@shared/schema";
 import crypto from "crypto";
 import { db } from "./db";
@@ -487,6 +491,14 @@ export interface IStorage {
   createKioskEmployee(kioskData: { username: string; email: string; password: string; shopId: number; parentUserId: number }): Promise<User>;
   isKioskOnline(shopId: number): Promise<{ isOnline: boolean; kioskUser?: User }>;
   getAllOnlineKiosks(shopId: number): Promise<{ onlineKiosks: User[]; totalKiosks: number }>;
+  
+  // MSA Profile und Pricing Methoden
+  getMSAProfile(userId: number): Promise<MSAProfile | undefined>;
+  createMSAProfile(profile: any): Promise<MSAProfile>;
+  updateMSAProfile(userId: number, updates: any): Promise<MSAProfile | undefined>;
+  getMSAPricing(userId: number): Promise<MSAPricing | undefined>;
+  createMSAPricing(pricing: any): Promise<MSAPricing>;
+  updateMSAPricing(userId: number, updates: any): Promise<MSAPricing | undefined>;
 }
 
 /**
@@ -6191,16 +6203,21 @@ export class DatabaseStorage implements IStorage {
 
       console.log(`🔍 ${multiShopAdmins.length} Multi-Shop Admins gefunden`);
 
-      // Für jeden Multi-Shop Admin die gewährten Permissions laden
-      const adminsWithPermissions = await Promise.all(
+      // Für jeden Multi-Shop Admin umfassende Informationen laden
+      const adminsWithDetails = await Promise.all(
         multiShopAdmins.map(async (admin) => {
+          // 1. Gewährte Permissions und Shops
           const grantedPermissions = await this.getGrantedPermissions(admin.id);
           const accessibleShops = await Promise.all(
             grantedPermissions.map(async (permission) => {
-              // Hole Business-Namen aus business_settings statt aus shops Tabelle
+              // Business-Namen aus business_settings abrufen
               const [businessData] = await db
                 .select({
-                  businessName: businessSettings.businessName
+                  businessName: businessSettings.businessName,
+                  ownerFirstName: businessSettings.ownerFirstName,
+                  ownerLastName: businessSettings.ownerLastName,
+                  city: businessSettings.city,
+                  email: businessSettings.email
                 })
                 .from(businessSettings)
                 .where(eq(businessSettings.shopId, permission.shopId));
@@ -6208,26 +6225,72 @@ export class DatabaseStorage implements IStorage {
               return {
                 id: permission.shopId,
                 name: businessData?.businessName || `Shop #${permission.shopId}`,
+                businessName: businessData?.businessName,
+                ownerName: businessData ? `${businessData.ownerFirstName} ${businessData.ownerLastName}` : '',
+                city: businessData?.city,
+                email: businessData?.email,
                 shopId: permission.shopId,
-                grantedAt: permission.grantedAt
+                grantedAt: permission.grantedAt,
+                isActive: true
               };
             })
           );
+
+          // 2. MSA-Profil laden
+          const msaProfile = await this.getMSAProfile(admin.id);
+          
+          // 3. MSA-Preisgestaltung laden (oder Standard verwenden)
+          let msaPricing = await this.getMSAPricing(admin.id);
+          if (!msaPricing) {
+            // Standard-Pricing erstellen falls nicht vorhanden
+            msaPricing = await this.createMSAPricing({
+              userId: admin.id,
+              pricePerShop: 29.90,
+              currency: 'EUR',
+              billingCycle: 'monthly',
+              discountPercent: 0
+            });
+          }
+
+          // 4. Monatlichen Gesamtpreis berechnen
+          const totalShops = accessibleShops.filter(shop => shop !== null).length;
+          const monthlyTotal = totalShops * msaPricing.pricePerShop * (1 - msaPricing.discountPercent / 100);
 
           return {
             id: admin.id,
             username: admin.username,
             email: admin.email,
-            isActive: true,
+            isActive: admin.isActive,
             createdAt: admin.createdAt,
+            
+            // Shop-Informationen
             accessibleShops: accessibleShops.filter(shop => shop !== null),
-            totalShops: accessibleShops.filter(shop => shop !== null).length
+            totalShops,
+            
+            // MSA-Profil
+            profile: msaProfile ? {
+              firstName: msaProfile.firstName,
+              lastName: msaProfile.lastName,
+              email: msaProfile.email,
+              phone: msaProfile.phone,
+              businessData: msaProfile.businessData
+            } : null,
+            
+            // Preisgestaltung
+            pricing: {
+              pricePerShop: msaPricing.pricePerShop,
+              currency: msaPricing.currency,
+              billingCycle: msaPricing.billingCycle,
+              discountPercent: msaPricing.discountPercent,
+              monthlyTotal: Number(monthlyTotal.toFixed(2)),
+              notes: msaPricing.notes
+            }
           };
         })
       );
 
-      console.log(`📋 Multi-Shop Admins verarbeitet: ${adminsWithPermissions.length}`);
-      return adminsWithPermissions;
+      console.log(`📋 Multi-Shop Admins mit Details verarbeitet: ${adminsWithDetails.length}`);
+      return adminsWithDetails;
     } catch (error) {
       console.error('Fehler beim Abrufen der Multi-Shop Admins:', error);
       return [];
@@ -6285,6 +6348,87 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error(`Fehler beim Abrufen der Kiosk-Mitarbeiter für Shop ${shopId}:`, error);
       return [];
+    }
+  }
+
+  // MSA PROFILE UND PRICING METHODEN
+  async getMSAProfile(userId: number): Promise<MSAProfile | undefined> {
+    try {
+      const [profile] = await db
+        .select()
+        .from(msaProfiles)
+        .where(eq(msaProfiles.userId, userId));
+      return profile;
+    } catch (error) {
+      console.error(`Fehler beim Abrufen des MSA-Profils für User ${userId}:`, error);
+      return undefined;
+    }
+  }
+
+  async createMSAProfile(profile: any): Promise<MSAProfile> {
+    try {
+      const [newProfile] = await db
+        .insert(msaProfiles)
+        .values(profile)
+        .returning();
+      return newProfile;
+    } catch (error) {
+      console.error('Fehler beim Erstellen des MSA-Profils:', error);
+      throw error;
+    }
+  }
+
+  async updateMSAProfile(userId: number, updates: any): Promise<MSAProfile | undefined> {
+    try {
+      const [updatedProfile] = await db
+        .update(msaProfiles)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(msaProfiles.userId, userId))
+        .returning();
+      return updatedProfile;
+    } catch (error) {
+      console.error(`Fehler beim Aktualisieren des MSA-Profils für User ${userId}:`, error);
+      return undefined;
+    }
+  }
+
+  async getMSAPricing(userId: number): Promise<MSAPricing | undefined> {
+    try {
+      const [pricing] = await db
+        .select()
+        .from(msaPricing)
+        .where(eq(msaPricing.userId, userId));
+      return pricing;
+    } catch (error) {
+      console.error(`Fehler beim Abrufen der MSA-Preisgestaltung für User ${userId}:`, error);
+      return undefined;
+    }
+  }
+
+  async createMSAPricing(pricing: any): Promise<MSAPricing> {
+    try {
+      const [newPricing] = await db
+        .insert(msaPricing)
+        .values(pricing)
+        .returning();
+      return newPricing;
+    } catch (error) {
+      console.error('Fehler beim Erstellen der MSA-Preisgestaltung:', error);
+      throw error;
+    }
+  }
+
+  async updateMSAPricing(userId: number, updates: any): Promise<MSAPricing | undefined> {
+    try {
+      const [updatedPricing] = await db
+        .update(msaPricing)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(msaPricing.userId, userId))
+        .returning();
+      return updatedPricing;
+    } catch (error) {
+      console.error(`Fehler beim Aktualisieren der MSA-Preisgestaltung für User ${userId}:`, error);
+      return undefined;
     }
   }
 

@@ -205,14 +205,109 @@ export function registerSuperadminRoutes(app: Express) {
         return res.status(401).json({ message: "Nicht angemeldet" });
       }
       
-      // Multi-Shop Admins mit ihren zugänglichen Shops abrufen
+      // Multi-Shop Admins mit umfassenden Details abrufen
       const multiShopAdmins = await storage.getAllMultiShopAdmins();
-      console.log('Multi-Shop Admins abgerufen:', multiShopAdmins.length);
+      console.log('Multi-Shop Admins mit Details abgerufen:', multiShopAdmins.length);
       
       res.json(multiShopAdmins);
     } catch (error) {
       console.error('Fehler beim Abrufen der Multi-Shop Admins:', error);
       res.status(500).json({ message: "Fehler beim Abrufen der Multi-Shop Admins" });
+    }
+  });
+
+  // MSA-Profil abrufen
+  app.get("/api/superadmin/msa-profile/:userId", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const profile = await storage.getMSAProfile(userId);
+      
+      if (!profile) {
+        return res.status(404).json({ message: "MSA-Profil nicht gefunden" });
+      }
+      
+      res.json(profile);
+    } catch (error) {
+      console.error('Fehler beim Abrufen des MSA-Profils:', error);
+      res.status(500).json({ message: "Fehler beim Abrufen des MSA-Profils" });
+    }
+  });
+
+  // MSA-Profil erstellen/aktualisieren
+  app.put("/api/superadmin/msa-profile/:userId", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const profileData = req.body;
+      
+      // Prüfen ob Profil existiert
+      const existingProfile = await storage.getMSAProfile(userId);
+      
+      let profile;
+      if (existingProfile) {
+        profile = await storage.updateMSAProfile(userId, profileData);
+      } else {
+        profile = await storage.createMSAProfile({ ...profileData, userId });
+      }
+      
+      if (!profile) {
+        return res.status(400).json({ message: "Fehler beim Speichern des MSA-Profils" });
+      }
+      
+      res.json(profile);
+    } catch (error) {
+      console.error('Fehler beim Speichern des MSA-Profils:', error);
+      res.status(500).json({ message: "Fehler beim Speichern des MSA-Profils" });
+    }
+  });
+
+  // MSA-Preisgestaltung abrufen
+  app.get("/api/superadmin/msa-pricing/:userId", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      let pricing = await storage.getMSAPricing(userId);
+      
+      // Standard-Pricing erstellen falls nicht vorhanden
+      if (!pricing) {
+        pricing = await storage.createMSAPricing({
+          userId,
+          pricePerShop: 29.90,
+          currency: 'EUR',
+          billingCycle: 'monthly',
+          discountPercent: 0
+        });
+      }
+      
+      res.json(pricing);
+    } catch (error) {
+      console.error('Fehler beim Abrufen der MSA-Preisgestaltung:', error);
+      res.status(500).json({ message: "Fehler beim Abrufen der MSA-Preisgestaltung" });
+    }
+  });
+
+  // MSA-Preisgestaltung aktualisieren
+  app.put("/api/superadmin/msa-pricing/:userId", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const pricingData = req.body;
+      
+      // Prüfen ob Pricing existiert
+      const existingPricing = await storage.getMSAPricing(userId);
+      
+      let pricing;
+      if (existingPricing) {
+        pricing = await storage.updateMSAPricing(userId, pricingData);
+      } else {
+        pricing = await storage.createMSAPricing({ ...pricingData, userId });
+      }
+      
+      if (!pricing) {
+        return res.status(400).json({ message: "Fehler beim Speichern der MSA-Preisgestaltung" });
+      }
+      
+      res.json(pricing);
+    } catch (error) {
+      console.error('Fehler beim Speichern der MSA-Preisgestaltung:', error);
+      res.status(500).json({ message: "Fehler beim Speichern der MSA-Preisgestaltung" });
     }
   });
 
