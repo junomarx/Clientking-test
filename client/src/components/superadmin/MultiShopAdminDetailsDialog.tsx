@@ -239,9 +239,10 @@ export function MultiShopAdminDetailsDialog({
               <TabsTrigger value="pricing">Preisgestaltung</TabsTrigger>
             </TabsList>
 
-            <div className="flex-1 overflow-y-auto mt-4 space-y-4 pr-2">
+            <div className="flex-1 overflow-y-auto mt-4 pr-2" style={{ maxHeight: 'calc(90vh - 160px)' }}>
               {/* Übersicht Tab */}
-              <TabsContent value="overview" className="space-y-4">
+              <TabsContent value="overview" className="space-y-4 m-0 data-[state=active]:block"
+                style={{ height: 'fit-content' }}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Card>
                     <CardHeader>
@@ -340,7 +341,8 @@ export function MultiShopAdminDetailsDialog({
               </TabsContent>
 
               {/* Shops Tab */}
-              <TabsContent value="shops" className="space-y-4">
+              <TabsContent value="shops" className="space-y-4 m-0 data-[state=active]:block"
+                style={{ height: 'fit-content' }}>
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -384,7 +386,8 @@ export function MultiShopAdminDetailsDialog({
               </TabsContent>
 
               {/* Profil Tab */}
-              <TabsContent value="profile" className="space-y-4 overflow-y-auto max-h-full">
+              <TabsContent value="profile" className="space-y-4 m-0 data-[state=active]:block"
+                style={{ height: 'fit-content' }}>
                 <Form {...profileForm}>
                   <form onSubmit={profileForm.handleSubmit(onUpdateProfile)} className="space-y-4">
                     <Card>
@@ -543,7 +546,8 @@ export function MultiShopAdminDetailsDialog({
               </TabsContent>
 
               {/* Preisgestaltung Tab */}
-              <TabsContent value="pricing" className="space-y-4 overflow-y-auto max-h-full">
+              <TabsContent value="pricing" className="space-y-4 m-0 data-[state=active]:block"
+                style={{ height: 'fit-content' }}>
                 <Form {...pricingForm}>
                   <form onSubmit={pricingForm.handleSubmit(onUpdatePricing)} className="space-y-4">
                     <Card>
