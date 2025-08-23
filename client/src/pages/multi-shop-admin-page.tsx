@@ -2427,15 +2427,18 @@ function MSAProfileSettings() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">E-Mail-Adresse</Label>
+              <Label htmlFor="email">Kontakt-E-Mail-Adresse</Label>
               <Input
                 id="email"
                 type="email"
                 value={profileData.email}
                 onChange={(e) => setProfileData({...profileData, email: e.target.value})}
-                placeholder="E-Mail eingeben"
+                placeholder="Kontakt-E-Mail eingeben"
                 required
               />
+              <p className="text-xs text-muted-foreground">
+                Diese E-Mail wird nur für Kontaktinformationen verwendet. Die Login-E-Mail bleibt unverändert.
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="phone">Telefonnummer</Label>
