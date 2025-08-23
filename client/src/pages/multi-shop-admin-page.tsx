@@ -636,9 +636,19 @@ function ReadonlyRepairDetailsDialog({
 
 // Dashboard Statistiken mit Zeitraum-Filter
 function DashboardStats() {
-  const [selectedPeriod, setSelectedPeriod] = useState<'day' | 'week' | 'month' | 'quarter' | 'year' | 'all' | 'custom'>('month');
+  // Zeitraum aus localStorage laden oder Standard verwenden
+  const [selectedPeriod, setSelectedPeriod] = useState<'day' | 'week' | 'month' | 'quarter' | 'year' | 'all' | 'custom'>(() => {
+    const saved = localStorage.getItem('msa-selected-period');
+    return (saved as 'day' | 'week' | 'month' | 'quarter' | 'year' | 'all' | 'custom') || 'month';
+  });
   const [customStartDate, setCustomStartDate] = useState<string>('');
   const [customEndDate, setCustomEndDate] = useState<string>('');
+
+  // Zeitraum-Änderung Handler mit localStorage-Speicherung
+  const handlePeriodChange = (period: 'day' | 'week' | 'month' | 'quarter' | 'year' | 'all' | 'custom') => {
+    setSelectedPeriod(period);
+    localStorage.setItem('msa-selected-period', period);
+  };
 
   // Dashboard-Übersicht mit Zeitraum-Filter
   const { data: shops, isLoading } = useQuery({
@@ -714,7 +724,7 @@ function DashboardStats() {
               <CardDescription>Multi-Shop Statistiken für {getDisplayLabel()}</CardDescription>
             </div>
             <div className="flex items-center gap-4">
-              <Select value={selectedPeriod} onValueChange={(value: any) => setSelectedPeriod(value)}>
+              <Select value={selectedPeriod} onValueChange={(value: any) => handlePeriodChange(value)}>
                 <SelectTrigger className="w-48">
                   <SelectValue />
                 </SelectTrigger>
@@ -958,9 +968,19 @@ function DashboardStats() {
 
 // Shop Übersicht
 function ShopsOverview() {
-  const [selectedPeriod, setSelectedPeriod] = useState<'day' | 'week' | 'month' | 'quarter' | 'year' | 'all' | 'custom'>('month');
+  // Zeitraum aus localStorage laden oder Standard verwenden (synchron mit Dashboard)
+  const [selectedPeriod, setSelectedPeriod] = useState<'day' | 'week' | 'month' | 'quarter' | 'year' | 'all' | 'custom'>(() => {
+    const saved = localStorage.getItem('msa-selected-period');
+    return (saved as 'day' | 'week' | 'month' | 'quarter' | 'year' | 'all' | 'custom') || 'month';
+  });
   const [customStartDate, setCustomStartDate] = useState<string>('');
   const [customEndDate, setCustomEndDate] = useState<string>('');
+
+  // Zeitraum-Änderung Handler mit localStorage-Speicherung (synchron mit Dashboard)
+  const handlePeriodChange = (period: 'day' | 'week' | 'month' | 'quarter' | 'year' | 'all' | 'custom') => {
+    setSelectedPeriod(period);
+    localStorage.setItem('msa-selected-period', period);
+  };
   
   const { data: shops, isLoading } = useQuery({
     queryKey: ["/api/multi-shop/accessible-shops", selectedPeriod, customStartDate, customEndDate],
@@ -1032,7 +1052,7 @@ function ShopsOverview() {
               <CardDescription>Statistiken für {getDisplayLabel()}</CardDescription>
             </div>
             <div className="flex items-center gap-4">
-              <Select value={selectedPeriod} onValueChange={(value: any) => setSelectedPeriod(value)}>
+              <Select value={selectedPeriod} onValueChange={(value: any) => handlePeriodChange(value)}>
                 <SelectTrigger className="w-48">
                   <SelectValue />
                 </SelectTrigger>
