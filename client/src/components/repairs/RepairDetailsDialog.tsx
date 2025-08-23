@@ -222,7 +222,7 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
     queryKey: [`/api/repairs/${repairId}`],
     enabled: open && repairId !== null,
     staleTime: 0, // Immer frische Daten laden
-    cacheTime: 0, // Keine Cache-Zeit
+    gcTime: 0, // Keine Cache-Zeit (ehemals cacheTime)
   });
 
   // Verfügbare Leihgeräte abrufen
@@ -303,7 +303,7 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
   // Kundendaten abrufen
   const { data: customers } = useQuery<Customer[]>({
     queryKey: ['/api/customers'],
-    enabled: open && (specificRepair?.customerId || repair?.customerId) !== undefined,
+    enabled: open && repairId !== null,
   });
   
   // E-Mail-Verlauf abrufen
@@ -338,7 +338,7 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
         const data = await response.json();
         console.log('🔍 Status-History-Daten erhalten:', data);
         console.log('🔍 Aktueller Repair-Status aus Repair-Objekt:', repair?.status);
-        return data;
+        return data as StatusHistoryEntry[];
       } catch (error) {
         console.error('Fehler beim Abrufen der Status-History:', error);
         return [];

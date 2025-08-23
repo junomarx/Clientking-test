@@ -47,8 +47,6 @@ import {
   Tag,
   Pen,
   FileText,
-  Euro,
-  Clock,
   AlertCircle
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -134,7 +132,7 @@ function ShopDetailsDialog({ shop }: { shop: any }) {
           </DialogHeader>
 
           <div className="flex-1 overflow-hidden">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "overview" | "active" | "history")} className="w-full h-full flex flex-col">
               <TabsList className="grid w-full grid-cols-3 flex-shrink-0">
                 <TabsTrigger value="overview">Übersicht</TabsTrigger>
                 <TabsTrigger value="active">Aktive Reparaturen ({activeRepairs.length})</TabsTrigger>
@@ -249,7 +247,7 @@ function ShopDetailsDialog({ shop }: { shop: any }) {
                                 <div className="flex items-center gap-3">
                                   <span className="font-medium">{repair.orderCode}</span>
                                   <Badge variant={getStatusVariant(repair.status)}>
-                                    {statusLabels[repair.status] || repair.status}
+                                    {statusLabels[repair.status as keyof typeof statusLabels] || repair.status}
                                   </Badge>
                                 </div>
                                 <p className="text-sm text-gray-600">
@@ -568,7 +566,7 @@ function ReadonlyRepairDetailsDialog({
                       variant={repair.status === 'abgeschlossen' ? 'default' : 'secondary'}
                       className="text-orange-600 bg-orange-50"
                     >
-                      {statusLabels[repair.status] || repair.status}
+                      {statusLabels[repair.status as keyof typeof statusLabels] || repair.status}
                     </Badge>
                     <span className="text-xs text-muted-foreground">
                       von {repair.assignedEmployee || 'System'}
@@ -2029,7 +2027,7 @@ function OrdersOverview() {
   });
 
   // Filter die aktiven Bestellungen
-  const filteredOrders = orders.filter(order => {
+  const filteredOrders = orders.filter((order: any) => {
     const matchesStatus = statusFilter === "all" || order.status === statusFilter;
     const matchesSearch = !searchTerm || 
       order.partName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -2041,7 +2039,7 @@ function OrdersOverview() {
   });
 
   // Filter die archivierten Bestellungen
-  const filteredArchivedOrders = archivedOrders.filter(order => {
+  const filteredArchivedOrders = archivedOrders.filter((order: any) => {
     const matchesSearch = !searchTerm || 
       order.partName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.deviceInfo.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -2061,7 +2059,7 @@ function OrdersOverview() {
     };
     
     return (
-      <Badge className={colors[status] || 'bg-gray-100 text-gray-800'}>
+      <Badge className={colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800'}>
         {status.toUpperCase()}
       </Badge>
     );
@@ -2191,7 +2189,7 @@ function OrdersOverview() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredOrders.map((order) => (
+                  {filteredOrders.map((order: any) => (
                     <tr key={order.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3">
                         <div>
@@ -2285,7 +2283,7 @@ function OrdersOverview() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {filteredArchivedOrders.map((order) => (
+                      {filteredArchivedOrders.map((order: any) => (
                         <tr key={order.id} className="hover:bg-gray-50">
                           <td className="px-4 py-3">
                             <div>

@@ -857,13 +857,8 @@ export function registerMultiShopAdminRoutes(app: Express) {
 
       // Vollständige Löschung über Storage-Interface
       const { storage } = await import('./storage');
-      const success = await storage.deleteEmployee(parseInt(employeeId));
-
-      if (success === true) {
-        res.json({ message: `Mitarbeiter wurde erfolgreich gelöscht` });
-      } else {
-        res.status(500).json({ error: "Fehler beim Löschen des Mitarbeiters" });
-      }
+      await storage.deleteEmployee(parseInt(employeeId));
+      res.json({ message: `Mitarbeiter wurde erfolgreich gelöscht` });
 
     } catch (error) {
       console.error("Delete employee error:", error);
@@ -1082,7 +1077,7 @@ export function registerMultiShopAdminRoutes(app: Express) {
       let pricing = null;
       if (pricing_record) {
         const totalShops = permissions.length;
-        const monthlyTotal = totalShops * pricing_record.pricePerShop * (1 - pricing_record.discountPercent / 100);
+        const monthlyTotal = totalShops * pricing_record.pricePerShop * (1 - (pricing_record.discountPercent || 0) / 100);
         
         pricing = {
           pricePerShop: pricing_record.pricePerShop,
@@ -1329,17 +1324,9 @@ export function registerMultiShopAdminRoutes(app: Express) {
           }
         }
 
-        // Zugewiesenen Mitarbeiter laden falls vorhanden
-        if (repair.assignedTo) {
-          try {
-            const [employee] = await db.select().from(users).where(eq(users.id, repair.assignedTo));
-            if (employee) {
-              assignedEmployee = `${employee.firstName || ''} ${employee.lastName || ''}`.trim();
-            }
-          } catch (error) {
-            console.log('Mitarbeiter nicht gefunden:', repair.assignedTo);
-          }
-        }
+        // Note: assignedTo field doesn't exist in repairs schema
+        // This would need to be implemented as a separate assignment table if needed
+        assignedEmployee = null;
 
         return {
           id: repair.id,
@@ -1420,17 +1407,9 @@ export function registerMultiShopAdminRoutes(app: Express) {
           }
         }
 
-        // Zugewiesenen Mitarbeiter laden falls vorhanden
-        if (repair.assignedTo) {
-          try {
-            const [employee] = await db.select().from(users).where(eq(users.id, repair.assignedTo));
-            if (employee) {
-              assignedEmployee = `${employee.firstName || ''} ${employee.lastName || ''}`.trim();
-            }
-          } catch (error) {
-            console.log('Mitarbeiter nicht gefunden:', repair.assignedTo);
-          }
-        }
+        // Note: assignedTo field doesn't exist in repairs schema
+        // This would need to be implemented as a separate assignment table if needed
+        assignedEmployee = null;
 
         return {
           id: repair.id,
