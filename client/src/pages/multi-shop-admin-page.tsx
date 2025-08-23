@@ -408,6 +408,8 @@ function ReadonlyRepairDetailsDialog({
 }) {
   if (!repair) return null;
 
+
+
   const statusLabels = {
     'eingegangen': 'Eingegangen',
     'ersatzteile_bestellen': 'Ersatzteile bestellen', 
@@ -430,7 +432,8 @@ function ReadonlyRepairDetailsDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
+        <div className="flex-1 overflow-y-auto space-y-4" style={{ maxHeight: 'calc(90vh - 180px)' }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Kundendaten - exakt wie im normalen RepairDetailsDialog */}
           <div className="bg-slate-50 rounded-lg p-4 shadow-sm border">
             <h3 className="text-lg font-medium flex items-center gap-2 mb-3">
@@ -617,6 +620,7 @@ function ReadonlyRepairDetailsDialog({
               </div>
             )}
           </div>
+        </div>
         </div>
 
         <div className="flex-shrink-0 flex justify-end gap-2 pt-4 border-t">
