@@ -130,7 +130,7 @@ function ShopDetailsDialog({ shop }: { shop: any }) {
           </DialogHeader>
 
           <div className="flex-1 overflow-hidden">
-            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "overview" | "active" | "history")} className="w-full h-full flex flex-col">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
               <TabsList className="grid w-full grid-cols-3 flex-shrink-0">
                 <TabsTrigger value="overview">Übersicht</TabsTrigger>
                 <TabsTrigger value="active">Aktive Reparaturen ({activeRepairs.length})</TabsTrigger>
@@ -245,7 +245,7 @@ function ShopDetailsDialog({ shop }: { shop: any }) {
                                 <div className="flex items-center gap-3">
                                   <span className="font-medium">{repair.orderCode}</span>
                                   <Badge variant={getStatusVariant(repair.status)}>
-                                    {statusLabels[repair.status as keyof typeof statusLabels] || repair.status}
+                                    {statusLabels[repair.status] || repair.status}
                                   </Badge>
                                 </div>
                                 <p className="text-sm text-gray-600">
@@ -396,7 +396,7 @@ function ShopDetailsDialog({ shop }: { shop: any }) {
   );
 }
 
-// Readonly Reparatur-Details Dialog - scrollbar und vollständig
+// Readonly Reparatur-Details Dialog - alles in einem Dialog wie im normalen RepairDetailsDialog
 function ReadonlyRepairDetailsDialog({ 
   repair, 
   isOpen, 
@@ -430,187 +430,192 @@ function ReadonlyRepairDetailsDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto space-y-4" style={{ maxHeight: 'calc(90vh - 180px)' }}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Kundendaten */}
-            <div className="bg-slate-50 rounded-lg p-4 shadow-sm border">
-              <h3 className="text-lg font-medium flex items-center gap-2 mb-3">
-                <User className="h-5 w-5" />
-                Kundendaten
-              </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
+          {/* Kundendaten - exakt wie im normalen RepairDetailsDialog */}
+          <div className="bg-slate-50 rounded-lg p-4 shadow-sm border">
+            <h3 className="text-lg font-medium flex items-center gap-2 mb-3">
+              <User className="h-5 w-5" />
+              Kundendaten
+            </h3>
+            
+            <div className="space-y-3">
+              <div className="flex items-start gap-2">
+                <User className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+                <div>
+                  <div className="font-medium">{repair.customerName || 'Unbekannter Kunde'}</div>
+                </div>
+              </div>
               
-              <div className="space-y-3">
+              {repair.customerPhone && (
+                <div className="flex items-start gap-2">
+                  <Phone className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+                  <div>
+                    <a 
+                      href={`tel:${repair.customerPhone}`}
+                      className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                    >
+                      {repair.customerPhone}
+                    </a>
+                  </div>
+                </div>
+              )}
+              
+              {repair.customerEmail && (
+                <div className="flex items-start gap-2">
+                  <Mail className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+                  <div>
+                    <a 
+                      href={`mailto:${repair.customerEmail}`}
+                      className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                    >
+                      {repair.customerEmail}
+                    </a>
+                  </div>
+                </div>
+              )}
+              
+              {repair.customerAddress && (
+                <div className="flex items-start gap-2">
+                  <MapPin className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+                  <div>
+                    <div>{repair.customerAddress}</div>
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex items-start gap-2">
+                <Calendar className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+                <div>Kunde seit {new Date(repair.createdAt).toLocaleDateString('de-DE')}</div>
+              </div>
+              
+              {repair.createdBy && (
                 <div className="flex items-start gap-2">
                   <User className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
                   <div>
-                    <div className="font-medium">{repair.customerName || 'Unbekannter Kunde'}</div>
+                    <div className="text-sm text-muted-foreground">Kunde erstellt von</div>
+                    <div className="text-sm font-medium">{repair.createdBy}</div>
                   </div>
                 </div>
-                
-                {repair.customerPhone && (
-                  <div className="flex items-start gap-2">
-                    <Phone className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
-                    <div>
-                      <a 
-                        href={`tel:${repair.customerPhone}`}
-                        className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
-                      >
-                        {repair.customerPhone}
-                      </a>
-                    </div>
-                  </div>
-                )}
-                
-                {repair.customerEmail && (
-                  <div className="flex items-start gap-2">
-                    <Mail className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
-                    <div>
-                      <a 
-                        href={`mailto:${repair.customerEmail}`}
-                        className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
-                      >
-                        {repair.customerEmail}
-                      </a>
-                    </div>
-                  </div>
-                )}
-                
-                {repair.customerAddress && (
-                  <div className="flex items-start gap-2">
-                    <MapPin className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
-                    <div>
-                      <div>{repair.customerAddress}</div>
-                    </div>
-                  </div>
-                )}
-                
-                <div className="flex items-start gap-2">
-                  <Calendar className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
-                  <div>Kunde seit {new Date(repair.createdAt).toLocaleDateString('de-DE')}</div>
-                </div>
-                
-                {repair.createdBy && (
-                  <div className="flex items-start gap-2">
-                    <User className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
-                    <div>
-                      <div className="text-sm text-muted-foreground">Kunde erstellt von</div>
-                      <div className="text-sm font-medium">{repair.createdBy}</div>
-                    </div>
-                  </div>
-                )}
-              </div>
+              )}
             </div>
+          </div>
+          
+          {/* Gerätedaten - exakt wie im normalen RepairDetailsDialog */}
+          <div className="bg-slate-50 rounded-lg p-4 shadow-sm border">
+            <h3 className="text-lg font-medium flex items-center gap-2 mb-3">
+              <Smartphone className="h-5 w-5" />
+              Gerätedaten
+            </h3>
             
-            {/* Gerätedaten */}
-            <div className="bg-slate-50 rounded-lg p-4 shadow-sm border">
-              <h3 className="text-lg font-medium flex items-center gap-2 mb-3">
-                <Smartphone className="h-5 w-5" />
-                Gerätedaten
-              </h3>
+            <div className="space-y-3">
+              <div className="flex items-start gap-2">
+                <Smartphone className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+                <div>
+                  <div className="font-medium">{repair.deviceInfo}</div>
+                  <div className="text-sm text-muted-foreground">Smartphone</div>
+                </div>
+              </div>
               
-              <div className="space-y-3">
+              {repair.serialNumber && (
                 <div className="flex items-start gap-2">
-                  <Smartphone className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+                  <Tag className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
                   <div>
-                    <div className="font-medium">{repair.deviceInfo}</div>
-                    <div className="text-sm text-muted-foreground">Smartphone</div>
+                    <div className="text-sm text-muted-foreground">Seriennummer</div>
+                    <div>{repair.serialNumber}</div>
                   </div>
                 </div>
-                
-                {repair.serialNumber && (
-                  <div className="flex items-start gap-2">
-                    <Tag className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
-                    <div>
-                      <div className="text-sm text-muted-foreground">Seriennummer</div>
-                      <div>{repair.serialNumber}</div>
-                    </div>
-                  </div>
-                )}
-                
-                {repair.deviceCode && (
-                  <div className="flex items-start gap-2">
-                    <Pen className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
-                    <div>
-                      <div className="text-sm text-muted-foreground">Gerätecode</div>
-                      <div>{repair.deviceCode}</div>
-                    </div>
-                  </div>
-                )}
-                
+              )}
+              
+              {repair.deviceCode && (
                 <div className="flex items-start gap-2">
-                  <div className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0">⚠️</div>
+                  <Pen className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
                   <div>
-                    <div className="text-sm text-muted-foreground">Fehlerbeschreibung</div>
-                    <div className="whitespace-pre-wrap">
-                      {repair.issue}
-                    </div>
+                    <div className="text-sm text-muted-foreground">Gerätecode</div>
+                    <div>{repair.deviceCode}</div>
                   </div>
                 </div>
-                
-                <div className="flex items-start gap-2">
-                  <div className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0">⏱️</div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <div className="text-sm text-muted-foreground">Status</div>
+              )}
+              
+              <div className="flex items-start gap-2">
+                <div className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0">⚠️</div>
+                <div>
+                  <div className="text-sm text-muted-foreground">Fehlerbeschreibung</div>
+                  <div className="whitespace-pre-wrap">
+                    {repair.issue}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-2">
+                <div className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0">⏱️</div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="text-sm text-muted-foreground">Status</div>
+                    <div className="flex items-center gap-1">
+                      <div className="text-xs text-muted-foreground">Verlauf</div>
+                      <ChevronDown className="h-3 w-3" />
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge 
-                        variant={repair.status === 'abgeschlossen' ? 'default' : 'secondary'}
-                        className="text-orange-600 bg-orange-50"
-                      >
-                        {statusLabels[repair.status as keyof typeof statusLabels] || repair.status}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        von {repair.assignedEmployee || 'System'}
-                      </span>
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {new Date(repair.updatedAt).toLocaleString('de-DE')}
-                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge 
+                      variant={repair.status === 'abgeschlossen' ? 'default' : 'secondary'}
+                      className="text-orange-600 bg-orange-50"
+                    >
+                      {statusLabels[repair.status] || repair.status}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      von {repair.assignedEmployee || 'System'}
+                    </span>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {new Date(repair.updatedAt).toLocaleString('de-DE')}
                   </div>
                 </div>
               </div>
             </div>
           </div>
-          
-          {/* Auftragsinformationen */}
-          <div className="bg-slate-50 rounded-lg p-4 shadow-sm border">
-            <h3 className="text-lg font-medium flex items-center gap-2 mb-3">
+        </div>
+        
+        {/* Auftragsinformationen - collapsible wie im normalen Dialog */}
+        <div className="bg-slate-50 rounded-lg p-4 shadow-sm border">
+          <h3 className="text-lg font-medium flex items-center justify-between mb-3 cursor-pointer">
+            <div className="flex items-center gap-2">
               <Calendar className="h-5 w-5" />
               Auftragsinformationen
-            </h3>
-            
-            <div className="space-y-3">
-              <div className="flex items-start gap-2">
-                <Calendar className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
-                <div>
-                  <div className="text-sm text-muted-foreground">Auftragsdatum</div>
-                  <div>{new Date(repair.createdAt).toLocaleDateString('de-DE')}</div>
-                </div>
-              </div>
-              
-              <div className="flex items-start gap-2">
-                <div className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0">💰</div>
-                <div>
-                  <div className="text-sm text-muted-foreground">Kostenvoranschlag</div>
-                  <div className="text-lg font-semibold text-green-600">
-                    {repair.cost ? `€${repair.cost}` : 'Noch nicht geschätzt'}
-                  </div>
-                </div>
-              </div>
-              
-              {repair.notes && (
-                <div className="flex items-start gap-2">
-                  <div className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0">📝</div>
-                  <div>
-                    <div className="text-sm text-muted-foreground">Notizen</div>
-                    <div className="p-3 bg-white rounded-md mt-1 whitespace-pre-wrap">
-                      {repair.notes}
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
+            <ChevronDown className="h-4 w-4" />
+          </h3>
+          
+          <div className="space-y-3">
+            <div className="flex items-start gap-2">
+              <Calendar className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+              <div>
+                <div className="text-sm text-muted-foreground">Auftragsdatum</div>
+                <div>{new Date(repair.createdAt).toLocaleDateString('de-DE')}</div>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-2">
+              <div className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0">💰</div>
+              <div>
+                <div className="text-sm text-muted-foreground">Kostenvoranschlag</div>
+                <div className="text-lg font-semibold text-green-600">
+                  {repair.cost ? `€${repair.cost}` : 'Noch nicht geschätzt'}
+                </div>
+              </div>
+            </div>
+            
+            {repair.notes && (
+              <div className="flex items-start gap-2">
+                <div className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0">📝</div>
+                <div>
+                  <div className="text-sm text-muted-foreground">Notizen</div>
+                  <div className="p-3 bg-white rounded-md mt-1 whitespace-pre-wrap">
+                    {repair.notes}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -2019,7 +2024,7 @@ function OrdersOverview() {
   });
 
   // Filter die aktiven Bestellungen
-  const filteredOrders = orders.filter((order: any) => {
+  const filteredOrders = orders.filter(order => {
     const matchesStatus = statusFilter === "all" || order.status === statusFilter;
     const matchesSearch = !searchTerm || 
       order.partName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -2031,7 +2036,7 @@ function OrdersOverview() {
   });
 
   // Filter die archivierten Bestellungen
-  const filteredArchivedOrders = archivedOrders.filter((order: any) => {
+  const filteredArchivedOrders = archivedOrders.filter(order => {
     const matchesSearch = !searchTerm || 
       order.partName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.deviceInfo.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -2051,7 +2056,7 @@ function OrdersOverview() {
     };
     
     return (
-      <Badge className={colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800'}>
+      <Badge className={colors[status] || 'bg-gray-100 text-gray-800'}>
         {status.toUpperCase()}
       </Badge>
     );
@@ -2181,7 +2186,7 @@ function OrdersOverview() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredOrders.map((order: any) => (
+                  {filteredOrders.map((order) => (
                     <tr key={order.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3">
                         <div>
@@ -2275,7 +2280,7 @@ function OrdersOverview() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {filteredArchivedOrders.map((order: any) => (
+                      {filteredArchivedOrders.map((order) => (
                         <tr key={order.id} className="hover:bg-gray-50">
                           <td className="px-4 py-3">
                             <div>
