@@ -1285,19 +1285,13 @@ export function registerMultiShopAdminRoutes(app: Express) {
         return res.status(403).json({ error: "Kein Zugriff auf diesen Shop" });
       }
 
-      // Echte Reparaturdaten aus der Datenbank laden
+      // Echte Reparaturdaten aus der Datenbank laden (alle AUSSER abgeholt)
       const activeRepairsData = await db
         .select()
         .from(repairs)
         .where(and(
           eq(repairs.shopId, shopId),
-          or(
-            eq(repairs.status, 'eingegangen'),
-            eq(repairs.status, 'ersatzteile_bestellen'), 
-            eq(repairs.status, 'ersatzteil_eingetroffen'),
-            eq(repairs.status, 'ausser_haus'),
-            eq(repairs.status, 'abholbereit')
-          )
+          sql`${repairs.status} != 'abgeholt'`
         ))
         .orderBy(desc(repairs.createdAt));
 
@@ -1376,12 +1370,13 @@ export function registerMultiShopAdminRoutes(app: Express) {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-      // Echte Reparatur-Historie aus der Datenbank laden
+      // Echte Reparatur-Historie aus der Datenbank laden (nur abgeholte Reparaturen)
       const historyData = await db
         .select()
         .from(repairs)
         .where(and(
           eq(repairs.shopId, shopId),
+          eq(repairs.status, 'abgeholt'),
           sql`${repairs.updatedAt} >= ${thirtyDaysAgo}`
         ))
         .orderBy(desc(repairs.updatedAt));
@@ -1420,6 +1415,7 @@ export function registerMultiShopAdminRoutes(app: Express) {
           createdAt: repair.createdAt,
           updatedAt: repair.updatedAt,
           cost: repair.estimatedCost ? parseFloat(repair.estimatedCost) : null,
+          notes: repair.notes,
           customerName,
           customerPhone,
           assignedEmployee
