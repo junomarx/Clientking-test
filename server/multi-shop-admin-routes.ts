@@ -1290,34 +1290,15 @@ export function registerMultiShopAdminRoutes(app: Express) {
         return res.status(403).json({ error: "Kein Zugriff auf diesen Shop" });
       }
 
-      // Aktive Reparaturen laden
-      const activeRepairs = await db
-        .select({
-          id: repairs.id,
-          orderCode: repairs.orderCode,
-          deviceInfo: sql<string>`${repairs.brand} || ' ' || ${repairs.model}`,
-          issue: repairs.issue,
-          status: repairs.status,
-          createdAt: repairs.createdAt,
-          updatedAt: repairs.updatedAt,
-          cost: repairs.cost,
-          notes: repairs.notes,
-          // Kunden-Details
-          customerName: sql<string>`COALESCE(${customers.firstName}, '') || ' ' || COALESCE(${customers.lastName}, '')`,
-          customerPhone: customers.phone,
-          customerEmail: customers.email,
-          // Zugewiesener Mitarbeiter
-          assignedEmployee: sql<string>`COALESCE(${users.firstName}, '') || ' ' || COALESCE(${users.lastName}, '')`,
-        })
+      // Echte Reparaturdaten aus der Datenbank laden
+      const activeRepairsData = await db
+        .select()
         .from(repairs)
-        .leftJoin(customers, eq(repairs.customerId, customers.id))
-        .leftJoin(users, eq(repairs.assignedTo, users.id))
         .where(and(
           eq(repairs.shopId, shopId),
-          // Nur aktive Reparaturen (nicht abgeschlossen)
           or(
             eq(repairs.status, 'eingegangen'),
-            eq(repairs.status, 'ersatzteile_bestellen'),
+            eq(repairs.status, 'ersatzteile_bestellen'), 
             eq(repairs.status, 'ersatzteil_eingetroffen'),
             eq(repairs.status, 'ausser_haus'),
             eq(repairs.status, 'abholbereit')
@@ -1325,7 +1306,59 @@ export function registerMultiShopAdminRoutes(app: Express) {
         ))
         .orderBy(desc(repairs.createdAt));
 
-      res.json(activeRepairs);
+      console.log(`🔧 Aktive Reparaturen für Shop ${shopId}:`, activeRepairsData.length);
+
+      // Daten für Frontend formatieren mit echten Werten
+      const formattedRepairs = await Promise.all(activeRepairsData.map(async (repair) => {
+        let customerName = 'Unbekannter Kunde';
+        let customerPhone = null;
+        let customerEmail = null;
+        let assignedEmployee = null;
+
+        // Kunde laden falls vorhanden
+        if (repair.customerId) {
+          try {
+            const [customer] = await db.select().from(customers).where(eq(customers.id, repair.customerId));
+            if (customer) {
+              customerName = `${customer.firstName || ''} ${customer.lastName || ''}`.trim() || 'Unbekannter Kunde';
+              customerPhone = customer.phone;
+              customerEmail = customer.email;
+            }
+          } catch (error) {
+            console.log('Kunde nicht gefunden:', repair.customerId);
+          }
+        }
+
+        // Zugewiesenen Mitarbeiter laden falls vorhanden
+        if (repair.assignedTo) {
+          try {
+            const [employee] = await db.select().from(users).where(eq(users.id, repair.assignedTo));
+            if (employee) {
+              assignedEmployee = `${employee.firstName || ''} ${employee.lastName || ''}`.trim();
+            }
+          } catch (error) {
+            console.log('Mitarbeiter nicht gefunden:', repair.assignedTo);
+          }
+        }
+
+        return {
+          id: repair.id,
+          orderCode: repair.orderCode || `REP-${repair.id}`,
+          deviceInfo: `${repair.brand} ${repair.model}`,
+          issue: repair.issue,
+          status: repair.status,
+          createdAt: repair.createdAt,
+          updatedAt: repair.updatedAt,
+          cost: repair.estimatedCost ? parseFloat(repair.estimatedCost) : null,
+          notes: repair.notes,
+          customerName,
+          customerPhone,
+          customerEmail,
+          assignedEmployee
+        };
+      }));
+
+      res.json(formattedRepairs);
     } catch (error) {
       console.error("Fehler beim Laden aktiver Reparaturen:", error);
       res.status(500).json({ error: "Fehler beim Laden der aktiven Reparaturen" });
@@ -1356,32 +1389,65 @@ export function registerMultiShopAdminRoutes(app: Express) {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-      const repairHistory = await db
-        .select({
-          id: repairs.id,
-          orderCode: repairs.orderCode,
-          deviceInfo: sql<string>`${repairs.brand} || ' ' || ${repairs.model}`,
-          issue: repairs.issue,
-          status: repairs.status,
-          createdAt: repairs.createdAt,
-          updatedAt: repairs.updatedAt,
-          cost: repairs.cost,
-          // Kunden-Details
-          customerName: sql<string>`COALESCE(${customers.firstName}, '') || ' ' || COALESCE(${customers.lastName}, '')`,
-          customerPhone: customers.phone,
-          // Zugewiesener Mitarbeiter
-          assignedEmployee: sql<string>`COALESCE(${users.firstName}, '') || ' ' || COALESCE(${users.lastName}, '')`,
-        })
+      // Echte Reparatur-Historie aus der Datenbank laden
+      const historyData = await db
+        .select()
         .from(repairs)
-        .leftJoin(customers, eq(repairs.customerId, customers.id))
-        .leftJoin(users, eq(repairs.assignedTo, users.id))
         .where(and(
           eq(repairs.shopId, shopId),
           sql`${repairs.updatedAt} >= ${thirtyDaysAgo}`
         ))
         .orderBy(desc(repairs.updatedAt));
 
-      res.json(repairHistory);
+      console.log(`📋 Reparatur-Historie für Shop ${shopId}:`, historyData.length);
+
+      // Daten für Frontend formatieren mit echten Werten
+      const formattedHistory = await Promise.all(historyData.map(async (repair) => {
+        let customerName = 'Unbekannter Kunde';
+        let customerPhone = null;
+        let assignedEmployee = null;
+
+        // Kunde laden falls vorhanden
+        if (repair.customerId) {
+          try {
+            const [customer] = await db.select().from(customers).where(eq(customers.id, repair.customerId));
+            if (customer) {
+              customerName = `${customer.firstName || ''} ${customer.lastName || ''}`.trim() || 'Unbekannter Kunde';
+              customerPhone = customer.phone;
+            }
+          } catch (error) {
+            console.log('Kunde nicht gefunden:', repair.customerId);
+          }
+        }
+
+        // Zugewiesenen Mitarbeiter laden falls vorhanden
+        if (repair.assignedTo) {
+          try {
+            const [employee] = await db.select().from(users).where(eq(users.id, repair.assignedTo));
+            if (employee) {
+              assignedEmployee = `${employee.firstName || ''} ${employee.lastName || ''}`.trim();
+            }
+          } catch (error) {
+            console.log('Mitarbeiter nicht gefunden:', repair.assignedTo);
+          }
+        }
+
+        return {
+          id: repair.id,
+          orderCode: repair.orderCode || `REP-${repair.id}`,
+          deviceInfo: `${repair.brand} ${repair.model}`,
+          issue: repair.issue,
+          status: repair.status,
+          createdAt: repair.createdAt,
+          updatedAt: repair.updatedAt,
+          cost: repair.estimatedCost ? parseFloat(repair.estimatedCost) : null,
+          customerName,
+          customerPhone,
+          assignedEmployee
+        };
+      }));
+
+      res.json(formattedHistory);
     } catch (error) {
       console.error("Fehler beim Laden der Reparatur-Historie:", error);
       res.status(500).json({ error: "Fehler beim Laden der Reparatur-Historie" });
