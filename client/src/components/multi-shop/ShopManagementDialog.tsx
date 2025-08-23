@@ -25,8 +25,9 @@ import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Edit3, Building2, Phone, Mail, Globe, MapPin, Clock, Star, Settings, Image, FileText } from "lucide-react";
+import { Edit3, Building2, Phone, Mail, Globe, MapPin, Clock, Star, Settings, Image, FileText, ImageIcon, X } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 // Schema für Business Settings - basiert auf shared/schema.ts
 const businessSettingsSchema = z.object({
@@ -66,7 +67,11 @@ interface ShopManagementDialogProps {
 export function ShopManagementDialog({ shop, trigger }: ShopManagementDialogProps) {
   const [open, setOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [logoPreview, setLogoPreview] = React.useState<string | null>(null);
+  const [logoError, setLogoError] = React.useState<string | null>(null);
   const { toast } = useToast();
+
+  const MAX_LOGO_SIZE = 2 * 1024 * 1024; // 2MB
   
   // Lade business settings für den Shop
   const { data: businessSettings, isLoading } = useQuery({
@@ -108,9 +113,50 @@ export function ShopManagementDialog({ shop, trigger }: ShopManagementDialogProp
     },
   });
 
+  // Logo Upload Handler
+  const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setLogoError(null);
+    const file = event.target.files?.[0];
+    
+    if (!file) return;
+    
+    // Überprüfe die Dateigröße (max 2MB)
+    if (file.size > MAX_LOGO_SIZE) {
+      setLogoError(`Die Datei ist zu groß (${(file.size / (1024 * 1024)).toFixed(2)} MB). Maximale Größe: 2 MB.`);
+      return;
+    }
+    
+    // Überprüfe den Dateityp
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/svg+xml', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setLogoError('Nur JPG, PNG, SVG, GIF und WEBP-Dateien sind erlaubt.');
+      return;
+    }
+    
+    // Lese die Datei als Data-URL
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string;
+      if (dataUrl) {
+        setLogoPreview(dataUrl);
+        form.setValue('logoImage', dataUrl);
+      }
+    };
+    reader.onerror = () => {
+      setLogoError('Fehler beim Lesen der Datei.');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDeleteLogo = () => {
+    setLogoPreview(null);
+    form.setValue('logoImage', '');
+  };
+
   // Aktualisiere Form wenn business settings geladen werden
   React.useEffect(() => {
     if (businessSettings) {
+      setLogoPreview(businessSettings.logoImage || null);
       form.reset({
         businessName: businessSettings.businessName || "",
         ownerFirstName: businessSettings.ownerFirstName || "",
@@ -242,7 +288,7 @@ export function ShopManagementDialog({ shop, trigger }: ShopManagementDialogProp
 
             {!isEditing ? (
               // Read-Only View
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-6">
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-base flex items-center gap-2">
@@ -325,18 +371,26 @@ export function ShopManagementDialog({ shop, trigger }: ShopManagementDialogProp
                       Logo & Branding
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Logo</p>
-                      {businessSettings?.logoImage ? (
-                        <img 
-                          src={businessSettings.logoImage} 
-                          alt="Shop Logo" 
-                          className="max-w-[200px] max-h-[100px] object-contain border rounded"
-                        />
-                      ) : (
-                        <p className="text-muted-foreground">Kein Logo hochgeladen</p>
-                      )}
+                  <CardContent>
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center">
+                        {businessSettings?.logoImage ? (
+                          <img
+                            src={businessSettings.logoImage}
+                            alt="Logo"
+                            className="max-h-full max-w-full object-contain rounded-md"
+                          />
+                        ) : (
+                          <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                        )}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Logo: {businessSettings?.logoImage ? (
+                          <span className="text-green-600">Vorhanden</span>
+                        ) : (
+                          <span className="text-gray-500">Nicht gesetzt</span>
+                        )}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -387,7 +441,7 @@ export function ShopManagementDialog({ shop, trigger }: ShopManagementDialogProp
               // Edit Form
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-6">
                     <Card>
                       <CardHeader>
                         <CardTitle className="text-base">Geschäftsinformationen</CardTitle>
@@ -693,26 +747,63 @@ export function ShopManagementDialog({ shop, trigger }: ShopManagementDialogProp
                         <CardTitle className="text-base">Logo & Branding</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-4">
-                        <FormField
-                          control={form.control}
-                          name="logoImage"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Logo (Base64-Format)</FormLabel>
-                              <FormControl>
-                                <Textarea 
-                                  {...field} 
-                                  placeholder="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
-                                  className="min-h-[80px] font-mono text-xs"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                              <p className="text-xs text-muted-foreground">
-                                Laden Sie ein Logo im Base64-Format hoch oder lassen Sie das Feld leer
-                              </p>
-                            </FormItem>
-                          )}
-                        />
+                        <div>
+                          <FormLabel>Firmenlogo</FormLabel>
+                          <p className="text-xs text-muted-foreground mb-3">
+                            Laden Sie Ihr Firmenlogo hoch (max. 2MB, PNG, JPG, SVG, GIF oder WEBP)
+                          </p>
+                          
+                          <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+                            {/* Logo Vorschau */}
+                            <div className={`relative flex justify-center items-center h-24 w-24 rounded-md border border-input 
+                              ${logoPreview ? 'bg-white' : 'bg-muted'}`}>
+                              {logoPreview ? (
+                                <>
+                                  <img
+                                    src={logoPreview}
+                                    alt="Firmenlogo"
+                                    className="max-h-full max-w-full object-contain rounded-md"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={handleDeleteLogo}
+                                    className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground h-5 w-5 rounded-full flex items-center justify-center"
+                                    aria-label="Logo löschen"
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </button>
+                                </>
+                              ) : (
+                                <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                              )}
+                            </div>
+                            
+                            {/* Upload Button */}
+                            <div className="flex flex-col gap-3">
+                              <input
+                                type="file"
+                                accept="image/png,image/jpeg,image/svg+xml,image/gif,image/webp"
+                                onChange={handleLogoUpload}
+                                className="block w-full text-sm text-slate-500
+                                          file:mr-4 file:py-2 file:px-4
+                                          file:rounded-md file:border-0
+                                          file:text-sm file:font-semibold
+                                          file:bg-primary file:text-white
+                                          hover:file:bg-primary/80"
+                                id="logo-upload"
+                              />
+                              
+                              {/* Fehler Anzeige */}
+                              {logoError && (
+                                <Alert variant="destructive" className="py-2 px-3">
+                                  <AlertDescription className="text-xs">
+                                    {logoError}
+                                  </AlertDescription>
+                                </Alert>
+                              )}
+                            </div>
+                          </div>
+                        </div>
                       </CardContent>
                     </Card>
 
@@ -731,12 +822,12 @@ export function ShopManagementDialog({ shop, trigger }: ShopManagementDialogProp
                                 <Textarea 
                                   {...field} 
                                   placeholder="Geben Sie hier die Reparaturbedingungen und AGB ein..."
-                                  className="min-h-[120px]"
+                                  className="min-h-[150px]"
                                 />
                               </FormControl>
                               <FormMessage />
                               <p className="text-xs text-muted-foreground">
-                                Diese Bedingungen werden bei der Kiosk-Unterschrift angezeigt
+                                Diese Bedingungen werden bei der Kiosk-Unterschrift angezeigt und können die gesamte Breite nutzen
                               </p>
                             </FormItem>
                           )}
