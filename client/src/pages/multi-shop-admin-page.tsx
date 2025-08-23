@@ -52,6 +52,7 @@ import {
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { ShopManagementDialog } from "@/components/multi-shop/ShopManagementDialog";
+import { ChangePasswordDialog } from "@/components/auth/ChangePasswordDialog";
 
 // Shop Details Dialog mit Reparaturen-Einsicht
 function ShopDetailsDialog({ shop }: { shop: any }) {
@@ -2341,6 +2342,7 @@ function OrdersOverview() {
 // MSA Profil Einstellungen
 function MSAProfileSettings() {
   const { toast } = useToast();
+  const [isChangePasswordDialogOpen, setIsChangePasswordDialogOpen] = useState(false);
   const [profileData, setProfileData] = useState({
     firstName: '',
     lastName: '',
@@ -2451,6 +2453,36 @@ function MSAProfileSettings() {
           </form>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Sicherheitseinstellungen</CardTitle>
+          <CardDescription>Verwalten Sie Ihre Passwort- und Sicherheitseinstellungen</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-sm font-medium">Passwort</h4>
+                <p className="text-sm text-muted-foreground">
+                  Ändern Sie Ihr Passwort für mehr Sicherheit
+                </p>
+              </div>
+              <Button 
+                variant="outline" 
+                onClick={() => setIsChangePasswordDialogOpen(true)}
+              >
+                Passwort ändern
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <ChangePasswordDialog
+        open={isChangePasswordDialogOpen}
+        onOpenChange={setIsChangePasswordDialogOpen}
+      />
     </div>
   );
 }
