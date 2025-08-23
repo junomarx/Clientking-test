@@ -2437,7 +2437,7 @@ function MSAProfileSettings() {
                 required
               />
               <p className="text-xs text-muted-foreground">
-                Diese E-Mail wird nur für Kontaktinformationen verwendet. Die Login-E-Mail bleibt unverändert.
+                Diese E-Mail wird für Kontaktinformationen verwendet. Sie kann dieselbe wie Ihre Login-E-Mail sein oder eine separate Kontakt-E-Mail.
               </p>
             </div>
             <div className="space-y-2">
