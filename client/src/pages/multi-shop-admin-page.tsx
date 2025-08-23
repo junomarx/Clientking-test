@@ -39,7 +39,13 @@ import {
   Filter,
   Calendar,
   UserCircle,
-  History
+  History,
+  Smartphone,
+  Phone,
+  Mail,
+  MapPin,
+  Tag,
+  Pen
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
@@ -424,150 +430,193 @@ function ReadonlyRepairDetailsDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto space-y-4" style={{ maxHeight: 'calc(90vh - 180px)' }}>
-          {/* Kunde und Gerät nebeneinander */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Kundendaten */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  Kundendaten
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
+          {/* Kundendaten - exakt wie im normalen RepairDetailsDialog */}
+          <div className="bg-slate-50 rounded-lg p-4 shadow-sm border">
+            <h3 className="text-lg font-medium flex items-center gap-2 mb-3">
+              <User className="h-5 w-5" />
+              Kundendaten
+            </h3>
+            
+            <div className="space-y-3">
+              <div className="flex items-start gap-2">
+                <User className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
                 <div>
-                  <Label className="text-sm font-medium flex items-center gap-1">
-                    <User className="h-3 w-3" />
-                    {repair.customerName || 'Unbekannter Kunde'}
-                  </Label>
+                  <div className="font-medium">{repair.customerName || 'Unbekannter Kunde'}</div>
                 </div>
-                <div>
-                  <Label className="text-sm font-medium flex items-center gap-1">
-                    <div className="h-3 w-3">📞</div>
-                    {repair.customerPhone || 'Keine Telefonnummer'}
-                  </Label>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium flex items-center gap-1">
-                    <div className="h-3 w-3">📧</div>
-                    {repair.customerEmail || 'Keine E-Mail'}
-                  </Label>
-                </div>
-                {repair.customerAddress && (
+              </div>
+              
+              {repair.customerPhone && (
+                <div className="flex items-start gap-2">
+                  <Phone className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
                   <div>
-                    <Label className="text-sm font-medium flex items-center gap-1">
-                      <div className="h-3 w-3">📍</div>
-                      {repair.customerAddress}
-                    </Label>
-                  </div>
-                )}
-                <div>
-                  <Label className="text-sm font-medium">Kunde seit</Label>
-                  <p className="text-sm">{new Date(repair.createdAt).toLocaleDateString('de-DE')}</p>
-                </div>
-                {repair.createdBy && (
-                  <div>
-                    <Label className="text-sm font-medium">Kunde erstellt von</Label>
-                    <p className="text-sm">{repair.createdBy}</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Gerätedaten */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <div className="h-4 w-4">📱</div>
-                  Gerätedaten
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div>
-                  <Label className="text-sm font-medium flex items-center gap-1">
-                    <div className="h-3 w-3">📱</div>
-                    {repair.deviceInfo}
-                  </Label>
-                  <p className="text-xs text-gray-500">Smartphone</p>
-                </div>
-                {repair.serialNumber && (
-                  <div>
-                    <Label className="text-sm font-medium">Seriennummer</Label>
-                    <p className="text-sm font-mono">{repair.serialNumber}</p>
-                  </div>
-                )}
-                {repair.deviceCode && (
-                  <div>
-                    <Label className="text-sm font-medium">Gerätecode</Label>
-                    <p className="text-sm">{repair.deviceCode}</p>
-                  </div>
-                )}
-                <div>
-                  <Label className="text-sm font-medium">Fehlerbeschreibung</Label>
-                  <div className="space-y-1">
-                    {repair.issue?.split('\n').map((line: string, index: number) => (
-                      <p key={index} className="text-sm">{line}</p>
-                    ))}
+                    <a 
+                      href={`tel:${repair.customerPhone}`}
+                      className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                    >
+                      {repair.customerPhone}
+                    </a>
                   </div>
                 </div>
+              )}
+              
+              {repair.customerEmail && (
+                <div className="flex items-start gap-2">
+                  <Mail className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+                  <div>
+                    <a 
+                      href={`mailto:${repair.customerEmail}`}
+                      className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                    >
+                      {repair.customerEmail}
+                    </a>
+                  </div>
+                </div>
+              )}
+              
+              {repair.customerAddress && (
+                <div className="flex items-start gap-2">
+                  <MapPin className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+                  <div>
+                    <div>{repair.customerAddress}</div>
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex items-start gap-2">
+                <Calendar className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+                <div>Kunde seit {new Date(repair.createdAt).toLocaleDateString('de-DE')}</div>
+              </div>
+              
+              {repair.createdBy && (
+                <div className="flex items-start gap-2">
+                  <User className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+                  <div>
+                    <div className="text-sm text-muted-foreground">Kunde erstellt von</div>
+                    <div className="text-sm font-medium">{repair.createdBy}</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {/* Gerätedaten - exakt wie im normalen RepairDetailsDialog */}
+          <div className="bg-slate-50 rounded-lg p-4 shadow-sm border">
+            <h3 className="text-lg font-medium flex items-center gap-2 mb-3">
+              <Smartphone className="h-5 w-5" />
+              Gerätedaten
+            </h3>
+            
+            <div className="space-y-3">
+              <div className="flex items-start gap-2">
+                <Smartphone className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
                 <div>
-                  <Label className="text-sm font-medium flex items-center gap-2">
-                    Status
+                  <div className="font-medium">{repair.deviceInfo}</div>
+                  <div className="text-sm text-muted-foreground">Smartphone</div>
+                </div>
+              </div>
+              
+              {repair.serialNumber && (
+                <div className="flex items-start gap-2">
+                  <Tag className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+                  <div>
+                    <div className="text-sm text-muted-foreground">Seriennummer</div>
+                    <div>{repair.serialNumber}</div>
+                  </div>
+                </div>
+              )}
+              
+              {repair.deviceCode && (
+                <div className="flex items-start gap-2">
+                  <Pen className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+                  <div>
+                    <div className="text-sm text-muted-foreground">Gerätecode</div>
+                    <div>{repair.deviceCode}</div>
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex items-start gap-2">
+                <div className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0">⚠️</div>
+                <div>
+                  <div className="text-sm text-muted-foreground">Fehlerbeschreibung</div>
+                  <div className="whitespace-pre-wrap">
+                    {repair.issue}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-2">
+                <div className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0">⏱️</div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="text-sm text-muted-foreground">Status</div>
                     <div className="flex items-center gap-1">
-                      <div className="text-xs text-gray-500">Verlauf</div>
+                      <div className="text-xs text-muted-foreground">Verlauf</div>
                       <ChevronDown className="h-3 w-3" />
                     </div>
-                  </Label>
-                  <div className="flex items-center gap-2 mt-1">
+                  </div>
+                  <div className="flex items-center gap-2">
                     <Badge 
                       variant={repair.status === 'abgeschlossen' ? 'default' : 'secondary'}
                       className="text-orange-600 bg-orange-50"
                     >
                       {statusLabels[repair.status] || repair.status}
                     </Badge>
-                    <span className="text-xs text-gray-500">
-                      von {repair.assignedEmployee || 'System'} • {new Date(repair.updatedAt).toLocaleString('de-DE')}
+                    <span className="text-xs text-muted-foreground">
+                      von {repair.assignedEmployee || 'System'}
                     </span>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Auftragsinformationen - collapsible */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 cursor-pointer">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <div className="h-4 w-4">📋</div>
-                Auftragsinformationen
-              </CardTitle>
-              <ChevronDown className="h-4 w-4" />
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm font-medium">Auftragsdatum</Label>
-                  <p className="text-sm">{new Date(repair.createdAt).toLocaleDateString('de-DE')}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">Kostenvoranschlag</Label>
-                  <div className="text-lg font-semibold text-green-600">
-                    {repair.cost ? `€${repair.cost}` : 'Noch nicht geschätzt'}
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {new Date(repair.updatedAt).toLocaleString('de-DE')}
                   </div>
                 </div>
               </div>
-
-              {repair.notes && (
+            </div>
+          </div>
+        </div>
+        
+        {/* Auftragsinformationen - collapsible wie im normalen Dialog */}
+        <div className="bg-slate-50 rounded-lg p-4 shadow-sm border">
+          <h3 className="text-lg font-medium flex items-center justify-between mb-3 cursor-pointer">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Auftragsinformationen
+            </div>
+            <ChevronDown className="h-4 w-4" />
+          </h3>
+          
+          <div className="space-y-3">
+            <div className="flex items-start gap-2">
+              <Calendar className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+              <div>
+                <div className="text-sm text-muted-foreground">Auftragsdatum</div>
+                <div>{new Date(repair.createdAt).toLocaleDateString('de-DE')}</div>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-2">
+              <div className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0">💰</div>
+              <div>
+                <div className="text-sm text-muted-foreground">Kostenvoranschlag</div>
+                <div className="text-lg font-semibold text-green-600">
+                  {repair.cost ? `€${repair.cost}` : 'Noch nicht geschätzt'}
+                </div>
+              </div>
+            </div>
+            
+            {repair.notes && (
+              <div className="flex items-start gap-2">
+                <div className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0">📝</div>
                 <div>
-                  <Label className="text-sm font-medium">Notizen</Label>
-                  <div className="p-3 bg-gray-50 rounded-md mt-1">
-                    <p className="text-sm whitespace-pre-wrap">{repair.notes}</p>
+                  <div className="text-sm text-muted-foreground">Notizen</div>
+                  <div className="p-3 bg-white rounded-md mt-1 whitespace-pre-wrap">
+                    {repair.notes}
                   </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="flex-shrink-0 flex justify-end gap-2 pt-4 border-t">
