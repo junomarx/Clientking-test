@@ -289,6 +289,7 @@ export function ShopManagementDialog({ shop, trigger }: ShopManagementDialogProp
             {!isEditing ? (
               // Read-Only View
               <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-base flex items-center gap-2">
@@ -367,13 +368,38 @@ export function ShopManagementDialog({ shop, trigger }: ShopManagementDialogProp
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-base flex items-center gap-2">
+                      <Settings className="h-4 w-4" />
+                      Technische Einstellungen
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Bonbreite</p>
+                      <p>{businessSettings?.receiptWidth || "80mm"}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Kiosk-PIN</p>
+                      <p>{businessSettings?.kioskPin ? "****" : "Nicht gesetzt"}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">SMTP konfiguriert</p>
+                      <p>{businessSettings?.smtpHost ? "Ja" : "Nein"}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                </div>
+
+                {/* Logo & Branding - Vollbreite */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
                       <Image className="h-4 w-4" />
                       Logo & Branding
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center">
+                      <div className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center">
                         {businessSettings?.logoImage ? (
                           <img
                             src={businessSettings.logoImage}
@@ -441,7 +467,7 @@ export function ShopManagementDialog({ shop, trigger }: ShopManagementDialogProp
               // Edit Form
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <Card>
                       <CardHeader>
                         <CardTitle className="text-base">Geschäftsinformationen</CardTitle>
@@ -741,10 +767,12 @@ export function ShopManagementDialog({ shop, trigger }: ShopManagementDialogProp
                         />
                       </CardContent>
                     </Card>
+                  </div>
 
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-base">Logo & Branding</CardTitle>
+                  {/* Logo & Branding - Vollbreite */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Logo & Branding</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-4">
                         <div>
@@ -807,34 +835,34 @@ export function ShopManagementDialog({ shop, trigger }: ShopManagementDialogProp
                       </CardContent>
                     </Card>
 
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-base">Reparaturbedingungen</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <FormField
-                          control={form.control}
-                          name="repairTerms"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>AGB / Reparaturbedingungen</FormLabel>
-                              <FormControl>
-                                <Textarea 
-                                  {...field} 
-                                  placeholder="Geben Sie hier die Reparaturbedingungen und AGB ein..."
-                                  className="min-h-[150px]"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                              <p className="text-xs text-muted-foreground">
-                                Diese Bedingungen werden bei der Kiosk-Unterschrift angezeigt und können die gesamte Breite nutzen
-                              </p>
-                            </FormItem>
-                          )}
-                        />
-                      </CardContent>
-                    </Card>
-                  </div>
+                  {/* Reparaturbedingungen - Vollbreite */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Reparaturbedingungen</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="repairTerms"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>AGB / Reparaturbedingungen</FormLabel>
+                            <FormControl>
+                              <Textarea 
+                                {...field} 
+                                placeholder="Geben Sie hier die Reparaturbedingungen und AGB ein..."
+                                className="min-h-[150px]"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                            <p className="text-xs text-muted-foreground">
+                              Diese Bedingungen werden bei der Kiosk-Unterschrift angezeigt und können die gesamte Breite nutzen
+                            </p>
+                          </FormItem>
+                        )}
+                      />
+                    </CardContent>
+                  </Card>
                 </form>
               </Form>
             )}
