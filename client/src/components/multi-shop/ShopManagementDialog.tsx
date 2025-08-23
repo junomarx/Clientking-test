@@ -389,7 +389,6 @@ export function ShopManagementDialog({ shop, trigger }: ShopManagementDialogProp
                 </Card>
                 </div>
 
-                {/* Logo & Branding - Vollbreite */}
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-base flex items-center gap-2">
@@ -399,7 +398,7 @@ export function ShopManagementDialog({ shop, trigger }: ShopManagementDialogProp
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center gap-4">
-                      <div className="w-32 h-32 border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center">
+                      <div className="w-56 h-56 border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center">
                         {businessSettings?.logoImage ? (
                           <img
                             src={businessSettings.logoImage}
@@ -407,14 +406,10 @@ export function ShopManagementDialog({ shop, trigger }: ShopManagementDialogProp
                             className="max-h-full max-w-full object-contain rounded-md"
                           />
                         ) : (
-                          <ImageIcon className="h-6 w-6 text-muted-foreground" />
-                        )}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        Logo: {businessSettings?.logoImage ? (
-                          <span className="text-green-600">Vorhanden</span>
-                        ) : (
-                          <span className="text-gray-500">Nicht gesetzt</span>
+                          <div className="text-center">
+                            <ImageIcon className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                            <span className="text-sm text-muted-foreground">Kein Logo vorhanden</span>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -444,6 +439,37 @@ export function ShopManagementDialog({ shop, trigger }: ShopManagementDialogProp
                   </CardContent>
                 </Card>
               </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Reparaturbedingungen
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="text-sm text-muted-foreground">
+                      AGB: {businessSettings?.repairTerms ? (
+                        <span className="text-green-600">Konfiguriert</span>
+                      ) : (
+                        <span className="text-gray-500">Nicht gesetzt</span>
+                      )}
+                    </div>
+                    {businessSettings?.repairTerms && (
+                      <div className="mt-2 p-3 bg-muted rounded-md">
+                        <p className="text-sm whitespace-pre-wrap">
+                          {businessSettings.repairTerms.length > 300 
+                            ? businessSettings.repairTerms.substring(0, 300) + '...' 
+                            : businessSettings.repairTerms
+                          }
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
             ) : (
               // Edit Form
               <Form {...form}>
@@ -764,7 +790,7 @@ export function ShopManagementDialog({ shop, trigger }: ShopManagementDialogProp
                           
                           <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
                             {/* Logo Vorschau */}
-                            <div className={`relative flex justify-center items-center h-32 w-32 rounded-md border border-input 
+                            <div className={`relative flex justify-center items-center h-56 w-56 rounded-md border border-input 
                               ${logoPreview ? 'bg-white' : 'bg-muted'}`}>
                               {logoPreview ? (
                                 <>
