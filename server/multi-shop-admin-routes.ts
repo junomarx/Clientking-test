@@ -1270,5 +1270,123 @@ export function registerMultiShopAdminRoutes(app: Express) {
     }
   });
 
+  // Shop-spezifische aktive Reparaturen
+  app.get("/api/multi-shop/shop-repairs/:shopId/active", protectMultiShopAdmin, async (req, res) => {
+    try {
+      const shopId = parseInt(req.params.shopId);
+      const currentUserId = req.user!.id;
+
+      // Prüfen ob MSA Zugriff auf diesen Shop hat
+      const hasAccess = await db
+        .select()
+        .from(userShopAccess)
+        .where(and(
+          eq(userShopAccess.userId, currentUserId),
+          eq(userShopAccess.shopId, shopId),
+          eq(userShopAccess.isActive, true)
+        ));
+
+      if (hasAccess.length === 0) {
+        return res.status(403).json({ error: "Kein Zugriff auf diesen Shop" });
+      }
+
+      // Aktive Reparaturen laden
+      const activeRepairs = await db
+        .select({
+          id: repairs.id,
+          orderCode: repairs.orderCode,
+          deviceInfo: sql<string>`${repairs.brand} || ' ' || ${repairs.model}`,
+          issue: repairs.issue,
+          status: repairs.status,
+          createdAt: repairs.createdAt,
+          updatedAt: repairs.updatedAt,
+          cost: repairs.cost,
+          notes: repairs.notes,
+          // Kunden-Details
+          customerName: sql<string>`COALESCE(${customers.firstName}, '') || ' ' || COALESCE(${customers.lastName}, '')`,
+          customerPhone: customers.phone,
+          customerEmail: customers.email,
+          // Zugewiesener Mitarbeiter
+          assignedEmployee: sql<string>`COALESCE(${users.firstName}, '') || ' ' || COALESCE(${users.lastName}, '')`,
+        })
+        .from(repairs)
+        .leftJoin(customers, eq(repairs.customerId, customers.id))
+        .leftJoin(users, eq(repairs.assignedTo, users.id))
+        .where(and(
+          eq(repairs.shopId, shopId),
+          // Nur aktive Reparaturen (nicht abgeschlossen)
+          or(
+            eq(repairs.status, 'eingegangen'),
+            eq(repairs.status, 'ersatzteile_bestellen'),
+            eq(repairs.status, 'ersatzteil_eingetroffen'),
+            eq(repairs.status, 'ausser_haus'),
+            eq(repairs.status, 'abholbereit')
+          )
+        ))
+        .orderBy(desc(repairs.createdAt));
+
+      res.json(activeRepairs);
+    } catch (error) {
+      console.error("Fehler beim Laden aktiver Reparaturen:", error);
+      res.status(500).json({ error: "Fehler beim Laden der aktiven Reparaturen" });
+    }
+  });
+
+  // Shop-spezifische Reparatur-Historie
+  app.get("/api/multi-shop/shop-repairs/:shopId/history", protectMultiShopAdmin, async (req, res) => {
+    try {
+      const shopId = parseInt(req.params.shopId);
+      const currentUserId = req.user!.id;
+
+      // Prüfen ob MSA Zugriff auf diesen Shop hat
+      const hasAccess = await db
+        .select()
+        .from(userShopAccess)
+        .where(and(
+          eq(userShopAccess.userId, currentUserId),
+          eq(userShopAccess.shopId, shopId),
+          eq(userShopAccess.isActive, true)
+        ));
+
+      if (hasAccess.length === 0) {
+        return res.status(403).json({ error: "Kein Zugriff auf diesen Shop" });
+      }
+
+      // Reparatur-Historie der letzten 30 Tage
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const repairHistory = await db
+        .select({
+          id: repairs.id,
+          orderCode: repairs.orderCode,
+          deviceInfo: sql<string>`${repairs.brand} || ' ' || ${repairs.model}`,
+          issue: repairs.issue,
+          status: repairs.status,
+          createdAt: repairs.createdAt,
+          updatedAt: repairs.updatedAt,
+          cost: repairs.cost,
+          // Kunden-Details
+          customerName: sql<string>`COALESCE(${customers.firstName}, '') || ' ' || COALESCE(${customers.lastName}, '')`,
+          customerPhone: customers.phone,
+          // Zugewiesener Mitarbeiter
+          assignedEmployee: sql<string>`COALESCE(${users.firstName}, '') || ' ' || COALESCE(${users.lastName}, '')`,
+        })
+        .from(repairs)
+        .leftJoin(customers, eq(repairs.customerId, customers.id))
+        .leftJoin(users, eq(repairs.assignedTo, users.id))
+        .where(and(
+          eq(repairs.shopId, shopId),
+          sql`${repairs.updatedAt} >= ${thirtyDaysAgo}`
+        ))
+        .orderBy(desc(repairs.updatedAt));
+
+      res.json(repairHistory);
+    } catch (error) {
+      console.error("Fehler beim Laden der Reparatur-Historie:", error);
+      res.status(500).json({ error: "Fehler beim Laden der Reparatur-Historie" });
+    }
+  });
+
   console.log("✅ Multi-Shop Admin routes registered");
 }

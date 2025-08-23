@@ -12,6 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   BarChart3, 
   Building2, 
@@ -33,10 +34,424 @@ import {
   Settings,
   User,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Search,
+  Filter,
+  Calendar,
+  UserCircle
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
+
+// Shop Details Dialog mit Reparaturen-Einsicht
+function ShopDetailsDialog({ shop }: { shop: any }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"overview" | "active" | "history">("active");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedRepair, setSelectedRepair] = useState<any>(null);
+  
+  // Shop-spezifische Reparaturen laden
+  const { data: activeRepairs = [], isLoading: isLoadingActive } = useQuery({
+    queryKey: ["/api/multi-shop/shop-repairs", shop.shopId, "active"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/multi-shop/shop-repairs/${shop.shopId}/active`);
+      return response.json();
+    },
+    enabled: isOpen && activeTab === "active"
+  });
+
+  const { data: repairHistory = [], isLoading: isLoadingHistory } = useQuery({
+    queryKey: ["/api/multi-shop/shop-repairs", shop.shopId, "history"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/multi-shop/shop-repairs/${shop.shopId}/history`);
+      return response.json();
+    },
+    enabled: isOpen && activeTab === "history"
+  });
+
+  // Filter aktive Reparaturen
+  const filteredActiveRepairs = activeRepairs.filter((repair: any) => {
+    const matchesStatus = statusFilter === "all" || repair.status === statusFilter;
+    const matchesSearch = !searchTerm || 
+      repair.orderCode?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      repair.deviceInfo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      repair.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      repair.issue?.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesStatus && matchesSearch;
+  });
+
+  const statusLabels = {
+    'eingegangen': 'Eingegangen',
+    'ersatzteile_bestellen': 'Ersatzteile bestellen', 
+    'ersatzteil_eingetroffen': 'Ersatzteil eingetroffen',
+    'ausser_haus': 'Außer Haus',
+    'abholbereit': 'Abholbereit',
+    'abgeschlossen': 'Abgeschlossen'
+  };
+
+  const getStatusVariant = (status: string) => {
+    switch (status) {
+      case 'eingegangen': return 'secondary';
+      case 'ersatzteile_bestellen': return 'destructive';
+      case 'ersatzteil_eingetroffen': return 'default';
+      case 'ausser_haus': return 'outline';
+      case 'abholbereit': return 'default';
+      case 'abgeschlossen': return 'default';
+      default: return 'secondary';
+    }
+  };
+
+  return (
+    <>
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogTrigger asChild>
+          <Button variant="outline" size="sm" className="flex-1">
+            <Eye className="h-4 w-4 mr-1" />
+            Details
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader className="flex-shrink-0">
+            <DialogTitle className="flex items-center gap-2">
+              <Building2 className="h-5 w-5" />
+              Shop-Details: {shop.businessName}
+            </DialogTitle>
+            <DialogDescription>
+              Shop-ID: {shop.shopId} • Reparatur-Management und -Übersicht
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-hidden">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
+              <TabsList className="grid w-full grid-cols-3 flex-shrink-0">
+                <TabsTrigger value="overview">Übersicht</TabsTrigger>
+                <TabsTrigger value="active">Aktive Reparaturen ({activeRepairs.length})</TabsTrigger>
+                <TabsTrigger value="history">Reparatur-Verlauf</TabsTrigger>
+              </TabsList>
+
+              <div className="flex-1 overflow-y-auto mt-4" style={{ maxHeight: 'calc(90vh - 180px)' }}>
+                {/* Übersicht Tab */}
+                <TabsContent value="overview" className="space-y-4 m-0">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Activity className="h-4 w-4" />
+                          Shop-Metriken
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Aktive Reparaturen</span>
+                          <span className="font-bold">{shop.metrics?.activeRepairs || 0}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Abgeschlossene Reparaturen</span>
+                          <span className="font-bold">{shop.metrics?.completedRepairs || 0}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Mitarbeiter</span>
+                          <span className="font-bold">{shop.metrics?.totalEmployees || 0}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Gesamtumsatz</span>
+                          <span className="font-bold">€{shop.metrics?.totalRevenue?.toLocaleString('de-DE') || '0'}</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <TrendingUp className="h-4 w-4" />
+                          Performance
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Ø Bearbeitungszeit</span>
+                          <span className="font-bold">4,2 Tage</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Kundenbeschwerdequote</span>
+                          <span className="font-bold text-green-600">2%</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Pünktlichkeit</span>
+                          <span className="font-bold text-green-600">94%</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </TabsContent>
+
+                {/* Aktive Reparaturen Tab */}
+                <TabsContent value="active" className="space-y-4 m-0">
+                  <div className="flex gap-4 items-center">
+                    <div className="flex-1">
+                      <div className="relative">
+                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Suchen nach Auftrag, Kunde, Gerät..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="pl-8"
+                        />
+                      </div>
+                    </div>
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                      <SelectTrigger className="w-[200px]">
+                        <Filter className="h-4 w-4 mr-2" />
+                        <SelectValue placeholder="Status filtern" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Alle Status</SelectItem>
+                        <SelectItem value="eingegangen">Eingegangen</SelectItem>
+                        <SelectItem value="ersatzteile_bestellen">Ersatzteile bestellen</SelectItem>
+                        <SelectItem value="ersatzteil_eingetroffen">Ersatzteil eingetroffen</SelectItem>
+                        <SelectItem value="ausser_haus">Außer Haus</SelectItem>
+                        <SelectItem value="abholbereit">Abholbereit</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {isLoadingActive ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+                    </div>
+                  ) : filteredActiveRepairs.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      {searchTerm || statusFilter !== "all" 
+                        ? "Keine Reparaturen entsprechen den Filterkriterien"
+                        : "Keine aktiven Reparaturen vorhanden"
+                      }
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {filteredActiveRepairs.map((repair: any) => (
+                        <Card key={repair.id} className="cursor-pointer hover:shadow-md transition-shadow"
+                              onClick={() => setSelectedRepair(repair)}>
+                          <CardContent className="p-4">
+                            <div className="flex justify-between items-start">
+                              <div className="space-y-1 flex-1">
+                                <div className="flex items-center gap-3">
+                                  <span className="font-medium">{repair.orderCode}</span>
+                                  <Badge variant={getStatusVariant(repair.status)}>
+                                    {statusLabels[repair.status] || repair.status}
+                                  </Badge>
+                                </div>
+                                <p className="text-sm text-gray-600">
+                                  {repair.deviceInfo} • {repair.customerName}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  {repair.issue}
+                                </p>
+                              </div>
+                              <div className="text-right text-sm text-gray-500">
+                                {repair.assignedEmployee && (
+                                  <div className="flex items-center gap-1">
+                                    <UserCircle className="h-3 w-3" />
+                                    {repair.assignedEmployee}
+                                  </div>
+                                )}
+                                <div className="flex items-center gap-1 mt-1">
+                                  <Calendar className="h-3 w-3" />
+                                  {new Date(repair.createdAt).toLocaleDateString('de-DE')}
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+
+                {/* Reparatur-Verlauf Tab */}
+                <TabsContent value="history" className="space-y-4 m-0">
+                  {isLoadingHistory ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Letzte 30 Tage</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="text-center">
+                              <div className="text-2xl font-bold text-green-600">
+                                {repairHistory.filter((r: any) => r.status === 'abgeschlossen').length}
+                              </div>
+                              <div className="text-sm text-gray-600">Abgeschlossen</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="text-2xl font-bold text-blue-600">
+                                {repairHistory.filter((r: any) => r.status === 'abholbereit').length}
+                              </div>
+                              <div className="text-sm text-gray-600">Abholbereit</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="text-2xl font-bold">4,2</div>
+                              <div className="text-sm text-gray-600">Ø Tage</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="text-2xl font-bold">94%</div>
+                              <div className="text-sm text-gray-600">Pünktlich</div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  )}
+                </TabsContent>
+              </div>
+            </Tabs>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Readonly Repair Details Dialog */}
+      {selectedRepair && (
+        <ReadonlyRepairDetailsDialog 
+          repair={selectedRepair} 
+          isOpen={!!selectedRepair}
+          onClose={() => setSelectedRepair(null)}
+        />
+      )}
+    </>
+  );
+}
+
+// Readonly Reparatur-Details Dialog
+function ReadonlyRepairDetailsDialog({ 
+  repair, 
+  isOpen, 
+  onClose 
+}: { 
+  repair: any;
+  isOpen: boolean;
+  onClose: () => void;
+}) {
+  if (!repair) return null;
+
+  const statusLabels = {
+    'eingegangen': 'Eingegangen',
+    'ersatzteile_bestellen': 'Ersatzteile bestellen', 
+    'ersatzteil_eingetroffen': 'Ersatzteil eingetroffen',
+    'ausser_haus': 'Außer Haus',
+    'abholbereit': 'Abholbereit',
+    'abgeschlossen': 'Abgeschlossen'
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader className="flex-shrink-0">
+          <DialogTitle className="flex items-center gap-2">
+            <Activity className="h-5 w-5" />
+            Reparatur {repair.orderCode} (Readonly)
+          </DialogTitle>
+          <DialogDescription>
+            Multi-Shop Admin Einsicht • Keine Bearbeitungsmöglichkeiten
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="flex-1 overflow-y-auto space-y-4" style={{ maxHeight: 'calc(90vh - 180px)' }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Kundendaten</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <Label className="text-sm font-medium">Name</Label>
+                  <p className="text-sm">{repair.customerName || 'Nicht verfügbar'}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Telefon</Label>
+                  <p className="text-sm">{repair.customerPhone || 'Nicht verfügbar'}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">E-Mail</Label>
+                  <p className="text-sm">{repair.customerEmail || 'Nicht verfügbar'}</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Geräteinformationen</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <Label className="text-sm font-medium">Gerät</Label>
+                  <p className="text-sm font-medium">{repair.deviceInfo}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Problem</Label>
+                  <p className="text-sm">{repair.issue}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Status</Label>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">
+                      {statusLabels[repair.status] || repair.status}
+                    </Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Reparatur-Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium">Auftragscode</Label>
+                  <p className="text-sm font-mono">{repair.orderCode}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Zugewiesen an</Label>
+                  <p className="text-sm">{repair.assignedEmployee || 'Nicht zugewiesen'}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Erstellt am</Label>
+                  <p className="text-sm">{new Date(repair.createdAt).toLocaleString('de-DE')}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Letzte Aktualisierung</Label>
+                  <p className="text-sm">{new Date(repair.updatedAt).toLocaleString('de-DE')}</p>
+                </div>
+              </div>
+              
+              {repair.notes && (
+                <div>
+                  <Label className="text-sm font-medium">Notizen</Label>
+                  <div className="p-3 bg-gray-50 rounded-md">
+                    <p className="text-sm whitespace-pre-wrap">{repair.notes}</p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="flex-shrink-0 flex justify-end gap-2 pt-4 border-t">
+          <Button variant="outline" onClick={onClose}>
+            Schließen
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 // Dashboard Statistiken mit Zeitraum-Filter
 function DashboardStats() {
@@ -529,18 +944,7 @@ function ShopsOverview() {
                 <span className="font-medium">{new Date().toLocaleDateString()}</span>
               </div>
               <div className="flex gap-2 pt-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="flex-1"
-                  onClick={() => {
-                    console.log(`Zeige Details für Shop ${shop.shopId}:`, shop);
-                    alert(`Shop-Details für ${shop.businessName}\n\nShop-ID: ${shop.shopId}\nUmsatz: €${shop.metrics?.totalRevenue?.toLocaleString() || '0'}\nMitarbeiter: ${shop.metrics?.totalEmployees || '0'}\nAktive Reparaturen: ${shop.metrics?.activeRepairs || '0'}\nAbgeschlossene Reparaturen: ${shop.metrics?.completedRepairs || '0'}`);
-                  }}
-                >
-                  <Eye className="h-4 w-4 mr-1" />
-                  Details
-                </Button>
+                <ShopDetailsDialog shop={shop} />
                 <Button 
                   variant="outline" 
                   size="sm" 
