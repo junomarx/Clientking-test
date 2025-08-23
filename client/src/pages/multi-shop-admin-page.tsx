@@ -249,14 +249,19 @@ function ShopDetailsDialog({ shop }: { shop: any }) {
                                   {repair.issue}
                                 </p>
                               </div>
-                              <div className="text-right text-sm text-gray-500">
+                              <div className="text-right">
+                                {repair.cost && (
+                                  <div className="text-lg font-semibold text-green-600 mb-1">
+                                    €{repair.cost}
+                                  </div>
+                                )}
                                 {repair.assignedEmployee && (
-                                  <div className="flex items-center gap-1">
+                                  <div className="flex items-center gap-1 text-sm text-gray-500">
                                     <UserCircle className="h-3 w-3" />
                                     {repair.assignedEmployee}
                                   </div>
                                 )}
-                                <div className="flex items-center gap-1 mt-1">
+                                <div className="flex items-center gap-1 mt-1 text-sm text-gray-500">
                                   <Calendar className="h-3 w-3" />
                                   {new Date(repair.createdAt).toLocaleDateString('de-DE')}
                                 </div>
@@ -385,7 +390,7 @@ function ShopDetailsDialog({ shop }: { shop: any }) {
   );
 }
 
-// Readonly Reparatur-Details Dialog mit vollständigen Daten
+// Readonly Reparatur-Details Dialog - alles in einem Dialog wie im normalen RepairDetailsDialog
 function ReadonlyRepairDetailsDialog({ 
   repair, 
   isOpen, 
@@ -395,45 +400,6 @@ function ReadonlyRepairDetailsDialog({
   isOpen: boolean;
   onClose: () => void;
 }) {
-  const [activeTab, setActiveTab] = useState("details");
-
-  // Zusätzliche Daten für die Reparatur laden
-  const { data: fullRepair, isLoading: isLoadingRepair } = useQuery({
-    queryKey: ["/api/repairs", repair.id],
-    queryFn: async () => {
-      const response = await apiRequest("GET", `/api/repairs/${repair.id}`);
-      return response.json();
-    },
-    enabled: isOpen && !!repair.id
-  });
-
-  const { data: statusHistory = [], isLoading: isLoadingHistory } = useQuery({
-    queryKey: ["/api/repairs", repair.id, "status-history"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", `/api/repairs/${repair.id}/status-history`);
-      return response.json();
-    },
-    enabled: isOpen && !!repair.id
-  });
-
-  const { data: emailHistory = [], isLoading: isLoadingEmails } = useQuery({
-    queryKey: ["/api/repairs", repair.id, "email-history"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", `/api/repairs/${repair.id}/email-history`);
-      return response.json();
-    },
-    enabled: isOpen && !!repair.id
-  });
-
-  const { data: spareParts = [], isLoading: isLoadingSpareParts } = useQuery({
-    queryKey: ["/api/repairs", repair.id, "spare-parts"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", `/api/repairs/${repair.id}/spare-parts`);
-      return response.json();
-    },
-    enabled: isOpen && !!repair.id
-  });
-
   if (!repair) return null;
 
   const statusLabels = {
@@ -445,339 +411,163 @@ function ReadonlyRepairDetailsDialog({
     'abgeschlossen': 'Abgeschlossen'
   };
 
-  const displayRepair = fullRepair || repair;
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <Activity className="h-5 w-5" />
-            Reparatur {displayRepair.orderCode} (Readonly)
+            Reparaturauftrag {repair.orderCode}
           </DialogTitle>
           <DialogDescription>
-            Multi-Shop Admin Einsicht • Keine Bearbeitungsmöglichkeiten
+            Vollständige Informationen zum Reparaturauftrag und Kundendaten
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 overflow-hidden">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
-            <TabsList className="grid w-full grid-cols-5 flex-shrink-0">
-              <TabsTrigger value="details">Details</TabsTrigger>
-              <TabsTrigger value="spareParts">Ersatzteile</TabsTrigger>
-              <TabsTrigger value="history">Verlauf</TabsTrigger>
-              <TabsTrigger value="emails">E-Mails</TabsTrigger>
-              <TabsTrigger value="signatures">Unterschriften</TabsTrigger>
-            </TabsList>
-
-            <div className="flex-1 overflow-y-auto mt-4" style={{ maxHeight: 'calc(90vh - 220px)' }}>
-              {/* Details Tab */}
-              <TabsContent value="details" className="space-y-4 m-0">
-                {isLoadingRepair ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="text-lg">Kundendaten</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                          <div>
-                            <Label className="text-sm font-medium">Name</Label>
-                            <p className="text-sm">{displayRepair.customerName || 'Nicht verfügbar'}</p>
-                          </div>
-                          <div>
-                            <Label className="text-sm font-medium">Telefon</Label>
-                            <p className="text-sm">{displayRepair.customerPhone || 'Nicht verfügbar'}</p>
-                          </div>
-                          <div>
-                            <Label className="text-sm font-medium">E-Mail</Label>
-                            <p className="text-sm">{displayRepair.customerEmail || 'Nicht verfügbar'}</p>
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="text-lg">Geräteinformationen</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                          <div>
-                            <Label className="text-sm font-medium">Gerät</Label>
-                            <p className="text-sm font-medium">{displayRepair.deviceInfo}</p>
-                          </div>
-                          <div>
-                            <Label className="text-sm font-medium">Problem</Label>
-                            <p className="text-sm">{displayRepair.issue}</p>
-                          </div>
-                          <div>
-                            <Label className="text-sm font-medium">Status</Label>
-                            <div className="flex items-center gap-2">
-                              <Badge variant="outline">
-                                {statusLabels[displayRepair.status] || displayRepair.status}
-                              </Badge>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-lg">Reparatur-Details</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <Label className="text-sm font-medium">Auftragscode</Label>
-                            <p className="text-sm font-mono">{displayRepair.orderCode}</p>
-                          </div>
-                          <div>
-                            <Label className="text-sm font-medium">Zugewiesen an</Label>
-                            <p className="text-sm">{displayRepair.assignedEmployee || 'Nicht zugewiesen'}</p>
-                          </div>
-                          <div>
-                            <Label className="text-sm font-medium">Geschätzte Kosten</Label>
-                            <p className="text-lg font-semibold text-green-600">
-                              {displayRepair.cost ? `€${displayRepair.cost}` : 'Noch nicht geschätzt'}
-                            </p>
-                          </div>
-                          <div>
-                            <Label className="text-sm font-medium">Garantie</Label>
-                            <p className="text-sm">{displayRepair.warranty ? `${displayRepair.warranty} Monate` : 'Standard'}</p>
-                          </div>
-                          <div>
-                            <Label className="text-sm font-medium">Erstellt am</Label>
-                            <p className="text-sm">{new Date(displayRepair.createdAt).toLocaleString('de-DE')}</p>
-                          </div>
-                          <div>
-                            <Label className="text-sm font-medium">Letzte Aktualisierung</Label>
-                            <p className="text-sm">{new Date(displayRepair.updatedAt).toLocaleString('de-DE')}</p>
-                          </div>
-                        </div>
-                        
-                        {displayRepair.notes && (
-                          <div>
-                            <Label className="text-sm font-medium">Notizen</Label>
-                            <div className="p-3 bg-gray-50 rounded-md mt-1">
-                              <p className="text-sm whitespace-pre-wrap">{displayRepair.notes}</p>
-                            </div>
-                          </div>
-                        )}
-
-                        {displayRepair.customerComments && (
-                          <div>
-                            <Label className="text-sm font-medium">Kundenkommentare</Label>
-                            <div className="p-3 bg-blue-50 rounded-md mt-1">
-                              <p className="text-sm whitespace-pre-wrap">{displayRepair.customerComments}</p>
-                            </div>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </div>
-                )}
-              </TabsContent>
-
-              {/* Ersatzteile Tab */}
-              <TabsContent value="spareParts" className="space-y-4 m-0">
-                {isLoadingSpareParts ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
-                  </div>
-                ) : spareParts.length > 0 ? (
-                  <div className="space-y-4">
-                    {spareParts.map((part: any, index: number) => (
-                      <Card key={index}>
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h3 className="font-medium">{part.name}</h3>
-                              <p className="text-sm text-gray-600">Status: {part.status}</p>
-                              {part.supplierName && (
-                                <p className="text-xs text-gray-500">Lieferant: {part.supplierName}</p>
-                              )}
-                            </div>
-                            <div className="text-right">
-                              {part.price && (
-                                <p className="font-semibold">€{part.price}</p>
-                              )}
-                              {part.orderDate && (
-                                <p className="text-xs text-gray-500">
-                                  Bestellt: {new Date(part.orderDate).toLocaleDateString('de-DE')}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <Card>
-                    <CardContent className="p-8 text-center">
-                      <Package className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">Keine Ersatzteile</h3>
-                      <p className="text-gray-500">Für diese Reparatur wurden keine Ersatzteile erfasst.</p>
-                    </CardContent>
-                  </Card>
-                )}
-              </TabsContent>
-
-              {/* Status-Verlauf Tab */}
-              <TabsContent value="history" className="space-y-4 m-0">
-                {isLoadingHistory ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
-                  </div>
-                ) : statusHistory.length > 0 ? (
-                  <div className="space-y-3">
-                    {statusHistory.map((entry: any) => (
-                      <Card key={entry.id}>
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <Activity className="h-4 w-4 text-blue-600" />
-                              <div>
-                                <p className="font-medium">
-                                  Status geändert von "{statusLabels[entry.oldStatus] || entry.oldStatus}" 
-                                  zu "{statusLabels[entry.newStatus] || entry.newStatus}"
-                                </p>
-                                <p className="text-sm text-gray-600">
-                                  Geändert von: {entry.changedBy || 'System'}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="text-right text-sm text-gray-500">
-                              {new Date(entry.changedAt).toLocaleString('de-DE')}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <Card>
-                    <CardContent className="p-8 text-center">
-                      <History className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">Kein Verlauf</h3>
-                      <p className="text-gray-500">Keine Status-Änderungen verfügbar.</p>
-                    </CardContent>
-                  </Card>
-                )}
-              </TabsContent>
-
-              {/* E-Mail-Historie Tab */}
-              <TabsContent value="emails" className="space-y-4 m-0">
-                {isLoadingEmails ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
-                  </div>
-                ) : emailHistory.length > 0 ? (
-                  <div className="space-y-3">
-                    {emailHistory.map((email: any) => (
-                      <Card key={email.id}>
-                        <CardContent className="p-4">
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <h3 className="font-medium">{email.subject}</h3>
-                              <div className="text-sm text-gray-500">
-                                {new Date(email.sentAt).toLocaleString('de-DE')}
-                              </div>
-                            </div>
-                            <div className="text-sm text-gray-600">
-                              An: {email.recipientEmail}
-                            </div>
-                            {email.content && (
-                              <div className="p-3 bg-gray-50 rounded-md mt-2">
-                                <p className="text-sm whitespace-pre-wrap">{email.content}</p>
-                              </div>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <Card>
-                    <CardContent className="p-8 text-center">
-                      <div className="h-12 w-12 text-gray-300 mx-auto mb-4">📧</div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">Keine E-Mails</h3>
-                      <p className="text-gray-500">Keine E-Mail-Historie verfügbar.</p>
-                    </CardContent>
-                  </Card>
-                )}
-              </TabsContent>
-
-              {/* Unterschriften Tab */}
-              <TabsContent value="signatures" className="space-y-4 m-0">
-                <div className="space-y-4">
-                  {displayRepair.customerSignature || displayRepair.pickupSignature ? (
-                    <div className="grid gap-4">
-                      {displayRepair.customerSignature && (
-                        <Card>
-                          <CardHeader>
-                            <CardTitle className="text-lg flex items-center gap-2">
-                              <div className="h-4 w-4">✍️</div>
-                              Abgabe-Unterschrift
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="border rounded-lg p-4 bg-gray-50">
-                              <img 
-                                src={displayRepair.customerSignature} 
-                                alt="Kunden-Unterschrift" 
-                                className="max-w-full h-auto"
-                                style={{ maxHeight: '200px' }}
-                              />
-                            </div>
-                            <p className="text-sm text-gray-500 mt-2">
-                              Unterschrieben bei Abgabe am {new Date(displayRepair.createdAt).toLocaleString('de-DE')}
-                            </p>
-                          </CardContent>
-                        </Card>
-                      )}
-
-                      {displayRepair.pickupSignature && (
-                        <Card>
-                          <CardHeader>
-                            <CardTitle className="text-lg flex items-center gap-2">
-                              <div className="h-4 w-4">✍️</div>
-                              Abholung-Unterschrift
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="border rounded-lg p-4 bg-gray-50">
-                              <img 
-                                src={displayRepair.pickupSignature} 
-                                alt="Abholung-Unterschrift" 
-                                className="max-w-full h-auto"
-                                style={{ maxHeight: '200px' }}
-                              />
-                            </div>
-                            <p className="text-sm text-gray-500 mt-2">
-                              Unterschrieben bei Abholung am {displayRepair.pickedUpAt ? new Date(displayRepair.pickedUpAt).toLocaleString('de-DE') : 'Noch nicht abgeholt'}
-                            </p>
-                          </CardContent>
-                        </Card>
-                      )}
-                    </div>
-                  ) : (
-                    <Card>
-                      <CardContent className="p-8 text-center">
-                        <div className="h-12 w-12 text-gray-300 mx-auto mb-4">✍️</div>
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">Keine Unterschriften</h3>
-                        <p className="text-gray-500">Keine digitalen Unterschriften verfügbar.</p>
-                      </CardContent>
-                    </Card>
-                  )}
+        <div className="flex-1 overflow-y-auto space-y-4" style={{ maxHeight: 'calc(90vh - 180px)' }}>
+          {/* Kunde und Gerät nebeneinander */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Kundendaten */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  Kundendaten
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <Label className="text-sm font-medium flex items-center gap-1">
+                    <User className="h-3 w-3" />
+                    {repair.customerName || 'Unbekannter Kunde'}
+                  </Label>
                 </div>
-              </TabsContent>
-            </div>
-          </Tabs>
+                <div>
+                  <Label className="text-sm font-medium flex items-center gap-1">
+                    <div className="h-3 w-3">📞</div>
+                    {repair.customerPhone || 'Keine Telefonnummer'}
+                  </Label>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium flex items-center gap-1">
+                    <div className="h-3 w-3">📧</div>
+                    {repair.customerEmail || 'Keine E-Mail'}
+                  </Label>
+                </div>
+                {repair.customerAddress && (
+                  <div>
+                    <Label className="text-sm font-medium flex items-center gap-1">
+                      <div className="h-3 w-3">📍</div>
+                      {repair.customerAddress}
+                    </Label>
+                  </div>
+                )}
+                <div>
+                  <Label className="text-sm font-medium">Kunde seit</Label>
+                  <p className="text-sm">{new Date(repair.createdAt).toLocaleDateString('de-DE')}</p>
+                </div>
+                {repair.createdBy && (
+                  <div>
+                    <Label className="text-sm font-medium">Kunde erstellt von</Label>
+                    <p className="text-sm">{repair.createdBy}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Gerätedaten */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <div className="h-4 w-4">📱</div>
+                  Gerätedaten
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <Label className="text-sm font-medium flex items-center gap-1">
+                    <div className="h-3 w-3">📱</div>
+                    {repair.deviceInfo}
+                  </Label>
+                  <p className="text-xs text-gray-500">Smartphone</p>
+                </div>
+                {repair.serialNumber && (
+                  <div>
+                    <Label className="text-sm font-medium">Seriennummer</Label>
+                    <p className="text-sm font-mono">{repair.serialNumber}</p>
+                  </div>
+                )}
+                {repair.deviceCode && (
+                  <div>
+                    <Label className="text-sm font-medium">Gerätecode</Label>
+                    <p className="text-sm">{repair.deviceCode}</p>
+                  </div>
+                )}
+                <div>
+                  <Label className="text-sm font-medium">Fehlerbeschreibung</Label>
+                  <div className="space-y-1">
+                    {repair.issue?.split('\n').map((line: string, index: number) => (
+                      <p key={index} className="text-sm">{line}</p>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium flex items-center gap-2">
+                    Status
+                    <div className="flex items-center gap-1">
+                      <div className="text-xs text-gray-500">Verlauf</div>
+                      <ChevronDown className="h-3 w-3" />
+                    </div>
+                  </Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge 
+                      variant={repair.status === 'abgeschlossen' ? 'default' : 'secondary'}
+                      className="text-orange-600 bg-orange-50"
+                    >
+                      {statusLabels[repair.status] || repair.status}
+                    </Badge>
+                    <span className="text-xs text-gray-500">
+                      von {repair.assignedEmployee || 'System'} • {new Date(repair.updatedAt).toLocaleString('de-DE')}
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Auftragsinformationen - collapsible */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 cursor-pointer">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <div className="h-4 w-4">📋</div>
+                Auftragsinformationen
+              </CardTitle>
+              <ChevronDown className="h-4 w-4" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium">Auftragsdatum</Label>
+                  <p className="text-sm">{new Date(repair.createdAt).toLocaleDateString('de-DE')}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Kostenvoranschlag</Label>
+                  <div className="text-lg font-semibold text-green-600">
+                    {repair.cost ? `€${repair.cost}` : 'Noch nicht geschätzt'}
+                  </div>
+                </div>
+              </div>
+
+              {repair.notes && (
+                <div>
+                  <Label className="text-sm font-medium">Notizen</Label>
+                  <div className="p-3 bg-gray-50 rounded-md mt-1">
+                    <p className="text-sm whitespace-pre-wrap">{repair.notes}</p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         <div className="flex-shrink-0 flex justify-end gap-2 pt-4 border-t">
