@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { usePrintManager } from './PrintOptionsManager';
 import { apiRequest } from '@/lib/queryClient';
-import { Customer, EmailHistory, Repair, RepairStatusHistory } from '@shared/schema';
+import { Customer, EmailHistory, Repair, RepairStatusHistory, LoanerDevice, type DeviceType } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 
 // Erweiterte EmailHistory mit optionalem templateName
@@ -226,14 +226,14 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
   });
 
   // Verfügbare Leihgeräte abrufen
-  const { data: availableLoanerDevices = [] } = useQuery({
+  const { data: availableLoanerDevices = [] } = useQuery<LoanerDevice[]>({
     queryKey: ['/api/loaner-devices/available'],
     enabled: open && repairId !== null,
     staleTime: 0,
   });
 
   // Zugewiesenes Leihgerät für diese Reparatur abrufen
-  const { data: currentLoanerDevice, refetch: refetchLoanerDevice } = useQuery({
+  const { data: currentLoanerDevice, refetch: refetchLoanerDevice } = useQuery<LoanerDevice | undefined>({
     queryKey: [`/api/repairs/${repairId}/loaner-device`],
     enabled: open && repairId !== null,
     staleTime: 0,
@@ -895,7 +895,7 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                     </div>
                     {repair.dropoffSignedAt && (
                       <div className="text-sm text-muted-foreground text-center">
-                        Unterschrieben am {formatDateTime(repair.dropoffSignedAt)}
+                        Unterschrieben am {formatDateTime(repair.dropoffSignedAt.toString())}
                       </div>
                     )}
                   </div>
@@ -936,7 +936,7 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                     </div>
                     {repair.pickupSignedAt && (
                       <div className="text-sm text-muted-foreground text-center">
-                        Unterschrieben am {formatDateTime(repair.pickupSignedAt)}
+                        Unterschrieben am {formatDateTime(repair.pickupSignedAt.toString())}
                       </div>
                     )}
                   </div>
