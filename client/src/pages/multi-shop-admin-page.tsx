@@ -51,6 +51,7 @@ import {
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
+import { ShopManagementDialog } from "@/components/multi-shop/ShopManagementDialog";
 
 // Shop Details Dialog mit Reparaturen-Einsicht
 function ShopDetailsDialog({ shop }: { shop: any }) {
@@ -1124,18 +1125,7 @@ function ShopsOverview() {
               </div>
               <div className="flex gap-2 pt-2">
                 <ShopDetailsDialog shop={shop} />
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="flex-1"
-                  onClick={() => {
-                    console.log(`Verwalte Shop ${shop.shopId}:`, shop);
-                    alert(`Shop-Verwaltung für ${shop.businessName}\n\nFunktionen:\n• Mitarbeiter verwalten\n• Bestellungen einsehen\n• Einstellungen bearbeiten\n• Umsatz-Reports\n\n(Funktionen werden schrittweise erweitert)`);
-                  }}
-                >
-                  <Edit3 className="h-4 w-4 mr-1" />
-                  Verwalten
-                </Button>
+                <ShopManagementDialog shop={shop} />
               </div>
             </CardContent>
           </Card>

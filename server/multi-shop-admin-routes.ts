@@ -1429,5 +1429,102 @@ export function registerMultiShopAdminRoutes(app: Express) {
     }
   });
 
+  // Business Settings für Multi-Shop Admins
+  app.get("/api/multi-shop/business-settings/:shopId", isAuthenticated, requireMultiShopAdminAuth, async (req: Request, res: Response) => {
+    try {
+      const shopId = parseInt(req.params.shopId);
+      const multiShopAdminId = (req.user as any).id;
+
+      // Überprüfe, ob der Multi-Shop Admin Zugriff auf diesen Shop hat
+      const hasAccess = await storage.hasMultiShopAccess(multiShopAdminId, shopId);
+      if (!hasAccess) {
+        return res.status(403).json({ message: "Kein Zugriff auf diesen Shop" });
+      }
+
+      // Hole den Shop-Owner für diesen Shop
+      const shopOwner = await storage.getShopOwner(shopId);
+      if (!shopOwner) {
+        return res.status(404).json({ message: "Shop-Owner nicht gefunden" });
+      }
+
+      // Hole business settings für den Shop-Owner
+      const businessSettings = await storage.getBusinessSettings(shopOwner.id);
+      
+      if (!businessSettings) {
+        // Erstelle Default-Settings wenn keine vorhanden sind
+        const defaultSettings = {
+          businessName: shopOwner.companyName || `Shop ${shopId}`,
+          ownerFirstName: shopOwner.ownerFirstName || "",
+          ownerLastName: shopOwner.ownerLastName || "",
+          taxId: shopOwner.taxId || "",
+          streetAddress: shopOwner.streetAddress || "",
+          city: shopOwner.city || "",
+          zipCode: shopOwner.zipCode || "",
+          country: shopOwner.country || "Österreich",
+          phone: shopOwner.companyPhone || "",
+          email: shopOwner.companyEmail || "",
+          website: shopOwner.website || "",
+          receiptWidth: "80mm" as const,
+          userId: shopOwner.id,
+          shopId: shopId
+        };
+        
+        return res.json(defaultSettings);
+      }
+
+      console.log(`✅ Multi-Shop Admin ${multiShopAdminId} accessed business settings for shop ${shopId}`);
+      res.json(businessSettings);
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Shop Business Settings:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Geschäftseinstellungen" });
+    }
+  });
+
+  app.post("/api/multi-shop/business-settings/:shopId", isAuthenticated, requireMultiShopAdminAuth, async (req: Request, res: Response) => {
+    try {
+      const shopId = parseInt(req.params.shopId);
+      const multiShopAdminId = (req.user as any).id;
+
+      // Überprüfe, ob der Multi-Shop Admin Zugriff auf diesen Shop hat
+      const hasAccess = await storage.hasMultiShopAccess(multiShopAdminId, shopId);
+      if (!hasAccess) {
+        return res.status(403).json({ message: "Kein Zugriff auf diesen Shop" });
+      }
+
+      // Hole den Shop-Owner für diesen Shop
+      const shopOwner = await storage.getShopOwner(shopId);
+      if (!shopOwner) {
+        return res.status(404).json({ message: "Shop-Owner nicht gefunden" });
+      }
+
+      // Konsolidiere alle Daten aus dem Request-Body
+      const settingsData = {
+        ...req.body,
+        userId: shopOwner.id, // WICHTIG: Shop-Owner ID setzen
+        shopId: shopId       // WICHTIG: Shop-ID für Tenant-Isolation setzen
+      };
+
+      console.log(`📝 Multi-Shop Admin ${multiShopAdminId} updating business settings for shop ${shopId} (owner: ${shopOwner.id})`);
+
+      // Aktuelle Einstellungen abrufen
+      const currentSettings = await storage.getBusinessSettings(shopOwner.id);
+
+      let updatedSettings;
+      if (currentSettings) {
+        // Update bestehende Einstellungen
+        updatedSettings = await storage.updateBusinessSettings(currentSettings.id, settingsData);
+      } else {
+        // Erstelle neue Einstellungen
+        updatedSettings = await storage.createBusinessSettings(settingsData);
+      }
+
+      console.log(`✅ Multi-Shop Admin ${multiShopAdminId} successfully updated business settings for shop ${shopId}`);
+      res.json(updatedSettings);
+    } catch (error) {
+      console.error("Fehler beim Aktualisieren der Shop Business Settings:", error);
+      res.status(500).json({ message: "Fehler beim Speichern der Geschäftseinstellungen" });
+    }
+  });
+
   console.log("✅ Multi-Shop Admin routes registered");
 }
