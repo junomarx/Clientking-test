@@ -1500,6 +1500,8 @@ export function registerMultiShopAdminRoutes(app: Express) {
           reviewLink: "",
           openingHours: "",
           kioskPin: "1234",
+          logoImage: "",
+          repairTerms: "",
           userId: shopOwner.id,
           shopId: shopId
         };

@@ -25,7 +25,8 @@ import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Edit3, Building2, Phone, Mail, Globe, MapPin, Clock, Star, Settings } from "lucide-react";
+import { Edit3, Building2, Phone, Mail, Globe, MapPin, Clock, Star, Settings, Image, FileText } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 
 // Schema für Business Settings - basiert auf shared/schema.ts
 const businessSettingsSchema = z.object({
@@ -51,6 +52,8 @@ const businessSettingsSchema = z.object({
   reviewLink: z.string().optional(),
   openingHours: z.string().optional(),
   kioskPin: z.string().optional(),
+  logoImage: z.string().optional(),
+  repairTerms: z.string().optional(),
 });
 
 type BusinessSettingsFormValues = z.infer<typeof businessSettingsSchema>;
@@ -69,11 +72,8 @@ export function ShopManagementDialog({ shop, trigger }: ShopManagementDialogProp
   const { data: businessSettings, isLoading } = useQuery({
     queryKey: [`/api/multi-shop/business-settings/${shop.shopId}`],
     queryFn: async () => {
-      console.log("🔍 Fetching business settings for shop:", shop.shopId);
       const response = await apiRequest("GET", `/api/multi-shop/business-settings/${shop.shopId}`);
-      const data = await response.json();
-      console.log("📋 Business settings received:", data);
-      return data;
+      return response.json();
     },
     enabled: open,
   });
@@ -103,14 +103,14 @@ export function ShopManagementDialog({ shop, trigger }: ShopManagementDialogProp
       reviewLink: "",
       openingHours: "",
       kioskPin: "",
+      logoImage: "",
+      repairTerms: "",
     },
   });
 
   // Aktualisiere Form wenn business settings geladen werden
   React.useEffect(() => {
-    console.log("🔄 useEffect triggered, businessSettings:", businessSettings);
     if (businessSettings) {
-      console.log("✅ Resetting form with business settings:", businessSettings);
       form.reset({
         businessName: businessSettings.businessName || "",
         ownerFirstName: businessSettings.ownerFirstName || "",
@@ -135,6 +135,8 @@ export function ShopManagementDialog({ shop, trigger }: ShopManagementDialogProp
         reviewLink: businessSettings.reviewLink || "",
         openingHours: businessSettings.openingHours || "",
         kioskPin: businessSettings.kioskPin || "",
+        logoImage: businessSettings.logoImage || "",
+        repairTerms: businessSettings.repairTerms || "",
       });
     }
   }, [businessSettings, form]);
@@ -312,6 +314,48 @@ export function ShopManagementDialog({ shop, trigger }: ShopManagementDialogProp
                     <div className="flex items-center gap-2">
                       <Star className="h-4 w-4 text-muted-foreground" />
                       <p>{businessSettings?.reviewLink ? "Bewertungslink vorhanden" : "Kein Bewertungslink"}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Image className="h-4 w-4" />
+                      Logo & Branding
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Logo</p>
+                      {businessSettings?.logoImage ? (
+                        <img 
+                          src={businessSettings.logoImage} 
+                          alt="Shop Logo" 
+                          className="max-w-[200px] max-h-[100px] object-contain border rounded"
+                        />
+                      ) : (
+                        <p className="text-muted-foreground">Kein Logo hochgeladen</p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Reparaturbedingungen
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">AGB / Reparaturbedingungen</p>
+                      <div className="bg-gray-50 p-3 rounded-md max-h-32 overflow-y-auto">
+                        <p className="whitespace-pre-wrap text-sm">
+                          {businessSettings?.repairTerms || "Keine Reparaturbedingungen hinterlegt"}
+                        </p>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -638,6 +682,62 @@ export function ShopManagementDialog({ shop, trigger }: ShopManagementDialogProp
                                 <Input {...field} type="password" />
                               </FormControl>
                               <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">Logo & Branding</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <FormField
+                          control={form.control}
+                          name="logoImage"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Logo (Base64-Format)</FormLabel>
+                              <FormControl>
+                                <Textarea 
+                                  {...field} 
+                                  placeholder="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
+                                  className="min-h-[80px] font-mono text-xs"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                              <p className="text-xs text-muted-foreground">
+                                Laden Sie ein Logo im Base64-Format hoch oder lassen Sie das Feld leer
+                              </p>
+                            </FormItem>
+                          )}
+                        />
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">Reparaturbedingungen</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <FormField
+                          control={form.control}
+                          name="repairTerms"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>AGB / Reparaturbedingungen</FormLabel>
+                              <FormControl>
+                                <Textarea 
+                                  {...field} 
+                                  placeholder="Geben Sie hier die Reparaturbedingungen und AGB ein..."
+                                  className="min-h-[120px]"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                              <p className="text-xs text-muted-foreground">
+                                Diese Bedingungen werden bei der Kiosk-Unterschrift angezeigt
+                              </p>
                             </FormItem>
                           )}
                         />
