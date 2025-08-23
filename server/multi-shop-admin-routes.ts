@@ -1430,24 +1430,49 @@ export function registerMultiShopAdminRoutes(app: Express) {
   });
 
   // Business Settings für Multi-Shop Admins
-  app.get("/api/multi-shop/business-settings/:shopId", isAuthenticated, requireMultiShopAdminAuth, async (req: Request, res: Response) => {
+  app.get("/api/multi-shop/business-settings/:shopId", protectMultiShopAdmin, async (req: any, res: any) => {
     try {
       const shopId = parseInt(req.params.shopId);
       const multiShopAdminId = (req.user as any).id;
 
-      // Überprüfe, ob der Multi-Shop Admin Zugriff auf diesen Shop hat
-      const hasAccess = await storage.hasMultiShopAccess(multiShopAdminId, shopId);
-      if (!hasAccess) {
+      // Überprüfe Multi-Shop Zugriff direkt über DB-Abfrage
+      const accessCheck = await db
+        .select()
+        .from(multiShopPermissions)
+        .where(
+          and(
+            eq(multiShopPermissions.multiShopAdminId, multiShopAdminId),
+            eq(multiShopPermissions.shopId, shopId),
+            eq(multiShopPermissions.granted, true),
+            isNull(multiShopPermissions.revokedAt)
+          )
+        )
+        .limit(1);
+
+      if (accessCheck.length === 0) {
         return res.status(403).json({ message: "Kein Zugriff auf diesen Shop" });
       }
 
-      // Hole den Shop-Owner für diesen Shop
-      const shopOwner = await storage.getShopOwner(shopId);
-      if (!shopOwner) {
+      // Hole Shop-Owner direkt über DB-Abfrage
+      const shopOwners = await db
+        .select()
+        .from(users)
+        .where(
+          and(
+            eq(users.shopId, shopId),
+            eq(users.role, 'owner')
+          )
+        )
+        .limit(1);
+
+      if (shopOwners.length === 0) {
         return res.status(404).json({ message: "Shop-Owner nicht gefunden" });
       }
 
+      const shopOwner = shopOwners[0];
+
       // Hole business settings für den Shop-Owner
+      const { storage } = await import('./storage');
       const businessSettings = await storage.getBusinessSettings(shopOwner.id);
       
       if (!businessSettings) {
@@ -1457,6 +1482,8 @@ export function registerMultiShopAdminRoutes(app: Express) {
           ownerFirstName: shopOwner.ownerFirstName || "",
           ownerLastName: shopOwner.ownerLastName || "",
           taxId: shopOwner.taxId || "",
+          vatNumber: "",
+          companySlogan: "",
           streetAddress: shopOwner.streetAddress || "",
           city: shopOwner.city || "",
           zipCode: shopOwner.zipCode || "",
@@ -1465,10 +1492,19 @@ export function registerMultiShopAdminRoutes(app: Express) {
           email: shopOwner.companyEmail || "",
           website: shopOwner.website || "",
           receiptWidth: "80mm" as const,
+          smtpSenderName: "",
+          smtpHost: "",
+          smtpUser: "",
+          smtpPassword: "",
+          smtpPort: "",
+          reviewLink: "",
+          openingHours: "",
+          kioskPin: "1234",
           userId: shopOwner.id,
           shopId: shopId
         };
         
+        console.log(`📋 Returning default settings for shop ${shopId}:`, defaultSettings);
         return res.json(defaultSettings);
       }
 
@@ -1480,22 +1516,46 @@ export function registerMultiShopAdminRoutes(app: Express) {
     }
   });
 
-  app.post("/api/multi-shop/business-settings/:shopId", isAuthenticated, requireMultiShopAdminAuth, async (req: Request, res: Response) => {
+  app.post("/api/multi-shop/business-settings/:shopId", protectMultiShopAdmin, async (req: any, res: any) => {
     try {
       const shopId = parseInt(req.params.shopId);
       const multiShopAdminId = (req.user as any).id;
 
-      // Überprüfe, ob der Multi-Shop Admin Zugriff auf diesen Shop hat
-      const hasAccess = await storage.hasMultiShopAccess(multiShopAdminId, shopId);
-      if (!hasAccess) {
+      // Überprüfe Multi-Shop Zugriff direkt über DB-Abfrage
+      const accessCheck = await db
+        .select()
+        .from(multiShopPermissions)
+        .where(
+          and(
+            eq(multiShopPermissions.multiShopAdminId, multiShopAdminId),
+            eq(multiShopPermissions.shopId, shopId),
+            eq(multiShopPermissions.granted, true),
+            isNull(multiShopPermissions.revokedAt)
+          )
+        )
+        .limit(1);
+
+      if (accessCheck.length === 0) {
         return res.status(403).json({ message: "Kein Zugriff auf diesen Shop" });
       }
 
-      // Hole den Shop-Owner für diesen Shop
-      const shopOwner = await storage.getShopOwner(shopId);
-      if (!shopOwner) {
+      // Hole Shop-Owner direkt über DB-Abfrage
+      const shopOwners = await db
+        .select()
+        .from(users)
+        .where(
+          and(
+            eq(users.shopId, shopId),
+            eq(users.role, 'owner')
+          )
+        )
+        .limit(1);
+
+      if (shopOwners.length === 0) {
         return res.status(404).json({ message: "Shop-Owner nicht gefunden" });
       }
+
+      const shopOwner = shopOwners[0];
 
       // Konsolidiere alle Daten aus dem Request-Body
       const settingsData = {
@@ -1506,17 +1566,9 @@ export function registerMultiShopAdminRoutes(app: Express) {
 
       console.log(`📝 Multi-Shop Admin ${multiShopAdminId} updating business settings for shop ${shopId} (owner: ${shopOwner.id})`);
 
-      // Aktuelle Einstellungen abrufen
-      const currentSettings = await storage.getBusinessSettings(shopOwner.id);
-
-      let updatedSettings;
-      if (currentSettings) {
-        // Update bestehende Einstellungen
-        updatedSettings = await storage.updateBusinessSettings(currentSettings.id, settingsData);
-      } else {
-        // Erstelle neue Einstellungen
-        updatedSettings = await storage.createBusinessSettings(settingsData);
-      }
+      // Verwende die storage.updateBusinessSettings Methode
+      const { storage } = await import('./storage');
+      const updatedSettings = await storage.updateBusinessSettings(settingsData, shopOwner.id);
 
       console.log(`✅ Multi-Shop Admin ${multiShopAdminId} successfully updated business settings for shop ${shopId}`);
       res.json(updatedSettings);

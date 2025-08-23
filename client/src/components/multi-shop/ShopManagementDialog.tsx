@@ -69,8 +69,11 @@ export function ShopManagementDialog({ shop, trigger }: ShopManagementDialogProp
   const { data: businessSettings, isLoading } = useQuery({
     queryKey: [`/api/multi-shop/business-settings/${shop.shopId}`],
     queryFn: async () => {
+      console.log("🔍 Fetching business settings for shop:", shop.shopId);
       const response = await apiRequest("GET", `/api/multi-shop/business-settings/${shop.shopId}`);
-      return response.json();
+      const data = await response.json();
+      console.log("📋 Business settings received:", data);
+      return data;
     },
     enabled: open,
   });
@@ -105,7 +108,9 @@ export function ShopManagementDialog({ shop, trigger }: ShopManagementDialogProp
 
   // Aktualisiere Form wenn business settings geladen werden
   React.useEffect(() => {
+    console.log("🔄 useEffect triggered, businessSettings:", businessSettings);
     if (businessSettings) {
+      console.log("✅ Resetting form with business settings:", businessSettings);
       form.reset({
         businessName: businessSettings.businessName || "",
         ownerFirstName: businessSettings.ownerFirstName || "",
