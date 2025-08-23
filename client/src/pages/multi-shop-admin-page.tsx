@@ -38,7 +38,8 @@ import {
   Search,
   Filter,
   Calendar,
-  UserCircle
+  UserCircle,
+  History
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
@@ -278,7 +279,7 @@ function ShopDetailsDialog({ shop }: { shop: any }) {
                     <div className="space-y-4">
                       <Card>
                         <CardHeader>
-                          <CardTitle>Letzte 30 Tage</CardTitle>
+                          <CardTitle>Statistik (Letzte 30 Tage)</CardTitle>
                         </CardHeader>
                         <CardContent>
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -295,16 +296,74 @@ function ShopDetailsDialog({ shop }: { shop: any }) {
                               <div className="text-sm text-gray-600">Abholbereit</div>
                             </div>
                             <div className="text-center">
-                              <div className="text-2xl font-bold">4,2</div>
-                              <div className="text-sm text-gray-600">Ø Tage</div>
+                              <div className="text-2xl font-bold text-orange-600">
+                                {repairHistory.length}
+                              </div>
+                              <div className="text-sm text-gray-600">Gesamt</div>
                             </div>
                             <div className="text-center">
-                              <div className="text-2xl font-bold">94%</div>
-                              <div className="text-sm text-gray-600">Pünktlich</div>
+                              <div className="text-2xl font-bold text-purple-600">
+                                {new Set(repairHistory.map((r: any) => r.customerName)).size}
+                              </div>
+                              <div className="text-sm text-gray-600">Kunden</div>
                             </div>
                           </div>
                         </CardContent>
                       </Card>
+
+                      {/* Liste der Historie-Reparaturen */}
+                      {repairHistory.length > 0 ? (
+                        <div className="grid grid-cols-1 gap-4">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-lg font-medium">Alle Reparaturen ({repairHistory.length})</h3>
+                          </div>
+                          {repairHistory.map((repair: any) => (
+                            <Card key={repair.id} className="cursor-pointer hover:shadow-md transition-shadow"
+                                  onClick={() => setSelectedRepair(repair)}>
+                              <CardContent className="p-4">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-3 mb-2">
+                                      <Badge variant={getStatusVariant(repair.status)}>
+                                        {statusLabels[repair.status as keyof typeof statusLabels] || repair.status}
+                                      </Badge>
+                                      <span className="font-mono text-sm">{repair.orderCode}</span>
+                                    </div>
+                                    <div className="text-sm space-y-1">
+                                      <div className="font-medium">{repair.deviceInfo}</div>
+                                      <div className="text-gray-600">{repair.issue}</div>
+                                      <div className="flex items-center gap-4 text-xs text-gray-500">
+                                        <span>{repair.customerName}</span>
+                                        <span>•</span>
+                                        <span>Erstellt: {new Date(repair.createdAt).toLocaleDateString('de-DE')}</span>
+                                        <span>•</span>
+                                        <span>Aktualisiert: {new Date(repair.updatedAt).toLocaleDateString('de-DE')}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    {repair.cost && (
+                                      <div className="text-lg font-semibold">€{repair.cost}</div>
+                                    )}
+                                    <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
+                                      <Calendar className="h-3 w-3" />
+                                      {new Date(repair.updatedAt).toLocaleDateString('de-DE')}
+                                    </div>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      ) : (
+                        <Card>
+                          <CardContent className="p-8 text-center">
+                            <History className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                            <h3 className="text-lg font-medium text-gray-900 mb-2">Keine Reparatur-Historie</h3>
+                            <p className="text-gray-500">Keine Reparaturen in den letzten 30 Tagen gefunden.</p>
+                          </CardContent>
+                        </Card>
+                      )}
                     </div>
                   )}
                 </TabsContent>
