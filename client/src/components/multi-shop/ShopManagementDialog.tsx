@@ -398,8 +398,8 @@ export function ShopManagementDialog({ shop, trigger }: ShopManagementDialogProp
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="flex items-center gap-4">
-                      <div className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center">
+                    <div className="flex justify-center">
+                      <div className="w-36 h-36 border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center">
                         {businessSettings?.logoImage ? (
                           <img
                             src={businessSettings.logoImage}
@@ -407,14 +407,7 @@ export function ShopManagementDialog({ shop, trigger }: ShopManagementDialogProp
                             className="max-h-full max-w-full object-contain rounded-md"
                           />
                         ) : (
-                          <ImageIcon className="h-6 w-6 text-muted-foreground" />
-                        )}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        Logo: {businessSettings?.logoImage ? (
-                          <span className="text-green-600">Vorhanden</span>
-                        ) : (
-                          <span className="text-gray-500">Nicht gesetzt</span>
+                          <ImageIcon className="h-8 w-8 text-muted-foreground" />
                         )}
                       </div>
                     </div>
@@ -436,29 +429,6 @@ export function ShopManagementDialog({ shop, trigger }: ShopManagementDialogProp
                           {businessSettings?.repairTerms || "Keine Reparaturbedingungen hinterlegt"}
                         </p>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <Settings className="h-4 w-4" />
-                      Technische Einstellungen
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Bonbreite</p>
-                      <p>{businessSettings?.receiptWidth || "80mm"}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Kiosk-PIN</p>
-                      <p>{businessSettings?.kioskPin ? "****" : "Nicht gesetzt"}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">SMTP konfiguriert</p>
-                      <p>{businessSettings?.smtpHost ? "Ja" : "Nein"}</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -783,7 +753,7 @@ export function ShopManagementDialog({ shop, trigger }: ShopManagementDialogProp
                           
                           <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
                             {/* Logo Vorschau */}
-                            <div className={`relative flex justify-center items-center h-24 w-24 rounded-md border border-input 
+                            <div className={`relative flex justify-center items-center h-36 w-36 rounded-md border border-input 
                               ${logoPreview ? 'bg-white' : 'bg-muted'}`}>
                               {logoPreview ? (
                                 <>
