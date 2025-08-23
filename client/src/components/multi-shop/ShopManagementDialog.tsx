@@ -399,7 +399,7 @@ export function ShopManagementDialog({ shop, trigger }: ShopManagementDialogProp
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center gap-4">
-                      <div className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center">
+                      <div className="w-32 h-32 border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center">
                         {businessSettings?.logoImage ? (
                           <img
                             src={businessSettings.logoImage}
@@ -416,25 +416,6 @@ export function ShopManagementDialog({ shop, trigger }: ShopManagementDialogProp
                         ) : (
                           <span className="text-gray-500">Nicht gesetzt</span>
                         )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
-                      Reparaturbedingungen
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">AGB / Reparaturbedingungen</p>
-                      <div className="bg-gray-50 p-3 rounded-md max-h-32 overflow-y-auto">
-                        <p className="whitespace-pre-wrap text-sm">
-                          {businessSettings?.repairTerms || "Keine Reparaturbedingungen hinterlegt"}
-                        </p>
                       </div>
                     </div>
                   </CardContent>
@@ -783,7 +764,7 @@ export function ShopManagementDialog({ shop, trigger }: ShopManagementDialogProp
                           
                           <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
                             {/* Logo Vorschau */}
-                            <div className={`relative flex justify-center items-center h-24 w-24 rounded-md border border-input 
+                            <div className={`relative flex justify-center items-center h-32 w-32 rounded-md border border-input 
                               ${logoPreview ? 'bg-white' : 'bg-muted'}`}>
                               {logoPreview ? (
                                 <>
