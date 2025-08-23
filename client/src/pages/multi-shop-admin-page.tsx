@@ -45,7 +45,11 @@ import {
   Mail,
   MapPin,
   Tag,
-  Pen
+  Pen,
+  FileText,
+  Euro,
+  Clock,
+  AlertCircle
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
@@ -540,7 +544,7 @@ function ReadonlyRepairDetailsDialog({
               )}
               
               <div className="flex items-start gap-2">
-                <div className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0">⚠️</div>
+                <AlertCircle className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
                 <div>
                   <div className="text-sm text-muted-foreground">Fehlerbeschreibung</div>
                   <div className="whitespace-pre-wrap">
@@ -550,7 +554,7 @@ function ReadonlyRepairDetailsDialog({
               </div>
               
               <div className="flex items-start gap-2">
-                <div className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0">⏱️</div>
+                <Clock className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <div className="text-sm text-muted-foreground">Status</div>
@@ -579,43 +583,40 @@ function ReadonlyRepairDetailsDialog({
           </div>
         </div>
         
-        {/* Auftragsinformationen - collapsible wie im normalen Dialog */}
-        <div className="bg-slate-50 rounded-lg p-4 shadow-sm border">
-          <h3 className="text-lg font-medium flex items-center justify-between mb-3 cursor-pointer">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Auftragsinformationen
-            </div>
-            <ChevronDown className="h-4 w-4" />
+        {/* Auftragsinformationen - exakt wie im normalen RepairDetailsDialog */}
+        <div className="bg-slate-50 rounded-lg p-4 shadow-sm border md:col-span-2">
+          <h3 className="text-lg font-medium flex items-center gap-2 mb-3">
+            <Calendar className="h-5 w-5" />
+            Auftragsinformationen
           </h3>
           
-          <div className="space-y-3">
-            <div className="flex items-start gap-2">
-              <Calendar className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
-              <div>
-                <div className="text-sm text-muted-foreground">Auftragsdatum</div>
-                <div>{new Date(repair.createdAt).toLocaleDateString('de-DE')}</div>
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-2">
-              <div className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0">💰</div>
-              <div>
-                <div className="text-sm text-muted-foreground">Kostenvoranschlag</div>
-                <div className="text-lg font-semibold text-green-600">
-                  {repair.cost ? `€${repair.cost}` : 'Noch nicht geschätzt'}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-3">
+              <div className="flex items-start gap-2">
+                <Calendar className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+                <div>
+                  <div className="text-sm text-muted-foreground">Auftragsdatum</div>
+                  <div>{new Date(repair.createdAt).toLocaleDateString('de-DE')}</div>
                 </div>
               </div>
+              
+              {repair.cost && (
+                <div className="flex items-start gap-2">
+                  <Euro className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+                  <div>
+                    <div className="text-sm text-muted-foreground">Kostenvoranschlag</div>
+                    <div className="font-medium">€{repair.cost}</div>
+                  </div>
+                </div>
+              )}
             </div>
             
             {repair.notes && (
               <div className="flex items-start gap-2">
-                <div className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0">📝</div>
+                <FileText className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
                 <div>
                   <div className="text-sm text-muted-foreground">Notizen</div>
-                  <div className="p-3 bg-white rounded-md mt-1 whitespace-pre-wrap">
-                    {repair.notes}
-                  </div>
+                  <div className="whitespace-pre-wrap">{repair.notes}</div>
                 </div>
               </div>
             )}
