@@ -768,7 +768,7 @@ function DashboardStats() {
               <CardTitle>Dashboard Übersicht</CardTitle>
               <CardDescription>Multi-Shop Statistiken für {getDisplayLabel()}</CardDescription>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col items-start gap-4">
               <Select value={selectedPeriod} onValueChange={(value: any) => handlePeriodChange(value)}>
                 <SelectTrigger className="w-48">
                   <SelectValue />
@@ -1150,7 +1150,7 @@ function ShopsOverview() {
               <CardTitle>Shop-Übersicht</CardTitle>
               <CardDescription>Statistiken für {getDisplayLabel()}</CardDescription>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col items-start gap-4">
               <Select value={selectedPeriod} onValueChange={(value: any) => handlePeriodChange(value)}>
                 <SelectTrigger className="w-48">
                   <SelectValue />
