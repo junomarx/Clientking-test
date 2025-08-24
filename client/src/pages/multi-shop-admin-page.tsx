@@ -63,6 +63,7 @@ import type { DateRange } from "react-day-picker";
 import { MultiShopAdminSidebar } from "@/components/multi-shop/MultiShopAdminSidebar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { OnlineStatusWidget } from "@/components/multi-shop/OnlineStatusWidget";
+import { useOnlineStatus } from "@/hooks/use-online-status";
 
 // Shop Details Dialog mit Reparaturen-Einsicht
 function ShopDetailsDialog({ shop }: { shop: any }) {
