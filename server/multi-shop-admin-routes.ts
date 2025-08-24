@@ -1064,8 +1064,19 @@ export function registerMultiShopAdminRoutes(app: Express) {
 
       const logs = await storage.getActivityLogs(userId, options);
       
+      // Auch die Gesamtzahl für Paginierung abrufen
+      const totalCountOptions = { ...options, limit: undefined, offset: undefined };
+      const allLogs = await storage.getActivityLogs(userId, totalCountOptions);
+      const totalCount = allLogs.length;
+      
+      console.log(`📋 ${logs.length} Activity-Logs für MSA-User ${userId} geladen`);
       console.log(`📋 ${logs.length} Activity-Logs für MSA-User ${userId} abgerufen`);
-      res.json(logs);
+      res.json({
+        logs,
+        totalCount,
+        currentPage: Math.floor((options.offset / options.limit) + 1),
+        totalPages: Math.ceil(totalCount / options.limit)
+      });
     } catch (error) {
       console.error("Fehler beim Abrufen der Activity-Logs:", error);
       res.status(500).json({ error: "Interner Serverfehler" });

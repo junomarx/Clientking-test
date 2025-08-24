@@ -34,6 +34,7 @@ import {
   Settings,
   User,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
   Search,
   Filter,
@@ -3131,22 +3132,27 @@ function LogsOverview() {
     return saved ? parseInt(saved) : 10;
   });
 
+  // Paginierung State
+  const [currentPage, setCurrentPage] = useState(1);
+
   // Speichere Logs-per-Page Auswahl in sessionStorage (bis Logout)
   const handleLogsPerPageChange = (value: string) => {
     const newValue = parseInt(value);
     setLogsPerPage(newValue);
+    setCurrentPage(1); // Zurück zur ersten Seite
     sessionStorage.setItem('msa-logs-per-page', value);
   };
 
   // Activity-Logs laden
-  const { data: activityLogs = [], isLoading, refetch: refetchActivityLogs } = useQuery({
-    queryKey: ['/api/multi-shop/activity-logs', period, eventType, customDateRange, logsPerPage],
+  const { data: activityLogsData, isLoading, refetch: refetchActivityLogs } = useQuery({
+    queryKey: ['/api/multi-shop/activity-logs', period, eventType, customDateRange, logsPerPage, currentPage],
     queryFn: async () => {
+      const offset = (currentPage - 1) * logsPerPage;
       const params = new URLSearchParams({
         period,
         eventType,
         limit: logsPerPage.toString(),
-        offset: '0'
+        offset: offset.toString()
       });
 
       if (period === 'custom' && customDateRange?.from && customDateRange?.to) {
@@ -3161,6 +3167,11 @@ function LogsOverview() {
       return response.json();
     }
   });
+
+  // Destructure mit Default-Werten für Paginierung
+  const activityLogs = activityLogsData?.logs || [];
+  const totalCount = activityLogsData?.totalCount || 0;
+  const totalPages = Math.ceil(totalCount / logsPerPage);
 
   // WebSocket-Handler für Echtzeit-Activity-Updates
   useEffect(() => {
@@ -3381,9 +3392,12 @@ function LogsOverview() {
           </div>
 
           {/* Activity Logs Liste */}
-          <div className="text-right mb-2">
+          <div className="flex justify-between items-center mb-2">
             <span className="text-xs text-gray-500">
-              Zeige die letzten {logsPerPage} Aktivitäten
+              {totalCount > 0 && `${((currentPage - 1) * logsPerPage) + 1}-${Math.min(currentPage * logsPerPage, totalCount)} von ${totalCount} Aktivitäten`}
+            </span>
+            <span className="text-xs text-gray-500">
+              Seite {currentPage} von {totalPages || 1}
             </span>
           </div>
           
@@ -3540,6 +3554,83 @@ function LogsOverview() {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Paginierung */}
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-2 mt-6 pt-4 border-t">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(currentPage - 1)}
+                className="flex items-center gap-1"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Zurück
+              </Button>
+              
+              <div className="flex items-center gap-1">
+                {/* Erste Seite */}
+                {currentPage > 3 && (
+                  <>
+                    <Button
+                      variant={1 === currentPage ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(1)}
+                      className="w-10"
+                    >
+                      1
+                    </Button>
+                    {currentPage > 4 && <span className="text-gray-400">...</span>}
+                  </>
+                )}
+                
+                {/* Aktuelle Seiten */}
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                  if (pageNum > totalPages) return null;
+                  
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={pageNum === currentPage ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(pageNum)}
+                      className="w-10"
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
+                
+                {/* Letzte Seite */}
+                {currentPage < totalPages - 2 && (
+                  <>
+                    {currentPage < totalPages - 3 && <span className="text-gray-400">...</span>}
+                    <Button
+                      variant={totalPages === currentPage ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(totalPages)}
+                      className="w-10"
+                    >
+                      {totalPages}
+                    </Button>
+                  </>
+                )}
+              </div>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage(currentPage + 1)}
+                className="flex items-center gap-1"
+              >
+                Weiter
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             </div>
           )}
         </CardContent>
