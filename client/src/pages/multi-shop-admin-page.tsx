@@ -53,6 +53,11 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { ShopManagementDialog } from "@/components/multi-shop/ShopManagementDialog";
 import { ChangePasswordDialog } from "@/components/auth/ChangePasswordDialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarUI } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { de } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 // Shop Details Dialog mit Reparaturen-Einsicht
 function ShopDetailsDialog({ shop }: { shop: any }) {
@@ -641,13 +646,31 @@ function DashboardStats() {
     const saved = localStorage.getItem('msa-selected-period');
     return (saved as 'day' | 'week' | 'month' | 'quarter' | 'year' | 'all' | 'custom') || 'month';
   });
-  const [customStartDate, setCustomStartDate] = useState<string>('');
-  const [customEndDate, setCustomEndDate] = useState<string>('');
+  // Benutzerdefinierte Daten aus localStorage laden
+  const [customStartDate, setCustomStartDate] = useState<Date | undefined>(() => {
+    const saved = localStorage.getItem('msa-custom-start-date');
+    return saved ? new Date(saved) : undefined;
+  });
+  const [customEndDate, setCustomEndDate] = useState<Date | undefined>(() => {
+    const saved = localStorage.getItem('msa-custom-end-date');
+    return saved ? new Date(saved) : undefined;
+  });
 
   // Zeitraum-Änderung Handler mit localStorage-Speicherung
   const handlePeriodChange = (period: 'day' | 'week' | 'month' | 'quarter' | 'year' | 'all' | 'custom') => {
     setSelectedPeriod(period);
     localStorage.setItem('msa-selected-period', period);
+  };
+
+  // Custom Date Handler mit localStorage-Speicherung
+  const handleCustomStartDateChange = (date: Date | undefined) => {
+    setCustomStartDate(date);
+    localStorage.setItem('msa-custom-start-date', date ? date.toISOString() : '');
+  };
+
+  const handleCustomEndDateChange = (date: Date | undefined) => {
+    setCustomEndDate(date);
+    localStorage.setItem('msa-custom-end-date', date ? date.toISOString() : '');
   };
 
   // Dashboard-Übersicht mit Zeitraum-Filter
@@ -656,7 +679,9 @@ function DashboardStats() {
     queryFn: async () => {
       let url = `/api/multi-shop/accessible-shops?period=${selectedPeriod}`;
       if (selectedPeriod === 'custom' && customStartDate && customEndDate) {
-        url = `/api/multi-shop/accessible-shops?start=${customStartDate}&end=${customEndDate}`;
+        const startStr = format(customStartDate, 'yyyy-MM-dd');
+        const endStr = format(customEndDate, 'yyyy-MM-dd');
+        url = `/api/multi-shop/accessible-shops?start=${startStr}&end=${endStr}`;
       }
       const response = await apiRequest("GET", url);
       return response.json();
@@ -676,8 +701,8 @@ function DashboardStats() {
 
   const getDisplayLabel = () => {
     if (selectedPeriod === 'custom' && customStartDate && customEndDate) {
-      const start = new Date(customStartDate).toLocaleDateString('de-DE');
-      const end = new Date(customEndDate).toLocaleDateString('de-DE');
+      const start = format(customStartDate, 'dd.MM.yyyy', { locale: de });
+      const end = format(customEndDate, 'dd.MM.yyyy', { locale: de });
       return `${start} - ${end}`;
     }
     return periodLabels[selectedPeriod];
@@ -740,24 +765,60 @@ function DashboardStats() {
               </Select>
               
               {selectedPeriod === 'custom' && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-4">
                   <div className="flex flex-col">
-                    <label className="text-xs text-gray-500 mb-1">Von</label>
-                    <input
-                      type="date"
-                      value={customStartDate}
-                      onChange={(e) => setCustomStartDate(e.target.value)}
-                      className="px-3 py-1 border rounded text-sm"
-                    />
+                    <label className="text-sm font-medium text-gray-700 mb-2">Von</label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-[200px] justify-start text-left font-normal",
+                            !customStartDate && "text-muted-foreground"
+                          )}
+                        >
+                          <Calendar className="mr-2 h-4 w-4" />
+                          {customStartDate ? format(customStartDate, "dd.MM.yyyy", { locale: de }) : "Startdatum wählen"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <CalendarUI
+                          mode="single"
+                          selected={customStartDate}
+                          onSelect={handleCustomStartDateChange}
+                          locale={de}
+                          disabled={(date) => date > new Date() || (customEndDate ? date > customEndDate : false)}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
                   <div className="flex flex-col">
-                    <label className="text-xs text-gray-500 mb-1">Bis</label>
-                    <input
-                      type="date"
-                      value={customEndDate}
-                      onChange={(e) => setCustomEndDate(e.target.value)}
-                      className="px-3 py-1 border rounded text-sm"
-                    />
+                    <label className="text-sm font-medium text-gray-700 mb-2">Bis</label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-[200px] justify-start text-left font-normal",
+                            !customEndDate && "text-muted-foreground"
+                          )}
+                        >
+                          <Calendar className="mr-2 h-4 w-4" />
+                          {customEndDate ? format(customEndDate, "dd.MM.yyyy", { locale: de }) : "Enddatum wählen"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <CalendarUI
+                          mode="single"
+                          selected={customEndDate}
+                          onSelect={handleCustomEndDateChange}
+                          locale={de}
+                          disabled={(date) => date > new Date() || (customStartDate ? date < customStartDate : false)}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
                 </div>
               )}
@@ -973,13 +1034,31 @@ function ShopsOverview() {
     const saved = localStorage.getItem('msa-selected-period');
     return (saved as 'day' | 'week' | 'month' | 'quarter' | 'year' | 'all' | 'custom') || 'month';
   });
-  const [customStartDate, setCustomStartDate] = useState<string>('');
-  const [customEndDate, setCustomEndDate] = useState<string>('');
+  // Benutzerdefinierte Daten aus localStorage laden (synchron mit Dashboard)
+  const [customStartDate, setCustomStartDate] = useState<Date | undefined>(() => {
+    const saved = localStorage.getItem('msa-custom-start-date');
+    return saved ? new Date(saved) : undefined;
+  });
+  const [customEndDate, setCustomEndDate] = useState<Date | undefined>(() => {
+    const saved = localStorage.getItem('msa-custom-end-date');
+    return saved ? new Date(saved) : undefined;
+  });
 
   // Zeitraum-Änderung Handler mit localStorage-Speicherung (synchron mit Dashboard)
   const handlePeriodChange = (period: 'day' | 'week' | 'month' | 'quarter' | 'year' | 'all' | 'custom') => {
     setSelectedPeriod(period);
     localStorage.setItem('msa-selected-period', period);
+  };
+
+  // Custom Date Handler mit localStorage-Speicherung (synchron mit Dashboard)
+  const handleCustomStartDateChange = (date: Date | undefined) => {
+    setCustomStartDate(date);
+    localStorage.setItem('msa-custom-start-date', date ? date.toISOString() : '');
+  };
+
+  const handleCustomEndDateChange = (date: Date | undefined) => {
+    setCustomEndDate(date);
+    localStorage.setItem('msa-custom-end-date', date ? date.toISOString() : '');
   };
   
   const { data: shops, isLoading } = useQuery({
@@ -1006,8 +1085,8 @@ function ShopsOverview() {
 
   const getDisplayLabel = () => {
     if (selectedPeriod === 'custom' && customStartDate && customEndDate) {
-      const start = new Date(customStartDate).toLocaleDateString('de-DE');
-      const end = new Date(customEndDate).toLocaleDateString('de-DE');
+      const start = format(customStartDate, 'dd.MM.yyyy', { locale: de });
+      const end = format(customEndDate, 'dd.MM.yyyy', { locale: de });
       return `${start} - ${end}`;
     }
     return periodLabels[selectedPeriod];
@@ -1068,24 +1147,60 @@ function ShopsOverview() {
               </Select>
               
               {selectedPeriod === 'custom' && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-4">
                   <div className="flex flex-col">
-                    <label className="text-xs text-gray-500 mb-1">Von</label>
-                    <input
-                      type="date"
-                      value={customStartDate}
-                      onChange={(e) => setCustomStartDate(e.target.value)}
-                      className="px-3 py-1 border rounded text-sm"
-                    />
+                    <label className="text-sm font-medium text-gray-700 mb-2">Von</label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-[200px] justify-start text-left font-normal",
+                            !customStartDate && "text-muted-foreground"
+                          )}
+                        >
+                          <Calendar className="mr-2 h-4 w-4" />
+                          {customStartDate ? format(customStartDate, "dd.MM.yyyy", { locale: de }) : "Startdatum wählen"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <CalendarUI
+                          mode="single"
+                          selected={customStartDate}
+                          onSelect={handleCustomStartDateChange}
+                          locale={de}
+                          disabled={(date) => date > new Date() || (customEndDate ? date > customEndDate : false)}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
                   <div className="flex flex-col">
-                    <label className="text-xs text-gray-500 mb-1">Bis</label>
-                    <input
-                      type="date"
-                      value={customEndDate}
-                      onChange={(e) => setCustomEndDate(e.target.value)}
-                      className="px-3 py-1 border rounded text-sm"
-                    />
+                    <label className="text-sm font-medium text-gray-700 mb-2">Bis</label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-[200px] justify-start text-left font-normal",
+                            !customEndDate && "text-muted-foreground"
+                          )}
+                        >
+                          <Calendar className="mr-2 h-4 w-4" />
+                          {customEndDate ? format(customEndDate, "dd.MM.yyyy", { locale: de }) : "Enddatum wählen"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <CalendarUI
+                          mode="single"
+                          selected={customEndDate}
+                          onSelect={handleCustomEndDateChange}
+                          locale={de}
+                          disabled={(date) => date > new Date() || (customStartDate ? date < customStartDate : false)}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
                 </div>
               )}
