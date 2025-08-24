@@ -1896,9 +1896,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let emailSent = false;
       let emailError = '';
       
+      // Alten Status abrufen für Activity-Logging
+      const oldRepair = await storage.getRepair(id, userId);
+      const oldStatus = oldRepair?.status;
+      
       // Reparaturstatus mit Benutzerkontext und optionaler Techniker-Information aktualisieren
       // Die updateRepairStatus Methode erstellt automatisch History-Einträge
       const repair = await storage.updateRepairStatus(id, status, userId, technicianNote);
+      
+      // Activity-Log für Reparatur-Status-Änderung erstellen
+      if (repair && oldStatus && oldStatus !== status) {
+        const user = await storage.getUser(userId);
+        await storage.logRepairActivity(
+          'status_changed',
+          repair.id,
+          repair,
+          userId,
+          user?.username || user?.email,
+          oldStatus,
+          status
+        );
+      }
       
       if (!repair) {
         return res.status(404).json({ message: "Repair not found" });

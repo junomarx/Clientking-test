@@ -83,9 +83,9 @@ import {
   or,
   sql,
   lt,
-  lte,
   gt,
   count,
+  isNull,
   isNotNull,
   isNull,
   like,
@@ -6633,8 +6633,19 @@ export class DatabaseStorage implements IStorage {
         offset = 0 
       } = options;
 
-      // Zugängliche Shops für MSA-User abrufen
-      const accessibleShopIds = shopIds || await this.getAccessibleShopIds(msaUserId);
+      // Zugängliche Shops für MSA-User abrufen - direkt aus permissions laden
+      let accessibleShopIds = shopIds;
+      if (!accessibleShopIds) {
+        const grantedPermissions = await db
+          .select({ shopId: multiShopPermissions.shopId })
+          .from(multiShopPermissions)
+          .where(and(
+            eq(multiShopPermissions.multiShopAdminId, msaUserId),
+            eq(multiShopPermissions.granted, true),
+            isNull(multiShopPermissions.revokedAt)
+          ));
+        accessibleShopIds = grantedPermissions.map(p => p.shopId);
+      }
       
       if (accessibleShopIds.length === 0) {
         return [];
