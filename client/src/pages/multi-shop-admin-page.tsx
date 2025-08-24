@@ -2363,59 +2363,68 @@ function OrdersOverview() {
                 </div>
 
                 {/* Mobile Cards */}
-                <div className="lg:hidden space-y-2">
+                <div className="lg:hidden space-y-2 px-2">
                   {filteredOrders.map((order: any) => (
-                    <div key={order.id} className="bg-white border border-gray-200 rounded-lg px-1 py-1 space-y-1 w-full max-w-full overflow-hidden box-border">
-                  {/* Header */}
-                  <div className="flex items-start gap-2">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-gray-900 text-sm truncate">{order.partName}</h3>
-                      {order.supplier && (
-                        <p className="text-xs text-blue-600 mt-1 truncate">{order.supplier}</p>
-                      )}
-                    </div>
-                    <span className="font-mono text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded flex-shrink-0">
-                      {order.orderCode}
-                    </span>
-                  </div>
-
-                  {/* Device Info */}
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">Gerät</p>
-                    <p className="text-sm text-gray-900 truncate">{order.deviceInfo}</p>
-                    {order.notes && (
-                      <p className="text-xs text-gray-500 mt-1 line-clamp-2">{order.notes}</p>
-                    )}
-                  </div>
-
-                  {/* Shop Info */}
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">Shop</p>
-                    <p className="text-sm text-gray-900 truncate">{order.businessName}</p>
-                    <p className="text-xs text-gray-500">ID: {order.shopId}</p>
-                  </div>
-
-                  {/* Status */}
-                  <div>
-                    <p className="text-xs text-gray-500 mb-2">Status</p>
-                    <Select
-                      value={order.status}
-                      onValueChange={(newStatus) => {
-                        changeStatusMutation.mutate({ id: order.id, status: newStatus });
-                      }}
-                      disabled={changeStatusMutation.isPending}
+                    <div
+                      key={order.id}
+                      className="bg-white border border-gray-200 rounded-lg px-3 py-2 space-y-2 w-full max-w-sm mx-auto overflow-hidden box-border"
                     >
-                      <SelectTrigger className="w-full max-w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="bestellen">Zu bestellen</SelectItem>
-                        <SelectItem value="bestellt">Bestellt</SelectItem>
-                        <SelectItem value="eingetroffen">Eingetroffen</SelectItem>
-                        <SelectItem value="erledigt">Erledigt</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                      {/* Header */}
+                      <div className="flex items-start gap-2">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-gray-900 text-sm truncate">
+                            {order.partName}
+                          </h3>
+                          {order.supplier && (
+                            <p className="text-xs text-blue-600 mt-1 truncate">
+                              {order.supplier}
+                            </p>
+                          )}
+                        </div>
+                        <span className="font-mono text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded truncate min-w-0">
+                          {order.orderCode}
+                        </span>
+                      </div>
+
+                      {/* Device Info */}
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Gerät</p>
+                        <p className="text-sm text-gray-900 truncate">{order.deviceInfo}</p>
+                        {order.notes && (
+                          <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                            {order.notes}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Shop Info */}
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Shop</p>
+                        <p className="text-sm text-gray-900 truncate">{order.businessName}</p>
+                        <p className="text-xs text-gray-500">ID: {order.shopId}</p>
+                      </div>
+
+                      {/* Status */}
+                      <div>
+                        <p className="text-xs text-gray-500 mb-2">Status</p>
+                        <Select
+                          value={order.status}
+                          onValueChange={(newStatus) => {
+                            changeStatusMutation.mutate({ id: order.id, status: newStatus });
+                          }}
+                          disabled={changeStatusMutation.isPending}
+                        >
+                          <SelectTrigger className="w-full overflow-hidden truncate">
+                            <SelectValue className="truncate" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="bestellen">Zu bestellen</SelectItem>
+                            <SelectItem value="bestellt">Bestellt</SelectItem>
+                            <SelectItem value="eingetroffen">Eingetroffen</SelectItem>
+                            <SelectItem value="erledigt">Erledigt</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -2523,18 +2532,25 @@ function OrdersOverview() {
                 </div>
 
                 {/* Mobile Cards für Archivierte */}
-                <div className="lg:hidden space-y-3 px-3 sm:px-0">
+                <div className="lg:hidden space-y-2 px-2">
                   {filteredArchivedOrders.map((order: any) => (
-                    <div key={order.id} className="bg-white border border-gray-200 rounded-lg px-1 py-1 space-y-1 w-full max-w-full overflow-hidden box-border">
+                    <div
+                      key={order.id}
+                      className="bg-white border border-gray-200 rounded-lg px-3 py-2 space-y-2 w-full max-w-sm mx-auto overflow-hidden box-border"
+                    >
                       {/* Header */}
                       <div className="flex items-start gap-2">
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-gray-900 text-sm truncate">{order.partName}</h3>
+                          <h3 className="font-medium text-gray-900 text-sm truncate">
+                            {order.partName}
+                          </h3>
                           {order.supplier && (
-                            <p className="text-xs text-blue-600 mt-1 truncate">{order.supplier}</p>
+                            <p className="text-xs text-blue-600 mt-1 truncate">
+                              {order.supplier}
+                            </p>
                           )}
                         </div>
-                        <span className="font-mono text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded flex-shrink-0">
+                        <span className="font-mono text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded truncate min-w-0">
                           {order.orderCode}
                         </span>
                       </div>
@@ -2544,7 +2560,9 @@ function OrdersOverview() {
                         <p className="text-xs text-gray-500 mb-1">Gerät</p>
                         <p className="text-sm text-gray-900 truncate">{order.deviceInfo}</p>
                         {order.notes && (
-                          <p className="text-xs text-gray-500 mt-1 line-clamp-2">{order.notes}</p>
+                          <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                            {order.notes}
+                          </p>
                         )}
                       </div>
 
@@ -2565,8 +2583,8 @@ function OrdersOverview() {
                           }}
                           disabled={changeStatusMutation.isPending}
                         >
-                          <SelectTrigger className="w-full max-w-full">
-                            <SelectValue />
+                          <SelectTrigger className="w-full overflow-hidden truncate">
+                            <SelectValue className="truncate" />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="bestellen">Zu bestellen</SelectItem>
