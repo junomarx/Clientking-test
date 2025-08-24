@@ -520,6 +520,59 @@ export function registerMultiShopRoutes(app: Express) {
     }
   });
 
+  // Shop-Owner: Zugriff für einen Multi-Shop Admin entziehen
+  app.post("/api/multi-shop/revoke-access-by-id/:accessId", async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: "Nicht angemeldet" });
+      }
+
+      const accessId = parseInt(req.params.accessId);
+      if (isNaN(accessId)) {
+        return res.status(400).json({ error: "Ungültige Access-ID" });
+      }
+
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+      
+      if (!user || !user.shopId) {
+        return res.status(403).json({ error: "Kein Shop-Zugang vorhanden" });
+      }
+
+      // Prüfen ob der Access-Eintrag zu diesem Shop gehört
+      const [accessEntry] = await db
+        .select()
+        .from(userShopAccess)
+        .where(and(
+          eq(userShopAccess.id, accessId),
+          eq(userShopAccess.shopId, user.shopId)
+        ));
+
+      if (!accessEntry) {
+        return res.status(404).json({ error: "Zugriff nicht gefunden oder nicht berechtigt" });
+      }
+
+      // Zugriff entziehen
+      await db
+        .update(userShopAccess)
+        .set({
+          isActive: false,
+          revokedAt: new Date()
+        })
+        .where(eq(userShopAccess.id, accessId));
+
+      console.log(`🚫 Shop-Owner ${user.username} hat Zugriff ID ${accessId} für Shop ${user.shopId} entzogen`);
+      
+      res.json({ 
+        success: true, 
+        message: "Zugriff erfolgreich entzogen"
+      });
+    } catch (error) {
+      console.error('Fehler beim Entziehen des Zugriffs:', error);
+      res.status(500).json({ error: 'Interner Serverfehler beim Entziehen des Zugriffs' });
+    }
+  });
+
   // Gewährte Zugänge für Shop-Owner abrufen
   app.get("/api/multi-shop/granted-accesses", async (req: Request, res: Response) => {
     try {
@@ -546,7 +599,8 @@ export function registerMultiShopRoutes(app: Express) {
       .leftJoin(users, eq(userShopAccess.userId, users.id))
       .where(and(
         eq(userShopAccess.shopId, user.shopId),
-        eq(userShopAccess.grantedBy, user.id)
+        eq(userShopAccess.grantedBy, user.id),
+        eq(userShopAccess.isActive, true)
       ));
 
       res.json(grantedAccesses);

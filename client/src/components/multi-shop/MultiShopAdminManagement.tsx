@@ -59,11 +59,11 @@ export default function MultiShopAdminManagement() {
 
   // Mutation für das Entziehen von Zugriff
   const revokeAccessMutation = useMutation({
-    mutationFn: async (permissionId: number) => {
-      const response = await apiRequest('POST', `/api/permissions/${permissionId}/revoke`);
+    mutationFn: async (accessId: number) => {
+      const response = await apiRequest('POST', `/api/multi-shop/revoke-access-by-id/${accessId}`);
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Failed to revoke access');
+        throw new Error(error.error || 'Failed to revoke access');
       }
       return response.json();
     },
