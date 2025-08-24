@@ -346,34 +346,36 @@ function ShopDetailsDialog({ shop }: { shop: any }) {
                           {repairHistory.map((repair: any) => (
                             <Card key={repair.id} className="cursor-pointer hover:shadow-md transition-shadow"
                                   onClick={() => setSelectedRepair(repair)}>
-                              <CardContent className="p-4">
-                                <div className="flex items-center justify-between">
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-3 mb-2">
+                              <CardContent className="p-3 sm:p-4">
+                                <div className="flex items-start gap-3 sm:gap-4">
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 sm:gap-3 mb-2 flex-wrap">
                                       <Badge variant={getStatusVariant(repair.status)}>
                                         {statusLabels[repair.status as keyof typeof statusLabels] || repair.status}
                                       </Badge>
-                                      <span className="font-mono text-sm">{repair.orderCode}</span>
+                                      <span className="font-mono text-sm truncate">{repair.orderCode}</span>
                                     </div>
                                     <div className="text-sm space-y-1">
-                                      <div className="font-medium">{repair.deviceInfo}</div>
-                                      <div className="text-gray-600">{repair.issue}</div>
-                                      <div className="flex items-center gap-4 text-xs text-gray-500">
-                                        <span>{repair.customerName}</span>
-                                        <span>•</span>
-                                        <span>Erstellt: {new Date(repair.createdAt).toLocaleDateString('de-DE')}</span>
-                                        <span>•</span>
-                                        <span>Aktualisiert: {new Date(repair.updatedAt).toLocaleDateString('de-DE')}</span>
+                                      <div className="font-medium truncate">{repair.deviceInfo}</div>
+                                      <div className="text-gray-600 line-clamp-2">{repair.issue}</div>
+                                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs text-gray-500">
+                                        <span className="truncate">{repair.customerName}</span>
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                          <span className="hidden sm:inline">•</span>
+                                          <span>Erstellt: {new Date(repair.createdAt).toLocaleDateString('de-DE')}</span>
+                                          <span>•</span>
+                                          <span>Aktualisiert: {new Date(repair.updatedAt).toLocaleDateString('de-DE')}</span>
+                                        </div>
                                       </div>
                                     </div>
                                   </div>
-                                  <div className="text-right">
+                                  <div className="flex flex-col items-end text-right flex-shrink-0 min-w-[80px]">
                                     {repair.cost && (
-                                      <div className="text-lg font-semibold">€{repair.cost}</div>
+                                      <div className="text-base sm:text-lg font-semibold">€{repair.cost}</div>
                                     )}
                                     <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
                                       <Calendar className="h-3 w-3" />
-                                      {new Date(repair.updatedAt).toLocaleDateString('de-DE')}
+                                      <span className="text-xs">{new Date(repair.updatedAt).toLocaleDateString('de-DE')}</span>
                                     </div>
                                   </div>
                                 </div>
