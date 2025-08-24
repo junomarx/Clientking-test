@@ -62,6 +62,7 @@ import { cn } from "@/lib/utils";
 import type { DateRange } from "react-day-picker";
 import { MultiShopAdminSidebar } from "@/components/multi-shop/MultiShopAdminSidebar";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { OnlineStatusWidget } from "@/components/multi-shop/OnlineStatusWidget";
 
 // Shop Details Dialog mit Reparaturen-Einsicht
 function ShopDetailsDialog({ shop }: { shop: any }) {
@@ -1823,9 +1824,9 @@ function EmployeeActionsDropdown({ employee }: { employee: any }) {
 
 // Mitarbeiter Übersicht
 function EmployeesOverview() {
-  const [onlineUsers, setOnlineUsers] = useState<number[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedShop, setSelectedShop] = useState<string>("all");
+  const { onlineUsers, isUserOnline } = useOnlineStatus();
   
   const { data: employees, isLoading, error } = useQuery({
     queryKey: ["/api/multi-shop/employees"],
@@ -1885,45 +1886,6 @@ function EmployeesOverview() {
 
   console.log("EmployeesOverview Debug:", { employees, isLoading, error });
 
-  // WebSocket-Verbindung für Live-Updates des Online-Status
-  useEffect(() => {
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//${window.location.host}/ws/status`;
-    const socket = new WebSocket(wsUrl);
-
-    socket.onopen = () => {
-      console.log("🔗 WebSocket-Verbindung für Online-Status hergestellt");
-      // Initiale Status-Anfrage senden
-      socket.send(JSON.stringify({ type: 'request_status' }));
-    };
-
-    socket.onmessage = (event) => {
-      try {
-        const message = JSON.parse(event.data);
-        
-        if (message.type === 'status_update' && message.onlineUsers) {
-          const userIds = message.onlineUsers.map((user: any) => user.userId);
-          setOnlineUsers(userIds);
-          console.log("📡 Online-Status aktualisiert:", userIds);
-        }
-      } catch (error) {
-        console.error("Fehler beim Verarbeiten der WebSocket-Nachricht:", error);
-      }
-    };
-
-    socket.onclose = () => {
-      console.log("🔌 WebSocket-Verbindung für Online-Status geschlossen");
-    };
-
-    socket.onerror = (error) => {
-      console.error("WebSocket-Fehler:", error);
-    };
-
-    return () => {
-      socket.close();
-    };
-  }, []);
-
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -1970,8 +1932,11 @@ function EmployeesOverview() {
     <div className="space-y-6">
       <CreateEmployeeDialog />
       
-      {/* Filter und Suche */}
-      <Card>
+      {/* Grid Layout mit Online-Status Widget */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          {/* Filter und Suche */}
+          <Card>
         <CardHeader>
           <CardTitle>Mitarbeiterübersicht ({filteredEmployees?.length || 0} von {employees?.length || 0} Mitarbeitern)</CardTitle>
         </CardHeader>
@@ -2075,9 +2040,7 @@ function EmployeesOverview() {
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-2">
                             {(() => {
-                              const isOnlineLive = onlineUsers.length > 0 
-                                ? onlineUsers.includes(employee.id) 
-                                : employee.isOnline;
+                              const isOnlineLive = isUserOnline(employee.id);
                               return (
                                 <>
                                   <div className={`w-3 h-3 rounded-full ${isOnlineLive ? 'bg-green-500' : 'bg-gray-300'}`}></div>
@@ -2101,9 +2064,15 @@ function EmployeesOverview() {
           </Card>
         ))
       )}
+        </div>
+        
+        {/* Online-Status Widget in der rechten Spalte */}
+        <div className="lg:col-span-1">
+          <OnlineStatusWidget />
+        </div>
+      </div>
     </div>
   );
-
 }
 
 // Bestellungen Übersicht
