@@ -1825,7 +1825,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           repair.id,
           repair,
           userId,
-          user.username
+          user.username || user.email || 'Unbekannter Benutzer'
         );
         console.log(`📋 Activity-Log für neue Reparatur ${repair.id} erstellt`);
       } catch (activityError) {
