@@ -470,7 +470,8 @@ export function registerMultiShopAdminRoutes(app: Express) {
         .select({ 
           id: spareParts.id, 
           shopId: spareParts.shopId,
-          repairId: spareParts.repairId 
+          repairId: spareParts.repairId,
+          status: spareParts.status
         })
         .from(spareParts)
         .where(eq(spareParts.id, sparePartId));
@@ -496,11 +497,45 @@ export function registerMultiShopAdminRoutes(app: Express) {
         console.log(`🗃️ Ersatzteil ${sparePartId} wird automatisch archiviert (Status: ${status})`);
       }
 
+      // Alten Status für Activity-Log speichern
+      const oldStatus = existingSparePart.status;
+
       const [updatedSparePart] = await db
         .update(spareParts)
         .set(updateData)
         .where(eq(spareParts.id, sparePartId))
         .returning();
+
+      // Activity-Log für MSA Ersatzteil-Status-Änderung erstellen
+      if (status && status !== oldStatus) {
+        try {
+          const { storage } = await import('./storage');
+          const currentUser = req.user!;
+          
+          // Holen des Auftrags für die Auftragsnummer
+          const [repairData] = await db
+            .select({ orderCode: repairs.orderCode })
+            .from(repairs)
+            .where(eq(repairs.id, existingSparePart.repairId));
+
+          await storage.logOrderActivity(
+            'status_updated',
+            updatedSparePart.id,
+            { 
+              oldStatus, 
+              newStatus: status, 
+              partName: updatedSparePart.partName,
+              orderCode: repairData?.orderCode || 'Unbekannt',
+              updatedBy: 'Multi-Shop Admin'
+            },
+            currentUser.id,
+            currentUser.username || currentUser.email || 'Multi-Shop Admin'
+          );
+          console.log(`📋 MSA Activity-Log erstellt: Ersatzteil-Status ${oldStatus} → ${status}`);
+        } catch (activityError) {
+          console.error("❌ Fehler beim Erstellen des MSA Order-Activity-Logs:", activityError);
+        }
+      }
 
       // WebSocket-Update an alle Clients im Shop senden
       const { getOnlineStatusManager } = await import('./websocket-server');
@@ -585,6 +620,37 @@ export function registerMultiShopAdminRoutes(app: Express) {
           updatedAt: new Date()
         })
         .where(eq(spareParts.id, parseInt(id)));
+
+      // Activity-Log für MSA Ersatzteil-Status-Änderung erstellen
+      if (status !== oldStatus) {
+        try {
+          const { storage } = await import('./storage');
+          const currentUser = req.user!;
+          
+          // Holen des Auftrags für die Auftragsnummer
+          const [repairData] = await db
+            .select({ orderCode: repairs.orderCode })
+            .from(repairs)
+            .where(eq(repairs.id, sparePart.repairId));
+
+          await storage.logOrderActivity(
+            'status_updated',
+            sparePart.id,
+            { 
+              oldStatus, 
+              newStatus: status, 
+              partName: sparePart.partName,
+              orderCode: repairData?.orderCode || 'Unbekannt',
+              updatedBy: 'Multi-Shop Admin'
+            },
+            currentUser.id,
+            currentUser.username || currentUser.email || 'Multi-Shop Admin'
+          );
+          console.log(`📋 MSA Activity-Log erstellt: Ersatzteil-Status ${oldStatus} → ${status} (Bulk-Operation)`);
+        } catch (activityError) {
+          console.error("❌ Fehler beim Erstellen des MSA Order-Activity-Logs:", activityError);
+        }
+      }
 
       // WICHTIG: Automatische Reparatur-Status-Aktualisierung aufrufen
       // Diese Logik prüft alle Ersatzteile der Reparatur und aktualisiert den Reparatur-Status entsprechend
