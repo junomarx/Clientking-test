@@ -6769,7 +6769,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const start = new Date(startDate as string);
       const end = new Date(endDate as string);
 
-      console.log(`Generiere PDF-Statistik für Shop ${shopId} - Zeitraum: ${start.toISOString()} bis ${end.toISOString()}`);
+      console.log(`Generiere PDF-Statistik für Shop ${shopId}`);
 
       const businessSettings = await storage.getBusinessSettings(userId);
 
@@ -6819,26 +6819,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
       .groupBy(repairs.deviceType, repairs.brand, repairs.model)
       .orderBy(repairs.deviceType, repairs.brand, repairs.model);
 
-      // 4. "Außer Haus" Reparaturen
-      const outsideRepairs = await db.select({
-        orderCode: repairs.orderCode,
+      // 4. "Außer Haus" Reparaturen - alle die während des Zeitraums diesen Status hatten (mit Datum)
+      const ausserHausRepairs = await db.select({
         deviceType: repairs.deviceType,
         brand: repairs.brand,
         model: repairs.model,
-        status: repairs.status,
-        createdAt: repairs.createdAt
+        statusDate: sql<string>`
+          CASE 
+            WHEN ${repairs.status} = 'ausser_haus' AND ${repairStatusHistory.changedAt} IS NOT NULL 
+            THEN ${repairStatusHistory.changedAt}::date
+            WHEN ${repairs.status} = 'ausser_haus' 
+            THEN ${repairs.createdAt}::date
+            ELSE ${repairStatusHistory.changedAt}::date
+          END
+        `
+      })
+      .from(repairs)
+      .leftJoin(repairStatusHistory, eq(repairStatusHistory.repairId, repairs.id))
+      .where(and(
+        eq(repairs.shopId, shopId),
+        gte(repairs.createdAt, start),
+        lte(repairs.createdAt, end),
+        or(
+          // Entweder aktuell "Außer Haus"
+          eq(repairs.status, 'ausser_haus'),
+          // Oder hatte "Außer Haus" Status während des Zeitraums
+          and(
+            eq(repairStatusHistory.newStatus, 'ausser_haus'),
+            gte(repairStatusHistory.changedAt, start),
+            lte(repairStatusHistory.changedAt, end)
+          )
+        )
+      ))
+      .orderBy(repairs.deviceType, repairs.brand, repairs.model);
+
+      // 5. Umsatzstatistik - Gesamtumsatz und Status-basierte Aufschlüsselung  
+      const revenueStats = await db.select({
+        totalRevenue: sql<number>`COALESCE(SUM(CASE 
+          WHEN status = 'abgeholt' AND estimated_cost IS NOT NULL 
+          AND estimated_cost ~ '^[0-9]+\.?[0-9]*$' 
+          THEN CAST(estimated_cost AS DECIMAL) 
+          ELSE 0 
+        END), 0)`,
+        pendingRevenue: sql<number>`COALESCE(SUM(CASE 
+          WHEN status IN ('abholbereit', 'fertig') AND estimated_cost IS NOT NULL 
+          AND estimated_cost ~ '^[0-9]+\.?[0-9]*$' 
+          THEN CAST(estimated_cost AS DECIMAL) 
+          ELSE 0 
+        END), 0)`
       })
       .from(repairs)
       .where(and(
         eq(repairs.shopId, shopId),
         gte(repairs.createdAt, start),
-        lte(repairs.createdAt, end),
-        eq(repairs.status, 'ausser_haus')
-      ))
-      .orderBy(repairs.deviceType, repairs.brand, repairs.model);
+        lte(repairs.createdAt, end)
+      ));
 
-      // 5. Umsatzstatistik - Sichere Berechnung ohne CAST-Fehler
-      const revenue = { totalRevenue: 0, pendingRevenue: 0 };
+      // Einzelne Revenue-Werte extrahieren
+      const revenue = revenueStats[0] || { totalRevenue: 0, pendingRevenue: 0 };
 
       // JSON-Antwort für Frontend-PDF-Generierung (wie bei Kostenvoranschlägen)
       res.json({
@@ -6864,13 +6902,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             model: stat.model || 'Unbekannt',
             count: stat.count
           })),
-          outsideRepairs: outsideRepairs.map(repair => ({
-            orderCode: repair.orderCode,
-            deviceType: repair.deviceType || 'Unbekannt',
-            brand: repair.brand || 'Unbekannt',
-            model: repair.model || 'Unbekannt',
-            status: repair.status,
-            createdAt: repair.createdAt
+          ausserHausRepairs: ausserHausRepairs.map(stat => ({
+            deviceType: stat.deviceType || 'Unbekannt',
+            brand: stat.brand || 'Unbekannt',
+            model: stat.model || 'Unbekannt',
+            statusDate: stat.statusDate
           })),
           revenue: {
             totalRevenue: Number(revenue.totalRevenue) || 0,

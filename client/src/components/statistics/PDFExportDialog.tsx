@@ -33,7 +33,6 @@ export function PDFExportDialog({ open, onOpenChange }: PDFExportDialogProps) {
       const endDateTime = new Date(endDate);
       endDateTime.setHours(23, 59, 59, 999); // Ende des Tages
 
-
       const params = new URLSearchParams({
         startDate: startDateTime.toISOString(),
         endDate: endDateTime.toISOString()
@@ -48,9 +47,7 @@ export function PDFExportDialog({ open, onOpenChange }: PDFExportDialogProps) {
       });
 
       if (!response.ok) {
-        const errorData = await response.text();
-        console.error('API Error Response:', errorData);
-        throw new Error(`API-Fehler: ${response.status} - ${errorData}`);
+        throw new Error('Fehler beim Abrufen der Statistikdaten');
       }
 
       const statisticsData = await response.json();
@@ -63,7 +60,7 @@ export function PDFExportDialog({ open, onOpenChange }: PDFExportDialogProps) {
       onOpenChange(false);
     } catch (error) {
       console.error('Fehler beim PDF-Export:', error);
-      alert(`Fehler beim Generieren der PDF-Statistik: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`);
+      alert('Fehler beim Generieren der PDF-Statistik');
     } finally {
       setIsExporting(false);
     }
