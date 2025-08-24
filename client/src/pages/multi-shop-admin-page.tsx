@@ -2365,7 +2365,7 @@ function OrdersOverview() {
                 {/* Mobile Cards */}
                 <div className="lg:hidden space-y-3 px-0">
                   {filteredOrders.map((order: any) => (
-                    <div key={order.id} className="bg-white border border-gray-200 rounded-lg p-3 space-y-3">
+                    <div key={order.id} className="bg-white border border-gray-200 rounded-lg p-2 space-y-3">
                   {/* Header */}
                   <div className="flex items-start gap-3">
                     <div className="flex-1 min-w-0">
@@ -2525,7 +2525,7 @@ function OrdersOverview() {
                 {/* Mobile Cards für Archivierte */}
                 <div className="lg:hidden space-y-3 px-3 sm:px-0">
                   {filteredArchivedOrders.map((order: any) => (
-                    <div key={order.id} className="bg-white border border-gray-200 rounded-lg p-3 space-y-3">
+                    <div key={order.id} className="bg-white border border-gray-200 rounded-lg p-2 space-y-3">
                       {/* Header */}
                       <div className="flex items-start gap-3">
                         <div className="flex-1 min-w-0">
