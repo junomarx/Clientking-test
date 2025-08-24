@@ -6924,6 +6924,56 @@ export class DatabaseStorage implements IStorage {
     );
   }
 
+  async logSystemActivity(
+    action: string,
+    entityId: number,
+    systemData: any,
+    performedBy?: number,
+    performedByUsername?: string,
+    description?: string,
+    details?: any
+  ): Promise<void> {
+    let logDescription = description || '';
+    
+    if (!logDescription) {
+      switch (action) {
+        case 'business_settings_updated':
+          logDescription = `Geschäftseinstellungen für Shop ${systemData.shopId} aktualisiert`;
+          break;
+        case 'feature_flags_updated':
+          logDescription = `System Feature-Flags aktualisiert (${systemData.featuresCount} Features)`;
+          break;
+        case 'email_settings_updated':
+          logDescription = `E-Mail-Einstellungen aktualisiert`;
+          break;
+        case 'database_maintenance':
+          logDescription = `Datenbank-Wartung durchgeführt`;
+          break;
+        case 'system_error':
+          logDescription = `System-Fehler aufgetreten`;
+          break;
+        default:
+          logDescription = `System-Operation: ${action}`;
+      }
+    }
+
+    await this.createActivityLog(
+      'system',
+      action,
+      logDescription,
+      performedBy,
+      performedByUsername,
+      'system', // role
+      'system',
+      entityId,
+      'System',
+      systemData.shopId || undefined,
+      undefined, // shopName wird später geholt
+      details || systemData,
+      systemData.severity || 'info'
+    );
+  }
+
   // Activity-Logs
   async getAllActivityLogs(userId: number): Promise<ActivityLog[]> {
     // TODO: Legacy method - use getActivityLogs instead

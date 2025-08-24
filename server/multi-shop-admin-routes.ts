@@ -1616,6 +1616,28 @@ export function registerMultiShopAdminRoutes(app: Express) {
       const updatedSettings = await storage.updateBusinessSettings(settingsData, shopOwner.id);
 
       console.log(`✅ Multi-Shop Admin ${multiShopAdminId} successfully updated business settings for shop ${shopId}`);
+      
+      // System Activity-Log für Geschäftseinstellungen-Update
+      try {
+        const { storage: storageForLog } = await import('./storage');
+        await storageForLog.logSystemActivity(
+          'business_settings_updated',
+          shopId,
+          {
+            shopId,
+            settingsUpdated: Object.keys(req.body),
+            multiShopAdminId,
+            shopOwnerId: shopOwner.id
+          },
+          multiShopAdminId,
+          `Multi-Shop Admin: ${req.user?.username || 'Unbekannt'}`,
+          'System-Konfiguration durch Multi-Shop Admin aktualisiert'
+        );
+        console.log(`📋 System Activity-Log für Business Settings Update (Shop ${shopId}) erstellt`);
+      } catch (activityError) {
+        console.error("❌ Fehler beim Erstellen des System-Activity-Logs:", activityError);
+      }
+      
       res.json(updatedSettings);
     } catch (error) {
       console.error("Fehler beim Aktualisieren der Shop Business Settings:", error);

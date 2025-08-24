@@ -203,6 +203,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const accessory = await storage.createAccessory(accessoryData);
       console.log(`[DIREKTE ROUTE] Zubehör-Bestellung erstellt:`, accessory);
+      
+      // Activity-Log für neu erstellte Zubehör-Bestellung
+      try {
+        await storage.logOrderActivity(
+          'created',
+          accessory.id,
+          accessory,
+          userId,
+          user.username || user.email || 'Unbekannter Benutzer'
+        );
+        console.log(`📋 Activity-Log für neue Zubehör-Bestellung ${accessory.id} erstellt`);
+      } catch (activityError) {
+        console.error("❌ Fehler beim Erstellen des Order-Activity-Logs:", activityError);
+      }
+      
       res.status(201).json(accessory);
     } catch (error) {
       console.error("[DIREKTE ROUTE] Fehler beim Erstellen der Zubehör-Bestellung:", error);
@@ -235,6 +250,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const success = await storage.bulkUpdateSparePartStatus(partIds, status, userId);
       
       if (success) {
+        // Activity-Log für Ersatzteil Bulk-Update
+        try {
+          const user = await storage.getUser(userId);
+          await storage.logOrderActivity(
+            'bulk_updated',
+            0, // Bulk-Operation hat keine einzelne ID
+            { partIds, status, count: partIds.length },
+            userId,
+            user?.username || user?.email || 'Unbekannter Benutzer'
+          );
+          console.log(`📋 Activity-Log für Ersatzteil Bulk-Update erstellt: ${partIds.length} Teile`);
+        } catch (activityError) {
+          console.error("❌ Fehler beim Erstellen des Order-Activity-Logs:", activityError);
+        }
+        
         res.json({ message: "Ersatzteile erfolgreich aktualisiert", partIds, status });
       } else {
         res.status(500).json({ message: "Fehler beim Aktualisieren der Ersatzteile" });
@@ -319,6 +349,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       console.log(`[DIREKTE ROUTE] Zubehör-Status aktualisiert:`, updatedAccessory);
+      
+      // Activity-Log für Zubehör-Bestellung-Update
+      try {
+        const user = await storage.getUser(userId);
+        await storage.logOrderActivity(
+          'updated',
+          accessoryId,
+          updatedAccessory,
+          userId,
+          user?.username || user?.email || 'Unbekannter Benutzer'
+        );
+        console.log(`📋 Activity-Log für Zubehör-Update ${accessoryId} erstellt`);
+      } catch (activityError) {
+        console.error("❌ Fehler beim Erstellen des Order-Activity-Logs:", activityError);
+      }
+      
       res.json(updatedAccessory);
     } catch (error) {
       console.error("[DIREKTE ROUTE] Fehler beim Aktualisieren des Zubehör-Status:", error);
@@ -448,6 +494,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (success) {
         console.log(`[DIREKTE ROUTE] Zubehör ${id} erfolgreich gelöscht für Benutzer ${userId}`);
+        
+        // Activity-Log für Zubehör-Bestellung-Löschung
+        try {
+          const user = await storage.getUser(userId);
+          await storage.logOrderActivity(
+            'deleted',
+            id,
+            { id, name: 'Gelöschte Zubehör-Bestellung' },
+            userId,
+            user?.username || user?.email || 'Unbekannter Benutzer'
+          );
+          console.log(`📋 Activity-Log für Zubehör-Löschung ${id} erstellt`);
+        } catch (activityError) {
+          console.error("❌ Fehler beim Erstellen des Order-Activity-Logs:", activityError);
+        }
+        
         res.json({ message: "Zubehör erfolgreich gelöscht", accessoryId: id });
       } else {
         res.status(404).json({ message: "Zubehör nicht gefunden oder keine Berechtigung" });
@@ -1216,6 +1278,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .returning();
       
       console.log(`✅ DSGVO-konform: Neuer Kunde ${customer.firstName} ${customer.lastName} für Shop ${user.shopId} erstellt`);
+      
+      // Activity-Log für neu erstellten Kunden
+      try {
+        await storage.logCustomerActivity(
+          'created',
+          customer.id,
+          customer,
+          userId,
+          user.username || user.email || 'Unbekannter Benutzer'
+        );
+        console.log(`📋 Activity-Log für neuen Kunden ${customer.id} erstellt`);
+      } catch (activityError) {
+        console.error("❌ Fehler beim Erstellen des Customer-Activity-Logs:", activityError);
+      }
+      
       res.status(201).json(customer);
     } catch (error) {
       console.error("Fehler beim Erstellen eines Kunden:", error);
@@ -1418,6 +1495,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userId: customer.user_id
         };
         
+        // Activity-Log für aktualisierten Kunden
+        try {
+          await storage.logCustomerActivity(
+            'updated',
+            formattedCustomer.id,
+            formattedCustomer,
+            userId,
+            user.username || user.email || 'Unbekannter Benutzer'
+          );
+          console.log(`📋 Activity-Log für Kunden-Update ${formattedCustomer.id} erstellt`);
+        } catch (activityError) {
+          console.error("❌ Fehler beim Erstellen des Customer-Activity-Logs:", activityError);
+        }
+        
         res.json(formattedCustomer);
       } catch (dbError) {
         console.error("Fehler bei der Datenbankaktualisierung:", dbError);
@@ -1442,6 +1533,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Kunde mit Benutzerkontext löschen
       await storage.deleteCustomer(id, userId);
+      
+      // Activity-Log für gelöschten Kunden
+      try {
+        const user = await storage.getUser(userId);
+        await storage.logCustomerActivity(
+          'deleted',
+          id,
+          { id, name: 'Gelöschter Kunde' },
+          userId,
+          user?.username || user?.email || 'Unbekannter Benutzer'
+        );
+        console.log(`📋 Activity-Log für Kunden-Löschung ${id} erstellt`);
+      } catch (activityError) {
+        console.error("❌ Fehler beim Erstellen des Customer-Activity-Logs:", activityError);
+      }
       
       res.status(204).send();
     } catch (error) {
@@ -6108,6 +6214,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId: sparePart.userId,
         shopId: sparePart.shopId
       });
+      
+      // Activity-Log für neu erstelltes Ersatzteil
+      try {
+        const user = await storage.getUser(userId);
+        await storage.logOrderActivity(
+          'created',
+          sparePart.id,
+          sparePart,
+          userId,
+          user?.username || user?.email || 'Unbekannter Benutzer'
+        );
+        console.log(`📋 Activity-Log für neues Ersatzteil ${sparePart.id} erstellt`);
+      } catch (activityError) {
+        console.error("❌ Fehler beim Erstellen des Order-Activity-Logs:", activityError);
+      }
+      
       res.status(201).json(sparePart);
     } catch (error) {
       console.error("Fehler beim Erstellen des Ersatzteils:", error);

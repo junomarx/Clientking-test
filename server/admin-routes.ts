@@ -784,6 +784,21 @@ export function registerAdminRoutes(app: Express) {
         return res.status(500).json({ message: "Fehler beim Aktualisieren des Benutzers" });
       }
       
+      // Activity-Log für Benutzer-Aktivierung/Deaktivierung erstellen
+      try {
+        const action = isActive ? 'activated' : 'deactivated';
+        await storage.logUserActivity(
+          action,
+          id,
+          updatedUser,
+          req.user?.id,
+          req.user?.username || req.user?.email || 'Unbekannter Admin'
+        );
+        console.log(`📋 Activity-Log für Benutzer-${action} ${id} erstellt`);
+      } catch (activityError) {
+        console.error("❌ Fehler beim Erstellen des User-Activity-Logs:", activityError);
+      }
+
       // Entferne Passwort aus der Antwort
       const { password, ...userWithoutPassword } = updatedUser;
       res.json(userWithoutPassword);
@@ -839,6 +854,20 @@ export function registerAdminRoutes(app: Express) {
         return res.status(500).json({ message: "Fehler beim Abrufen der aktualisierten Benutzerdaten" });
       }
       
+      // Activity-Log für Benutzer-Update erstellen
+      try {
+        await storage.logUserActivity(
+          'updated',
+          id,
+          freshUser,
+          req.user?.id,
+          req.user?.username || req.user?.email || 'Unbekannter Admin'
+        );
+        console.log(`📋 Activity-Log für Benutzer-Update ${id} erstellt`);
+      } catch (activityError) {
+        console.error("❌ Fehler beim Erstellen des User-Activity-Logs:", activityError);
+      }
+
       // Entferne Passwort aus der Antwort
       const { password: _, ...userWithoutPassword } = freshUser;
       res.json(userWithoutPassword);
@@ -888,6 +917,20 @@ export function registerAdminRoutes(app: Express) {
       }
       
       console.log(`Benutzer mit ID ${id} und alle zugehörigen Daten wurden erfolgreich gelöscht:`, result.deletedData);
+      
+      // Activity-Log für Benutzer-Löschung erstellen
+      try {
+        await storage.logUserActivity(
+          'deleted',
+          id,
+          user,
+          req.user?.id,
+          req.user?.username || req.user?.email || 'Unbekannter Admin'
+        );
+        console.log(`📋 Activity-Log für Benutzer-Löschung ${id} erstellt`);
+      } catch (activityError) {
+        console.error("❌ Fehler beim Erstellen des User-Activity-Logs:", activityError);
+      }
       
       // 204 No Content - Erfolgreiche Löschung ohne Rückgabeinhalt
       res.status(204).send();
@@ -1084,6 +1127,26 @@ export function registerAdminRoutes(app: Express) {
           await tx.insert(packageFeatures).values(insertValues);
         }
       });
+      
+      // System Activity-Log für Feature-Management-Update
+      try {
+        const { storage } = await import('./storage');
+        await storage.logSystemActivity(
+          'feature_flags_updated',
+          0, // System-wide operation
+          {
+            featuresCount: features.length,
+            updatedFeatures: features.map((f: any) => f.key),
+            adminUser: req.user?.username
+          },
+          req.user?.id || 0,
+          `Admin: ${req.user?.username || 'Unbekannt'}`,
+          'System-Feature-Flags durch Administrator aktualisiert'
+        );
+        console.log(`📋 System Activity-Log für Feature-Update erstellt (${features.length} Features)`);
+      } catch (activityError) {
+        console.error("❌ Fehler beim Erstellen des System-Activity-Logs:", activityError);
+      }
       
       res.json({ success: true, message: "Features erfolgreich aktualisiert" });
     } catch (error) {
