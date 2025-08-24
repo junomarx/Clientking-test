@@ -1817,6 +1817,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (historyError) {
         console.error("❌ Fehler beim Erstellen des Status-History-Eintrags:", historyError);
       }
+
+      // Activity-Log für neu erstellte Reparatur erstellen
+      try {
+        await storage.logRepairActivity(
+          'created',
+          repair.id,
+          repair,
+          userId,
+          user.username
+        );
+        console.log(`📋 Activity-Log für neue Reparatur ${repair.id} erstellt`);
+      } catch (activityError) {
+        console.error("❌ Fehler beim Erstellen des Activity-Logs:", activityError);
+      }
       
       console.log(`✅ DSGVO-konform: Neue Reparatur ${repair.id} für Shop ${user.shopId} erstellt`);
       res.status(201).json(repair);
