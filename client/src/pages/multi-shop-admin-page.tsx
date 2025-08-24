@@ -47,7 +47,8 @@ import {
   Tag,
   Pen,
   FileText,
-  AlertCircle
+  AlertCircle,
+  Circle
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
@@ -58,6 +59,7 @@ import { Calendar as CalendarUI } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import type { DateRange } from "react-day-picker";
 
 // Shop Details Dialog mit Reparaturen-Einsicht
 function ShopDetailsDialog({ shop }: { shop: any }) {
@@ -2975,25 +2977,273 @@ function MSASettings() {
 
 // Logs Übersicht
 function LogsOverview() {
+  const [period, setPeriod] = useState("month");
+  const [eventType, setEventType] = useState("all");
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>(
+    localStorage.getItem('msa-logs-date-range') 
+      ? JSON.parse(localStorage.getItem('msa-logs-date-range')!)
+      : undefined
+  );
+
+  // Activity-Logs laden
+  const { data: activityLogs = [], isLoading } = useQuery({
+    queryKey: ['/api/multi-shop/activity-logs', period, eventType, customDateRange],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        period,
+        eventType,
+        limit: '100',
+        offset: '0'
+      });
+
+      if (period === 'custom' && customDateRange?.from && customDateRange?.to) {
+        params.set('start', customDateRange.from.toISOString());
+        params.set('end', customDateRange.to.toISOString());
+      }
+
+      const response = await fetch(`/api/multi-shop/activity-logs?${params}`);
+      if (!response.ok) {
+        throw new Error('Fehler beim Laden der Activity-Logs');
+      }
+      return response.json();
+    }
+  });
+
+  const handleCustomDateSubmit = () => {
+    if (customDateRange) {
+      localStorage.setItem('msa-logs-date-range', JSON.stringify(customDateRange));
+      setPeriod('custom');
+      setShowCalendar(false);
+    }
+  };
+
+  const getEventTypeIcon = (eventType: string) => {
+    switch (eventType) {
+      case 'repair':
+        return <Settings className="h-4 w-4" />;
+      case 'user':
+        return <Users className="h-4 w-4" />;
+      case 'order':
+        return <Package className="h-4 w-4" />;
+      case 'customer':
+        return <User className="h-4 w-4" />;
+      case 'system':
+        return <Activity className="h-4 w-4" />;
+      default:
+        return <Circle className="h-4 w-4" />;
+    }
+  };
+
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'info':
+        return 'text-blue-600 bg-blue-50';
+      case 'warning':
+        return 'text-yellow-600 bg-yellow-50';
+      case 'error':
+        return 'text-red-600 bg-red-50';
+      case 'success':
+        return 'text-green-600 bg-green-50';
+      default:
+        return 'text-gray-600 bg-gray-50';
+    }
+  };
+
+  const formatTimestamp = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffHours = diffMs / (1000 * 60 * 60);
+    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+    if (diffHours < 1) {
+      const diffMinutes = Math.floor(diffMs / (1000 * 60));
+      return `vor ${diffMinutes} Min`;
+    } else if (diffHours < 24) {
+      return `vor ${Math.floor(diffHours)} Std`;
+    } else if (diffDays < 7) {
+      return `vor ${Math.floor(diffDays)} Tagen`;
+    } else {
+      return date.toLocaleDateString('de-DE', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Aktivitäts-Logs</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="h-5 w-5" />
+            Aktivitäts-Logs
+          </CardTitle>
           <CardDescription>
-            Übersicht aller Aktivitäten in allen Shops (Reparaturen, Ersatzteile, etc.)
+            Chronologische Übersicht aller Aktivitäten in allen verwalteten Shops
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-12">
-            <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Aktivitäts-Monitoring
-            </h3>
-            <p className="text-gray-500">
-              Hier werden alle Reparatur-Events (eingegangen, beendet, abgeholt) und Ersatzteil-Aktivitäten angezeigt.
-            </p>
+          {/* Filter Controls */}
+          <div className="mb-6 flex flex-wrap gap-4">
+            {/* Zeitraum Filter */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700">Zeitraum:</span>
+              <Select value={period} onValueChange={setPeriod}>
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="today">Heute</SelectItem>
+                  <SelectItem value="week">Diese Woche</SelectItem>
+                  <SelectItem value="month">Dieser Monat</SelectItem>
+                  <SelectItem value="quarter">Dieses Quartal</SelectItem>
+                  <SelectItem value="year">Dieses Jahr</SelectItem>
+                  <SelectItem value="custom">Benutzerdefiniert</SelectItem>
+                  <SelectItem value="all">Alle</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              {period === 'custom' && (
+                <Popover open={showCalendar} onOpenChange={setShowCalendar}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="ml-2">
+                      <Calendar className="h-4 w-4 mr-2" />
+                      {customDateRange?.from
+                        ? customDateRange.to
+                          ? `${format(customDateRange.from, "dd.MM.yyyy")} - ${format(customDateRange.to, "dd.MM.yyyy")}`
+                          : format(customDateRange.from, "dd.MM.yyyy")
+                        : "Datum wählen"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <div className="p-3">
+                      <CalendarUI
+                        mode="range"
+                        selected={customDateRange}
+                        onSelect={setCustomDateRange}
+                        numberOfMonths={2}
+                        className="rounded-md border"
+                      />
+                      <div className="flex justify-end gap-2 mt-3">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowCalendar(false)}
+                        >
+                          Abbrechen
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={handleCustomDateSubmit}
+                          disabled={!customDateRange?.from || !customDateRange?.to}
+                        >
+                          Anwenden
+                        </Button>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              )}
+            </div>
+
+            {/* Event-Typ Filter */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700">Typ:</span>
+              <Select value={eventType} onValueChange={setEventType}>
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Alle</SelectItem>
+                  <SelectItem value="repair">Reparaturen</SelectItem>
+                  <SelectItem value="user">Benutzer</SelectItem>
+                  <SelectItem value="order">Bestellungen</SelectItem>
+                  <SelectItem value="customer">Kunden</SelectItem>
+                  <SelectItem value="system">System</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+
+          {/* Activity Logs Liste */}
+          {isLoading ? (
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />
+              ))}
+            </div>
+          ) : activityLogs.length === 0 ? (
+            <div className="text-center py-12">
+              <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Keine Aktivitäten gefunden
+              </h3>
+              <p className="text-gray-500">
+                Für den gewählten Zeitraum und Filter wurden keine Aktivitäten gefunden.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {activityLogs.map((log: any) => (
+                <div
+                  key={log.id}
+                  className="flex items-start gap-4 p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  {/* Event Icon */}
+                  <div className={`p-2 rounded-lg ${getSeverityColor(log.severity)}`}>
+                    {getEventTypeIcon(log.eventType)}
+                  </div>
+
+                  {/* Event Details */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-900 truncate">
+                          {log.description}
+                        </p>
+                        <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
+                          {log.performedByUsername && (
+                            <span>von {log.performedByUsername}</span>
+                          )}
+                          {log.shopName && (
+                            <span>• {log.shopName}</span>
+                          )}
+                          {log.entityName && (
+                            <span>• {log.entityName}</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end gap-1">
+                        <time className="text-xs text-gray-500">
+                          {formatTimestamp(log.createdAt)}
+                        </time>
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getSeverityColor(log.severity)}`}>
+                          {log.eventType}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {/* Details expandieren bei Bedarf */}
+                    {log.details && Object.keys(log.details).length > 0 && (
+                      <details className="mt-2">
+                        <summary className="text-xs text-blue-600 cursor-pointer hover:text-blue-800">
+                          Details anzeigen
+                        </summary>
+                        <pre className="mt-1 text-xs text-gray-600 bg-gray-50 p-2 rounded overflow-auto">
+                          {JSON.stringify(log.details, null, 2)}
+                        </pre>
+                      </details>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

@@ -98,6 +98,48 @@ export type InsertDeviceIssue = z.infer<typeof insertDeviceIssueSchema>;
 export type ErrorCatalogEntry = typeof errorCatalogEntries.$inferSelect;
 export type InsertErrorCatalogEntry = z.infer<typeof insertErrorCatalogEntrySchema>;
 
+// Activity Log System für MSA - zentrale Tabelle für alle wichtigen Events
+export const activityLogs = pgTable("activity_logs", {
+  id: serial("id").primaryKey(),
+  // Event-Kategorisierung
+  eventType: text("event_type").notNull(), // 'repair', 'order', 'user', 'admin', 'customer', 'system'
+  action: text("action").notNull(), // 'created', 'updated', 'deleted', 'status_changed', 'login', 'logout', etc.
+  
+  // Betroffene Entität
+  entityType: text("entity_type"), // 'repair', 'order', 'user', 'customer', 'shop', etc.
+  entityId: integer("entity_id"), // ID der betroffenen Entität
+  entityName: text("entity_name"), // Name/Bezeichnung für bessere Lesbarkeit
+  
+  // Wer hat die Aktion ausgeführt
+  performedBy: integer("performed_by").references(() => users.id),
+  performedByUsername: text("performed_by_username"), // Für bessere Performance bei Anzeige
+  performedByRole: text("performed_by_role"), // 'admin', 'owner', 'employee', 'msa', 'system'
+  
+  // Shop-Kontext
+  shopId: integer("shop_id").references(() => shops.id),
+  shopName: text("shop_name"), // Für Performance
+  
+  // Event-Details
+  description: text("description").notNull(), // Menschenlesbare Beschreibung
+  details: jsonb("details"), // Zusätzliche strukturierte Daten (old_value, new_value, etc.)
+  
+  // Metadaten
+  ipAddress: text("ip_address"), // Für Sicherheits-Audit
+  userAgent: text("user_agent"), // Browser/System-Info
+  severity: text("severity").default("info"), // 'low', 'info', 'warning', 'high', 'critical'
+  
+  // Zeitstempel
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertActivityLogSchema = createInsertSchema(activityLogs).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type ActivityLog = typeof activityLogs.$inferSelect;
+export type InsertActivityLog = z.infer<typeof insertActivityLogSchema>;
+
 // Repair orders table
 export const repairs = pgTable("repairs", {
   id: serial("id").primaryKey(),

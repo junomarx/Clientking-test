@@ -67,6 +67,9 @@ import {
   type MSAProfile,
   msaPricing,
   type MSAPricing,
+  activityLogs,
+  type ActivityLog,
+  type InsertActivityLog,
 } from "@shared/schema";
 import crypto from "crypto";
 import { db } from "./db";
@@ -74,9 +77,11 @@ import {
   eq,
   desc,
   and,
+  gte,
+  lte,
+  inArray,
   or,
   sql,
-  gte,
   lt,
   lte,
   gt,
@@ -6562,6 +6567,315 @@ export class DatabaseStorage implements IStorage {
       console.error("Fehler beim Löschen des Kiosk-Mitarbeiters:", error);
       throw error;
     }
+  }
+
+  // Activity-Logs System
+  async createActivityLog(
+    eventType: string,
+    action: string,
+    description: string,
+    performedBy?: number,
+    performedByUsername?: string,
+    performedByRole?: string,
+    entityType?: string,
+    entityId?: number,
+    entityName?: string,
+    shopId?: number,
+    shopName?: string,
+    details?: any,
+    severity: string = 'info'
+  ): Promise<ActivityLog | null> {
+    try {
+      const [activityLog] = await db.insert(activityLogs).values({
+        eventType,
+        action,
+        description,
+        performedBy,
+        performedByUsername,
+        performedByRole,
+        entityType,
+        entityId,
+        entityName,
+        shopId,
+        shopName,
+        details,
+        severity,
+      }).returning();
+      
+      console.log('📋 Activity Log erstellt:', activityLog);
+      return activityLog;
+    } catch (error) {
+      console.error('Fehler beim Erstellen des Activity-Logs:', error);
+      return null;
+    }
+  }
+
+  async getActivityLogs(
+    msaUserId: number,
+    options: {
+      shopIds?: number[];
+      period?: string;
+      startDate?: string;
+      endDate?: string;
+      eventType?: string;
+      limit?: number;
+      offset?: number;
+    } = {}
+  ): Promise<ActivityLog[]> {
+    try {
+      const { 
+        shopIds, 
+        period, 
+        startDate, 
+        endDate, 
+        eventType, 
+        limit = 100, 
+        offset = 0 
+      } = options;
+
+      // Zugängliche Shops für MSA-User abrufen
+      const accessibleShopIds = shopIds || await this.getAccessibleShopIds(msaUserId);
+      
+      if (accessibleShopIds.length === 0) {
+        return [];
+      }
+
+      let query = db
+        .select()
+        .from(activityLogs)
+        .where(inArray(activityLogs.shopId, accessibleShopIds))
+        .orderBy(desc(activityLogs.createdAt))
+        .limit(limit)
+        .offset(offset);
+
+      // Zeitraum-Filter
+      if (period && period !== 'all') {
+        const dateFilter = this.getDateFilterForPeriod(period);
+        if (dateFilter) {
+          query = query.where(
+            and(
+              inArray(activityLogs.shopId, accessibleShopIds),
+              gte(activityLogs.createdAt, new Date(dateFilter.start))
+            )
+          );
+        }
+      } else if (startDate && endDate) {
+        query = query.where(
+          and(
+            inArray(activityLogs.shopId, accessibleShopIds),
+            gte(activityLogs.createdAt, new Date(startDate)),
+            lte(activityLogs.createdAt, new Date(endDate))
+          )
+        );
+      }
+
+      // Event-Typ-Filter
+      if (eventType && eventType !== 'all') {
+        query = query.where(
+          and(
+            inArray(activityLogs.shopId, accessibleShopIds),
+            eq(activityLogs.eventType, eventType)
+          )
+        );
+      }
+
+      const logs = await query;
+      
+      console.log(`📋 ${logs.length} Activity-Logs für MSA-User ${msaUserId} geladen`);
+      return logs;
+    } catch (error) {
+      console.error('Fehler beim Abrufen der Activity-Logs:', error);
+      return [];
+    }
+  }
+
+  // Hilfsmethoden für Activity-Logging
+  async logRepairActivity(
+    action: string,
+    repairId: number,
+    repair: any,
+    performedBy?: number,
+    performedByUsername?: string,
+    oldValue?: any,
+    newValue?: any
+  ): Promise<void> {
+    let description = '';
+    let details: any = { repairId, oldValue, newValue };
+
+    switch (action) {
+      case 'created':
+        description = `Neue Reparatur "${repair.orderCode || repairId}" erstellt`;
+        break;
+      case 'status_changed':
+        description = `Reparatur "${repair.orderCode || repairId}" Status geändert: ${oldValue} → ${newValue}`;
+        break;
+      case 'completed':
+        description = `Reparatur "${repair.orderCode || repairId}" abgeschlossen`;
+        break;
+      case 'picked_up':
+        description = `Reparatur "${repair.orderCode || repairId}" abgeholt`;
+        break;
+      default:
+        description = `Reparatur "${repair.orderCode || repairId}" ${action}`;
+    }
+
+    await this.createActivityLog(
+      'repair',
+      action,
+      description,
+      performedBy,
+      performedByUsername,
+      undefined, // role wird später aus User-Daten geholt
+      'repair',
+      repairId,
+      repair.orderCode || `Reparatur #${repairId}`,
+      repair.shopId,
+      undefined, // shopName wird später geholt
+      details,
+      'info'
+    );
+  }
+
+  async logUserActivity(
+    action: string,
+    userId: number,
+    user: any,
+    performedBy?: number,
+    performedByUsername?: string,
+    details?: any
+  ): Promise<void> {
+    let description = '';
+    
+    switch (action) {
+      case 'created':
+        description = `Neuer Benutzer "${user.username || user.email}" erstellt`;
+        break;
+      case 'updated':
+        description = `Benutzer "${user.username || user.email}" aktualisiert`;
+        break;
+      case 'deleted':
+        description = `Benutzer "${user.username || user.email}" gelöscht`;
+        break;
+      case 'shop_transfer':
+        description = `Benutzer "${user.username || user.email}" zu anderem Shop verschoben`;
+        break;
+      case 'login':
+        description = `Benutzer "${user.username || user.email}" angemeldet`;
+        break;
+      case 'logout':
+        description = `Benutzer "${user.username || user.email}" abgemeldet`;
+        break;
+      default:
+        description = `Benutzer "${user.username || user.email}" ${action}`;
+    }
+
+    await this.createActivityLog(
+      'user',
+      action,
+      description,
+      performedBy,
+      performedByUsername,
+      undefined,
+      'user',
+      userId,
+      user.username || user.email,
+      user.shopId,
+      undefined,
+      details,
+      action === 'deleted' ? 'warning' : 'info'
+    );
+  }
+
+  async logOrderActivity(
+    action: string,
+    orderId: number,
+    order: any,
+    performedBy?: number,
+    performedByUsername?: string,
+    details?: any
+  ): Promise<void> {
+    let description = '';
+    
+    switch (action) {
+      case 'created':
+        description = `Neue Ersatzteil-Bestellung "${order.partName}" erstellt`;
+        break;
+      case 'status_changed':
+        description = `Bestellung "${order.partName}" Status geändert`;
+        break;
+      case 'received':
+        description = `Ersatzteil "${order.partName}" eingetroffen`;
+        break;
+      case 'archived':
+        description = `Bestellung "${order.partName}" archiviert`;
+        break;
+      default:
+        description = `Bestellung "${order.partName}" ${action}`;
+    }
+
+    await this.createActivityLog(
+      'order',
+      action,
+      description,
+      performedBy,
+      performedByUsername,
+      undefined,
+      'order',
+      orderId,
+      order.partName,
+      order.shopId,
+      undefined,
+      details,
+      'info'
+    );
+  }
+
+  async logCustomerActivity(
+    action: string,
+    customerId: number,
+    customer: any,
+    performedBy?: number,
+    performedByUsername?: string,
+    details?: any
+  ): Promise<void> {
+    let description = '';
+    const customerName = `${customer.firstName} ${customer.lastName}`;
+    
+    switch (action) {
+      case 'created':
+        description = `Neuer Kunde "${customerName}" erstellt`;
+        break;
+      case 'updated':
+        description = `Kunde "${customerName}" aktualisiert`;
+        break;
+      case 'deleted':
+        description = `Kunde "${customerName}" gelöscht`;
+        break;
+      default:
+        description = `Kunde "${customerName}" ${action}`;
+    }
+
+    await this.createActivityLog(
+      'customer',
+      action,
+      description,
+      performedBy,
+      performedByUsername,
+      undefined,
+      'customer',
+      customerId,
+      customerName,
+      customer.shopId,
+      undefined,
+      details,
+      'info'
+    );
+  }
+
+  // Activity-Logs
+  async getAllActivityLogs(userId: number): Promise<ActivityLog[]> {
+    // TODO: Legacy method - use getActivityLogs instead
+    return await this.getActivityLogs(userId);
   }
 }
 

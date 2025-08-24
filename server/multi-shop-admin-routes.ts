@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { eq, sql, and, or, count, desc, inArray, isNull } from "drizzle-orm";
 import { db } from "./db";
-import { users, businessSettings, repairs, customers, userShopAccess, spareParts, multiShopPermissions, msaProfiles, msaPricing, businessDataSchema } from "@shared/schema";
+import { users, businessSettings, repairs, customers, userShopAccess, spareParts, multiShopPermissions, msaProfiles, msaPricing, businessDataSchema, activityLogs } from "@shared/schema";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 
@@ -1026,6 +1026,49 @@ export function registerMultiShopAdminRoutes(app: Express) {
     } catch (error) {
       console.error("Update employee status error:", error);
       res.status(500).json({ error: "Fehler beim Ändern des Mitarbeiter-Status" });
+    }
+  });
+
+  // === MSA Activity Logs ===
+  
+  // Activity-Logs für MSA
+  app.get("/api/multi-shop/activity-logs", protectMultiShopAdmin, async (req, res) => {
+    try {
+      const { storage } = await import('./storage');
+      const userId = req.user!.id;
+
+      const { 
+        period = 'month',
+        start,
+        end,
+        eventType = 'all',
+        limit = 100,
+        offset = 0 
+      } = req.query;
+
+      console.log(`🔍 Activity-Logs Request für MSA-User ${userId}:`, {
+        period, start, end, eventType, limit, offset
+      });
+
+      const options: any = {
+        period: period as string,
+        eventType: eventType === 'all' ? undefined : eventType as string,
+        limit: parseInt(limit as string) || 100,
+        offset: parseInt(offset as string) || 0,
+      };
+
+      if (start && end) {
+        options.startDate = start as string;
+        options.endDate = end as string;
+      }
+
+      const logs = await storage.getActivityLogs(userId, options);
+      
+      console.log(`📋 ${logs.length} Activity-Logs für MSA-User ${userId} abgerufen`);
+      res.json(logs);
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Activity-Logs:", error);
+      res.status(500).json({ error: "Interner Serverfehler" });
     }
   });
 
