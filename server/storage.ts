@@ -6675,14 +6675,22 @@ export class DatabaseStorage implements IStorage {
         accessibleShopIds = grantedPermissions.map(p => p.shopId);
       }
       
+      console.log(`🔍 MSA-User ${msaUserId} - Zugängliche Shop-IDs:`, accessibleShopIds);
+      
       if (accessibleShopIds.length === 0) {
+        console.log(`❌ MSA-User ${msaUserId} hat keine zugänglichen Shops`);
         return [];
       }
 
       // Alle WHERE-Conditions sammeln
-      const whereConditions = [
-        inArray(activityLogs.shopId, accessibleShopIds)
-      ];
+      const whereConditions = [];
+      
+      // WICHTIG: shopId kann NULL sein für System-Logs, daher OR-Condition verwenden
+      if (accessibleShopIds.length === 1) {
+        whereConditions.push(eq(activityLogs.shopId, accessibleShopIds[0]));
+      } else {
+        whereConditions.push(inArray(activityLogs.shopId, accessibleShopIds));
+      }
 
       // Zeitraum-Filter
       if (period && period !== 'all') {
@@ -6733,7 +6741,16 @@ export class DatabaseStorage implements IStorage {
 
       const logs = await query;
       
-      console.log(`📋 ${logs.length} Activity-Logs für MSA-User ${msaUserId} geladen`);
+      console.log(`📋 ${logs.length} Activity-Logs für MSA-User ${msaUserId} geladen (aus ${accessibleShopIds.length} Shops: ${accessibleShopIds.join(', ')})`);
+      console.log(`🔍 Filter-Details:`, { period, eventType, limit, offset, accessibleShopIds });
+      
+      if (logs.length === 0) {
+        console.log(`❌ Keine Activity-Logs gefunden - debugging...`);
+        // Debug: Teste ob Logs überhaupt existieren
+        const debugQuery = await db.select().from(activityLogs).where(eq(activityLogs.shopId, accessibleShopIds[0])).limit(5);
+        console.log(`🔍 Debug - Logs für Shop ${accessibleShopIds[0]}:`, debugQuery.length);
+      }
+      
       return logs;
     } catch (error) {
       console.error('Fehler beim Abrufen der Activity-Logs:', error);
