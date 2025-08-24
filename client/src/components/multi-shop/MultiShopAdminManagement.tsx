@@ -60,12 +60,17 @@ export default function MultiShopAdminManagement() {
   // Mutation für das Entziehen von Zugriff
   const revokeAccessMutation = useMutation({
     mutationFn: async (accessId: number) => {
-      const response = await apiRequest('POST', `/api/multi-shop/revoke-access-by-id/${accessId}`);
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to revoke access');
+      try {
+        const response = await apiRequest('POST', `/api/multi-shop/revoke-access-by-id/${accessId}`);
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || error.message || 'Failed to revoke access');
+        }
+        return response.json();
+      } catch (error: any) {
+        console.error("API call error:", error);
+        throw error;
       }
-      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -75,9 +80,10 @@ export default function MultiShopAdminManagement() {
       queryClient.invalidateQueries({ queryKey: ['/api/multi-shop/granted-accesses'] });
     },
     onError: (error: any) => {
+      console.error("Revoke error details:", error);
       toast({
         title: "Fehler beim Entziehen",
-        description: error.message || "Zugriff konnte nicht entzogen werden.",
+        description: error?.message || error?.error || "Zugriff konnte nicht entzogen werden.",
         variant: "destructive",
       });
     }
