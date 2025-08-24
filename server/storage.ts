@@ -2512,7 +2512,8 @@ export class DatabaseStorage implements IStorage {
       // Aktualisiere den Status und optional die Techniker-Information
       const updateData: any = {
         status: status,
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        statusUpdatedAt: new Date()
       };
       
       // Techniker-Information hinzufügen, wenn vorhanden
