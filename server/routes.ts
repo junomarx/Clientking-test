@@ -6857,13 +6857,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const revenueStats = await db.select({
         totalRevenue: sql<number>`COALESCE(SUM(CASE 
           WHEN status = 'abgeholt' AND estimated_cost IS NOT NULL 
-          AND estimated_cost ~ '^[0-9]+(\.[0-9]+)?$' 
+          AND estimated_cost ~ '^[0-9]+(\.[0-9]+)?$'
+          AND LENGTH(estimated_cost) > 0
+          AND estimated_cost NOT LIKE '%-%'
+          AND estimated_cost NOT LIKE '%[a-zA-Z]%'
           THEN CAST(estimated_cost AS DECIMAL) 
           ELSE 0 
         END), 0)`,
         pendingRevenue: sql<number>`COALESCE(SUM(CASE 
           WHEN status IN ('abholbereit', 'fertig') AND estimated_cost IS NOT NULL 
-          AND estimated_cost ~ '^[0-9]+(\.[0-9]+)?$' 
+          AND estimated_cost ~ '^[0-9]+(\.[0-9]+)?$'
+          AND LENGTH(estimated_cost) > 0
+          AND estimated_cost NOT LIKE '%-%'
+          AND estimated_cost NOT LIKE '%[a-zA-Z]%'
           THEN CAST(estimated_cost AS DECIMAL) 
           ELSE 0 
         END), 0)`
