@@ -2363,11 +2363,11 @@ function OrdersOverview() {
                 </div>
 
                 {/* Mobile Cards */}
-                <div className="lg:hidden space-y-3 px-0">
+                <div className="lg:hidden space-y-2 px-1">
                   {filteredOrders.map((order: any) => (
-                    <div key={order.id} className="bg-white border border-gray-200 rounded-lg p-2 space-y-3">
+                    <div key={order.id} className="bg-white border border-gray-200 rounded-lg px-2 py-1 space-y-2">
                   {/* Header */}
-                  <div className="flex items-start gap-3">
+                  <div className="flex items-start gap-2">
                     <div className="flex-1 min-w-0">
                       <h3 className="font-medium text-gray-900 text-sm truncate">{order.partName}</h3>
                       {order.supplier && (
@@ -2525,9 +2525,9 @@ function OrdersOverview() {
                 {/* Mobile Cards für Archivierte */}
                 <div className="lg:hidden space-y-3 px-3 sm:px-0">
                   {filteredArchivedOrders.map((order: any) => (
-                    <div key={order.id} className="bg-white border border-gray-200 rounded-lg p-2 space-y-3">
+                    <div key={order.id} className="bg-white border border-gray-200 rounded-lg px-2 py-1 space-y-2">
                       {/* Header */}
-                      <div className="flex items-start gap-3">
+                      <div className="flex items-start gap-2">
                         <div className="flex-1 min-w-0">
                           <h3 className="font-medium text-gray-900 text-sm truncate">{order.partName}</h3>
                           {order.supplier && (
