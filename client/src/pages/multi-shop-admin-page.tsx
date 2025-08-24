@@ -2363,7 +2363,7 @@ function OrdersOverview() {
                 </div>
 
                 {/* Mobile Cards */}
-                <div className="lg:hidden space-y-3 px-3 sm:px-0">
+                <div className="lg:hidden space-y-3 px-0">
                   {filteredOrders.map((order: any) => (
                     <div key={order.id} className="bg-white border border-gray-200 rounded-lg p-3 space-y-3">
                   {/* Header */}
