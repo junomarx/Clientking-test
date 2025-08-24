@@ -3126,7 +3126,7 @@ function LogsOverview() {
   );
 
   // Activity-Logs laden
-  const { data: activityLogs = [], isLoading } = useQuery({
+  const { data: activityLogs = [], isLoading, refetch: refetchActivityLogs } = useQuery({
     queryKey: ['/api/multi-shop/activity-logs', period, eventType, customDateRange],
     queryFn: async () => {
       const params = new URLSearchParams({
@@ -3148,6 +3148,33 @@ function LogsOverview() {
       return response.json();
     }
   });
+
+  // WebSocket-Handler für Echtzeit-Activity-Updates
+  useEffect(() => {
+    if (activeTab === "activity") {
+      const handleWebSocketMessage = (event: MessageEvent) => {
+        try {
+          const message = JSON.parse(event.data);
+          if (message.type === 'activity_update') {
+            console.log('📝 Neue Activity empfangen, aktualisiere Logs...', message);
+            // Refetch activity logs when new activity is received
+            refetchActivityLogs();
+          }
+        } catch (error) {
+          console.error('Fehler beim Verarbeiten der Activity-Update WebSocket-Nachricht:', error);
+        }
+      };
+
+      // Listen to WebSocket messages from existing online status hook
+      const ws = (window as any).wsConnection;
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.addEventListener('message', handleWebSocketMessage);
+        return () => {
+          ws.removeEventListener('message', handleWebSocketMessage);
+        };
+      }
+    }
+  }, [activeTab, refetchActivityLogs]);
 
   const handleCustomDateSubmit = () => {
     if (customDateRange) {

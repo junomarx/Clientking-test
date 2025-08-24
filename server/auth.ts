@@ -326,18 +326,9 @@ export function setupAuth(app: Express) {
         
         try {
           await storage.updateUserLastLogin(user.id);
-          
-          // Activity-Log für Login erstellen
-          await storage.logUserActivity(
-            'login',
-            user.id,
-            user,
-            user.id,
-            user.username || user.email || 'Unbekannter Benutzer'
-          );
-          console.log(`🔍 Login Activity-Log erstellt für Benutzer ${user.username} (ID: ${user.id})`);
+          // Login Activity-Log wird jetzt über WebSocket-Heartbeat erstellt
         } catch (error) {
-          console.error("Failed to update last login timestamp or create activity log:", error);
+          console.error("Failed to update last login timestamp:", error);
         }
         
         console.log(`✅ Login erfolgreich für Benutzer ${user.username} (ID: ${user.id}, Shop-ID: ${user.shopId})`);
@@ -359,18 +350,7 @@ export function setupAuth(app: Express) {
         try {
           await storage.updateUserLastLogout(userId);
           
-          // Activity-Log für Logout erstellen
-          const user = await storage.getUser(userId);
-          if (user) {
-            await storage.logUserActivity(
-              'logout',
-              userId,
-              user,
-              userId,
-              user.username || user.email || 'Unbekannter Benutzer'
-            );
-            console.log(`🔍 Logout Activity-Log erstellt für Benutzer ${user.username} (ID: ${userId})`);
-          }
+          // Logout Activity-Log wird jetzt über WebSocket-Disconnect erstellt
         } catch (error) {
           console.error("Failed to update last logout timestamp:", error);
         }

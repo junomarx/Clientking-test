@@ -9,6 +9,7 @@ interface ConnectedUser {
   lastHeartbeat: Date;
   isActive: boolean;
   isKiosk?: boolean;
+  hasLoggedActivity?: boolean; // Track if login activity was already logged
 }
 
 class OnlineStatusManager {
@@ -140,7 +141,8 @@ class OnlineStatusManager {
       socket: ws,
       lastHeartbeat: new Date(),
       isActive: true,
-      isKiosk: isKioskUser
+      isKiosk: isKioskUser,
+      hasLoggedActivity: false // Noch kein Login-Activity-Log erstellt
     });
     
     // Bei Kiosk-Benutzern automatische Bestätigung senden
@@ -181,6 +183,29 @@ class OnlineStatusManager {
       user.lastHeartbeat = new Date();
       user.isActive = true;
       
+      // Bei erstem Heartbeat Login-Activity-Log erstellen
+      if (!user.hasLoggedActivity) {
+        try {
+          const userDetails = await storage.getUser(userId);
+          if (userDetails) {
+            await storage.logUserActivity(
+              'login',
+              userId,
+              userDetails,
+              userId,
+              userDetails.username || userDetails.email || 'Unbekannter Benutzer'
+            );
+            user.hasLoggedActivity = true;
+            console.log(`🔍 WebSocket Login Activity-Log erstellt für ${user.username} (ID: ${userId})`);
+            
+            // Benachrichtige alle Multi-Shop Admins über neue Activity
+            this.broadcastActivityUpdate('user', 'login', `Benutzer "${user.username}" angemeldet`, userDetails.shopId);
+          }
+        } catch (error) {
+          console.error('Fehler beim Erstellen des WebSocket Login Activity-Logs:', error);
+        }
+      }
+      
       // Heartbeat-Bestätigung senden
       user.socket.send(JSON.stringify({
         type: 'heartbeat_ack',
@@ -202,6 +227,14 @@ class OnlineStatusManager {
     for (const [userId, user] of this.connectedUsers.entries()) {
       if (user.socket === ws) {
         console.log(`User ${user.username} (${userId}) disconnected`);
+        
+        // Logout-Activity-Log erstellen wenn Login-Activity-Log existiert
+        if (user.hasLoggedActivity) {
+          this.createLogoutActivityLog(userId, user.username).catch(error => {
+            console.error('Fehler beim Erstellen des Logout Activity-Logs:', error);
+          });
+        }
+        
         this.connectedUsers.delete(userId);
         
         // LastLogoutAt in Datenbank aktualisieren
@@ -228,6 +261,14 @@ class OnlineStatusManager {
         
         if (timeSinceLastHeartbeat > timeout) {
           console.log(`User ${user.username} (${userId}) timed out`);
+          
+          // Logout-Activity-Log erstellen wenn Login-Activity-Log existiert
+          if (user.hasLoggedActivity) {
+            this.createLogoutActivityLog(userId, user.username).catch(error => {
+              console.error('Fehler beim Erstellen des Timeout Logout Activity-Logs:', error);
+            });
+          }
+          
           if (user.socket && user.socket.readyState === WebSocket.OPEN) {
             user.socket.close();
           }
@@ -713,6 +754,51 @@ class OnlineStatusManager {
     }
     
     this.wss.close();
+  }
+
+  // Hilfsmethode für Logout-Activity-Log
+  private async createLogoutActivityLog(userId: number, username: string) {
+    try {
+      const userDetails = await storage.getUser(userId);
+      if (userDetails) {
+        await storage.logUserActivity(
+          'logout',
+          userId,
+          userDetails,
+          userId,
+          userDetails.username || userDetails.email || 'Unbekannter Benutzer'
+        );
+        console.log(`🔍 WebSocket Logout Activity-Log erstellt für ${username} (ID: ${userId})`);
+        
+        // Benachrichtige alle Multi-Shop Admins über neue Activity
+        this.broadcastActivityUpdate('user', 'logout', `Benutzer "${username}" abgemeldet`, userDetails.shopId);
+      }
+    } catch (error) {
+      console.error('Fehler beim Erstellen des WebSocket Logout Activity-Logs:', error);
+    }
+  }
+
+  // Broadcast Activity-Updates an alle Multi-Shop Admins
+  private broadcastActivityUpdate(eventType: string, action: string, description: string, shopId: number | null) {
+    const activityMessage = JSON.stringify({
+      type: 'activity_update',
+      eventType,
+      action,
+      description,
+      shopId,
+      timestamp: new Date().toISOString()
+    });
+
+    // An alle verbundenen Multi-Shop Admin Clients senden
+    for (const user of this.connectedUsers.values()) {
+      if (user.socket && user.socket.readyState === WebSocket.OPEN) {
+        try {
+          user.socket.send(activityMessage);
+        } catch (error) {
+          console.error('Error sending activity update:', error);
+        }
+      }
+    }
   }
 }
 
