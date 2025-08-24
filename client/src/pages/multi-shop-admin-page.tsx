@@ -2349,7 +2349,7 @@ function OrdersOverview() {
                 {/* Mobile Cards */}
                 <div className="lg:hidden space-y-3 px-1">
                   {filteredOrders.map((order: any) => (
-                    <div key={order.id} className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 space-y-3 w-full max-w-full overflow-hidden">
+                    <div key={order.id} className="bg-white border border-gray-200 rounded-lg p-3 space-y-3 w-full max-w-[calc(100vw-2rem)] overflow-hidden">
                   {/* Header */}
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
@@ -3283,12 +3283,12 @@ function LogsOverview() {
               ))}
             </div>
           ) : activityLogs.length === 0 ? (
-            <div className="text-center py-12">
-              <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <div className="text-center py-8 sm:py-12 px-4">
+              <Activity className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
                 Keine Aktivitäten gefunden
               </h3>
-              <p className="text-gray-500">
+              <p className="text-sm sm:text-base text-gray-500">
                 Für den gewählten Zeitraum und Filter wurden keine Aktivitäten gefunden.
               </p>
             </div>
@@ -3300,7 +3300,7 @@ function LogsOverview() {
                   className="flex items-start gap-2 sm:gap-4 p-3 sm:p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors w-full max-w-full overflow-hidden"
                 >
                   {/* Event Icon */}
-                  <div className={`p-2 rounded-lg ${getSeverityColor(log.severity)}`}>
+                  <div className={`p-1.5 sm:p-2 rounded-lg flex-shrink-0 ${getSeverityColor(log.severity)}`}>
                     {getEventTypeIcon(log.eventType)}
                   </div>
 

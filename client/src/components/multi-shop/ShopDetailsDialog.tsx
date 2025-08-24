@@ -97,62 +97,62 @@ export function ShopDetailsDialog({ isOpen, onClose, shop }: ShopDetailsDialogPr
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+      <DialogContent className="max-w-4xl w-[95vw] max-h-[95vh] sm:max-h-[90vh] flex flex-col p-0">
+        <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-2 border-b">
+          <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
             <Building2 className="w-5 h-5" />
-            {shop.shopName || shop.name || `Shop ${shop.shopId}`}
+            <span className="truncate">{shop.shopName || shop.name || `Shop ${shop.shopId}`}</span>
           </DialogTitle>
         </DialogHeader>
         
-        <ScrollArea className="max-h-[calc(90vh-120px)]">
-          <div className="space-y-6">
+        <ScrollArea className="flex-1 px-4 sm:px-6 py-4">
+          <div className="space-y-4 sm:space-y-6">
             {/* Shop-Übersicht */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Card>
-                <CardContent className="p-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+              <Card className="w-full">
+                <CardContent className="p-3 sm:p-4">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Reparaturen</p>
-                      <p className="text-2xl font-bold">{shop.metrics?.totalRepairs || 0}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs sm:text-sm text-muted-foreground">Reparaturen</p>
+                      <p className="text-lg sm:text-2xl font-bold truncate">{shop.metrics?.totalRepairs || 0}</p>
                     </div>
-                    <Wrench className="h-8 w-8 text-blue-600" />
+                    <Wrench className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 flex-shrink-0" />
                   </div>
                 </CardContent>
               </Card>
               
-              <Card>
-                <CardContent className="p-4">
+              <Card className="w-full">
+                <CardContent className="p-3 sm:p-4">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Aktive</p>
-                      <p className="text-2xl font-bold">{shop.metrics?.activeRepairs || 0}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs sm:text-sm text-muted-foreground">Aktive</p>
+                      <p className="text-lg sm:text-2xl font-bold truncate">{shop.metrics?.activeRepairs || 0}</p>
                     </div>
-                    <Calendar className="h-8 w-8 text-yellow-600" />
+                    <Calendar className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-600 flex-shrink-0" />
                   </div>
                 </CardContent>
               </Card>
               
-              <Card>
-                <CardContent className="p-4">
+              <Card className="w-full">
+                <CardContent className="p-3 sm:p-4">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Kunden</p>
-                      <p className="text-2xl font-bold">{customers?.length || 0}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs sm:text-sm text-muted-foreground">Kunden</p>
+                      <p className="text-lg sm:text-2xl font-bold truncate">{customers?.length || 0}</p>
                     </div>
-                    <Users className="h-8 w-8 text-green-600" />
+                    <Users className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 flex-shrink-0" />
                   </div>
                 </CardContent>
               </Card>
               
-              <Card>
-                <CardContent className="p-4">
+              <Card className="w-full">
+                <CardContent className="p-3 sm:p-4">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Mitarbeiter</p>
-                      <p className="text-2xl font-bold">{shop.metrics?.totalEmployees || 0}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs sm:text-sm text-muted-foreground">Mitarbeiter</p>
+                      <p className="text-lg sm:text-2xl font-bold truncate">{shop.metrics?.totalEmployees || 0}</p>
                     </div>
-                    <Users className="h-8 w-8 text-purple-600" />
+                    <Users className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600 flex-shrink-0" />
                   </div>
                 </CardContent>
               </Card>
@@ -172,24 +172,24 @@ export function ShopDetailsDialog({ isOpen, onClose, shop }: ShopDetailsDialogPr
                 ) : repairs && repairs.length > 0 ? (
                   <div className="space-y-3">
                     {repairs.slice(0, 10).map((repair: any) => (
-                      <div key={repair.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">{repair.orderCode}</span>
-                            <Badge className={getStatusColor(repair.status)}>
+                      <div key={repair.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border rounded-lg gap-2 sm:gap-4 w-full max-w-full overflow-hidden">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                            <span className="font-medium text-sm sm:text-base truncate">{repair.orderCode}</span>
+                            <Badge className={`${getStatusColor(repair.status)} text-xs`}>
                               {repair.status}
                             </Badge>
                           </div>
-                          <div className="text-sm text-muted-foreground mt-1">
+                          <div className="text-xs sm:text-sm text-muted-foreground mt-1 truncate">
                             {repair.deviceType} - {repair.issue}
                           </div>
-                          <div className="text-xs text-muted-foreground">
+                          <div className="text-xs text-muted-foreground truncate">
                             Kunde: {repair.customerName || 'Unbekannt'} • 
                             Erstellt: {new Date(repair.createdAt).toLocaleDateString('de-DE')}
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className="font-medium">
+                        <div className="text-left sm:text-right flex-shrink-0">
+                          <div className="font-medium text-sm sm:text-base">
                             {repair.estimatedCost ? `€${repair.estimatedCost}` : 'Offen'}
                           </div>
                         </div>
@@ -266,9 +266,14 @@ export function ShopDetailsDialog({ isOpen, onClose, shop }: ShopDetailsDialogPr
           </div>
         </ScrollArea>
 
-        <div className="flex justify-end gap-2 pt-4 border-t">
-          <Button variant="outline" onClick={onClose}>
-            Schließen
+        {/* Close Button - erscheint nur auf mobile */}
+        <div className="sm:hidden px-4 py-3 border-t bg-gray-50">
+          <Button 
+            variant="outline" 
+            onClick={onClose}
+            className="w-full"
+          >
+            Dialog schließen
           </Button>
         </div>
       </DialogContent>
