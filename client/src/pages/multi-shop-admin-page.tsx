@@ -133,8 +133,8 @@ function ShopDetailsDialog({ shop }: { shop: any }) {
             Details
           </Button>
         </DialogTrigger>
-        <DialogContent className="max-w-6xl w-[95vw] max-h-[90vh] overflow-hidden flex flex-col">
-          <DialogHeader className="flex-shrink-0">
+        <DialogContent className="max-w-6xl w-[95vw] max-h-[95vh] overflow-hidden flex flex-col">
+          <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 border-b flex-shrink-0">
             <DialogTitle className="flex items-center gap-2 text-sm sm:text-base">
               <Building2 className="h-4 w-4 sm:h-5 sm:w-5" />
               <span className="truncate">Shop-Details: {shop.businessName}</span>
@@ -144,15 +144,15 @@ function ShopDetailsDialog({ shop }: { shop: any }) {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex-1 overflow-hidden">
-            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "overview" | "active" | "history")} className="w-full h-full flex flex-col">
-              <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 flex-shrink-0 h-auto">
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "overview" | "active" | "history")} className="w-full">
+              <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto mb-4">
                 <TabsTrigger value="overview" className="text-xs sm:text-sm py-2">Übersicht</TabsTrigger>
                 <TabsTrigger value="active" className="text-xs sm:text-sm py-2">Aktive ({activeRepairs.length})</TabsTrigger>
                 <TabsTrigger value="history" className="text-xs sm:text-sm py-2">Verlauf</TabsTrigger>
               </TabsList>
 
-              <div className="flex-1 overflow-y-auto mt-4 px-1" style={{ maxHeight: 'calc(90vh - 180px)' }}>
+              <div className="w-full space-y-4">
                 {/* Übersicht Tab */}
                 <TabsContent value="overview" className="space-y-4 m-0">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -393,6 +393,18 @@ function ShopDetailsDialog({ shop }: { shop: any }) {
                     </div>
                   )}
                 </TabsContent>
+              </div>
+              
+              {/* Mobile Close Button - am Ende des scrollbaren Contents */}
+              <div className="sm:hidden mt-6 pt-4 border-t">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsOpen(false)}
+                  className="w-full"
+                  size="lg"
+                >
+                  Dialog schließen
+                </Button>
               </div>
             </Tabs>
           </div>
