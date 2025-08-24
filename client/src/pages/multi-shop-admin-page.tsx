@@ -3429,7 +3429,7 @@ export default function MultiShopAdminPage() {
         </header>
 
         {/* Main content */}
-        <main className="flex-1 overflow-auto p-3 md:p-6">
+        <main className="flex-1 overflow-auto px-0 py-3 md:p-6">
           <ScrollArea className="h-full">
             {activeTab === "dashboard" && <DashboardStats />}
             {activeTab === "shops" && <ShopsOverview />}
