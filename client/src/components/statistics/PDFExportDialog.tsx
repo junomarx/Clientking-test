@@ -33,6 +33,8 @@ export function PDFExportDialog({ open, onOpenChange }: PDFExportDialogProps) {
       const endDateTime = new Date(endDate);
       endDateTime.setHours(23, 59, 59, 999); // Ende des Tages
 
+      console.log('PDF Export - Start:', startDateTime.toISOString(), 'End:', endDateTime.toISOString());
+
       const params = new URLSearchParams({
         startDate: startDateTime.toISOString(),
         endDate: endDateTime.toISOString()
@@ -47,10 +49,13 @@ export function PDFExportDialog({ open, onOpenChange }: PDFExportDialogProps) {
       });
 
       if (!response.ok) {
-        throw new Error('Fehler beim Abrufen der Statistikdaten');
+        const errorData = await response.text();
+        console.error('API Error Response:', errorData);
+        throw new Error(`API-Fehler: ${response.status} - ${errorData}`);
       }
 
       const statisticsData = await response.json();
+      console.log('Received statistics data:', statisticsData);
       
       // PDF-Generierung mit jsPDF (gleiche Methode wie bei Kostenvoranschlägen)
       const { generateStatisticsPDF } = await import('./StatisticsPDFGenerator');
@@ -60,7 +65,7 @@ export function PDFExportDialog({ open, onOpenChange }: PDFExportDialogProps) {
       onOpenChange(false);
     } catch (error) {
       console.error('Fehler beim PDF-Export:', error);
-      alert('Fehler beim Generieren der PDF-Statistik');
+      alert(`Fehler beim Generieren der PDF-Statistik: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`);
     } finally {
       setIsExporting(false);
     }
