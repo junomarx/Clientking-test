@@ -2181,7 +2181,7 @@ function OrdersOverview() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 px-4 sm:px-0">
         <Card>
           <CardHeader>
             <CardTitle>Bestellungen - Zentrale Ersatzteil-Verwaltung</CardTitle>
@@ -2199,7 +2199,7 @@ function OrdersOverview() {
   }
 
   return (
-    <div className="space-y-6 p-2 sm:p-4">
+    <div className="space-y-6">
       <Card>
         <CardHeader className="pb-4">
           <CardTitle className="text-lg sm:text-xl font-bold flex items-center gap-2">
