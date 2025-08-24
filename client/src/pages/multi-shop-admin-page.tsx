@@ -1935,28 +1935,28 @@ function EmployeesOverview() {
       
       {/* Grid Layout mit Online-Status Widget */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-4 md:space-y-6">
           {/* Filter und Suche */}
           <Card>
         <CardHeader>
           <CardTitle>Mitarbeiterübersicht ({filteredEmployees?.length || 0} von {employees?.length || 0} Mitarbeitern)</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col sm:flex-row gap-4 mb-6">
+          <div className="flex flex-col sm:flex-row gap-3 md:gap-4 mb-4 md:mb-6">
             {/* Suchfeld */}
             <div className="flex-1">
               <Input
                 placeholder="Nach Name oder E-Mail suchen..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full"
+                className="w-full text-sm md:text-base"
               />
             </div>
             
             {/* Shop-Filter */}
-            <div className="w-full sm:w-64">
+            <div className="w-full sm:w-48 md:w-64">
               <Select value={selectedShop} onValueChange={setSelectedShop}>
-                <SelectTrigger>
+                <SelectTrigger className="text-sm md:text-base">
                   <SelectValue placeholder="Shop auswählen" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1995,57 +1995,57 @@ function EmployeesOverview() {
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
-                <table className="w-full">
+                <table className="w-full min-w-[600px]">
                   <thead>
                     <tr className="border-b">
-                      <th className="text-left py-3 px-4 font-medium text-gray-600">Mitarbeiter</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-600">Rolle</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-600">Status</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-600">Online</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-600">Aktionen</th>
+                      <th className="text-left py-3 px-2 md:px-4 font-medium text-gray-600 text-sm">Mitarbeiter</th>
+                      <th className="text-left py-3 px-2 md:px-4 font-medium text-gray-600 text-sm">Rolle</th>
+                      <th className="text-left py-3 px-2 md:px-4 font-medium text-gray-600 text-sm">Status</th>
+                      <th className="text-left py-3 px-2 md:px-4 font-medium text-gray-600 text-sm">Online</th>
+                      <th className="text-left py-3 px-2 md:px-4 font-medium text-gray-600 text-sm">Aktionen</th>
                     </tr>
                   </thead>
                   <tbody>
                     {shopEmployees.map((employee: any) => (
                       <tr key={employee.id} className="border-b hover:bg-gray-50">
-                        <td className="py-3 px-4">
+                        <td className="py-3 px-2 md:px-4">
                           <div>
-                            <p className="font-medium">
+                            <p className="font-medium text-sm md:text-base">
                               {employee.username 
                                 ? employee.username 
                                 : (employee.firstName || employee.lastName) 
                                   ? `${employee.firstName || ''} ${employee.lastName || ''}`.trim() 
                                   : employee.email || 'Unbekannt'}
                             </p>
-                            <p className="text-sm text-gray-500">{employee.email}</p>
+                            <p className="text-xs md:text-sm text-gray-500 truncate max-w-[120px] md:max-w-none">{employee.email}</p>
                           </div>
                         </td>
-                        <td className="py-3 px-4">
-                          <Badge variant="outline" className={
+                        <td className="py-3 px-2 md:px-4">
+                          <Badge variant="outline" className={`text-xs ${
                             employee.role === 'owner' ? "bg-purple-50 text-purple-700" :
                             employee.role === 'employee' ? "bg-green-50 text-green-700" :
                             "bg-orange-50 text-orange-700"
-                          }>
+                          }`}>
                             {employee.role === 'owner' ? 'Inhaber' :
                              employee.role === 'employee' ? 'Mitarbeiter' :
                              employee.role === 'kiosk' ? 'Kiosk' : employee.role}
                           </Badge>
                         </td>
-                        <td className="py-3 px-4">
-                          <Badge variant="outline" className={
+                        <td className="py-3 px-2 md:px-4">
+                          <Badge variant="outline" className={`text-xs ${
                             employee.isActive ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
-                          }>
+                          }`}>
                             {employee.isActive ? 'Aktiv' : 'Inaktiv'}
                           </Badge>
                         </td>
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-2">
+                        <td className="py-3 px-2 md:px-4">
+                          <div className="flex items-center gap-1 md:gap-2">
                             {(() => {
                               const isOnlineLive = isUserOnline(employee.id);
                               return (
                                 <>
-                                  <div className={`w-3 h-3 rounded-full ${isOnlineLive ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                                  <Badge className={isOnlineLive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}>
+                                  <div className={`w-2 h-2 md:w-3 md:h-3 rounded-full ${isOnlineLive ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                                  <Badge className={`text-xs ${isOnlineLive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}`}>
                                     {isOnlineLive ? 'Online' : 'Offline'}
                                   </Badge>
                                 </>
@@ -2053,7 +2053,7 @@ function EmployeesOverview() {
                             })()}
                           </div>
                         </td>
-                        <td className="py-3 px-4">
+                        <td className="py-3 px-2 md:px-4">
                           <EmployeeActionsDropdown employee={employee} />
                         </td>
                       </tr>

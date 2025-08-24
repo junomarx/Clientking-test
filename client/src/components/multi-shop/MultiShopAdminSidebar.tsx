@@ -11,10 +11,8 @@ import {
   Package,
   Activity,
   LogOut,
-  ChevronLeft,
   Settings,
-  UserCog,
-  X
+  UserCog
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { User } from "@shared/schema";
@@ -163,16 +161,6 @@ export function MultiShopAdminSidebar({
               <LogOut className="h-5 w-5 mr-2" />
               Ausloggen
             </Button>
-            <Button 
-              variant="link" 
-              className="w-full justify-start mt-2"
-              asChild
-            >
-              <Link to="/app">
-                <ChevronLeft className="h-5 w-5 mr-2" />
-                Zurück zur App
-              </Link>
-            </Button>
           </div>
         </div>
       </div>
@@ -199,7 +187,7 @@ export function MultiShopAdminSidebar({
             <div className="space-y-2 px-1">
               <Button 
                 variant="outline" 
-                className="w-full justify-start mb-2"
+                className="w-full justify-start"
                 onClick={() => {
                   closeSheetMenu();
                   setTimeout(handleLogout, 100);
@@ -207,17 +195,6 @@ export function MultiShopAdminSidebar({
               >
                 <LogOut className="h-5 w-5 mr-2" />
                 Ausloggen
-              </Button>
-              <Button 
-                variant="link" 
-                className="w-full justify-start"
-                asChild
-                onClick={() => closeSheetMenu()}
-              >
-                <Link to="/app">
-                  <ChevronLeft className="h-5 w-5 mr-2" />
-                  Zurück zur App
-                </Link>
               </Button>
             </div>
           </SheetContent>
