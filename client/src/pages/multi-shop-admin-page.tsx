@@ -3384,14 +3384,13 @@ function LogsOverview() {
                       </div>
                     </div>
                     
-                    {/* Details expandieren bei Bedarf */}
-                    {log.details && Object.keys(log.details).length > 0 && (
-                      <details className="mt-2">
-                        <summary className="text-xs text-blue-600 cursor-pointer hover:text-blue-800">
-                          Details anzeigen
-                        </summary>
+                    {/* Details immer anzeigen */}
+                    <details className="mt-2">
+                      <summary className="text-xs text-blue-600 cursor-pointer hover:text-blue-800">
+                        Details anzeigen
+                      </summary>
                         <div className="mt-2 space-y-2">
-                          {/* Zeitstempel hinzufügen */}
+                          {/* Zeitstempel immer anzeigen */}
                           <div className="text-xs text-gray-500 mb-2">
                             Erstellt: {new Date(log.createdAt).toLocaleString('de-DE', {
                               day: '2-digit',
@@ -3414,10 +3413,10 @@ function LogsOverview() {
                                 {log.details.newValue}
                               </span>
                             </div>
-                          ) : log.eventType === 'repair' && log.details.repairId ? (
+                          ) : log.eventType === 'repair' && log.entityName ? (
                             <div className="flex items-center gap-2">
                               <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700">
-                                Reparatur-ID: {log.details.repairId}
+                                Auftrag: {log.entityName}
                               </span>
                             </div>
                           ) : log.eventType === 'customer' ? (
@@ -3433,40 +3432,51 @@ function LogsOverview() {
                                   Ersatzteil-Bestellung
                                 </span>
                               </div>
-                              {/* Geräteinformationen anzeigen wenn verfügbar */}
-                              {log.details?.deviceInfo && (
-                                <div className="flex flex-wrap items-center gap-1">
-                                  {log.details.deviceInfo.deviceType && (
-                                    <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700">
-                                      {log.details.deviceInfo.deviceType}
-                                    </span>
-                                  )}
-                                  {log.details.deviceInfo.manufacturer && (
-                                    <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700">
-                                      {log.details.deviceInfo.manufacturer}
-                                    </span>
-                                  )}
-                                  {log.details.deviceInfo.model && (
-                                    <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700">
-                                      {log.details.deviceInfo.model}
-                                    </span>
-                                  )}
-                                  {log.details.deviceInfo.repairId && (
-                                    <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-indigo-100 text-indigo-700">
-                                      Reparatur #{log.details.deviceInfo.repairId}
-                                    </span>
-                                  )}
-                                </div>
-                              )}
+                              {/* Geräteinformationen in Details anzeigen */}
                             </div>
-                          ) : log.details && Object.keys(log.details).length > 0 ? (
-                            <pre className="text-xs text-gray-600 bg-gray-50 p-2 rounded overflow-auto">
-                              {JSON.stringify(log.details, null, 2)}
-                            </pre>
                           ) : null}
+                          
+                          {/* Zusätzliche Details für Ersatzteil-Logs */}
+                          {log.eventType === 'order' && log.details?.deviceInfo && (
+                            <div className="mt-2">
+                              <div className="text-xs font-medium text-gray-700 mb-1">Geräteinformationen:</div>
+                              <div className="flex flex-wrap items-center gap-1">
+                                {log.details.deviceInfo.deviceType && (
+                                  <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700">
+                                    {log.details.deviceInfo.deviceType}
+                                  </span>
+                                )}
+                                {log.details.deviceInfo.manufacturer && (
+                                  <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700">
+                                    {log.details.deviceInfo.manufacturer}
+                                  </span>
+                                )}
+                                {log.details.deviceInfo.model && (
+                                  <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700">
+                                    {log.details.deviceInfo.model}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Andere Details als JSON */}
+                          {log.details && Object.keys(log.details).filter(key => key !== 'deviceInfo').length > 0 && (
+                            <div className="mt-2">
+                              <div className="text-xs font-medium text-gray-700 mb-1">Weitere Details:</div>
+                              <pre className="text-xs text-gray-600 bg-gray-50 p-2 rounded overflow-auto">
+                                {JSON.stringify(
+                                  Object.fromEntries(
+                                    Object.entries(log.details).filter(([key]) => key !== 'deviceInfo')
+                                  ), 
+                                  null, 
+                                  2
+                                )}
+                              </pre>
+                            </div>
+                          )}
                         </div>
                       </details>
-                    )}
                   </div>
                 </div>
               ))}

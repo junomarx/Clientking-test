@@ -122,6 +122,19 @@ export function setupAuth(app: Express) {
         if (storage.updateUserLastLogin) {
           await storage.updateUserLastLogin(user.id);
         }
+        
+        // Activity-Log für Login erstellen
+        try {
+          await storage.logUserActivity(
+            'login',
+            user.id,
+            user,
+            user.id,
+            user.username || user.email || 'Unbekannter Benutzer'
+          );
+        } catch (logError) {
+          console.error('Fehler beim Erstellen des Login Activity-Logs:', logError);
+        }
         return done(null, user);
       } catch (error) {
         return done(error);
@@ -335,6 +348,18 @@ export function setupAuth(app: Express) {
       if (userId) {
         try {
           await storage.updateUserLastLogout(userId);
+          
+          // Activity-Log für Logout erstellen
+          const user = await storage.getUser(userId);
+          if (user) {
+            await storage.logUserActivity(
+              'logout',
+              userId,
+              user,
+              userId,
+              user.username || user.email || 'Unbekannter Benutzer'
+            );
+          }
         } catch (error) {
           console.error("Failed to update last logout timestamp:", error);
         }
