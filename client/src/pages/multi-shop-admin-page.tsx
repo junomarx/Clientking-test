@@ -785,7 +785,7 @@ function DashboardStats() {
               </Select>
               
               {selectedPeriod === 'custom' && (
-                <div className="flex items-center gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                   <div className="flex flex-col">
                     <label className="text-sm font-medium text-gray-700 mb-2">Von</label>
                     <Popover>
@@ -793,7 +793,7 @@ function DashboardStats() {
                         <Button
                           variant="outline"
                           className={cn(
-                            "w-[200px] justify-start text-left font-normal",
+                            "w-full sm:w-[200px] justify-start text-left font-normal",
                             !customStartDate && "text-muted-foreground"
                           )}
                         >
@@ -820,7 +820,7 @@ function DashboardStats() {
                         <Button
                           variant="outline"
                           className={cn(
-                            "w-[200px] justify-start text-left font-normal",
+                            "w-full sm:w-[200px] justify-start text-left font-normal",
                             !customEndDate && "text-muted-foreground"
                           )}
                         >
@@ -1167,7 +1167,7 @@ function ShopsOverview() {
               </Select>
               
               {selectedPeriod === 'custom' && (
-                <div className="flex items-center gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                   <div className="flex flex-col">
                     <label className="text-sm font-medium text-gray-700 mb-2">Von</label>
                     <Popover>
@@ -1175,7 +1175,7 @@ function ShopsOverview() {
                         <Button
                           variant="outline"
                           className={cn(
-                            "w-[200px] justify-start text-left font-normal",
+                            "w-full sm:w-[200px] justify-start text-left font-normal",
                             !customStartDate && "text-muted-foreground"
                           )}
                         >
@@ -1202,7 +1202,7 @@ function ShopsOverview() {
                         <Button
                           variant="outline"
                           className={cn(
-                            "w-[200px] justify-start text-left font-normal",
+                            "w-full sm:w-[200px] justify-start text-left font-normal",
                             !customEndDate && "text-muted-foreground"
                           )}
                         >
