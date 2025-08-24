@@ -87,7 +87,6 @@ import {
   count,
   isNull,
   isNotNull,
-  isNull,
   like,
   SQL,
   not,
@@ -6651,44 +6650,57 @@ export class DatabaseStorage implements IStorage {
         return [];
       }
 
-      let query = db
-        .select()
-        .from(activityLogs)
-        .where(inArray(activityLogs.shopId, accessibleShopIds))
-        .orderBy(desc(activityLogs.createdAt))
-        .limit(limit)
-        .offset(offset);
+      // Alle WHERE-Conditions sammeln
+      const whereConditions = [
+        inArray(activityLogs.shopId, accessibleShopIds)
+      ];
 
       // Zeitraum-Filter
       if (period && period !== 'all') {
-        const dateFilter = this.getDateFilterForPeriod(period);
-        if (dateFilter) {
-          query = query.where(
-            and(
-              inArray(activityLogs.shopId, accessibleShopIds),
-              gte(activityLogs.createdAt, new Date(dateFilter.start))
-            )
-          );
+        const now = new Date();
+        let startDateFilter: Date | null = null;
+
+        switch (period) {
+          case 'today':
+            startDateFilter = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            break;
+          case 'week':
+            startDateFilter = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            break;
+          case 'month':
+            startDateFilter = new Date(now.getFullYear(), now.getMonth(), 1);
+            break;
+          case 'quarter':
+            const quarterStart = Math.floor(now.getMonth() / 3) * 3;
+            startDateFilter = new Date(now.getFullYear(), quarterStart, 1);
+            break;
+          case 'year':
+            startDateFilter = new Date(now.getFullYear(), 0, 1);
+            break;
+        }
+
+        if (startDateFilter) {
+          whereConditions.push(gte(activityLogs.createdAt, startDateFilter));
         }
       } else if (startDate && endDate) {
-        query = query.where(
-          and(
-            inArray(activityLogs.shopId, accessibleShopIds),
-            gte(activityLogs.createdAt, new Date(startDate)),
-            lte(activityLogs.createdAt, new Date(endDate))
-          )
+        whereConditions.push(
+          gte(activityLogs.createdAt, new Date(startDate)),
+          lte(activityLogs.createdAt, new Date(endDate))
         );
       }
 
       // Event-Typ-Filter
       if (eventType && eventType !== 'all') {
-        query = query.where(
-          and(
-            inArray(activityLogs.shopId, accessibleShopIds),
-            eq(activityLogs.eventType, eventType)
-          )
-        );
+        whereConditions.push(eq(activityLogs.eventType, eventType));
       }
+
+      const query = db
+        .select()
+        .from(activityLogs)
+        .where(and(...whereConditions))
+        .orderBy(desc(activityLogs.createdAt))
+        .limit(limit)
+        .offset(offset);
 
       const logs = await query;
       

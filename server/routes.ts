@@ -1906,7 +1906,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Activity-Log für Reparatur-Status-Änderung erstellen
       if (repair && oldStatus && oldStatus !== status) {
+        console.log(`🔍 Status-Änderung erkannt: ${oldStatus} → ${status} für Reparatur ${repair.id}`);
         const user = await storage.getUser(userId);
+        console.log(`🔍 User für Activity-Log: ${user?.username || user?.email}`);
         await storage.logRepairActivity(
           'status_changed',
           repair.id,
@@ -1916,6 +1918,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           oldStatus,
           status
         );
+      } else {
+        console.log(`🔍 Keine Status-Änderung: oldStatus=${oldStatus}, newStatus=${status}, repair=${!!repair}`);
       }
       
       if (!repair) {
