@@ -6853,26 +6853,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ))
       .orderBy(repairs.deviceType, repairs.brand, repairs.model);
 
-      // 5. Umsatzstatistik - Gesamtumsatz und Status-basierte Aufschlüsselung  
-      const revenueStats = await db.select({
-        totalRevenue: sql<number>`COALESCE(SUM(CASE 
-          WHEN status = 'abgeholt' AND estimated_cost IS NOT NULL 
-          AND estimated_cost ~ '^[0-9]+(\.[0-9]+)?$'
-          AND LENGTH(estimated_cost) > 0
-          AND estimated_cost NOT LIKE '%-%'
-          AND estimated_cost NOT LIKE '%[a-zA-Z]%'
-          THEN CAST(estimated_cost AS DECIMAL) 
-          ELSE 0 
-        END), 0)`,
-        pendingRevenue: sql<number>`COALESCE(SUM(CASE 
-          WHEN status IN ('abholbereit', 'fertig') AND estimated_cost IS NOT NULL 
-          AND estimated_cost ~ '^[0-9]+(\.[0-9]+)?$'
-          AND LENGTH(estimated_cost) > 0
-          AND estimated_cost NOT LIKE '%-%'
-          AND estimated_cost NOT LIKE '%[a-zA-Z]%'
-          THEN CAST(estimated_cost AS DECIMAL) 
-          ELSE 0 
-        END), 0)`
+      // 5. Umsatzstatistik - Vereinfachte Berechnung ohne CAST
+      console.log('📊 Starting revenue stats calculation...');
+      
+      // Hole alle relevanten Reparaturen und berechne clientseitig
+      const revenueRepairs = await db.select({
+        status: repairs.status,
+        estimated_cost: repairs.estimated_cost
       })
       .from(repairs)
       .where(and(
@@ -6881,8 +6868,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lte(repairs.createdAt, end)
       ));
 
-      // Einzelne Revenue-Werte extrahieren
-      const revenue = revenueStats[0] || { totalRevenue: 0, pendingRevenue: 0 };
+      // Clientseitige Berechnung
+      let totalRevenue = 0;
+      let pendingRevenue = 0;
+      
+      for (const repair of revenueRepairs) {
+        if (repair.estimated_cost && typeof repair.estimated_cost === 'string') {
+          // Nur gültige Zahlen verarbeiten
+          const cost = parseFloat(repair.estimated_cost);
+          if (!isNaN(cost) && isFinite(cost)) {
+            if (repair.status === 'abgeholt') {
+              totalRevenue += cost;
+            } else if (repair.status === 'abholbereit' || repair.status === 'fertig') {
+              pendingRevenue += cost;
+            }
+          }
+        }
+      }
+
+      console.log('📊 Revenue stats completed successfully');
+      const revenue = { totalRevenue, pendingRevenue };
 
       // JSON-Antwort für Frontend-PDF-Generierung (wie bei Kostenvoranschlägen)
       res.json({
