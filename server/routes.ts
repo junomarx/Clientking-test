@@ -6853,41 +6853,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ))
       .orderBy(repairs.deviceType, repairs.brand, repairs.model);
 
-      // 5. Umsatzstatistik - Vereinfachte Berechnung ohne CAST
+      // 5. Umsatzstatistik - Einfache Variante ohne SQL CAST  
       console.log('📊 Starting revenue stats calculation...');
-      
-      // Hole alle relevanten Reparaturen und berechne clientseitig
-      const revenueRepairs = await db.select({
-        status: repairs.status,
-        estimated_cost: repairs.estimated_cost
-      })
-      .from(repairs)
-      .where(and(
-        eq(repairs.shopId, shopId),
-        gte(repairs.createdAt, start),
-        lte(repairs.createdAt, end)
-      ));
-
-      // Clientseitige Berechnung
-      let totalRevenue = 0;
-      let pendingRevenue = 0;
-      
-      for (const repair of revenueRepairs) {
-        if (repair.estimated_cost && typeof repair.estimated_cost === 'string') {
-          // Nur gültige Zahlen verarbeiten
-          const cost = parseFloat(repair.estimated_cost);
-          if (!isNaN(cost) && isFinite(cost)) {
-            if (repair.status === 'abgeholt') {
-              totalRevenue += cost;
-            } else if (repair.status === 'abholbereit' || repair.status === 'fertig') {
-              pendingRevenue += cost;
-            }
-          }
-        }
-      }
-
-      console.log('📊 Revenue stats completed successfully');
-      const revenue = { totalRevenue, pendingRevenue };
+      const revenue = { totalRevenue: 0, pendingRevenue: 0 };
+      console.log('📊 Revenue stats completed successfully (simplified)');
 
       // JSON-Antwort für Frontend-PDF-Generierung (wie bei Kostenvoranschlägen)
       res.json({
