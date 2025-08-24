@@ -6609,6 +6609,28 @@ export class DatabaseStorage implements IStorage {
       }).returning();
       
       console.log('📋 Activity Log erstellt:', activityLog);
+      
+      // WebSocket-Broadcast für Echtzeit-Updates senden
+      try {
+        const websocketModule = await import('./websocket-server');
+        const onlineStatusManager = websocketModule.getOnlineStatusManager();
+        if (onlineStatusManager && details && 'repairId' in details) {
+          const message = {
+            type: 'activity-log-update',
+            data: {
+              activityLog,
+              eventType,
+              action,
+              shopId
+            }
+          };
+          onlineStatusManager.broadcast(message);
+          console.log(`🔄 Activity-Log-Update gesendet für Shop ${shopId}`);
+        }
+      } catch (wsError) {
+        console.error('Fehler beim Senden des Activity-Log WebSocket-Updates:', wsError);
+      }
+      
       return activityLog;
     } catch (error) {
       console.error('Fehler beim Erstellen des Activity-Logs:', error);

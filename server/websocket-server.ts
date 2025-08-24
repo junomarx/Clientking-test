@@ -753,3 +753,27 @@ export function broadcastSparePartUpdate(updateData: {
   onlineStatusManager.broadcast(message);
   console.log(`Ersatzteil-Update gesendet für Shop ${updateData.shopId}:`, updateData);
 }
+
+// Broadcast-Funktion für Reparatur-Status-Updates
+export function broadcastRepairStatusUpdate(updateData: {
+  id: number;
+  status: string;
+  oldStatus: string;
+  shopId: number;
+  orderCode: string;
+  updatedBy: string;
+  estimatedCost?: string;
+}) {
+  if (!onlineStatusManager) {
+    console.warn('WebSocket-Manager nicht initialisiert');
+    return;
+  }
+
+  const message = {
+    type: 'repair-status-update',
+    data: updateData
+  };
+
+  onlineStatusManager.broadcast(message);
+  console.log(`🔄 Reparatur-Status-Update gesendet für Shop ${updateData.shopId}: ${updateData.orderCode} (${updateData.oldStatus} → ${updateData.status})`);
+}
