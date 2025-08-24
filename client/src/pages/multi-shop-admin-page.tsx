@@ -2363,12 +2363,11 @@ function OrdersOverview() {
                 </div>
 
                 {/* Mobile Cards */}
-                <div className="lg:hidden space-y-2 px-4 pr-6">
+                <div className="lg:hidden space-y-2 px-4 pb-6">
                   {filteredOrders.map((order: any) => (
                     <div
                       key={order.id}
-                      className="bg-white border border-gray-200 rounded-lg px-3 py-2 space-y-2 w-full max-w-full overflow-hidden box-border"
-                      style={{ marginRight: '8px' }}
+                      className="bg-white border border-gray-200 rounded-lg px-3 py-2 space-y-2 w-full max-w-full overflow-hidden box-border mr-2"
                     >
                       {/* Header */}
                       <div className="flex items-start gap-2">
@@ -2533,12 +2532,11 @@ function OrdersOverview() {
                 </div>
 
                 {/* Mobile Cards für Archivierte */}
-                <div className="lg:hidden space-y-2 px-4 pr-6">
+                <div className="lg:hidden space-y-2 px-4 pb-6">
                   {filteredArchivedOrders.map((order: any) => (
                     <div
                       key={order.id}
-                      className="bg-white border border-gray-200 rounded-lg px-3 py-2 space-y-2 w-full max-w-full overflow-hidden box-border"
-                      style={{ marginRight: '8px' }}
+                      className="bg-white border border-gray-200 rounded-lg px-3 py-2 space-y-2 w-full max-w-full overflow-hidden box-border mr-2"
                     >
                       {/* Header */}
                       <div className="flex items-start gap-2">
@@ -3449,8 +3447,8 @@ export default function MultiShopAdminPage() {
         </header>
 
         {/* Main content */}
-        <main className="flex-1 overflow-hidden px-0 py-3 md:px-6 md:py-6">
-          <ScrollArea className="h-full w-full">
+        <main className="flex-1 overflow-auto px-0 py-3 md:px-6 md:py-6">
+          <div className="h-full w-full">
             {activeTab === "dashboard" && <DashboardStats />}
             {activeTab === "shops" && <ShopsOverview />}
             {activeTab === "employees" && <EmployeesOverview />}
@@ -3458,7 +3456,7 @@ export default function MultiShopAdminPage() {
             {activeTab === "logs" && <LogsOverview />}
             {activeTab === "settings" && <MSABusinessSettings />}
             {activeTab === "account" && <MSAProfileSettings />}
-          </ScrollArea>
+          </div>
         </main>
       </div>
     </div>
