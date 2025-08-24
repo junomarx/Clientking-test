@@ -5890,7 +5890,10 @@ export class DatabaseStorage implements IStorage {
         
         if (startDate) {
           const periodCompletedResult = await db
-            .select({ count: count() })
+            .select({ 
+              count: count(),
+              revenue: sql<number>`SUM(CASE WHEN ${repairs.estimatedCost} ~ '^[0-9]+(\.[0-9]+)?$' THEN CAST(${repairs.estimatedCost} AS NUMERIC) ELSE 0 END)`
+            })
             .from(repairs)
             .where(
               and(
@@ -5902,7 +5905,7 @@ export class DatabaseStorage implements IStorage {
             );
           
           periodCompletedRepairs = periodCompletedResult[0]?.count || 0;
-          periodRevenue = periodCompletedRepairs * avgRepairPrice;
+          periodRevenue = periodCompletedResult[0]?.revenue || 0;
         } else {
           // Fallback für 'all' oder wenn kein Zeitraum definiert
           periodCompletedRepairs = completedCount;
@@ -5914,7 +5917,10 @@ export class DatabaseStorage implements IStorage {
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         
         const monthlyCompletedResult = await db
-          .select({ count: count() })
+          .select({ 
+            count: count(),
+            revenue: sql<number>`SUM(CASE WHEN ${repairs.estimatedCost} ~ '^[0-9]+(\.[0-9]+)?$' THEN CAST(${repairs.estimatedCost} AS NUMERIC) ELSE 0 END)`
+          })
           .from(repairs)
           .where(
             and(
@@ -5924,7 +5930,7 @@ export class DatabaseStorage implements IStorage {
             )
           );
 
-        periodRevenue = (monthlyCompletedResult[0]?.count || 0) * avgRepairPrice;
+        periodRevenue = monthlyCompletedResult[0]?.revenue || 0;
         periodCompletedRepairs = monthlyCompletedResult[0]?.count || 0;
       }
 
