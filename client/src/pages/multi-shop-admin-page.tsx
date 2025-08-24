@@ -2238,9 +2238,9 @@ function OrdersOverview() {
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="px-0 sm:px-6">
+        <CardContent className="px-3 sm:px-6">
           {/* Filter und Suche */}
-          <div className="px-3 sm:px-0">
+          <div>
             <div className="flex flex-col sm:flex-row gap-4 mb-6">
               <div className="flex-1">
                 <input
@@ -2288,7 +2288,7 @@ function OrdersOverview() {
               ) : (
                 <>
                   {/* Desktop Tabelle */}
-                  <div className="hidden lg:block overflow-x-auto px-3 sm:px-0">
+                  <div className="hidden lg:block overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
@@ -2363,7 +2363,7 @@ function OrdersOverview() {
                 </div>
 
                 {/* Mobile Cards */}
-                <div className="lg:hidden space-y-2 px-0">
+                <div className="lg:hidden space-y-2">
                   {filteredOrders.map((order: any) => (
                     <div key={order.id} className="bg-white border border-gray-200 rounded-lg px-1 py-1 space-y-1 w-full max-w-full overflow-hidden box-border">
                   {/* Header */}
@@ -2440,7 +2440,7 @@ function OrdersOverview() {
               ) : (
                 <>
                   {/* Desktop Tabelle für Archivierte */}
-                  <div className="hidden lg:block overflow-x-auto px-3 sm:px-0">
+                  <div className="hidden lg:block overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
@@ -3429,7 +3429,7 @@ export default function MultiShopAdminPage() {
         </header>
 
         {/* Main content */}
-        <main className="flex-1 overflow-auto px-0 py-3 md:p-6">
+        <main className="flex-1 overflow-auto px-0 py-3 md:px-6 md:py-6">
           <ScrollArea className="h-full">
             {activeTab === "dashboard" && <DashboardStats />}
             {activeTab === "shops" && <ShopsOverview />}
