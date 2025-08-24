@@ -4298,25 +4298,30 @@ export class DatabaseStorage implements IStorage {
         // Umsatz berechnen (nur wenn ein Preis vorhanden ist)
         // Verwende estimatedCost (von Repair) statt price
         if (repair.estimatedCost) {
-          // String in Nummer konvertieren (z.B. "123,45" oder "123.45" zu 123.45)
-          const cost = parseFloat(repair.estimatedCost.replace(',', '.'));
+          // Prüfe zuerst, ob es eine gültige Dezimalzahl ist
+          const cleanedCost = repair.estimatedCost.replace(',', '.');
           
-          if (!isNaN(cost)) {
-            // Abhängig von der Einstellung, ob nach Erstellungs- oder Abholdatum
-            // Verwende pickupSignedAt statt pickedUpAt
-            const relevantDate = revenueBasedOnPickup ? 
-              (repair.pickupSignedAt || repair.createdAt) : repair.createdAt;
+          // Verwende die gleiche Regex wie in der PDF-Route
+          if (/^(0|[1-9][0-9]*)(\.[0-9]+)?$/.test(cleanedCost)) {
+            const cost = parseFloat(cleanedCost);
+            
+            if (!isNaN(cost)) {
+              // Abhängig von der Einstellung, ob nach Erstellungs- oder Abholdatum
+              // Verwende pickupSignedAt statt pickedUpAt
+              const relevantDate = revenueBasedOnPickup ? 
+                (repair.pickupSignedAt || repair.createdAt) : repair.createdAt;
               
-            // Umsatz zum Gesamtumsatz addieren
-            total += cost;
-            
-            // Nach Status gruppieren (Status als String verwenden)
-            const statusKey = repair.status || 'Unbekannt';
-            byStatus[statusKey] = (byStatus[statusKey] || 0) + cost;
-            
-            // Nach Monat gruppieren (1-12 statt 0-11)
-            const month = relevantDate.getMonth() + 1;
-            byMonth[month] = (byMonth[month] || 0) + cost;
+              // Umsatz zum Gesamtumsatz addieren
+              total += cost;
+              
+              // Nach Status gruppieren (Status als String verwenden)
+              const statusKey = repair.status || 'Unbekannt';
+              byStatus[statusKey] = (byStatus[statusKey] || 0) + cost;
+              
+              // Nach Monat gruppieren (1-12 statt 0-11)
+              const month = relevantDate.getMonth() + 1;
+              byMonth[month] = (byMonth[month] || 0) + cost;
+            }
           }
         }
       }
