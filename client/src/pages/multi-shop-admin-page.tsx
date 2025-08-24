@@ -2363,11 +2363,11 @@ function OrdersOverview() {
                 </div>
 
                 {/* Mobile Cards */}
-                <div className="lg:hidden space-y-2 px-2">
+                <div className="lg:hidden space-y-2 px-4">
                   {filteredOrders.map((order: any) => (
                     <div
                       key={order.id}
-                      className="bg-white border border-gray-200 rounded-lg px-3 py-2 space-y-2 w-full max-w-sm mx-auto overflow-hidden box-border"
+                      className="bg-white border border-gray-200 rounded-lg px-3 py-2 space-y-2 w-full overflow-hidden box-border"
                     >
                       {/* Header */}
                       <div className="flex items-start gap-2">
@@ -2532,11 +2532,11 @@ function OrdersOverview() {
                 </div>
 
                 {/* Mobile Cards für Archivierte */}
-                <div className="lg:hidden space-y-2 px-2">
+                <div className="lg:hidden space-y-2 px-4">
                   {filteredArchivedOrders.map((order: any) => (
                     <div
                       key={order.id}
-                      className="bg-white border border-gray-200 rounded-lg px-3 py-2 space-y-2 w-full max-w-sm mx-auto overflow-hidden box-border"
+                      className="bg-white border border-gray-200 rounded-lg px-3 py-2 space-y-2 w-full overflow-hidden box-border"
                     >
                       {/* Header */}
                       <div className="flex items-start gap-2">
