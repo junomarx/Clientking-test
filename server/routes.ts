@@ -6819,37 +6819,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       .groupBy(repairs.deviceType, repairs.brand, repairs.model)
       .orderBy(repairs.deviceType, repairs.brand, repairs.model);
 
-      // 4. "Außer Haus" Reparaturen - alle die während des Zeitraums diesen Status hatten (mit Datum)
+      // 4. "Außer Haus" Reparaturen - Vereinfacht ohne komplexe JOIN
       const ausserHausRepairs = await db.select({
         deviceType: repairs.deviceType,
         brand: repairs.brand,
         model: repairs.model,
-        statusDate: sql<string>`
-          CASE 
-            WHEN ${repairs.status} = 'ausser_haus' AND ${repairStatusHistory.changedAt} IS NOT NULL 
-            THEN ${repairStatusHistory.changedAt}::date
-            WHEN ${repairs.status} = 'ausser_haus' 
-            THEN ${repairs.createdAt}::date
-            ELSE ${repairStatusHistory.changedAt}::date
-          END
-        `
+        statusDate: repairs.createdAt
       })
       .from(repairs)
-      .leftJoin(repairStatusHistory, eq(repairStatusHistory.repairId, repairs.id))
       .where(and(
         eq(repairs.shopId, shopId),
+        eq(repairs.status, 'ausser_haus'),
         gte(repairs.createdAt, start),
-        lte(repairs.createdAt, end),
-        or(
-          // Entweder aktuell "Außer Haus"
-          eq(repairs.status, 'ausser_haus'),
-          // Oder hatte "Außer Haus" Status während des Zeitraums
-          and(
-            eq(repairStatusHistory.newStatus, 'ausser_haus'),
-            gte(repairStatusHistory.changedAt, start),
-            lte(repairStatusHistory.changedAt, end)
-          )
-        )
+        lte(repairs.createdAt, end)
       ))
       .orderBy(repairs.deviceType, repairs.brand, repairs.model);
 
