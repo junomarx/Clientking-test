@@ -97,16 +97,16 @@ export function ShopDetailsDialog({ isOpen, onClose, shop }: ShopDetailsDialogPr
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl w-[95vw] max-h-[95vh] sm:max-h-[90vh] flex flex-col p-0">
-        <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-2 border-b">
+      <DialogContent className="max-w-4xl w-[95vw] max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden p-0">
+        <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 border-b flex-shrink-0">
           <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
             <Building2 className="w-5 h-5" />
             <span className="truncate">{shop.shopName || shop.name || `Shop ${shop.shopId}`}</span>
           </DialogTitle>
         </DialogHeader>
         
-        <ScrollArea className="flex-1 px-4 sm:px-6 py-4">
-          <div className="space-y-4 sm:space-y-6">
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
+          <div className="space-y-4 sm:space-y-6 pb-4">
             {/* Shop-Übersicht */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
               <Card className="w-full">
@@ -263,18 +263,19 @@ export function ShopDetailsDialog({ isOpen, onClose, shop }: ShopDetailsDialogPr
                 )}
               </CardContent>
             </Card>
+            
+            {/* Mobile Close Button - direkt im Content */}
+            <div className="sm:hidden mt-6 pt-4 border-t">
+              <Button 
+                variant="outline" 
+                onClick={onClose}
+                className="w-full"
+                size="lg"
+              >
+                Dialog schließen
+              </Button>
+            </div>
           </div>
-        </ScrollArea>
-
-        {/* Close Button - erscheint nur auf mobile */}
-        <div className="sm:hidden px-4 py-3 border-t bg-gray-50">
-          <Button 
-            variant="outline" 
-            onClick={onClose}
-            className="w-full"
-          >
-            Dialog schließen
-          </Button>
         </div>
       </DialogContent>
     </Dialog>
