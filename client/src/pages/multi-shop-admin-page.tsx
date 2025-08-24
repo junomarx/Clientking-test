@@ -2238,33 +2238,35 @@ function OrdersOverview() {
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="px-2 sm:px-6">
+        <CardContent className="px-0 sm:px-6">
           {/* Filter und Suche */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-6">
-            <div className="flex-1">
-              <input
-                type="text"
-                placeholder="Suchen nach Ersatzteil, Hersteller, Modell, Shop oder Order-Code..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            {activeOrdersTab === "active" && (
-              <div className="sm:w-48">
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
+          <div className="px-3 sm:px-0">
+            <div className="flex flex-col sm:flex-row gap-4 mb-6">
+              <div className="flex-1">
+                <input
+                  type="text"
+                  placeholder="Suchen nach Ersatzteil, Hersteller, Modell, Shop oder Order-Code..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="all">Alle Status</option>
-                  <option value="bestellen">Zu bestellen</option>
-                  <option value="bestellt">Bestellt</option>
-                  <option value="eingetroffen">Eingetroffen</option>
-                  <option value="erledigt">Erledigt</option>
-                </select>
+                />
               </div>
-            )}
+              {activeOrdersTab === "active" && (
+                <div className="sm:w-48">
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="all">Alle Status</option>
+                    <option value="bestellen">Zu bestellen</option>
+                    <option value="bestellt">Bestellt</option>
+                    <option value="eingetroffen">Eingetroffen</option>
+                    <option value="erledigt">Erledigt</option>
+                  </select>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Aktive Bestellungen Tab */}
@@ -2286,7 +2288,7 @@ function OrdersOverview() {
               ) : (
                 <>
                   {/* Desktop Tabelle */}
-                  <div className="hidden lg:block overflow-x-auto">
+                  <div className="hidden lg:block overflow-x-auto px-3 sm:px-0">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
@@ -2361,9 +2363,9 @@ function OrdersOverview() {
                 </div>
 
                 {/* Mobile Cards */}
-                <div className="lg:hidden space-y-3">
+                <div className="lg:hidden space-y-3 px-3 sm:px-0">
                   {filteredOrders.map((order: any) => (
-                    <div key={order.id} className="bg-white border border-gray-200 rounded-lg p-3 space-y-3 w-full">
+                    <div key={order.id} className="bg-white border border-gray-200 rounded-lg p-3 space-y-3">
                   {/* Header */}
                   <div className="flex items-start gap-3">
                     <div className="flex-1 min-w-0">
@@ -2438,7 +2440,7 @@ function OrdersOverview() {
               ) : (
                 <>
                   {/* Desktop Tabelle für Archivierte */}
-                  <div className="hidden lg:block overflow-x-auto">
+                  <div className="hidden lg:block overflow-x-auto px-3 sm:px-0">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
@@ -2521,9 +2523,9 @@ function OrdersOverview() {
                 </div>
 
                 {/* Mobile Cards für Archivierte */}
-                <div className="lg:hidden space-y-3">
+                <div className="lg:hidden space-y-3 px-3 sm:px-0">
                   {filteredArchivedOrders.map((order: any) => (
-                    <div key={order.id} className="bg-white border border-gray-200 rounded-lg p-3 space-y-3 w-full">
+                    <div key={order.id} className="bg-white border border-gray-200 rounded-lg p-3 space-y-3">
                       {/* Header */}
                       <div className="flex items-start gap-3">
                         <div className="flex-1 min-w-0">
