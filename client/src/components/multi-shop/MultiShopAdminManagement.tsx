@@ -57,6 +57,38 @@ export default function MultiShopAdminManagement() {
     },
   });
 
+  // Mutation für das Entziehen von Zugriff
+  const revokeAccessMutation = useMutation({
+    mutationFn: async (permissionId: number) => {
+      const response = await apiRequest('POST', `/api/permissions/${permissionId}/revoke`);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to revoke access');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Zugriff entzogen",
+        description: "Der Zugriff für den Multi-Shop-Admin wurde erfolgreich entzogen.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/multi-shop/granted-accesses'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Fehler beim Entziehen",
+        description: error.message || "Zugriff konnte nicht entzogen werden.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleRevokeAccess = (permissionId: number) => {
+    if (confirm("Möchten Sie den Zugriff für diesen Multi-Shop-Admin wirklich entziehen?")) {
+      revokeAccessMutation.mutate(permissionId);
+    }
+  };
+
   const handleGrantAccess = () => {
     if (!email || !email.includes('@')) {
       toast({
@@ -200,12 +232,22 @@ export default function MultiShopAdminManagement() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <Badge variant="default" className="bg-green-100 text-green-800">
-                      Zugriff gewährt
-                    </Badge>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {new Date(access.grantedAt).toLocaleDateString('de-DE')}
-                    </p>
+                    <div className="flex flex-col items-end space-y-2">
+                      <Badge variant="default" className="bg-green-100 text-green-800">
+                        Zugriff gewährt
+                      </Badge>
+                      <p className="text-xs text-gray-500">
+                        {new Date(access.grantedAt).toLocaleDateString('de-DE')}
+                      </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        onClick={() => handleRevokeAccess(access.id)}
+                      >
+                        Zugriff entziehen
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}
