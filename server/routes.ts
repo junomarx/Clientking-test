@@ -6750,7 +6750,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // PDF-Statistik-Endpoint - Verwendet Frontend-PDF-Generierung wie bei Kostenvoranschlägen
+  // PDF-Statistik-Endpoint - Vereinfacht für abgeholte Reparaturen mit Umsatz
   app.get("/api/statistics/pdf", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
@@ -6769,96 +6769,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const start = new Date(startDate as string);
       const end = new Date(endDate as string);
 
-      console.log(`Generiere PDF-Statistik für Shop ${shopId} - Zeitraum: ${start.toISOString()} bis ${end.toISOString()}`);
+      console.log(`📊 PDF-Export für Shop ${shopId}: ${start.toISOString()} bis ${end.toISOString()}`);
 
       const businessSettings = await storage.getBusinessSettings(userId);
 
-      // Gleiche Datenabfrage wie bei /api/statistics/data
-      const deviceTypeStats = await db.select({
-        deviceType: repairs.deviceType,
-        count: sql<number>`count(*)::int`
-      })
-      .from(repairs)
-      .where(and(
-        eq(repairs.shopId, shopId),
-        gte(repairs.createdAt, start),
-        lte(repairs.createdAt, end)
-      ))
-      .groupBy(repairs.deviceType)
-      .orderBy(repairs.deviceType);
-
-      const brandStats = await db.select({
-        deviceType: repairs.deviceType,
-        brand: repairs.brand,
-        count: sql<number>`count(*)::int`
-      })
-      .from(repairs)
-      .where(and(
-        eq(repairs.shopId, shopId),
-        gte(repairs.createdAt, start),
-        lte(repairs.createdAt, end),
-        isNotNull(repairs.brand)
-      ))
-      .groupBy(repairs.deviceType, repairs.brand)
-      .orderBy(repairs.deviceType, repairs.brand);
-
-      const modelStats = await db.select({
+      // Fokus nur auf abgeholte Reparaturen mit Umsatz im Zeitraum
+      const completedRepairs = await db.select({
+        orderCode: repairs.orderCode,
         deviceType: repairs.deviceType,
         brand: repairs.brand,
         model: repairs.model,
-        count: sql<number>`count(*)::int`
+        estimated_cost: repairs.estimated_cost,
+        createdAt: repairs.createdAt
       })
       .from(repairs)
       .where(and(
         eq(repairs.shopId, shopId),
+        eq(repairs.status, 'abgeholt'),
         gte(repairs.createdAt, start),
         lte(repairs.createdAt, end),
-        isNotNull(repairs.brand),
-        isNotNull(repairs.model)
-      ))
-      .groupBy(repairs.deviceType, repairs.brand, repairs.model)
-      .orderBy(repairs.deviceType, repairs.brand, repairs.model);
-
-      // 4. "Außer Haus" Reparaturen - alle die während des Zeitraums diesen Status hatten (mit Datum)
-      const ausserHausRepairs = await db.select({
-        deviceType: repairs.deviceType,
-        brand: repairs.brand,
-        model: repairs.model,
-        statusDate: sql<string>`
-          CASE 
-            WHEN ${repairs.status} = 'ausser_haus' AND ${repairStatusHistory.changedAt} IS NOT NULL 
-            THEN ${repairStatusHistory.changedAt}::date
-            WHEN ${repairs.status} = 'ausser_haus' 
-            THEN ${repairs.createdAt}::date
-            ELSE ${repairStatusHistory.changedAt}::date
-          END
-        `
-      })
-      .from(repairs)
-      .leftJoin(repairStatusHistory, eq(repairStatusHistory.repairId, repairs.id))
-      .where(and(
-        eq(repairs.shopId, shopId),
-        gte(repairs.createdAt, start),
-        lte(repairs.createdAt, end),
-        or(
-          // Entweder aktuell "Außer Haus"
-          eq(repairs.status, 'ausser_haus'),
-          // Oder hatte "Außer Haus" Status während des Zeitraums
-          and(
-            eq(repairStatusHistory.newStatus, 'ausser_haus'),
-            gte(repairStatusHistory.changedAt, start),
-            lte(repairStatusHistory.changedAt, end)
-          )
-        )
+        isNotNull(repairs.estimated_cost)
       ))
       .orderBy(repairs.deviceType, repairs.brand, repairs.model);
 
-      // 5. Umsatzstatistik - Einfache Variante ohne SQL CAST  
-      console.log('📊 Starting revenue stats calculation...');
-      const revenue = { totalRevenue: 0, pendingRevenue: 0 };
-      console.log('📊 Revenue stats completed successfully (simplified)');
+      console.log(`📊 ${completedRepairs.length} abgeholte Reparaturen mit Kosten gefunden`);
 
-      // JSON-Antwort für Frontend-PDF-Generierung (wie bei Kostenvoranschlägen)
+      // Funktion zum Extrahieren der ersten Zahl (60-70 → 60)
+      function extractFirstNumber(costStr: string): number {
+        if (!costStr) return 0;
+        const match = costStr.match(/^\d+/);
+        return match ? parseInt(match[0], 10) : 0;
+      }
+
+      // Statistiken clientseitig berechnen
+      const deviceTypeCounts = new Map<string, number>();
+      const brandCounts = new Map<string, number>();
+      const modelCounts = new Map<string, number>();
+      let totalRevenue = 0;
+
+      for (const repair of completedRepairs) {
+        const deviceType = repair.deviceType || 'Unbekannt';
+        const brand = repair.brand || 'Unbekannt';
+        const model = repair.model || 'Unbekannt';
+        
+        // Zählen
+        deviceTypeCounts.set(deviceType, (deviceTypeCounts.get(deviceType) || 0) + 1);
+        const brandKey = `${deviceType}|${brand}`;
+        brandCounts.set(brandKey, (brandCounts.get(brandKey) || 0) + 1);
+        const modelKey = `${deviceType}|${brand}|${model}`;
+        modelCounts.set(modelKey, (modelCounts.get(modelKey) || 0) + 1);
+
+        // Umsatz (erste Zahl bei "60-70" etc.)
+        if (repair.estimated_cost) {
+          totalRevenue += extractFirstNumber(repair.estimated_cost);
+        }
+      }
+
+      // Arrays für JSON Response
+      const deviceTypeStats = Array.from(deviceTypeCounts.entries()).map(([deviceType, count]) => ({
+        deviceType, count
+      }));
+
+      const brandStats = Array.from(brandCounts.entries()).map(([key, count]) => {
+        const [deviceType, brand] = key.split('|');
+        return { deviceType, brand, count };
+      });
+
+      const modelStats = Array.from(modelCounts.entries()).map(([key, count]) => {
+        const [deviceType, brand, model] = key.split('|');
+        return { deviceType, brand, model, count };
+      });
+
+      console.log(`📊 Gesamtumsatz berechnet: ${totalRevenue}€`);
+
+      // JSON Response
       res.json({
         period: {
           start: start.toISOString().split('T')[0],
@@ -6867,36 +6851,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
         businessName: businessSettings?.businessName || 'Reparaturshop',
         data: {
-          deviceTypeStats: deviceTypeStats.map(stat => ({
-            deviceType: stat.deviceType || 'Unbekannt',
-            count: stat.count
-          })),
-          brandStats: brandStats.map(stat => ({
-            deviceType: stat.deviceType || 'Unbekannt',
-            brand: stat.brand || 'Unbekannt', 
-            count: stat.count
-          })),
-          modelStats: modelStats.map(stat => ({
-            deviceType: stat.deviceType || 'Unbekannt',
-            brand: stat.brand || 'Unbekannt',
-            model: stat.model || 'Unbekannt',
-            count: stat.count
-          })),
-          ausserHausRepairs: ausserHausRepairs.map(stat => ({
-            deviceType: stat.deviceType || 'Unbekannt',
-            brand: stat.brand || 'Unbekannt',
-            model: stat.model || 'Unbekannt',
-            statusDate: stat.statusDate
-          })),
+          deviceTypeStats,
+          brandStats,
+          modelStats,
+          ausserHausRepairs: [], // Vereinfacht
           revenue: {
-            totalRevenue: Number(revenue.totalRevenue) || 0,
-            pendingRevenue: Number(revenue.pendingRevenue) || 0
+            totalRevenue,
+            pendingRevenue: 0
           }
         }
       });
 
     } catch (error) {
-      console.error("Fehler beim Generieren der PDF-Statistik:", error);
+      console.error("Fehler beim PDF-Export:", error);
       res.status(500).json({ 
         message: "Fehler beim Generieren der PDF-Statistik",
         error: error instanceof Error ? error.message : String(error)
