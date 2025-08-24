@@ -3189,6 +3189,23 @@ function LogsOverview() {
     }
   };
 
+  const getEventTypeBorderColor = (eventType: string) => {
+    switch (eventType) {
+      case 'repair':
+        return 'border-blue-200 hover:border-blue-300';
+      case 'user':
+        return 'border-green-200 hover:border-green-300';
+      case 'order':
+        return 'border-purple-200 hover:border-purple-300';
+      case 'customer':
+        return 'border-orange-200 hover:border-orange-300';
+      case 'system':
+        return 'border-gray-200 hover:border-gray-300';
+      default:
+        return 'border-gray-200 hover:border-gray-300';
+    }
+  };
+
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
     const now = new Date();
@@ -3331,7 +3348,7 @@ function LogsOverview() {
               {activityLogs.map((log: any) => (
                 <div
                   key={log.id}
-                  className="flex items-start gap-2 sm:gap-4 p-3 sm:p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors w-full max-w-full overflow-hidden"
+                  className={`flex items-start gap-2 sm:gap-4 p-3 sm:p-4 bg-white border-2 rounded-lg hover:bg-gray-50 transition-colors w-full max-w-full overflow-hidden ${getEventTypeBorderColor(log.eventType)}`}
                 >
                   {/* Event Icon */}
                   <div className={`p-1.5 sm:p-2 rounded-lg flex-shrink-0 ${getSeverityColor(log.severity)}`}>
@@ -3374,6 +3391,19 @@ function LogsOverview() {
                           Details anzeigen
                         </summary>
                         <div className="mt-2 space-y-2">
+                          {/* Zeitstempel hinzufügen */}
+                          <div className="text-xs text-gray-500 mb-2">
+                            Erstellt: {new Date(log.createdAt).toLocaleString('de-DE', {
+                              day: '2-digit',
+                              month: '2-digit', 
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              second: '2-digit'
+                            })}
+                          </div>
+                          
+                          {/* Reparatur Details */}
                           {log.eventType === 'repair' && log.details.oldValue && log.details.newValue ? (
                             <div className="flex items-center gap-2 text-sm">
                               <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700">
@@ -3384,11 +3414,56 @@ function LogsOverview() {
                                 {log.details.newValue}
                               </span>
                             </div>
-                          ) : (
+                          ) : log.eventType === 'repair' && log.details.repairId ? (
+                            <div className="flex items-center gap-2">
+                              <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700">
+                                Reparatur-ID: {log.details.repairId}
+                              </span>
+                            </div>
+                          ) : log.eventType === 'customer' ? (
+                            <div className="flex items-center gap-2">
+                              <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-orange-100 text-orange-700">
+                                Neuer Kunde
+                              </span>
+                            </div>
+                          ) : log.eventType === 'order' ? (
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2">
+                                <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-700">
+                                  Ersatzteil-Bestellung
+                                </span>
+                              </div>
+                              {/* Geräteinformationen anzeigen wenn verfügbar */}
+                              {log.details?.deviceInfo && (
+                                <div className="flex flex-wrap items-center gap-1">
+                                  {log.details.deviceInfo.deviceType && (
+                                    <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700">
+                                      {log.details.deviceInfo.deviceType}
+                                    </span>
+                                  )}
+                                  {log.details.deviceInfo.manufacturer && (
+                                    <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700">
+                                      {log.details.deviceInfo.manufacturer}
+                                    </span>
+                                  )}
+                                  {log.details.deviceInfo.model && (
+                                    <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700">
+                                      {log.details.deviceInfo.model}
+                                    </span>
+                                  )}
+                                  {log.details.deviceInfo.repairId && (
+                                    <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-indigo-100 text-indigo-700">
+                                      Reparatur #{log.details.deviceInfo.repairId}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          ) : log.details && Object.keys(log.details).length > 0 ? (
                             <pre className="text-xs text-gray-600 bg-gray-50 p-2 rounded overflow-auto">
                               {JSON.stringify(log.details, null, 2)}
                             </pre>
-                          )}
+                          ) : null}
                         </div>
                       </details>
                     )}

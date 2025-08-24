@@ -6675,10 +6675,7 @@ export class DatabaseStorage implements IStorage {
         accessibleShopIds = grantedPermissions.map(p => p.shopId);
       }
       
-      console.log(`🔍 MSA-User ${msaUserId} - Zugängliche Shop-IDs:`, accessibleShopIds);
-      
       if (accessibleShopIds.length === 0) {
-        console.log(`❌ MSA-User ${msaUserId} hat keine zugänglichen Shops`);
         return [];
       }
 
@@ -6741,15 +6738,7 @@ export class DatabaseStorage implements IStorage {
 
       const logs = await query;
       
-      console.log(`📋 ${logs.length} Activity-Logs für MSA-User ${msaUserId} geladen (aus ${accessibleShopIds.length} Shops: ${accessibleShopIds.join(', ')})`);
-      console.log(`🔍 Filter-Details:`, { period, eventType, limit, offset, accessibleShopIds });
-      
-      if (logs.length === 0) {
-        console.log(`❌ Keine Activity-Logs gefunden - debugging...`);
-        // Debug: Teste ob Logs überhaupt existieren
-        const debugQuery = await db.select().from(activityLogs).where(eq(activityLogs.shopId, accessibleShopIds[0])).limit(5);
-        console.log(`🔍 Debug - Logs für Shop ${accessibleShopIds[0]}:`, debugQuery.length);
-      }
+      console.log(`📋 ${logs.length} Activity-Logs für MSA-User ${msaUserId} geladen`);
       
       return logs;
     } catch (error) {
@@ -6864,6 +6853,29 @@ export class DatabaseStorage implements IStorage {
     details?: any
   ): Promise<void> {
     let description = '';
+    let enhancedDetails = details || {};
+    
+    // Geräteinformationen abrufen wenn eine Reparatur-ID vorhanden ist
+    if (order.repairId) {
+      try {
+        const repair = await this.getRepairById(order.repairId);
+        if (repair) {
+          // Gerätetyp, Hersteller und Modell abrufen
+          const deviceType = repair.deviceTypeId ? await this.getDeviceTypeById(repair.deviceTypeId) : null;
+          const brand = repair.brandId ? await this.getBrandById(repair.brandId) : null;
+          const model = repair.modelId ? await this.getModelById(repair.modelId) : null;
+          
+          enhancedDetails.deviceInfo = {
+            deviceType: deviceType?.name || null,
+            manufacturer: brand?.name || null,
+            model: model?.name || null,
+            repairId: order.repairId
+          };
+        }
+      } catch (error) {
+        console.error('Fehler beim Abrufen der Geräteinformationen für Order-Log:', error);
+      }
+    }
     
     switch (action) {
       case 'created':
@@ -6894,7 +6906,7 @@ export class DatabaseStorage implements IStorage {
       order.partName,
       order.shopId,
       undefined,
-      details,
+      enhancedDetails,
       'info'
     );
   }
