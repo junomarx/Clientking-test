@@ -6769,7 +6769,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const start = new Date(startDate as string);
       const end = new Date(endDate as string);
 
-      console.log(`Generiere PDF-Statistik für Shop ${shopId} - Zeitraum: ${start.toISOString()} bis ${end.toISOString()}`);
+      console.log(`Generiere PDF-Statistik für Shop ${shopId}`);
 
       const businessSettings = await storage.getBusinessSettings(userId);
 
@@ -6857,13 +6857,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const revenueStats = await db.select({
         totalRevenue: sql<number>`COALESCE(SUM(CASE 
           WHEN status = 'abgeholt' AND estimated_cost IS NOT NULL 
-          AND estimated_cost ~ '^[0-9]+\.?[0-9]*$' 
+          AND estimated_cost ~ '^[0-9]+(\.[0-9]+)?$' 
           THEN CAST(estimated_cost AS DECIMAL) 
           ELSE 0 
         END), 0)`,
         pendingRevenue: sql<number>`COALESCE(SUM(CASE 
           WHEN status IN ('abholbereit', 'fertig') AND estimated_cost IS NOT NULL 
-          AND estimated_cost ~ '^[0-9]+\.?[0-9]*$' 
+          AND estimated_cost ~ '^[0-9]+(\.[0-9]+)?$' 
           THEN CAST(estimated_cost AS DECIMAL) 
           ELSE 0 
         END), 0)`
