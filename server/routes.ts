@@ -6270,6 +6270,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!sparePart) {
         return res.status(404).json({ message: "Ersatzteil nicht gefunden" });
       }
+
+      // Activity-Log für Ersatzteil-Update erstellen
+      if (req.body.status && req.body.status !== existingSparePart.status) {
+        try {
+          const user = await storage.getUser(userId);
+          const repair = await storage.getRepair(sparePart.repairId, userId);
+          
+          await storage.logOrderActivity(
+            'status_updated',
+            sparePart.id,
+            { 
+              oldStatus: existingSparePart.status, 
+              newStatus: req.body.status, 
+              partName: sparePart.partName,
+              orderCode: repair?.orderCode || 'Unbekannt',
+              updatedBy: user?.username || user?.email || 'Benutzer'
+            },
+            userId,
+            user?.username || user?.email || 'Unbekannter Benutzer'
+          );
+          console.log(`📋 Activity-Log erstellt: Ersatzteil-Status ${existingSparePart.status} → ${req.body.status}`);
+        } catch (activityError) {
+          console.error("❌ Fehler beim Erstellen des Order-Activity-Logs:", activityError);
+        }
+      }
       
       console.log(`Ersatzteil ${id} aktualisiert von Benutzer ${userId}`);
       res.json(sparePart);
@@ -6359,6 +6384,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!success) {
         return res.status(400).json({ message: "Fehler beim Aktualisieren der Ersatzteile" });
+      }
+
+      // Activity-Log für Ersatzteil Bulk-Update erstellen
+      try {
+        const user = await storage.getUser(userId);
+        await storage.logOrderActivity(
+          'bulk_updated',
+          0, // Bulk-Operation hat keine einzelne ID
+          { partIds, status, count: partIds.length },
+          userId,
+          user?.username || user?.email || 'Unbekannter Benutzer'
+        );
+        console.log(`📋 Activity-Log für Ersatzteil Bulk-Update erstellt: ${partIds.length} Teile → ${status}`);
+      } catch (activityError) {
+        console.error("❌ Fehler beim Erstellen des Order-Activity-Logs:", activityError);
       }
       
       console.log(`Bulk-Update erfolgreich für Benutzer ${userId}`);
