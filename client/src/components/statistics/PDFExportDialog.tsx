@@ -48,7 +48,9 @@ export function PDFExportDialog({ open, onOpenChange }: PDFExportDialogProps) {
       });
 
       if (!response.ok) {
-        throw new Error('Fehler beim Abrufen der Statistikdaten');
+        const errorData = await response.text();
+        console.error('API Error Response:', errorData);
+        throw new Error(`API-Fehler: ${response.status} - ${errorData}`);
       }
 
       const statisticsData = await response.json();
@@ -61,7 +63,7 @@ export function PDFExportDialog({ open, onOpenChange }: PDFExportDialogProps) {
       onOpenChange(false);
     } catch (error) {
       console.error('Fehler beim PDF-Export:', error);
-      alert('Fehler beim Generieren der PDF-Statistik');
+      alert(`Fehler beim Generieren der PDF-Statistik: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`);
     } finally {
       setIsExporting(false);
     }
