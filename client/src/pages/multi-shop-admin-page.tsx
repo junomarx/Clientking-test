@@ -2363,9 +2363,9 @@ function OrdersOverview() {
                 </div>
 
                 {/* Mobile Cards */}
-                <div className="lg:hidden space-y-2 px-1">
+                <div className="lg:hidden space-y-2 px-0">
                   {filteredOrders.map((order: any) => (
-                    <div key={order.id} className="bg-white border border-gray-200 rounded-lg px-2 py-1 space-y-2">
+                    <div key={order.id} className="bg-white border border-gray-200 rounded-lg px-1 py-1 space-y-1 w-full max-w-full overflow-hidden box-border">
                   {/* Header */}
                   <div className="flex items-start gap-2">
                     <div className="flex-1 min-w-0">
@@ -2405,7 +2405,7 @@ function OrdersOverview() {
                       }}
                       disabled={changeStatusMutation.isPending}
                     >
-                      <SelectTrigger className="w-full">
+                      <SelectTrigger className="w-full max-w-full">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -2525,7 +2525,7 @@ function OrdersOverview() {
                 {/* Mobile Cards für Archivierte */}
                 <div className="lg:hidden space-y-3 px-3 sm:px-0">
                   {filteredArchivedOrders.map((order: any) => (
-                    <div key={order.id} className="bg-white border border-gray-200 rounded-lg px-2 py-1 space-y-2">
+                    <div key={order.id} className="bg-white border border-gray-200 rounded-lg px-1 py-1 space-y-1 w-full max-w-full overflow-hidden box-border">
                       {/* Header */}
                       <div className="flex items-start gap-2">
                         <div className="flex-1 min-w-0">
@@ -2565,7 +2565,7 @@ function OrdersOverview() {
                           }}
                           disabled={changeStatusMutation.isPending}
                         >
-                          <SelectTrigger className="w-full">
+                          <SelectTrigger className="w-full max-w-full">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
