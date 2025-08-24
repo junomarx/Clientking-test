@@ -60,6 +60,8 @@ import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import type { DateRange } from "react-day-picker";
+import { MultiShopAdminSidebar } from "@/components/multi-shop/MultiShopAdminSidebar";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Shop Details Dialog mit Reparaturen-Einsicht
 function ShopDetailsDialog({ shop }: { shop: any }) {
@@ -3253,172 +3255,72 @@ function LogsOverview() {
 export default function MultiShopAdminPage() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [settingsExpanded, setSettingsExpanded] = useState(false);
-  const { logoutMutation } = useAuth();
+  const { user, logoutMutation } = useAuth();
 
   const handleLogout = () => {
     logoutMutation.mutate();
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 justify-between items-center">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <div className="bg-blue-600 p-2 rounded-lg">
-                  <Building2 className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-semibold text-gray-900">ClientKing</h1>
-                  <p className="text-sm text-gray-500">Multi-Shop Admin</p>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-                ClientKing Multi-Shop Admin
-              </span>
-              <Button variant="outline" size="sm" onClick={handleLogout}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Abmelden
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="flex h-screen bg-background">
+      {/* Sidebar */}
+      <MultiShopAdminSidebar 
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        currentUser={user || undefined}
+        handleLogout={handleLogout}
+      />
 
-      <div className="mx-auto max-w-7xl py-8 px-4 sm:px-6 lg:px-8">
-        <div className="flex space-x-8">
-          {/* Sidebar Navigation */}
-          <div className="w-64 flex-shrink-0">
-            <nav className="space-y-2">
-              <button
-                onClick={() => setActiveTab("dashboard")}
-                className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                  activeTab === "dashboard"
-                    ? "bg-blue-100 text-blue-700"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                }`}
-              >
-                <BarChart3 className="h-5 w-5 mr-3" />
-                Dashboard
-              </button>
-              <button
-                onClick={() => setActiveTab("shops")}
-                className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                  activeTab === "shops"
-                    ? "bg-blue-100 text-blue-700"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                }`}
-              >
-                <Building2 className="h-5 w-5 mr-3" />
-                Shops
-              </button>
-              <button
-                onClick={() => setActiveTab("employees")}
-                className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                  activeTab === "employees"
-                    ? "bg-blue-100 text-blue-700"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                }`}
-              >
-                <Users className="h-5 w-5 mr-3" />
-                Mitarbeiter
-              </button>
-              <button
-                onClick={() => setActiveTab("orders")}
-                className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                  activeTab === "orders"
-                    ? "bg-blue-100 text-blue-700"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                }`}
-              >
-                <Package className="h-5 w-5 mr-3" />
-                Bestellungen
-              </button>
-              <button
-                onClick={() => setSettingsExpanded(!settingsExpanded)}
-                className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-              >
-                <div className="flex items-center">
-                  <Settings className="h-5 w-5 mr-3" />
-                  Einstellungen
-                </div>
-                {settingsExpanded ? (
-                  <ChevronDown className="h-4 w-4" />
-                ) : (
-                  <ChevronRight className="h-4 w-4" />
-                )}
-              </button>
-              
-              {/* Untermenü für Einstellungen */}
-              {settingsExpanded && (
-                <div className="ml-6 space-y-1 mt-1">
-                  <button
-                    onClick={() => setActiveTab("profile")}
-                    className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                      activeTab === "profile"
-                        ? "bg-blue-100 text-blue-700"
-                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                    }`}
-                  >
-                    <User className="h-4 w-4 mr-3" />
-                    Profil & Stammdaten
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("business")}
-                    className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                      activeTab === "business"
-                        ? "bg-blue-100 text-blue-700"
-                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                    }`}
-                  >
-                    <Building2 className="h-4 w-4 mr-3" />
-                    Geschäftsdaten & Rechnungsstellung
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("pricing")}
-                    className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                      activeTab === "pricing"
-                        ? "bg-blue-100 text-blue-700"
-                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                    }`}
-                  >
-                    <Euro className="h-4 w-4 mr-3" />
-                    Preisgestaltung & Pakete
-                  </button>
-                </div>
-              )}
-              <button
-                onClick={() => setActiveTab("logs")}
-                className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                  activeTab === "logs"
-                    ? "bg-blue-100 text-blue-700"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                }`}
-              >
-                <Activity className="h-5 w-5 mr-3" />
-                Logs
-              </button>
-            </nav>
+      {/* Main content area */}
+      <div className="flex flex-col flex-1 overflow-hidden">
+        {/* Top header - Mobile und Desktop */}
+        <header className="flex justify-between items-center py-3 px-4 md:py-4 md:px-6 bg-background shadow-sm border-b">
+          {/* Mobile Titel */}
+          <div className="flex items-center md:hidden">
+            <h1 className="text-lg font-medium ml-10">
+              {activeTab === "dashboard" && "Dashboard"}
+              {activeTab === "shops" && "Shops"}
+              {activeTab === "employees" && "Mitarbeiter"}
+              {activeTab === "orders" && "Bestellungen"}
+              {activeTab === "logs" && "Logs"}
+              {activeTab === "settings" && "Geschäft"}
+              {activeTab === "account" && "Konto"}
+            </h1>
           </div>
+          
+          {/* Desktop Titel */}
+          <div className="hidden md:block">
+            <h1 className="text-xl font-semibold">
+              {activeTab === "dashboard" && "Multi-Shop Admin Dashboard"}
+              {activeTab === "shops" && "Shop-Verwaltung"}
+              {activeTab === "employees" && "Mitarbeiter-Verwaltung"}
+              {activeTab === "orders" && "Bestellungen-Übersicht"}
+              {activeTab === "logs" && "Activity Logs"}
+              {activeTab === "settings" && "Geschäfts-Einstellungen"}
+              {activeTab === "account" && "Konto-Einstellungen"}
+            </h1>
+          </div>
+          
+          {/* Multi-Shop Admin rechts (Desktop) */}
+          <div className="flex items-center text-right">
+            <p className="text-sm text-muted-foreground hidden md:block">
+              Multi-Shop Administration
+            </p>
+          </div>
+        </header>
 
-          {/* Main Content */}
-          <div className="flex-1">
-            <div className="max-w-6xl">
-              {activeTab === "dashboard" && <DashboardStats />}
-              {activeTab === "shops" && <ShopsOverview />}
-              {activeTab === "employees" && <EmployeesOverview />}
-              {activeTab === "orders" && <OrdersOverview />}
-              {activeTab === "profile" && <MSAProfileSettings />}
-              {activeTab === "business" && <MSABusinessSettings />}
-              {activeTab === "pricing" && <MSAPricingSettings />}
-              {activeTab === "logs" && <LogsOverview />}
-            </div>
-          </div>
-        </div>
+        {/* Main content */}
+        <main className="flex-1 overflow-auto p-3 md:p-6">
+          <ScrollArea className="h-full">
+            {activeTab === "dashboard" && <DashboardStats />}
+            {activeTab === "shops" && <ShopsOverview />}
+            {activeTab === "employees" && <EmployeesOverview />}
+            {activeTab === "orders" && <OrdersOverview />}
+            {activeTab === "logs" && <LogsOverview />}
+            {activeTab === "settings" && <MSABusinessSettings />}
+            {activeTab === "account" && <MSAProfileSettings />}
+          </ScrollArea>
+        </main>
       </div>
     </div>
   );
