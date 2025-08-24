@@ -133,26 +133,26 @@ function ShopDetailsDialog({ shop }: { shop: any }) {
             Details
           </Button>
         </DialogTrigger>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogContent className="max-w-6xl w-[95vw] max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader className="flex-shrink-0">
-            <DialogTitle className="flex items-center gap-2">
-              <Building2 className="h-5 w-5" />
-              Shop-Details: {shop.businessName}
+            <DialogTitle className="flex items-center gap-2 text-sm sm:text-base">
+              <Building2 className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="truncate">Shop-Details: {shop.businessName}</span>
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-xs sm:text-sm">
               Shop-ID: {shop.shopId} • Reparatur-Management und -Übersicht
             </DialogDescription>
           </DialogHeader>
 
           <div className="flex-1 overflow-hidden">
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "overview" | "active" | "history")} className="w-full h-full flex flex-col">
-              <TabsList className="grid w-full grid-cols-3 flex-shrink-0">
-                <TabsTrigger value="overview">Übersicht</TabsTrigger>
-                <TabsTrigger value="active">Aktive Reparaturen ({activeRepairs.length})</TabsTrigger>
-                <TabsTrigger value="history">Reparatur-Verlauf</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 flex-shrink-0 h-auto">
+                <TabsTrigger value="overview" className="text-xs sm:text-sm py-2">Übersicht</TabsTrigger>
+                <TabsTrigger value="active" className="text-xs sm:text-sm py-2">Aktive ({activeRepairs.length})</TabsTrigger>
+                <TabsTrigger value="history" className="text-xs sm:text-sm py-2">Verlauf</TabsTrigger>
               </TabsList>
 
-              <div className="flex-1 overflow-y-auto mt-4" style={{ maxHeight: 'calc(90vh - 180px)' }}>
+              <div className="flex-1 overflow-y-auto mt-4 px-1" style={{ maxHeight: 'calc(90vh - 180px)' }}>
                 {/* Übersicht Tab */}
                 <TabsContent value="overview" className="space-y-4 m-0">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -2185,43 +2185,46 @@ function OrdersOverview() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-2 sm:p-4">
       <Card>
-        <CardHeader>
-          <CardTitle>Bestellungen - Zentrale Ersatzteil-Verwaltung</CardTitle>
-          <CardDescription>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg sm:text-xl font-bold flex items-center gap-2">
+            <Package className="h-5 w-5 sm:h-6 sm:w-6 flex-shrink-0" />
+            <span className="truncate">Bestellungen - Zentrale Ersatzteil-Verwaltung</span>
+          </CardTitle>
+          <CardDescription className="text-sm">
             Verwalten Sie Ersatzteilbestellungen für alle Standorte zentral
           </CardDescription>
           
           {/* Tab Navigation */}
-          <div className="flex space-x-1 mt-4">
+          <div className="flex flex-col sm:flex-row gap-2 mt-4 overflow-x-auto">
             <Button
               variant={activeOrdersTab === "active" ? "default" : "outline"}
               onClick={() => setActiveOrdersTab("active")}
-              className="flex items-center gap-2"
+              className="flex items-center justify-center gap-1 sm:gap-2 whitespace-nowrap"
               size="sm"
             >
-              <Package className="h-4 w-4" />
-              Aktive Bestellungen
-              <Badge variant="secondary" className="ml-2">
+              <Package className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="text-xs sm:text-sm">Aktive Bestellungen</span>
+              <Badge variant="secondary" className="ml-1 sm:ml-2 text-xs">
                 {filteredOrders.length}
               </Badge>
             </Button>
             <Button
               variant={activeOrdersTab === "archived" ? "default" : "outline"}
               onClick={() => setActiveOrdersTab("archived")}
-              className="flex items-center gap-2"
+              className="flex items-center justify-center gap-1 sm:gap-2 whitespace-nowrap"
               size="sm"
             >
-              <CheckCircle className="h-4 w-4" />
-              Archivierte Bestellungen
-              <Badge variant="secondary" className="ml-2">
+              <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="text-xs sm:text-sm">Archivierte Bestellungen</span>
+              <Badge variant="secondary" className="ml-1 sm:ml-2 text-xs">
                 {filteredArchivedOrders.length}
               </Badge>
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-2 sm:px-6">
           {/* Filter und Suche */}
           <div className="flex flex-col sm:flex-row gap-4 mb-6">
             <div className="flex-1">
@@ -2344,9 +2347,9 @@ function OrdersOverview() {
                 </div>
 
                 {/* Mobile Cards */}
-                <div className="lg:hidden space-y-3">
+                <div className="lg:hidden space-y-3 px-1">
                   {filteredOrders.map((order: any) => (
-                    <div key={order.id} className="bg-white border border-gray-200 rounded-lg p-4 space-y-3">
+                    <div key={order.id} className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 space-y-3 w-full max-w-full overflow-hidden">
                   {/* Header */}
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
@@ -3178,25 +3181,25 @@ function LogsOverview() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-2 sm:p-4">
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="h-5 w-5" />
-            Aktivitäts-Logs
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg sm:text-xl font-bold flex items-center gap-2">
+            <Activity className="h-5 w-5 sm:h-6 sm:w-6 flex-shrink-0" />
+            <span className="truncate">Aktivitäts-Logs</span>
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-sm">
             Chronologische Übersicht aller Aktivitäten in allen verwalteten Shops
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-2 sm:px-6">
           {/* Filter Controls */}
-          <div className="mb-6 flex flex-wrap gap-4">
+          <div className="mb-6 flex flex-col sm:flex-row flex-wrap gap-4">
             {/* Zeitraum Filter */}
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700">Zeitraum:</span>
+              <span className="text-xs sm:text-sm font-medium text-gray-700">Zeitraum:</span>
               <Select value={period} onValueChange={setPeriod}>
-                <SelectTrigger className="w-40">
+                <SelectTrigger className="w-32 sm:w-40">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -3255,9 +3258,9 @@ function LogsOverview() {
 
             {/* Event-Typ Filter */}
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700">Typ:</span>
+              <span className="text-xs sm:text-sm font-medium text-gray-700">Typ:</span>
               <Select value={eventType} onValueChange={setEventType}>
-                <SelectTrigger className="w-40">
+                <SelectTrigger className="w-32 sm:w-40">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -3290,11 +3293,11 @@ function LogsOverview() {
               </p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-3 px-1">
               {activityLogs.map((log: any) => (
                 <div
                   key={log.id}
-                  className="flex items-start gap-4 p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex items-start gap-2 sm:gap-4 p-3 sm:p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors w-full max-w-full overflow-hidden"
                 >
                   {/* Event Icon */}
                   <div className={`p-2 rounded-lg ${getSeverityColor(log.severity)}`}>
@@ -3303,20 +3306,20 @@ function LogsOverview() {
 
                   {/* Event Details */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <p className="font-medium text-gray-900 truncate">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-900 text-sm sm:text-base truncate">
                           {log.description}
                         </p>
-                        <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 mt-1 text-xs sm:text-sm text-gray-500">
                           {log.performedByUsername && (
                             <span>von {log.performedByUsername}</span>
                           )}
                           {log.shopName && (
-                            <span>• {log.shopName}</span>
+                            <span className="truncate">• {log.shopName}</span>
                           )}
                           {log.entityName && (
-                            <span>• {log.entityName}</span>
+                            <span className="truncate">• {log.entityName}</span>
                           )}
                         </div>
                       </div>
