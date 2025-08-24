@@ -3342,7 +3342,7 @@ function LogsOverview() {
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between">
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 text-sm sm:text-base truncate">
+                        <p className="font-medium text-gray-900 text-sm sm:text-base">
                           {log.description}
                         </p>
                         <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 mt-1 text-xs sm:text-sm text-gray-500">
@@ -3373,9 +3373,23 @@ function LogsOverview() {
                         <summary className="text-xs text-blue-600 cursor-pointer hover:text-blue-800">
                           Details anzeigen
                         </summary>
-                        <pre className="mt-1 text-xs text-gray-600 bg-gray-50 p-2 rounded overflow-auto">
-                          {JSON.stringify(log.details, null, 2)}
-                        </pre>
+                        <div className="mt-2 space-y-2">
+                          {log.eventType === 'repair' && log.details.oldValue && log.details.newValue ? (
+                            <div className="flex items-center gap-2 text-sm">
+                              <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700">
+                                {log.details.oldValue}
+                              </span>
+                              <span className="text-gray-400">→</span>
+                              <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700">
+                                {log.details.newValue}
+                              </span>
+                            </div>
+                          ) : (
+                            <pre className="text-xs text-gray-600 bg-gray-50 p-2 rounded overflow-auto">
+                              {JSON.stringify(log.details, null, 2)}
+                            </pre>
+                          )}
+                        </div>
                       </details>
                     )}
                   </div>
