@@ -2361,18 +2361,18 @@ function OrdersOverview() {
                 </div>
 
                 {/* Mobile Cards */}
-                <div className="lg:hidden space-y-3 px-1">
+                <div className="lg:hidden space-y-3">
                   {filteredOrders.map((order: any) => (
-                    <div key={order.id} className="bg-white border border-gray-200 rounded-lg p-3 space-y-3 w-full max-w-[calc(100vw-2rem)] overflow-hidden">
+                    <div key={order.id} className="bg-white border border-gray-200 rounded-lg p-3 space-y-3 w-full">
                   {/* Header */}
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-900 text-sm">{order.partName}</h3>
+                  <div className="flex items-start gap-3">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-gray-900 text-sm truncate">{order.partName}</h3>
                       {order.supplier && (
-                        <p className="text-xs text-blue-600 mt-1">{order.supplier}</p>
+                        <p className="text-xs text-blue-600 mt-1 truncate">{order.supplier}</p>
                       )}
                     </div>
-                    <span className="font-mono text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                    <span className="font-mono text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded flex-shrink-0">
                       {order.orderCode}
                     </span>
                   </div>
@@ -2380,16 +2380,16 @@ function OrdersOverview() {
                   {/* Device Info */}
                   <div>
                     <p className="text-xs text-gray-500 mb-1">Gerät</p>
-                    <p className="text-sm text-gray-900">{order.deviceInfo}</p>
+                    <p className="text-sm text-gray-900 truncate">{order.deviceInfo}</p>
                     {order.notes && (
-                      <p className="text-xs text-gray-500 mt-1">{order.notes}</p>
+                      <p className="text-xs text-gray-500 mt-1 line-clamp-2">{order.notes}</p>
                     )}
                   </div>
 
                   {/* Shop Info */}
                   <div>
                     <p className="text-xs text-gray-500 mb-1">Shop</p>
-                    <p className="text-sm text-gray-900">{order.businessName}</p>
+                    <p className="text-sm text-gray-900 truncate">{order.businessName}</p>
                     <p className="text-xs text-gray-500">ID: {order.shopId}</p>
                   </div>
 
@@ -2523,16 +2523,16 @@ function OrdersOverview() {
                 {/* Mobile Cards für Archivierte */}
                 <div className="lg:hidden space-y-3">
                   {filteredArchivedOrders.map((order: any) => (
-                    <div key={order.id} className="bg-white border border-gray-200 rounded-lg p-4 space-y-3">
+                    <div key={order.id} className="bg-white border border-gray-200 rounded-lg p-3 space-y-3 w-full">
                       {/* Header */}
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <h3 className="font-medium text-gray-900 text-sm">{order.partName}</h3>
+                      <div className="flex items-start gap-3">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-gray-900 text-sm truncate">{order.partName}</h3>
                           {order.supplier && (
-                            <p className="text-xs text-blue-600 mt-1">{order.supplier}</p>
+                            <p className="text-xs text-blue-600 mt-1 truncate">{order.supplier}</p>
                           )}
                         </div>
-                        <span className="font-mono text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                        <span className="font-mono text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded flex-shrink-0">
                           {order.orderCode}
                         </span>
                       </div>
@@ -2540,16 +2540,16 @@ function OrdersOverview() {
                       {/* Device Info */}
                       <div>
                         <p className="text-xs text-gray-500 mb-1">Gerät</p>
-                        <p className="text-sm text-gray-900">{order.deviceInfo}</p>
+                        <p className="text-sm text-gray-900 truncate">{order.deviceInfo}</p>
                         {order.notes && (
-                          <p className="text-xs text-gray-500 mt-1">{order.notes}</p>
+                          <p className="text-xs text-gray-500 mt-1 line-clamp-2">{order.notes}</p>
                         )}
                       </div>
 
                       {/* Shop Info */}
                       <div>
                         <p className="text-xs text-gray-500 mb-1">Shop</p>
-                        <p className="text-sm text-gray-900">{order.businessName}</p>
+                        <p className="text-sm text-gray-900 truncate">{order.businessName}</p>
                         <p className="text-xs text-gray-500">ID: {order.shopId}</p>
                       </div>
 
