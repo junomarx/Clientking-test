@@ -6819,19 +6819,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       .groupBy(repairs.deviceType, repairs.brand, repairs.model)
       .orderBy(repairs.deviceType, repairs.brand, repairs.model);
 
-      // 4. "Außer Haus" Reparaturen - Vereinfacht ohne komplexe JOIN
-      const ausserHausRepairs = await db.select({
+      // 4. "Außer Haus" Reparaturen
+      const outsideRepairs = await db.select({
+        orderCode: repairs.orderCode,
         deviceType: repairs.deviceType,
         brand: repairs.brand,
         model: repairs.model,
-        statusDate: repairs.createdAt
+        status: repairs.status,
+        createdAt: repairs.createdAt
       })
       .from(repairs)
       .where(and(
         eq(repairs.shopId, shopId),
-        eq(repairs.status, 'ausser_haus'),
         gte(repairs.createdAt, start),
-        lte(repairs.createdAt, end)
+        lte(repairs.createdAt, end),
+        eq(repairs.status, 'ausser_haus')
       ))
       .orderBy(repairs.deviceType, repairs.brand, repairs.model);
 
@@ -6862,11 +6864,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             model: stat.model || 'Unbekannt',
             count: stat.count
           })),
-          ausserHausRepairs: ausserHausRepairs.map(stat => ({
-            deviceType: stat.deviceType || 'Unbekannt',
-            brand: stat.brand || 'Unbekannt',
-            model: stat.model || 'Unbekannt',
-            statusDate: stat.statusDate
+          outsideRepairs: outsideRepairs.map(repair => ({
+            orderCode: repair.orderCode,
+            deviceType: repair.deviceType || 'Unbekannt',
+            brand: repair.brand || 'Unbekannt',
+            model: repair.model || 'Unbekannt',
+            status: repair.status,
+            createdAt: repair.createdAt
           })),
           revenue: {
             totalRevenue: Number(revenue.totalRevenue) || 0,
