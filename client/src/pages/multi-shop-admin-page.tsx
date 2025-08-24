@@ -3124,15 +3124,28 @@ function LogsOverview() {
       ? JSON.parse(localStorage.getItem('msa-logs-date-range')!)
       : undefined
   );
+  
+  // Logs per page mit persistenter Speicherung (nur für MSA Session)
+  const [logsPerPage, setLogsPerPage] = useState(() => {
+    const saved = sessionStorage.getItem('msa-logs-per-page');
+    return saved ? parseInt(saved) : 10;
+  });
+
+  // Speichere Logs-per-Page Auswahl in sessionStorage (bis Logout)
+  const handleLogsPerPageChange = (value: string) => {
+    const newValue = parseInt(value);
+    setLogsPerPage(newValue);
+    sessionStorage.setItem('msa-logs-per-page', value);
+  };
 
   // Activity-Logs laden
   const { data: activityLogs = [], isLoading, refetch: refetchActivityLogs } = useQuery({
-    queryKey: ['/api/multi-shop/activity-logs', period, eventType, customDateRange],
+    queryKey: ['/api/multi-shop/activity-logs', period, eventType, customDateRange, logsPerPage],
     queryFn: async () => {
       const params = new URLSearchParams({
         period,
         eventType,
-        limit: '100',
+        limit: logsPerPage.toString(),
         offset: '0'
       });
 
@@ -3349,13 +3362,35 @@ function LogsOverview() {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Logs per Page Filter */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs sm:text-sm font-medium text-gray-700">Anzeigen:</span>
+              <Select value={logsPerPage.toString()} onValueChange={handleLogsPerPageChange}>
+                <SelectTrigger className="w-20 sm:w-24">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="20">20</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                  <SelectItem value="100">100</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Activity Logs Liste */}
+          <div className="text-right mb-2">
+            <span className="text-xs text-gray-500">
+              Zeige die letzten {logsPerPage} Aktivitäten
+            </span>
+          </div>
+          
           {isLoading ? (
-            <div className="space-y-3">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />
+            <div className="space-y-2">
+              {[...Array(logsPerPage > 10 ? 10 : logsPerPage)].map((_, i) => (
+                <div key={i} className="h-12 bg-gray-100 rounded-lg animate-pulse" />
               ))}
             </div>
           ) : activityLogs.length === 0 ? (
@@ -3369,14 +3404,14 @@ function LogsOverview() {
               </p>
             </div>
           ) : (
-            <div className="space-y-3 px-1">
+            <div className="space-y-2 px-1">
               {activityLogs.map((log: any) => (
                 <div
                   key={log.id}
-                  className={`flex items-start gap-2 sm:gap-4 p-3 sm:p-4 bg-white border-2 rounded-lg hover:bg-gray-50 transition-colors w-full max-w-full overflow-hidden ${getEventTypeBorderColor(log.eventType)}`}
+                  className={`flex items-start gap-2 sm:gap-3 p-2 sm:p-3 bg-white border-2 rounded-lg hover:bg-gray-50 transition-colors w-full max-w-full overflow-hidden ${getEventTypeBorderColor(log.eventType)}`}
                 >
                   {/* Event Icon */}
-                  <div className={`p-1.5 sm:p-2 rounded-lg flex-shrink-0 ${getSeverityColor(log.severity)}`}>
+                  <div className={`p-1 sm:p-1.5 rounded-lg flex-shrink-0 ${getSeverityColor(log.severity)}`}>
                     {getEventTypeIcon(log.eventType)}
                   </div>
 
@@ -3384,10 +3419,10 @@ function LogsOverview() {
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between">
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 text-sm sm:text-base">
+                        <p className="font-medium text-gray-900 text-sm">
                           {log.description}
                         </p>
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 mt-1 text-xs sm:text-sm text-gray-500">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mt-0.5 text-xs text-gray-500">
                           {log.performedByUsername && (
                             <span>von {log.performedByUsername}</span>
                           )}
@@ -3399,24 +3434,24 @@ function LogsOverview() {
                           )}
                         </div>
                       </div>
-                      <div className="flex flex-col items-end gap-1">
+                      <div className="flex flex-col items-end gap-0.5">
                         <time className="text-xs text-gray-500">
                           {formatTimestamp(log.createdAt)}
                         </time>
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getSeverityColor(log.severity)}`}>
+                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${getSeverityColor(log.severity)}`}>
                           {log.eventType}
                         </span>
                       </div>
                     </div>
                     
                     {/* Details immer anzeigen */}
-                    <details className="mt-2">
+                    <details className="mt-1.5">
                       <summary className="text-xs text-blue-600 cursor-pointer hover:text-blue-800">
                         Details anzeigen
                       </summary>
-                        <div className="mt-2 space-y-2">
+                        <div className="mt-1.5 space-y-1.5">
                           {/* Zeitstempel immer anzeigen */}
-                          <div className="text-xs text-gray-500 mb-2">
+                          <div className="text-xs text-gray-500 mb-1.5">
                             Erstellt: {new Date(log.createdAt).toLocaleString('de-DE', {
                               day: '2-digit',
                               month: '2-digit', 
