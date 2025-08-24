@@ -2363,7 +2363,7 @@ function OrdersOverview() {
                 </div>
 
                 {/* Mobile Cards */}
-                <div className="lg:hidden space-y-2 px-4 pb-6">
+                <div className="lg:hidden space-y-2 px-4" style={{ paddingBottom: '20px' }}>
                   {filteredOrders.map((order: any) => (
                     <div
                       key={order.id}
@@ -2532,7 +2532,7 @@ function OrdersOverview() {
                 </div>
 
                 {/* Mobile Cards für Archivierte */}
-                <div className="lg:hidden space-y-2 px-4 pb-6">
+                <div className="lg:hidden space-y-2 px-4" style={{ paddingBottom: '20px' }}>
                   {filteredArchivedOrders.map((order: any) => (
                     <div
                       key={order.id}
