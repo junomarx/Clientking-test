@@ -324,6 +324,52 @@ export function registerMultiShopRoutes(app: Express) {
 
   // ========== NEUE MULTI-SHOP-BERECHTIGUNG APIs ==========
 
+  // Superadmin: Passwort für MSA zurücksetzen
+  app.patch("/api/superadmin/users/:userId/reset-password", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const { newPassword } = req.body;
+
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Ungültige Benutzer-ID" });
+      }
+
+      if (!newPassword || newPassword.trim().length < 6) {
+        return res.status(400).json({ message: "Neues Passwort muss mindestens 6 Zeichen haben" });
+      }
+
+      // Prüfen ob User existiert
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Benutzer nicht gefunden" });
+      }
+
+      // Passwort hashen (verwende die bestehende hashPassword Funktion)
+      const { hashPassword } = await import('./auth');
+      const hashedPassword = await hashPassword(newPassword);
+
+      // Passwort aktualisieren
+      const success = await storage.updateUserPassword(userId, hashedPassword);
+
+      if (success) {
+        console.log(`[SUPERADMIN] Passwort für User ${userId} (${user.username}) zurückgesetzt`);
+        
+        res.json({ 
+          message: `Passwort für ${user.username} erfolgreich zurückgesetzt`,
+          userId
+        });
+      } else {
+        res.status(500).json({ message: "Fehler beim Zurücksetzen des Passworts" });
+      }
+    } catch (error: any) {
+      console.error('Fehler beim Zurücksetzen des Passworts:', error);
+      res.status(500).json({ 
+        message: 'Interner Serverfehler beim Zurücksetzen des Passworts',
+        error: error.message 
+      });
+    }
+  });
+
   // Superadmin: Multi-Shop-Berechtigung für einen Shop ein-/ausschalten
   app.patch("/api/superadmin/users/:userId/multishop-permission", isSuperadmin, async (req: Request, res: Response) => {
     try {

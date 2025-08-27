@@ -5517,8 +5517,25 @@ export class DatabaseStorage implements IStorage {
     try {
       console.log('DEBUG: Getting multi-shop admin details for ID:', adminId);
       
-      // NEUE LOGIK: Admin muss isMultiShopAdmin=true haben
-      const admin = await db.select().from(users).where(
+      // NEUE LOGIK: Admin muss isMultiShopAdmin=true haben, inklusive Login-Zeitstempel
+      const admin = await db.select({
+        id: users.id,
+        username: users.username,
+        email: users.email,
+        password: users.password,
+        isActive: users.isActive,
+        isAdmin: users.isAdmin,
+        isSuperadmin: users.isSuperadmin,
+        isMultiShopAdmin: users.isMultiShopAdmin,
+        canAssignMultiShopAdmins: users.canAssignMultiShopAdmins,
+        role: users.role,
+        pricingPlan: users.pricingPlan,
+        shopId: users.shopId,
+        createdAt: users.createdAt,
+        trialExpiresAt: users.trialExpiresAt,
+        lastLoginAt: users.lastLoginAt,
+        lastLogoutAt: users.lastLogoutAt
+      }).from(users).where(
         and(
           eq(users.id, adminId),
           eq(users.isMultiShopAdmin, true),

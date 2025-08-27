@@ -16,6 +16,7 @@ import { z } from "zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useOnlineStatus } from "@/hooks/use-online-status";
 import { 
   User, 
   Building2, 
@@ -28,7 +29,11 @@ import {
   Euro,
   Calendar,
   Percent,
-  FileText
+  FileText,
+  Circle,
+  Key,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
@@ -39,6 +44,8 @@ interface MultiShopAdmin {
   email: string;
   isActive: boolean;
   createdAt: string;
+  lastLoginAt: string | null;
+  lastLogoutAt: string | null;
   accessibleShops: Array<{
     id: number;
     name: string;
@@ -115,6 +122,37 @@ export function MultiShopAdminDetailsDialog({
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("overview");
   const [hasChanges, setHasChanges] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
+  const { isUserOnline: isOnlineViaWebSocket, isConnected } = useOnlineStatus();
+
+  // Online-Status Logik (gleich wie in SuperadminUsersTab)
+  const { data: backendOnlineStatus } = useQuery({
+    queryKey: ['/api/online-status'],
+    refetchInterval: 30000,
+  });
+
+  const isUserOnline = (userId: number, lastLoginAt: string | null, lastLogoutAt: string | null) => {
+    if (backendOnlineStatus && 'onlineUsers' in backendOnlineStatus && Array.isArray(backendOnlineStatus.onlineUsers)) {
+      return backendOnlineStatus.onlineUsers.includes(userId);
+    }
+    if (isConnected) {
+      return isOnlineViaWebSocket(userId);
+    }
+    // Fallback: Zeitstempel-basierte Logik
+    if (!lastLoginAt) return false;
+    const loginTime = new Date(lastLoginAt);
+    const now = new Date();
+    const fifteenMinutesAgo = new Date(now.getTime() - 15 * 60 * 1000);
+    if (lastLogoutAt) {
+      const logoutTime = new Date(lastLogoutAt);
+      if (logoutTime > loginTime) {
+        return false;
+      }
+    }
+    return loginTime > fifteenMinutesAgo;
+  };
 
   // MSA-Profil Form
   const profileForm = useForm<MSAProfileData>({
@@ -208,6 +246,43 @@ export function MultiShopAdminDetailsDialog({
     },
   });
 
+  // Reset password mutation
+  const resetPasswordMutation = useMutation({
+    mutationFn: async ({ userId, newPassword }: { userId: number; newPassword: string }) => {
+      const response = await apiRequest('PATCH', `/api/superadmin/users/${userId}/reset-password`, {
+        newPassword
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Passwort zurückgesetzt",
+        description: "Das Passwort wurde erfolgreich zurückgesetzt.",
+      });
+      setNewPassword("");
+      setResetPasswordDialogOpen(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Fehler",
+        description: error.message || "Fehler beim Zurücksetzen des Passworts",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleResetPassword = () => {
+    if (!admin || !newPassword.trim()) {
+      toast({
+        title: "Fehler",
+        description: "Bitte geben Sie ein neues Passwort ein.",
+        variant: "destructive",
+      });
+      return;
+    }
+    resetPasswordMutation.mutate({ userId: admin.id, newPassword });
+  };
+
   const onUpdateProfile = (data: MSAProfileData) => {
     updateProfileMutation.mutate(data);
     setHasChanges(false);
@@ -232,11 +307,12 @@ export function MultiShopAdminDetailsDialog({
 
         <div className="flex-1 overflow-hidden">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
-            <TabsList className="grid w-full grid-cols-4 flex-shrink-0">
+            <TabsList className="grid w-full grid-cols-5 flex-shrink-0">
               <TabsTrigger value="overview">Übersicht</TabsTrigger>
               <TabsTrigger value="shops">Shops</TabsTrigger>
               <TabsTrigger value="profile">Profil</TabsTrigger>
               <TabsTrigger value="pricing">Preisgestaltung</TabsTrigger>
+              <TabsTrigger value="security">Sicherheit</TabsTrigger>
             </TabsList>
 
             <div className="flex-1 overflow-y-auto mt-4 pr-2" style={{ maxHeight: 'calc(90vh - 260px)' }}>
@@ -265,6 +341,37 @@ export function MultiShopAdminDetailsDialog({
                         <Badge variant={admin.isActive ? "default" : "secondary"}>
                           {admin.isActive ? "Aktiv" : "Inaktiv"}
                         </Badge>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium">Online-Status</Label>
+                        <div className="flex items-center gap-2">
+                          <Badge 
+                            variant="outline" 
+                            className={`${
+                              isUserOnline(admin.id, admin.lastLoginAt, admin.lastLogoutAt) 
+                                ? 'bg-green-100 text-green-700' 
+                                : 'bg-red-100 text-red-700'
+                            }`}
+                          >
+                            <Circle 
+                              className={`h-3 w-3 mr-1 ${
+                                isUserOnline(admin.id, admin.lastLoginAt, admin.lastLogoutAt) 
+                                  ? 'fill-green-500 text-green-500' 
+                                  : 'fill-red-500 text-red-500'
+                              }`} 
+                            />
+                            {isUserOnline(admin.id, admin.lastLoginAt, admin.lastLogoutAt) ? 'Online' : 'Offline'}
+                          </Badge>
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium">Letzter Login</Label>
+                        <p className="text-sm">
+                          {admin.lastLoginAt 
+                            ? format(new Date(admin.lastLoginAt), "dd.MM.yyyy HH:mm", { locale: de })
+                            : "Nie angemeldet"
+                          }
+                        </p>
                       </div>
                       <div>
                         <Label className="text-sm font-medium">Erstellt am</Label>
@@ -708,6 +815,64 @@ export function MultiShopAdminDetailsDialog({
                     </Card>
                   </form>
                 </Form>
+              </TabsContent>
+
+              {/* Sicherheit Tab */}
+              <TabsContent value="security" className="space-y-4 m-0 data-[state=active]:block"
+                style={{ height: 'fit-content' }}>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Key className="h-4 w-4" />
+                      Passwort-Verwaltung
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <p className="text-sm text-yellow-800">
+                        <strong>Wichtiger Hinweis:</strong> Das Zurücksetzen des Passworts überschreibt das aktuelle Passwort. 
+                        Der Multi-Shop Admin sollte über die Änderung informiert werden.
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="newPassword">Neues Passwort</Label>
+                        <div className="relative">
+                          <Input
+                            id="newPassword"
+                            type={showPassword ? "text" : "password"}
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            placeholder="Neues Passwort eingeben"
+                            className="pr-10"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            {showPassword ? (
+                              <EyeOff className="h-4 w-4" />
+                            ) : (
+                              <Eye className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      <Button 
+                        onClick={handleResetPassword}
+                        disabled={!newPassword.trim() || resetPasswordMutation.isPending}
+                        className="w-full"
+                      >
+                        {resetPasswordMutation.isPending ? "Wird zurückgesetzt..." : "Passwort zurücksetzen"}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
               </TabsContent>
             </div>
           </Tabs>
