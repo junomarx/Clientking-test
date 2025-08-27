@@ -6223,25 +6223,48 @@ export class DatabaseStorage implements IStorage {
       const adminsWithDetails = await Promise.all(
         multiShopAdmins.map(async (admin) => {
           // 1. Verwende das neue user_shop_access System statt getGrantedPermissions
-          const accessibleShopsData = await db
+          const accessibleShopsRaw = await db
             .select({
               shopId: userShopAccess.shopId,
               grantedAt: userShopAccess.grantedAt,
-              isActive: userShopAccess.isActive,
-              businessName: businessSettings.businessName,
-              ownerFirstName: businessSettings.ownerFirstName,
-              ownerLastName: businessSettings.ownerLastName,
-              city: businessSettings.city,
-              email: businessSettings.email
+              isActive: userShopAccess.isActive
             })
             .from(userShopAccess)
-            .leftJoin(businessSettings, eq(userShopAccess.shopId, businessSettings.shopId))
             .where(
               and(
                 eq(userShopAccess.userId, admin.id),
                 eq(userShopAccess.isActive, true)
               )
             );
+
+          // 2. Für jeden Shop die neuesten Business Settings holen (um Duplikate zu vermeiden)
+          const accessibleShopsData = await Promise.all(
+            accessibleShopsRaw.map(async (access) => {
+              const [latestBusinessData] = await db
+                .select({
+                  businessName: businessSettings.businessName,
+                  ownerFirstName: businessSettings.ownerFirstName,
+                  ownerLastName: businessSettings.ownerLastName,
+                  city: businessSettings.city,
+                  email: businessSettings.email
+                })
+                .from(businessSettings)
+                .where(eq(businessSettings.shopId, access.shopId))
+                .orderBy(businessSettings.id)
+                .limit(1);
+
+              return {
+                shopId: access.shopId,
+                grantedAt: access.grantedAt,
+                isActive: access.isActive,
+                businessName: latestBusinessData?.businessName,
+                ownerFirstName: latestBusinessData?.ownerFirstName,
+                ownerLastName: latestBusinessData?.ownerLastName,
+                city: latestBusinessData?.city,
+                email: latestBusinessData?.email
+              };
+            })
+          );
 
           const accessibleShops = accessibleShopsData.map((shopData) => ({
             id: shopData.shopId,
