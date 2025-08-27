@@ -6707,18 +6707,19 @@ export class DatabaseStorage implements IStorage {
         offset = 0 
       } = options;
 
-      // Zugängliche Shops für MSA-User abrufen - direkt aus permissions laden
+      // Zugängliche Shops für MSA-User abrufen - NEUE IMPLEMENTATION mit userShopAccess
       let accessibleShopIds = shopIds;
       if (!accessibleShopIds) {
-        const grantedPermissions = await db
-          .select({ shopId: multiShopPermissions.shopId })
-          .from(multiShopPermissions)
+        const grantedAccess = await db
+          .select({ shopId: userShopAccess.shopId })
+          .from(userShopAccess)
           .where(and(
-            eq(multiShopPermissions.multiShopAdminId, msaUserId),
-            eq(multiShopPermissions.granted, true),
-            isNull(multiShopPermissions.revokedAt)
+            eq(userShopAccess.userId, msaUserId),
+            eq(userShopAccess.isActive, true),
+            isNull(userShopAccess.revokedAt)
           ));
-        accessibleShopIds = grantedPermissions.map(p => p.shopId);
+        accessibleShopIds = grantedAccess.map(a => a.shopId);
+        console.log(`📋 ${accessibleShopIds.length} Activity-Logs für MSA-User ${msaUserId} geladen`);
       }
       
       if (accessibleShopIds.length === 0) {
