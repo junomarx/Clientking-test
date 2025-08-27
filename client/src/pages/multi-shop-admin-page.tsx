@@ -73,6 +73,7 @@ function ShopDetailsDialog({ shop }: { shop: any }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedRepair, setSelectedRepair] = useState<any>(null);
+  const { toast } = useToast();
   
   // Shop-spezifische Reparaturen laden
   const { data: activeRepairs = [], isLoading: isLoadingActive } = useQuery({
@@ -92,6 +93,34 @@ function ShopDetailsDialog({ shop }: { shop: any }) {
     },
     enabled: isOpen && activeTab === "history"
   });
+
+  // Status-Update Mutation
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ repairId, status }: { repairId: number; status: string }) => {
+      const response = await apiRequest("PATCH", `/api/multi-shop/repairs/${repairId}/status`, { status });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Status aktualisiert",
+        description: `Reparatur ${data.repair?.orderCode} wurde auf "${statusLabels[data.newStatus as keyof typeof statusLabels] || data.newStatus}" gesetzt.`,
+      });
+      // Reparaturen neu laden
+      queryClient.invalidateQueries({ queryKey: ["/api/multi-shop/shop-repairs"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Fehler",
+        description: "Status konnte nicht aktualisiert werden.",
+        variant: "destructive",
+      });
+      console.error("Status update error:", error);
+    },
+  });
+
+  const handleStatusChange = (repairId: number, newStatus: string) => {
+    updateStatusMutation.mutate({ repairId, status: newStatus });
+  };
 
   // Filter aktive Reparaturen
   const filteredActiveRepairs = activeRepairs.filter((repair: any) => {
@@ -253,11 +282,11 @@ function ShopDetailsDialog({ shop }: { shop: any }) {
                   ) : (
                     <div className="space-y-2">
                       {filteredActiveRepairs.map((repair: any) => (
-                        <Card key={repair.id} className="cursor-pointer hover:shadow-md transition-shadow"
-                              onClick={() => setSelectedRepair(repair)}>
+                        <Card key={repair.id} className="hover:shadow-md transition-shadow">
                           <CardContent className="p-4">
                             <div className="flex justify-between items-start">
-                              <div className="space-y-1 flex-1">
+                              <div className="space-y-1 flex-1 cursor-pointer" 
+                                   onClick={() => setSelectedRepair(repair)}>
                                 <div className="flex items-center gap-3">
                                   <span className="font-medium">{repair.orderCode}</span>
                                   <Badge variant={getStatusVariant(repair.status)}>
@@ -271,19 +300,43 @@ function ShopDetailsDialog({ shop }: { shop: any }) {
                                   {repair.issue}
                                 </p>
                               </div>
-                              <div className="text-right">
+                              <div className="text-right space-y-2">
                                 {repair.cost && (
-                                  <div className="text-lg font-semibold text-green-600 mb-1">
+                                  <div className="text-lg font-semibold text-green-600">
                                     €{repair.cost}
                                   </div>
                                 )}
+                                
+                                {/* Status-Dropdown für MSA */}
+                                <div className="space-y-1">
+                                  <Select
+                                    value={repair.status}
+                                    onValueChange={(newStatus) => handleStatusChange(repair.id, newStatus)}
+                                    disabled={updateStatusMutation.isPending}
+                                  >
+                                    <SelectTrigger className="w-40 h-8 text-xs">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="eingegangen">Eingegangen</SelectItem>
+                                      <SelectItem value="in_reparatur">In Reparatur</SelectItem>
+                                      <SelectItem value="ersatzteile_bestellen">Ersatzteile bestellen</SelectItem>
+                                      <SelectItem value="warten_auf_ersatzteile">Warten auf Ersatzteile</SelectItem>
+                                      <SelectItem value="ersatzteil_eingetroffen">Ersatzteil eingetroffen</SelectItem>
+                                      <SelectItem value="ausser_haus">Außer Haus</SelectItem>
+                                      <SelectItem value="fertig">Fertig</SelectItem>
+                                      <SelectItem value="abgeholt">Abgeholt</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+
                                 {repair.assignedEmployee && (
                                   <div className="flex items-center gap-1 text-sm text-gray-500">
                                     <UserCircle className="h-3 w-3" />
                                     {repair.assignedEmployee}
                                   </div>
                                 )}
-                                <div className="flex items-center gap-1 mt-1 text-sm text-gray-500">
+                                <div className="flex items-center gap-1 text-sm text-gray-500">
                                   <Calendar className="h-3 w-3" />
                                   {new Date(repair.createdAt).toLocaleDateString('de-DE')}
                                 </div>
