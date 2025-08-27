@@ -5848,10 +5848,23 @@ export class DatabaseStorage implements IStorage {
           )
         );
 
-      // Einfache Dummy-Berechnung für Umsatz (basierend auf abgeschlossenen Reparaturen)
+      // Echter Gesamtumsatz basierend auf abgeschlossenen Reparaturen mit estimated_cost
       const completedCount = completedRepairsResult[0]?.count || 0;
-      const avgRepairPrice = 89.99; // Durchschnittlicher Reparaturpreis
-      const totalRevenue = completedCount * avgRepairPrice;
+      
+      // Berechne echten Gesamtumsatz aus estimated_cost
+      const totalRevenueResult = await db
+        .select({ 
+          revenue: sql<number>`SUM(CASE WHEN ${repairs.estimatedCost} ~ '^[0-9]+(\.[0-9]+)?$' THEN CAST(${repairs.estimatedCost} AS NUMERIC) ELSE 0 END)`
+        })
+        .from(repairs)
+        .where(
+          and(
+            eq(repairs.shopId, shopId),
+            eq(repairs.status, 'abgeholt')
+          )
+        );
+      
+      const totalRevenue = totalRevenueResult[0]?.revenue || 0;
       
       // Zeitraum-spezifische Berechnungen
       let periodRevenue = 0;

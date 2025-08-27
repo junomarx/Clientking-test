@@ -329,8 +329,8 @@ export function registerMultiShopAdminRoutes(app: Express) {
         return res.json([]); // Keine authorisierten Shops = keine Bestellungen
       }
 
-      // Ersatzteile mit allen relevanten Daten aus authorisierten Shops laden
-      const sparePartOrders = await db
+      // Ersatzteile OHNE JOIN zu business_settings holen (um Duplikate zu vermeiden)
+      const sparePartOrdersRaw = await db
         .select({
           id: spareParts.id,
           partName: spareParts.partName,
@@ -351,14 +351,11 @@ export function registerMultiShopAdminRoutes(app: Express) {
           repairStatus: repairs.status,
           // Kunden-Details
           customerName: sql<string>`COALESCE(${customers.firstName}, '') || ' ' || COALESCE(${customers.lastName}, '')`,
-          customerPhone: customers.phone,
-          // Shop-Details
-          businessName: businessSettings.businessName
+          customerPhone: customers.phone
         })
         .from(spareParts)
         .leftJoin(repairs, eq(spareParts.repairId, repairs.id))
         .leftJoin(customers, eq(repairs.customerId, customers.id))
-        .leftJoin(businessSettings, eq(spareParts.shopId, businessSettings.shopId))
         .where(and(
           // Nur aus authorisierten Shops
           authorizedShopIds.length === 1 ? 
@@ -368,6 +365,25 @@ export function registerMultiShopAdminRoutes(app: Express) {
           eq(spareParts.archived, false)
         ))
         .orderBy(desc(spareParts.createdAt));
+
+      // Business Names separat für jeden Shop holen (um Duplikate zu vermeiden)
+      const shopBusinessNames = new Map<number, string>();
+      for (const shopId of authorizedShopIds) {
+        const [businessData] = await db
+          .select({ businessName: businessSettings.businessName })
+          .from(businessSettings)
+          .where(eq(businessSettings.shopId, shopId))
+          .orderBy(businessSettings.id)
+          .limit(1);
+        
+        shopBusinessNames.set(shopId, businessData?.businessName || `Shop #${shopId}`);
+      }
+
+      // Business Names zu den Ersatzteilen hinzufügen
+      const sparePartOrders = sparePartOrdersRaw.map(order => ({
+        ...order,
+        businessName: shopBusinessNames.get(order.shopId) || `Shop #${order.shopId}`
+      }));
 
       res.json(sparePartOrders);
     } catch (error) {
@@ -396,8 +412,8 @@ export function registerMultiShopAdminRoutes(app: Express) {
         return res.json([]); // Keine authorisierten Shops = keine Bestellungen
       }
 
-      // Archivierte Ersatzteile mit allen relevanten Daten aus authorisierten Shops laden
-      const archivedSparePartOrders = await db
+      // Archivierte Ersatzteile OHNE JOIN zu business_settings holen (um Duplikate zu vermeiden)
+      const archivedSparePartOrdersRaw = await db
         .select({
           id: spareParts.id,
           partName: spareParts.partName,
@@ -418,14 +434,11 @@ export function registerMultiShopAdminRoutes(app: Express) {
           repairStatus: repairs.status,
           // Kunden-Details
           customerName: sql<string>`COALESCE(${customers.firstName}, '') || ' ' || COALESCE(${customers.lastName}, '')`,
-          customerPhone: customers.phone,
-          // Shop-Details
-          businessName: businessSettings.businessName
+          customerPhone: customers.phone
         })
         .from(spareParts)
         .leftJoin(repairs, eq(spareParts.repairId, repairs.id))
         .leftJoin(customers, eq(repairs.customerId, customers.id))
-        .leftJoin(businessSettings, eq(spareParts.shopId, businessSettings.shopId))
         .where(and(
           // Nur aus authorisierten Shops
           authorizedShopIds.length === 1 ? 
@@ -435,6 +448,12 @@ export function registerMultiShopAdminRoutes(app: Express) {
           eq(spareParts.archived, true)
         ))
         .orderBy(desc(spareParts.updatedAt)); // Nach letztem Update sortieren
+
+      // Business Names zu den archivierten Ersatzteilen hinzufügen (mit der bereits geladenen Map)
+      const archivedSparePartOrders = archivedSparePartOrdersRaw.map(order => ({
+        ...order,
+        businessName: shopBusinessNames.get(order.shopId) || `Shop #${order.shopId}`
+      }));
 
       res.json(archivedSparePartOrders);
     } catch (error) {
