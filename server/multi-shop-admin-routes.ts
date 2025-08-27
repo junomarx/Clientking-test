@@ -449,10 +449,23 @@ export function registerMultiShopAdminRoutes(app: Express) {
         ))
         .orderBy(desc(spareParts.updatedAt)); // Nach letztem Update sortieren
 
-      // Business Names zu den archivierten Ersatzteilen hinzufügen (mit der bereits geladenen Map)
+      // Business Names für archivierte Ersatzteile holen
+      const shopBusinessNamesForArchived = new Map<number, string>();
+      for (const shopId of authorizedShopIds) {
+        const [businessData] = await db
+          .select({ businessName: businessSettings.businessName })
+          .from(businessSettings)
+          .where(eq(businessSettings.shopId, shopId))
+          .orderBy(businessSettings.id)
+          .limit(1);
+        
+        shopBusinessNamesForArchived.set(shopId, businessData?.businessName || `Shop #${shopId}`);
+      }
+
+      // Business Names zu den archivierten Ersatzteilen hinzufügen
       const archivedSparePartOrders = archivedSparePartOrdersRaw.map(order => ({
         ...order,
-        businessName: shopBusinessNames.get(order.shopId) || `Shop #${order.shopId}`
+        businessName: shopBusinessNamesForArchived.get(order.shopId) || `Shop #${order.shopId}`
       }));
 
       res.json(archivedSparePartOrders);

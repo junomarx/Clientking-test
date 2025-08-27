@@ -5917,8 +5917,8 @@ export class DatabaseStorage implements IStorage {
               and(
                 eq(repairs.shopId, shopId),
                 eq(repairs.status, 'abgeholt'),
-                gte(repairs.statusUpdatedAt, startDate),
-                lte(repairs.statusUpdatedAt, endDate)
+                gte(sql`COALESCE(${repairs.statusUpdatedAt}, ${repairs.updatedAt})`, startDate),
+                lte(sql`COALESCE(${repairs.statusUpdatedAt}, ${repairs.updatedAt})`, endDate)
               )
             );
           
@@ -5944,7 +5944,7 @@ export class DatabaseStorage implements IStorage {
             and(
               eq(repairs.shopId, shopId),
               eq(repairs.status, 'abgeholt'),
-              gte(repairs.statusUpdatedAt, thirtyDaysAgo)
+              gte(sql`COALESCE(${repairs.statusUpdatedAt}, ${repairs.updatedAt})`, thirtyDaysAgo)
             )
           );
 
