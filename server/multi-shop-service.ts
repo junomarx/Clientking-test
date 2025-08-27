@@ -22,9 +22,9 @@ export class MultiShopService {
       return null;
     }
 
-    // Nur gewährte Permissions laden (granted: true, revokedAt: null)
-    const grantedPermissions = await storage.getGrantedPermissions(userId);
-    const shopIds = grantedPermissions.map(permission => permission.shopId);
+    // Verwende die neue getUserAccessibleShops Methode statt getGrantedPermissions
+    const accessibleShops = await storage.getUserAccessibleShops(userId);
+    const shopIds = accessibleShops.map(shop => shop.id);
     
     console.log(`🔐 Permission-basierte Shops für Multi-Shop Admin ${userId}: [${shopIds.join(', ')}]`);
     return shopIds.length > 0 ? shopIds : [];
