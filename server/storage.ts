@@ -6222,35 +6222,40 @@ export class DatabaseStorage implements IStorage {
       // Für jeden Multi-Shop Admin umfassende Informationen laden
       const adminsWithDetails = await Promise.all(
         multiShopAdmins.map(async (admin) => {
-          // 1. Gewährte Permissions und Shops
-          const grantedPermissions = await this.getGrantedPermissions(admin.id);
-          const accessibleShops = await Promise.all(
-            grantedPermissions.map(async (permission) => {
-              // Business-Namen aus business_settings abrufen
-              const [businessData] = await db
-                .select({
-                  businessName: businessSettings.businessName,
-                  ownerFirstName: businessSettings.ownerFirstName,
-                  ownerLastName: businessSettings.ownerLastName,
-                  city: businessSettings.city,
-                  email: businessSettings.email
-                })
-                .from(businessSettings)
-                .where(eq(businessSettings.shopId, permission.shopId));
-                
-              return {
-                id: permission.shopId,
-                name: businessData?.businessName || `Shop #${permission.shopId}`,
-                businessName: businessData?.businessName,
-                ownerName: businessData ? `${businessData.ownerFirstName} ${businessData.ownerLastName}` : '',
-                city: businessData?.city,
-                email: businessData?.email,
-                shopId: permission.shopId,
-                grantedAt: permission.grantedAt,
-                isActive: true
-              };
+          // 1. Verwende das neue user_shop_access System statt getGrantedPermissions
+          const accessibleShopsData = await db
+            .select({
+              shopId: userShopAccess.shopId,
+              grantedAt: userShopAccess.grantedAt,
+              isActive: userShopAccess.isActive,
+              businessName: businessSettings.businessName,
+              ownerFirstName: businessSettings.ownerFirstName,
+              ownerLastName: businessSettings.ownerLastName,
+              city: businessSettings.city,
+              email: businessSettings.email
             })
-          );
+            .from(userShopAccess)
+            .leftJoin(businessSettings, eq(userShopAccess.shopId, businessSettings.shopId))
+            .where(
+              and(
+                eq(userShopAccess.userId, admin.id),
+                eq(userShopAccess.isActive, true)
+              )
+            );
+
+          const accessibleShops = accessibleShopsData.map((shopData) => ({
+            id: shopData.shopId,
+            name: shopData.businessName || `Shop #${shopData.shopId}`,
+            businessName: shopData.businessName,
+            ownerName: shopData.ownerFirstName && shopData.ownerLastName 
+              ? `${shopData.ownerFirstName} ${shopData.ownerLastName}` 
+              : '',
+            city: shopData.city,
+            email: shopData.email,
+            shopId: shopData.shopId,
+            grantedAt: shopData.grantedAt,
+            isActive: shopData.isActive
+          }));
 
           // 2. MSA-Profil laden
           let msaProfile;
