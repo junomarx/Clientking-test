@@ -10,8 +10,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Check, ChevronsUpDown, X } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Check, ChevronsUpDown, X, ChevronDown, ChevronRight, Circle } from "lucide-react";
 import { Building2, UserPlus, UserMinus, Users, ShieldCheck, Plus } from "lucide-react";
+import { useOnlineStatus } from "@/hooks/use-online-status";
 // Erweiterte MultiShopAdmin Interface
 interface MultiShopAdmin {
   id: number;
@@ -92,6 +94,22 @@ interface User {
 export function MultiShopManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { isUserOnline } = useOnlineStatus();
+  
+  // State für die ausklappbaren Shop-Listen
+  const [expandedAdmins, setExpandedAdmins] = useState<Set<number>>(new Set());
+  
+  const toggleAdminExpansion = (adminId: number) => {
+    setExpandedAdmins(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(adminId)) {
+        newSet.delete(adminId);
+      } else {
+        newSet.add(adminId);
+      }
+      return newSet;
+    });
+  };
 
   // Direkte API-Aufrufe für Superadmin Multi-Shop Verwaltung
   const { data: multiShopAdmins = [], isLoading: isLoadingAdmins } = useQuery<MultiShopAdmin[]>({
@@ -553,9 +571,26 @@ export function MultiShopManagement() {
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <ShieldCheck className="h-5 w-5 text-primary" />
+                      <div className="flex items-center gap-2">
+                        <ShieldCheck className="h-5 w-5 text-primary" />
+                        {/* Online-Status-Kreis */}
+                        <div className="relative flex items-center">
+                          <Circle 
+                            className={`h-3 w-3 ${isUserOnline(admin.id) ? 'text-green-500 fill-green-500' : 'text-red-500 fill-red-500'}`} 
+                          />
+                        </div>
+                      </div>
                       <div>
                         <h3 className="font-medium">{admin.username}</h3>
+                        <div className="flex items-center gap-1 mt-1">
+                          <span className={`text-xs px-2 py-1 rounded-full ${
+                            isUserOnline(admin.id) 
+                              ? 'bg-green-100 text-green-700' 
+                              : 'bg-gray-100 text-gray-600'
+                          }`}>
+                            {isUserOnline(admin.id) ? 'Online' : 'Offline'}
+                          </span>
+                        </div>
                         {admin.email && (
                           <p className="text-sm text-muted-foreground">{admin.email}</p>
                         )}
@@ -565,6 +600,18 @@ export function MultiShopManagement() {
                       <Badge variant="secondary">
                         {admin.accessibleShops.length} Shop{admin.accessibleShops.length !== 1 ? "s" : ""}
                       </Badge>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleAdminExpansion(admin.id)}
+                        className="p-2"
+                      >
+                        {expandedAdmins.has(admin.id) ? (
+                          <ChevronDown className="h-4 w-4" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4" />
+                        )}
+                      </Button>
                       <Button
                         variant="outline"
                         size="sm"
@@ -579,45 +626,49 @@ export function MultiShopManagement() {
                   </div>
                 </CardHeader>
                 
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Shop Name</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Gewährt am</TableHead>
-                        <TableHead className="w-[100px]">Aktionen</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {admin.accessibleShops.map((shopAccess) => (
-                        <TableRow key={shopAccess.shopId}>
-                          <TableCell className="font-medium">
-                            {shopAccess.businessName || shopAccess.name}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={shopAccess.isActive ? "default" : "secondary"}>
-                              {shopAccess.isActive ? "Aktiv" : "Inaktiv"}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            {new Date(shopAccess.grantedAt).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleRevokeAccess(admin.id, shopAccess.shopId)}
-                              disabled={revokeAccessMutation.isPending}
-                            >
-                              <UserMinus className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
+                <Collapsible open={expandedAdmins.has(admin.id)} onOpenChange={() => toggleAdminExpansion(admin.id)}>
+                  <CollapsibleContent>
+                    <CardContent>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Shop Name</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Gewährt am</TableHead>
+                            <TableHead className="w-[100px]">Aktionen</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {admin.accessibleShops.map((shopAccess) => (
+                            <TableRow key={shopAccess.shopId}>
+                              <TableCell className="font-medium">
+                                {shopAccess.businessName || shopAccess.name}
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant={shopAccess.isActive ? "default" : "secondary"}>
+                                  {shopAccess.isActive ? "Aktiv" : "Inaktiv"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                {new Date(shopAccess.grantedAt).toLocaleDateString()}
+                              </TableCell>
+                              <TableCell>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleRevokeAccess(admin.id, shopAccess.shopId)}
+                                  disabled={revokeAccessMutation.isPending}
+                                >
+                                  <UserMinus className="h-4 w-4" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </CollapsibleContent>
+                </Collapsible>
               </Card>
             ))}
           </div>
