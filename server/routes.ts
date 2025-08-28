@@ -1992,7 +1992,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/repairs/:id/status", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
-      const { status, sendEmail, technicianNote } = req.body;
+      const { status, sendEmail, technicianNote, emailTemplate } = req.body;
       
       // Validate status
       if (!status || !repairStatuses.safeParse(status).success) {
@@ -2047,7 +2047,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Kunde und Business-Daten laden (für E-Mail)
-      const customer = await storage.getCustomer(repair.customerId, userId);
+      const customer = repair.customerId ? await storage.getCustomer(repair.customerId, userId) : null;
       const businessSettings = await storage.getBusinessSettings(userId);
       
       // Wenn Kunde existiert, Benachrichtigungen senden
@@ -2063,9 +2063,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           "geschaeftsname": businessSettings?.businessName || "Handyshop",
           "abholzeit": "ab sofort", // kann später angepasst werden
           // Fehlende Variablen hinzufügen
-          "reparaturarbeit": repair.description || repair.issue || "Reparatur des Geräts",
-          "oeffnungszeiten": businessSettings?.opening_hours || "",
-          "opening_hours": businessSettings?.opening_hours || "",
+          "reparaturarbeit": repair.issue || "Reparatur des Geräts",
+          "oeffnungszeiten": businessSettings?.openingHours || "",
+          "opening_hours": businessSettings?.openingHours || "",
           // Wichtig: userId und repairId für die Datenisolierung und E-Mail-Verlauf hinzufügen
           "userId": userId.toString(),
           "repairId": repair.id.toString()
@@ -2092,10 +2092,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const { emailService } = await import('./email-service.js');
               console.log(`🔍 EmailService erfolgreich geladen:`, typeof emailService);
               
-              // Template-Typ basierend auf Status bestimmen
+              // Template-Typ basierend auf Status und Benutzerauswahl bestimmen
               let templateType = status;
               if (status === 'fertig') {
-                templateType = 'fertig';
+                // Bei Status "fertig" verwende das vom Benutzer gewählte Template
+                templateType = emailTemplate || 'Reparatur erfolgreich abgeschlossen';
               } else if (status === 'ersatzteil_eingetroffen') {
                 templateType = 'ersatzteil_eingetroffen';
               }

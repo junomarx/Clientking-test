@@ -126,12 +126,12 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
   });
 
   // Status-Änderung Mutation
-  const updateStatusMutation = useMutation<any, Error, { id: number; status: string; sendEmail?: boolean; technicianNote?: string }>({
+  const updateStatusMutation = useMutation<any, Error, { id: number; status: string; sendEmail?: boolean; technicianNote?: string; emailTemplate?: string }>({
     mutationFn: async (variables) => {
       const response = await apiRequest(
         'PATCH',
         `/api/repairs/${variables.id}/status`,
-        { status: variables.status, sendEmail: variables.sendEmail, technicianNote: variables.technicianNote }
+        { status: variables.status, sendEmail: variables.sendEmail, technicianNote: variables.technicianNote, emailTemplate: variables.emailTemplate }
       );
       return response.json();
     },
@@ -451,7 +451,7 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
         onClose={() => setShowStatusDialog(false)}
         repairId={selectedRepairId}
         currentStatus={currentStatus}
-        onUpdateStatus={(id, status, sendEmail, technicianNote) => updateStatusMutation.mutate({ id, status, sendEmail, technicianNote })}
+        onUpdateStatus={(id, status, sendEmail, technicianNote, emailTemplate) => updateStatusMutation.mutate({ id, status, sendEmail, technicianNote, emailTemplate })}
       />
 
       {/* Repair bearbeiten Dialog */}

@@ -258,8 +258,8 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
   };
 
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ id, status, sendEmail, technicianNote }: { id: number, status: string, sendEmail?: boolean, technicianNote?: string }) => {
-      const response = await apiRequest('PATCH', `/api/repairs/${id}/status`, { status, sendEmail, technicianNote });
+    mutationFn: async ({ id, status, sendEmail, technicianNote, emailTemplate }: { id: number, status: string, sendEmail?: boolean, technicianNote?: string, emailTemplate?: string }) => {
+      const response = await apiRequest('PATCH', `/api/repairs/${id}/status`, { status, sendEmail, technicianNote, emailTemplate });
       const data = await response.json();
       
       // Check for email status in response headers
@@ -1142,8 +1142,8 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
           onClose={() => setShowStatusDialog(false)}
           repairId={selectedRepairId}
           currentStatus={newStatus || 'eingegangen'}
-          onUpdateStatus={(id, status, sendEmail, technicianNote) => {
-            console.log(`Status-Update für ID=${id}, newStatus=${status}, sendEmail=${sendEmail}, technicianNote=${technicianNote}`);
+          onUpdateStatus={(id, status, sendEmail, technicianNote, emailTemplate) => {
+            console.log(`Status-Update für ID=${id}, newStatus=${status}, sendEmail=${sendEmail}, technicianNote=${technicianNote}, emailTemplate=${emailTemplate}`);
             
             if (status === 'abgeholt') {
               updateStatusMutation.mutate({
@@ -1165,7 +1165,8 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
                 id: id,
                 status: status,
                 sendEmail: sendEmail,
-                technicianNote: technicianNote
+                technicianNote: technicianNote,
+                emailTemplate: emailTemplate
               });
             }
             

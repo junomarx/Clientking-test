@@ -1197,11 +1197,24 @@ export class EmailService {
       
       // Fallback-Suche nach Name, wenn kein Type-Match gefunden wurde
       if (!template) {
-        if (templateType === 'fertig') {
+        if (templateType === 'fertig' || templateType === 'Reparatur erfolgreich abgeschlossen') {
           template = templates.find(t => 
             t.name.toLowerCase().includes('abholbereit') || 
             t.name.toLowerCase().includes('fertig') ||
+            t.name.toLowerCase().includes('erfolgreich') ||
             t.type === 'ready_for_pickup'
+          );
+        } else if (templateType === 'Reparatur nicht möglich') {
+          template = templates.find(t => 
+            t.name.toLowerCase().includes('nicht möglich') ||
+            t.name.toLowerCase().includes('nicht reparierbar') ||
+            t.name === 'Reparatur nicht möglich'
+          );
+        } else if (templateType === 'Kunde hat Reparatur abgelehnt') {
+          template = templates.find(t => 
+            t.name.toLowerCase().includes('abgelehnt') ||
+            t.name.toLowerCase().includes('kunde hat') ||
+            t.name === 'Kunde hat Reparatur abgelehnt'
           );
         } else if (templateType === 'ersatzteil_eingetroffen') {
           // Für "Ersatzteil eingetroffen" verwende die Vorlage "Gerät zur Reparatur bringen"

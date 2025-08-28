@@ -274,7 +274,7 @@ export const defaultCustomerEmailTemplates: DefaultEmailTemplate[] = [
     type: 'customer'
   },
   {
-    name: "Reparatur abholbereit",
+    name: "Reparatur erfolgreich abgeschlossen",
     subject: "Ihre Reparatur ist abholbereit",
     body: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
@@ -298,6 +298,92 @@ export const defaultCustomerEmailTemplates: DefaultEmailTemplate[] = [
         <p>Bitte bringen Sie zum Abholen Ihren Abholschein oder einen Ausweis mit.</p>
         
         <p>Falls Sie Fragen haben, zögern Sie nicht, uns zu kontaktieren.</p>
+        
+        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
+          <p style="margin: 5px 0;"><strong>{{geschaeftsname}}</strong></p>
+          <p style="margin: 5px 0;">{{adresse}}</p>
+          <p style="margin: 5px 0;">Telefon: {{telefon}}</p>
+          <p style="margin: 5px 0;">E-Mail: {{email}}</p>
+        </div>
+        
+        <p style="margin-top: 20px; font-style: italic; text-align: center;">Vielen Dank für Ihr Vertrauen!</p>
+        
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666;">
+          <p>Diese E-Mail wurde automatisch von {{geschaeftsname}} gesendet.</p>
+        </div>
+      </div>
+    `,
+    variables: ["kundenname", "hersteller", "geraet", "auftragsnummer", "reparaturarbeit", "oeffnungszeiten", "geschaeftsname", "adresse", "telefon", "email"],
+    type: 'customer'
+  },
+  {
+    name: "Reparatur nicht möglich",
+    subject: "Information zu Ihrer Reparatur",
+    body: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h2 style="color: #f59e0b;">Reparatur leider nicht möglich</h2>
+        </div>
+        
+        <p>Sehr geehrte(r) {{kundenname}},</p>
+        
+        <p>nach eingehender Untersuchung müssen wir Ihnen leider mitteilen, dass eine Reparatur Ihres Geräts nicht möglich ist.</p>
+        
+        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+          <p style="margin: 5px 0;"><strong>Gerät:</strong> {{hersteller}} {{geraet}}</p>
+          <p style="margin: 5px 0;"><strong>Auftragsnummer:</strong> {{auftragsnummer}}</p>
+          <p style="margin: 5px 0;"><strong>Beschreibung:</strong> {{reparaturarbeit}}</p>
+        </div>
+        
+        <p>Sie können Ihr Gerät zu unseren Öffnungszeiten abholen:</p>
+        <p style="text-align: center; font-weight: bold;">{{oeffnungszeiten}}</p>
+        
+        <p>Bitte bringen Sie zum Abholen Ihren Abholschein oder einen Ausweis mit. Es fallen keine Reparaturkosten an.</p>
+        
+        <p>Falls Sie Fragen haben, zögern Sie nicht, uns zu kontaktieren. Wir beraten Sie gerne zu alternativen Lösungen.</p>
+        
+        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
+          <p style="margin: 5px 0;"><strong>{{geschaeftsname}}</strong></p>
+          <p style="margin: 5px 0;">{{adresse}}</p>
+          <p style="margin: 5px 0;">Telefon: {{telefon}}</p>
+          <p style="margin: 5px 0;">E-Mail: {{email}}</p>
+        </div>
+        
+        <p style="margin-top: 20px; font-style: italic; text-align: center;">Vielen Dank für Ihr Vertrauen!</p>
+        
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666;">
+          <p>Diese E-Mail wurde automatisch von {{geschaeftsname}} gesendet.</p>
+        </div>
+      </div>
+    `,
+    variables: ["kundenname", "hersteller", "geraet", "auftragsnummer", "reparaturarbeit", "oeffnungszeiten", "geschaeftsname", "adresse", "telefon", "email"],
+    type: 'customer'
+  },
+  {
+    name: "Kunde hat Reparatur abgelehnt",
+    subject: "Information zu Ihrer Reparatur",
+    body: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h2 style="color: #6b7280;">Reparatur abgeschlossen</h2>
+        </div>
+        
+        <p>Sehr geehrte(r) {{kundenname}},</p>
+        
+        <p>wie besprochen, haben Sie sich entschieden, die Reparatur Ihres Geräts nicht durchführen zu lassen.</p>
+        
+        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+          <p style="margin: 5px 0;"><strong>Gerät:</strong> {{hersteller}} {{geraet}}</p>
+          <p style="margin: 5px 0;"><strong>Auftragsnummer:</strong> {{auftragsnummer}}</p>
+          <p style="margin: 5px 0;"><strong>Beschreibung:</strong> {{reparaturarbeit}}</p>
+        </div>
+        
+        <p>Sie können Ihr Gerät zu unseren Öffnungszeiten in unveränderten Zustand abholen:</p>
+        <p style="text-align: center; font-weight: bold;">{{oeffnungszeiten}}</p>
+        
+        <p>Bitte bringen Sie zum Abholen Ihren Abholschein oder einen Ausweis mit. Es fallen nur die vereinbarten Diagnosekosten an.</p>
+        
+        <p>Falls Sie Fragen haben oder sich umentscheiden, zögern Sie nicht, uns zu kontaktieren.</p>
         
         <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
           <p style="margin: 5px 0;"><strong>{{geschaeftsname}}</strong></p>

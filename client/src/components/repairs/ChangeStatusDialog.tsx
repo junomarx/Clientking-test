@@ -36,6 +36,7 @@ const statusSchema = z.object({
     required_error: 'Bitte Status auswählen',
   }),
   sendEmail: z.boolean().optional(),
+  emailTemplate: z.string().optional(),
   technicianNote: z.string().optional()
 });
 
@@ -46,7 +47,7 @@ interface ChangeStatusDialogProps {
   onClose: () => void;
   repairId: number | null;
   currentStatus: string;
-  onUpdateStatus: (id: number, status: string, sendEmail?: boolean, technicianNote?: string) => void;
+  onUpdateStatus: (id: number, status: string, sendEmail?: boolean, technicianNote?: string, emailTemplate?: string) => void;
 }
 
 export function ChangeStatusDialog({ 
@@ -89,6 +90,7 @@ export function ChangeStatusDialog({
     defaultValues: {
       status: (currentStatus || 'eingegangen') as any,
       sendEmail: false,
+      emailTemplate: 'Reparatur erfolgreich abgeschlossen',
       technicianNote: ''
     },
   });
@@ -99,8 +101,18 @@ export function ChangeStatusDialog({
                           currentSelectedStatus === 'ersatzteil_eingetroffen' ||
                           currentSelectedStatus === 'abgeholt';
   
+  // Zeige Template-Auswahl nur bei Status "fertig"
+  const showTemplateSelection = currentSelectedStatus === 'fertig';
+  
   // Zeige Techniker-Eingabefeld nur bei "Ausser Haus"
   const showTechnicianField = currentSelectedStatus === 'ausser_haus';
+  
+  // E-Mail-Templates für Status "fertig"
+  const emailTemplates = [
+    { value: 'Reparatur erfolgreich abgeschlossen', label: 'Erfolgreich abgeschlossen' },
+    { value: 'Reparatur nicht möglich', label: 'Reparatur nicht möglich' },
+    { value: 'Kunde hat Reparatur abgelehnt', label: 'Kunde hat abgelehnt' }
+  ];
   
   // Label für E-Mail-Checkbox je nach Status
   const getEmailLabel = () => {
@@ -186,7 +198,7 @@ export function ChangeStatusDialog({
       }
     }
     
-    onUpdateStatus(repairId, data.status, data.sendEmail, data.technicianNote);
+    onUpdateStatus(repairId, data.status, data.sendEmail, data.technicianNote, data.emailTemplate);
   }
   
   return (
@@ -277,6 +289,40 @@ export function ChangeStatusDialog({
                         </FormItem>
                       )}
                     />
+                    
+                    {/* Template-Auswahl nur bei Status "fertig" und wenn E-Mail aktiviert ist */}
+                    {showTemplateSelection && form.watch('sendEmail') && (
+                      <FormField
+                        control={form.control}
+                        name="emailTemplate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>E-Mail-Vorlage</FormLabel>
+                            <Select 
+                              onValueChange={field.onChange} 
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="E-Mail-Vorlage auswählen" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {emailTemplates.map((template) => (
+                                  <SelectItem key={template.value} value={template.value}>
+                                    {template.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <p className="text-sm text-muted-foreground">
+                              Wählen Sie die passende E-Mail-Vorlage für die Kundenkommunikation
+                            </p>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
                   </>
                 )}
               </div>
