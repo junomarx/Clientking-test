@@ -134,7 +134,7 @@ export function MultiShopAdminDetailsDialog({
   });
 
   const isUserOnline = (userId: number, lastLoginAt: string | null, lastLogoutAt: string | null) => {
-    if (backendOnlineStatus && 'onlineUsers' in backendOnlineStatus && Array.isArray(backendOnlineStatus.onlineUsers)) {
+    if (backendOnlineStatus && typeof backendOnlineStatus === 'object' && 'onlineUsers' in backendOnlineStatus && Array.isArray(backendOnlineStatus.onlineUsers)) {
       return backendOnlineStatus.onlineUsers.includes(userId);
     }
     if (isConnected) {

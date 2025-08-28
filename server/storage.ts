@@ -6355,6 +6355,8 @@ export class DatabaseStorage implements IStorage {
             email: admin.email,
             isActive: admin.isActive,
             createdAt: admin.createdAt,
+            lastLoginAt: admin.lastLoginAt,
+            lastLogoutAt: admin.lastLogoutAt,
             
             // Shop-Informationen
             accessibleShops: accessibleShops.filter(shop => shop !== null),
