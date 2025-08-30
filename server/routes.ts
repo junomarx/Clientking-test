@@ -3801,6 +3801,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const repairId = parseInt(req.params.id);
       const { quotedAmount, quoteDescription, sendEmail } = req.body;
       const userId = (req.user as any).id;
+      
+      console.log(`🔥 QUOTE DEBUG: repairId=${repairId}, userId=${userId} (type: ${typeof userId}), sendEmail=${sendEmail}`);
 
       // Validierung der Eingabedaten
       if (!quotedAmount) {
