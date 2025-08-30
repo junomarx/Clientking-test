@@ -3844,7 +3844,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Business Settings für E-Mail abrufen
         const businessSettings = await storage.getBusinessSettings(userId);
 
-        // E-Mail über den bestehenden E-Mail-Service senden
+        // E-Mail mit der FUNKTIONIERENDEN sendRepairStatusEmail Methode senden
         try {
           const { emailService } = await import('./email-service.js');
           
@@ -3852,35 +3852,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const acceptUrl = `${req.protocol}://${req.get('host')}/quote-response/${token}?action=accept`;
           const declineUrl = `${req.protocol}://${req.get('host')}/quote-response/${token}?action=decline`;
 
-          // E-Mail-Inhalt erstellen
-          const emailContent = `
-            <h2>Kostenvoranschlag für Ihre Reparatur</h2>
-            <p>Liebe/r ${customer.firstName} ${customer.lastName},</p>
-            <p>wir haben einen Kostenvoranschlag für die Reparatur Ihres ${repair.brand} ${repair.model} erstellt:</p>
-            <p><strong>Geschätzter Preis: ${quotedAmount} €</strong></p>
-            ${quoteDescription ? `<p><strong>Beschreibung:</strong> ${quoteDescription}</p>` : ''}
-            <p>Sie können den Kostenvoranschlag direkt über die folgenden Links akzeptieren oder ablehnen:</p>
-            <p>
-              <a href="${acceptUrl}" style="background-color: #22c55e; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">✅ Preis akzeptieren</a>
-              &nbsp;&nbsp;
-              <a href="${declineUrl}" style="background-color: #ef4444; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">❌ Preis ablehnen</a>
-            </p>
-            <p>Mit freundlichen Grüßen<br>${businessSettings?.businessName}</p>
-          `;
-
-          // E-Mail über den bestehenden Service senden
-          console.log(`🚀 SENDE: E-Mail an ${customer.email} für Benutzer ${userId} (userId type: ${typeof userId})`);
-          console.log(`🔍 PARAMETERS: to=${customer.email}, userId=${userId}`);
-          const emailResult = await emailService.sendEmail(
-            {
-              to: customer.email,
-              subject: `Kostenvoranschlag für ${repair.model} - ${businessSettings?.businessName}`,
-              html: emailContent
-            },
-            userId
+          // E-Mail über die FUNKTIONIERENDE Methode senden
+          console.log(`🚀 SENDE KOSTENVORANSCHLAG: E-Mail an ${customer.email} für Benutzer ${userId}`);
+          
+          const emailResult = await emailService.sendEmailWithCustomContent(
+            userId,
+            customer.email,
+            `Kostenvoranschlag für ${repair.model} - ${businessSettings?.businessName}`,
+            `
+              <h2>Kostenvoranschlag für Ihre Reparatur</h2>
+              <p>Liebe/r ${customer.firstName} ${customer.lastName},</p>
+              <p>wir haben einen Kostenvoranschlag für die Reparatur Ihres ${repair.brand} ${repair.model} erstellt:</p>
+              <p><strong>Geschätzter Preis: ${quotedAmount} €</strong></p>
+              ${quoteDescription ? `<p><strong>Beschreibung:</strong> ${quoteDescription}</p>` : ''}
+              <p>Sie können den Kostenvoranschlag direkt über die folgenden Links akzeptieren oder ablehnen:</p>
+              <p>
+                <a href="${acceptUrl}" style="background-color: #22c55e; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">✅ Preis akzeptieren</a>
+                &nbsp;&nbsp;
+                <a href="${declineUrl}" style="background-color: #ef4444; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">❌ Preis ablehnen</a>
+              </p>
+              <p>Mit freundlichen Grüßen<br>${businessSettings?.businessName}</p>
+            `
           );
 
-          if (emailResult) {
+          if (emailResult && emailResult.success === true) {
+            console.log(`✅ SUCCESS: Kostenvoranschlag erfolgreich gesendet an ${customer.email}`);
             // E-Mail-Verlaufseintrag erstellen
             await db.insert(emailHistory).values({
               repairId: repairId,
@@ -3893,7 +3889,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
               shopId: repair.shopId || 1
             });
           } else {
-            throw new Error('E-Mail-Versand fehlgeschlagen');
+            const errorMessage = emailResult?.error || 'E-Mail-Versand fehlgeschlagen';
+            console.error(`❌ FEHLER: Kostenvoranschlag-Versand fehlgeschlagen:`, errorMessage);
+            throw new Error(errorMessage);
           }
 
         } catch (emailError) {
