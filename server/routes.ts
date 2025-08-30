@@ -41,6 +41,7 @@ import {
   spareParts,
   repairStatusHistory,
   emailTemplates,
+  emailHistory,
   loanerDevices,
   quoteResponses
 } from "@shared/schema";
@@ -61,7 +62,6 @@ import fs from 'fs';
 // jsPDF will be imported dynamically
 import { requireShopIsolation, attachShopId } from "./middleware/shop-isolation";
 import { enforceShopIsolation, validateCustomerBelongsToShop } from "./middleware/enforce-shop-isolation";
-import nodemailer from "nodemailer";
 
 // Middleware to check if user is authenticated
 async function isAuthenticated(req: Request, res: Response, next: NextFunction) {
