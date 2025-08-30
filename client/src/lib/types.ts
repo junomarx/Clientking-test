@@ -53,9 +53,6 @@ export interface Repair {
   
   // Leihgeräte-System
   loanerDeviceId?: number | null; // Verknüpfung zum zugewiesenen Leihgerät
-  
-  // Kostenvoranschlag-System
-  hasQuoteRequest?: boolean; // Zeigt an, ob ein Kostenvoranschlag gesendet wurde und auf Antwort gewartet wird
 }
 
 // Extended repair with customer name for display

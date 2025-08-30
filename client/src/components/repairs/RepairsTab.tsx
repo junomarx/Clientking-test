@@ -37,8 +37,7 @@ import {
   QrCode,
   RefreshCw,
   Smartphone,
-  Calculator,
-  ClockIcon
+  Calculator
 } from 'lucide-react';
 import { usePrintManager } from './PrintOptionsManager';
 import { QRSignatureDialog } from '../signature/QRSignatureDialog';
@@ -802,19 +801,6 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
                             </TooltipTrigger>
                             <TooltipContent>
                               <p>Kostenvoranschlag senden</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        )}
-                        {/* Warten-auf-Antwort Icon für ausstehende Kostenvoranschläge */}
-                        {repair.hasQuoteRequest && (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className="text-amber-600 p-1 rounded">
-                                <ClockIcon className="h-4 w-4" />
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Wartet auf Kostenvoranschlag-Antwort</p>
                             </TooltipContent>
                           </Tooltip>
                         )}

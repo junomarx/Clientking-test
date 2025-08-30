@@ -41,7 +41,6 @@ import {
   spareParts,
   repairStatusHistory,
   emailTemplates,
-  emailHistory,
   loanerDevices,
   quoteResponses
 } from "@shared/schema";
@@ -62,6 +61,7 @@ import fs from 'fs';
 // jsPDF will be imported dynamically
 import { requireShopIsolation, attachShopId } from "./middleware/shop-isolation";
 import { enforceShopIsolation, validateCustomerBelongsToShop } from "./middleware/enforce-shop-isolation";
+import nodemailer from "nodemailer";
 
 // Middleware to check if user is authenticated
 async function isAuthenticated(req: Request, res: Response, next: NextFunction) {
@@ -3801,8 +3801,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const repairId = parseInt(req.params.id);
       const { quotedAmount, quoteDescription, sendEmail } = req.body;
       const userId = (req.user as any).id;
-      
-      console.log(`🔥 QUOTE DEBUG: repairId=${repairId}, userId=${userId} (type: ${typeof userId}), sendEmail=${sendEmail}`);
 
       // Validierung der Eingabedaten
       if (!quotedAmount) {
@@ -3836,7 +3834,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Wenn E-Mail gesendet werden soll
       if (sendEmail) {
         const customer = await storage.getCustomer(repair.customerId, userId);
-        console.log(`🔍 DEBUG Customer:`, customer);
         if (!customer || !customer.email) {
           return res.status(400).json({ message: "Kunde hat keine E-Mail-Adresse" });
         }
@@ -3844,7 +3841,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Business Settings für E-Mail abrufen
         const businessSettings = await storage.getBusinessSettings(userId);
 
-        // E-Mail mit der FUNKTIONIERENDEN sendRepairStatusEmail Methode senden
+        // E-Mail senden (wird später implementiert mit Template)
         try {
           const { emailService } = await import('./email-service.js');
           
@@ -3852,65 +3849,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const acceptUrl = `${req.protocol}://${req.get('host')}/quote-response/${token}?action=accept`;
           const declineUrl = `${req.protocol}://${req.get('host')}/quote-response/${token}?action=decline`;
 
-          // E-Mail über die FUNKTIONIERENDE Methode senden
-          console.log(`🚀 SENDE KOSTENVORANSCHLAG: E-Mail an ${customer.email} für Benutzer ${userId}`);
-          
-          const emailResult = await emailService.sendRepairStatusEmail(
-            userId,
-            repair.id,
-            'kostenvoranschlag',
-            {
-              repairId: repair.id,
-              customer: customer,
-              repair: repair,
-              businessSettings: businessSettings,
-              quotedAmount: quotedAmount,
-              quoteDescription: quoteDescription,
-              acceptUrl: acceptUrl,
-              declineUrl: declineUrl
+          // E-Mail-Variablen für Kostenvoranschlag
+          const emailVariables = {
+            "kundenname": `${customer.firstName} ${customer.lastName}`,
+            "geraet": repair.model,
+            "hersteller": repair.brand,
+            "auftragsnummer": repair.orderCode || repair.id.toString(),
+            "preis": quotedAmount,
+            "beschreibung": quoteDescription || "",
+            "geschaeftsname": businessSettings?.businessName || "Handyshop",
+            "telefon": businessSettings?.phone || "",
+            "email": businessSettings?.email || "",
+            "adresse": `${businessSettings?.streetAddress || ""}, ${businessSettings?.zipCode || ""} ${businessSettings?.city || ""}`.trim(),
+            "website": businessSettings?.website || "",
+            "akzeptieren_url": acceptUrl,
+            "ablehnen_url": declineUrl,
+            "businessLogo": businessSettings?.logoImage || ""
+          };
+
+          // Vorläufige E-Mail mit nodemailer senden (Template wird später erstellt)
+          const transporter = nodemailer.createTransporter({
+            host: businessSettings?.smtpHost,
+            port: businessSettings?.smtpPort,
+            secure: businessSettings?.smtpSecure,
+            auth: {
+              user: businessSettings?.smtpUser,
+              pass: businessSettings?.smtpPassword
             }
-          );
+          });
 
-          if (emailResult && emailResult.success === true) {
-            console.log(`✅ SUCCESS: Kostenvoranschlag erfolgreich gesendet an ${customer.email}`);
-            // E-Mail-Verlaufseintrag erstellen
-            await db.insert(emailHistory).values({
-              repairId: repairId,
-              emailTemplateId: null,
-              subject: `Kostenvoranschlag für ${repair.model} - ${businessSettings?.businessName}`,
-              recipient: customer.email,
-              status: 'success',
-              userId: userId,
-              sentAt: new Date(),
-              shopId: repair.shopId || 1
-            });
-          } else {
-            const errorMessage = emailResult?.error || 'E-Mail-Versand fehlgeschlagen';
-            console.error(`❌ FEHLER: Kostenvoranschlag-Versand fehlgeschlagen:`, errorMessage);
-            throw new Error(errorMessage);
-          }
+          const mailOptions = {
+            from: businessSettings?.smtpUser || businessSettings?.email,
+            to: customer.email,
+            subject: `Kostenvoranschlag für ${repair.model} - ${businessSettings?.businessName}`,
+            html: `
+              <h2>Kostenvoranschlag für Ihre Reparatur</h2>
+              <p>Liebe/r ${customer.firstName} ${customer.lastName},</p>
+              <p>wir haben einen Kostenvoranschlag für die Reparatur Ihres ${repair.brand} ${repair.model} erstellt:</p>
+              <p><strong>Geschätzter Preis: ${quotedAmount} €</strong></p>
+              ${quoteDescription ? `<p><strong>Beschreibung:</strong> ${quoteDescription}</p>` : ''}
+              <p>Sie können den Kostenvoranschlag direkt über die folgenden Links akzeptieren oder ablehnen:</p>
+              <p>
+                <a href="${acceptUrl}" style="background-color: #22c55e; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">✅ Preis akzeptieren</a>
+                &nbsp;&nbsp;
+                <a href="${declineUrl}" style="background-color: #ef4444; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">❌ Preis ablehnen</a>
+              </p>
+              <p>Mit freundlichen Grüßen<br>${businessSettings?.businessName}</p>
+            `
+          };
 
+          await transporter.sendMail(mailOptions);
         } catch (emailError) {
           console.error("Fehler beim Senden der Kostenvoranschlag-E-Mail:", emailError);
-          
-          // E-Mail-Verlaufseintrag für Fehler erstellen
-          try {
-            await db.insert(emailHistory).values({
-              repairId: repairId,
-              emailTemplateId: null,
-              subject: `Kostenvoranschlag für ${repair.model} - ${businessSettings?.businessName}`,
-              recipient: customer.email,
-              status: 'failed',
-              userId: userId,
-              sentAt: new Date(),
-              shopId: repair.shopId || 1
-            });
-          } catch (historyError) {
-            console.error("Fehler beim Erstellen des E-Mail-Verlaufseintrags:", historyError);
-          }
-          
-          // Fehler nicht verschlucken, sondern propagieren
-          throw emailError;
+          // E-Mail-Fehler nicht kritisch - Quote wurde trotzdem erstellt
         }
       }
 
@@ -4092,32 +4083,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           <p>Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.</p>
         </body></html>
       `);
-    }
-  });
-
-  // Quote responses für eine Reparatur abrufen
-  app.get("/api/repairs/:id/quote-responses", isAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const repairId = parseInt(req.params.id);
-      const userId = (req.user as any).id;
-
-      // Prüfen, ob die Reparatur existiert und dem Benutzer gehört
-      const repair = await storage.getRepair(repairId, userId);
-      if (!repair) {
-        return res.status(404).json({ message: "Reparatur nicht gefunden" });
-      }
-
-      // Quote Responses für diese Reparatur abrufen
-      const quotes = await db.select()
-        .from(quoteResponses)
-        .where(eq(quoteResponses.repairId, repairId))
-        .orderBy(quoteResponses.createdAt);
-
-      res.json(quotes);
-
-    } catch (error) {
-      console.error("Fehler beim Abrufen der Quote Responses:", error);
-      res.status(500).json({ message: "Fehler beim Abrufen der Quote Responses" });
     }
   });
 
