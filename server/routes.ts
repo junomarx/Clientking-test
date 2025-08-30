@@ -3868,6 +3868,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           };
 
           // Vorläufige E-Mail mit nodemailer senden (Template wird später erstellt)
+          const nodemailer = await import('nodemailer');
           const transporter = nodemailer.createTransporter({
             host: businessSettings?.smtpHost,
             port: businessSettings?.smtpPort,
