@@ -3869,7 +3869,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           // Vorläufige E-Mail mit nodemailer senden (Template wird später erstellt)
           const nodemailer = await import('nodemailer');
-          const transporter = nodemailer.createTransporter({
+          const transporter = nodemailer.default.createTransporter({
             host: businessSettings?.smtpHost,
             port: businessSettings?.smtpPort,
             secure: businessSettings?.smtpSecure,
@@ -3900,9 +3900,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
           };
 
           await transporter.sendMail(mailOptions);
+
+          // E-Mail-Verlaufseintrag erstellen
+          await db.insert(emailHistory).values({
+            repairId: repairId,
+            emailTemplateId: null, // Kein Template verwendet
+            subject: `Kostenvoranschlag für ${repair.model} - ${businessSettings?.businessName}`,
+            recipient: customer.email,
+            status: 'success',
+            userId: userId,
+            shopId: repair.shopId || 1
+          });
+
         } catch (emailError) {
           console.error("Fehler beim Senden der Kostenvoranschlag-E-Mail:", emailError);
-          // E-Mail-Fehler nicht kritisch - Quote wurde trotzdem erstellt
+          
+          // E-Mail-Verlaufseintrag für Fehler erstellen
+          try {
+            await db.insert(emailHistory).values({
+              repairId: repairId,
+              emailTemplateId: null,
+              subject: `Kostenvoranschlag für ${repair.model} - ${businessSettings?.businessName}`,
+              recipient: customer.email,
+              status: 'failed',
+              userId: userId,
+              shopId: repair.shopId || 1
+            });
+          } catch (historyError) {
+            console.error("Fehler beim Erstellen des E-Mail-Verlaufseintrags:", historyError);
+          }
         }
       }
 
@@ -4084,6 +4110,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
           <p>Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.</p>
         </body></html>
       `);
+    }
+  });
+
+  // Quote responses für eine Reparatur abrufen
+  app.get("/api/repairs/:id/quote-responses", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const repairId = parseInt(req.params.id);
+      const userId = (req.user as any).id;
+
+      // Prüfen, ob die Reparatur existiert und dem Benutzer gehört
+      const repair = await storage.getRepair(repairId, userId);
+      if (!repair) {
+        return res.status(404).json({ message: "Reparatur nicht gefunden" });
+      }
+
+      // Quote Responses für diese Reparatur abrufen
+      const quotes = await db.select()
+        .from(quoteResponses)
+        .where(eq(quoteResponses.repairId, repairId))
+        .orderBy(quoteResponses.createdAt);
+
+      res.json(quotes);
+
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Quote Responses:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Quote Responses" });
     }
   });
 

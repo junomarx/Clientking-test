@@ -84,3 +84,10 @@ export function needsQuote(estimatedCost: string | null | undefined): boolean {
   
   return false;
 }
+
+// Helper function to check if a repair has quote responses sent
+export function hasQuoteResponse(repair: any): boolean {
+  // This will be used to show if a quote has been sent for this repair
+  // For now, return false - will be updated when we add quote response data
+  return false;
+}
