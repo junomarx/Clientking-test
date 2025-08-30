@@ -3867,7 +3867,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           `;
 
           // E-Mail über den bestehenden Service senden
-          console.log(`Sende Kostenvoranschlag an ${customer.email} für Benutzer ${userId}`);
+          console.log(`🚀 SENDE: E-Mail an ${customer.email} für Benutzer ${userId} (userId type: ${typeof userId})`);
+          console.log(`🔍 PARAMETERS: to=${customer.email}, userId=${userId}`);
           const emailResult = await emailService.sendEmail(
             {
               to: customer.email,
