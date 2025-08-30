@@ -715,6 +715,7 @@ export const repairsRelations = relations(repairs, ({ one, many }) => ({
   emailHistory: many(emailHistory),
   spareParts: many(spareParts),
   statusHistory: many(repairStatusHistory),
+  quoteResponses: many(quoteResponses), // Ein Repair kann mehrere Quote Responses haben
 }));
 
 // Beziehungen für repairStatusHistory
@@ -1114,6 +1115,50 @@ export const loanerDevicesRelations = relations(loanerDevices, ({ one, many }) =
     references: [users.id],
   }),
   repairs: many(repairs), // Ein Leihgerät kann für mehrere Reparaturen verwendet werden (nacheinander)
+}));
+
+// Quote Response System - Kostenvoranschlag-Antworten von Kunden
+export const quoteResponseStatuses = z.enum(["pending", "accepted", "declined"]);
+
+export const quoteResponses = pgTable("quote_responses", {
+  id: serial("id").primaryKey(),
+  repairId: integer("repair_id").notNull().references(() => repairs.id),
+  token: text("token").notNull().unique(), // Eindeutiger Token für Kunde-Links
+  quotedAmount: text("quoted_amount").notNull(), // Der angebotene Preis
+  quoteDescription: text("quote_description"), // Optionale Beschreibung des Kostenvoranschlags
+  
+  // Kunde-Antwort
+  response: text("response"), // "accepted", "declined" oder null wenn noch ausstehend
+  customerReason: text("customer_reason"), // Optionaler Grund bei Ablehnung
+  respondedAt: timestamp("responded_at"), // Zeitpunkt der Antwort
+  
+  // Shop-Zugehörigkeit
+  shopId: integer("shop_id").notNull().references(() => shops.id),
+  
+  // Zeitstempel
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertQuoteResponseSchema = createInsertSchema(quoteResponses).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type QuoteResponse = typeof quoteResponses.$inferSelect;
+export type InsertQuoteResponse = z.infer<typeof insertQuoteResponseSchema>;
+
+// Beziehungen für Quote Responses
+export const quoteResponsesRelations = relations(quoteResponses, ({ one }) => ({
+  repair: one(repairs, {
+    fields: [quoteResponses.repairId],
+    references: [repairs.id],
+  }),
+  shop: one(shops, {
+    fields: [quoteResponses.shopId],
+    references: [shops.id],
+  }),
 }));
 
 
