@@ -63,24 +63,3 @@ export function getStatusBadge(status: string): React.ReactNode {
       return React.createElement("span", { className: `${badgeStyle} bg-gray-100 text-gray-700` }, status);
   }
 }
-
-// Kostenvoranschlag-Pattern-Erkennung für undefinierten Preis
-export function needsQuote(estimatedCost: string | null | undefined): boolean {
-  if (!estimatedCost) return true; // Leerer oder null Wert
-  
-  const cost = estimatedCost.trim().toLowerCase();
-  
-  // Direkter Match für "KV" oder "kv"
-  if (cost === "kv") return true;
-  
-  // Pattern für Bereiche wie "60-70", "100-150", etc.
-  if (/^\d+\s*-\s*\d+$/.test(cost)) return true;
-  
-  // Leer oder nur Whitespace
-  if (cost === "" || cost === "0" || cost === "-") return true;
-  
-  // Pattern für "ab XX", "ca XX", "etwa XX"
-  if (/^(ab|ca|etwa|~)\s*\d+/.test(cost)) return true;
-  
-  return false;
-}

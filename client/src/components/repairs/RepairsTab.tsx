@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Repair as SchemaRepair, Customer } from '@shared/schema';
 import { Repair } from '@/lib/types';
 import { queryClient, apiRequest } from '@/lib/queryClient';
-import { getStatusBadge, needsQuote } from '@/lib/utils';
+import { getStatusBadge } from '@/lib/utils';
 import { useLocation } from 'wouter';
 import { 
   Dialog,
@@ -18,7 +18,6 @@ import {
 import { EditRepairDialog } from './EditRepairDialog';
 import { RepairDetailsDialog } from './RepairDetailsDialog';
 import { ChangeStatusDialog } from './ChangeStatusDialog';
-import { QuoteDialog } from './QuoteDialog';
 import { useToast } from '@/hooks/use-toast';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -36,8 +35,7 @@ import {
   Info,
   QrCode,
   RefreshCw,
-  Smartphone,
-  Calculator
+  Smartphone
 } from 'lucide-react';
 import { usePrintManager } from './PrintOptionsManager';
 import { QRSignatureDialog } from '../signature/QRSignatureDialog';
@@ -67,8 +65,6 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
   const [showLoanerDeviceWarning, setShowLoanerDeviceWarning] = useState(false);
   const [loanerDeviceInfo, setLoanerDeviceInfo] = useState<any>(null);
   const [pendingSignatureRepair, setPendingSignatureRepair] = useState<any>(null);
-  const [showQuoteDialog, setShowQuoteDialog] = useState(false);
-  const [selectedRepairForQuote, setSelectedRepairForQuote] = useState<any>(null);
   const { toast } = useToast();
   const { user } = useAuth();
   
@@ -482,35 +478,6 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
     sendReviewRequestMutation.mutate(repairId);
   };
 
-  // Kostenvoranschlag-Dialog öffnen
-  const openQuoteDialog = (repair: any) => {
-    setSelectedRepairForQuote(repair);
-    setShowQuoteDialog(true);
-  };
-
-  // Kostenvoranschlag senden
-  const handleSendQuote = async (repairId: number, quotedAmount: string, quoteDescription?: string, sendEmail?: boolean) => {
-    try {
-      const response = await apiRequest('POST', `/api/repairs/${repairId}/quote`, {
-        quotedAmount,
-        quoteDescription,
-        sendEmail
-      });
-
-      if (!response.ok) {
-        throw new Error('Fehler beim Senden des Kostenvoranschlags');
-      }
-
-      // Cache invalidieren um die aktualisierten Daten zu laden
-      queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
-      
-      return response.json();
-    } catch (error) {
-      console.error('Fehler beim Senden des Kostenvoranschlags:', error);
-      throw error;
-    }
-  };
-
   // QR-Code Unterschrift öffnen
   const handleOpenQRSignature = async (repair: any) => {
     console.log('🔍 QR-Code geklickt für Reparatur:', repair.id, 'Status:', repair.status);
@@ -782,25 +749,6 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
                             </TooltipTrigger>
                             <TooltipContent>
                               <p>Leihgerät ausgegeben</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        )}
-                        {/* Kostenvoranschlag-Icon für undefinierten Preis */}
-                        {needsQuote(repair.estimatedCost) && (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button 
-                                className="text-blue-600 hover:text-blue-800 p-1 transform hover:scale-110 transition-all" 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  openQuoteDialog(repair);
-                                }}
-                              >
-                                <Calculator className="h-4 w-4" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Kostenvoranschlag senden</p>
                             </TooltipContent>
                           </Tooltip>
                         )}
@@ -1332,19 +1280,6 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Kostenvoranschlag Dialog */}
-      <QuoteDialog
-        open={showQuoteDialog}
-        onClose={() => setShowQuoteDialog(false)}
-        repairId={selectedRepairForQuote?.id || null}
-        repairDetails={{
-          customerName: selectedRepairForQuote?.customerName,
-          orderCode: selectedRepairForQuote?.orderCode,
-          model: selectedRepairForQuote?.model
-        }}
-        onSendQuote={handleSendQuote}
-      />
     </div>
   );
 }
