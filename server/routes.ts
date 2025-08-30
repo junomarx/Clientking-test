@@ -3867,13 +3867,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           // E-Mail über den bestehenden Service senden
           const emailResult = await emailService.sendEmail(
-            userId,
-            customer.email,
-            `Kostenvoranschlag für ${repair.model} - ${businessSettings?.businessName}`,
-            emailContent
+            {
+              to: customer.email,
+              subject: `Kostenvoranschlag für ${repair.model} - ${businessSettings?.businessName}`,
+              html: emailContent
+            },
+            userId
           );
 
-          if (emailResult.success) {
+          if (emailResult) {
             // E-Mail-Verlaufseintrag erstellen
             await db.insert(emailHistory).values({
               repairId: repairId,
@@ -3886,7 +3888,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               shopId: repair.shopId || 1
             });
           } else {
-            throw new Error(emailResult.error || 'E-Mail-Versand fehlgeschlagen');
+            throw new Error('E-Mail-Versand fehlgeschlagen');
           }
 
         } catch (emailError) {
