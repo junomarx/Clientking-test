@@ -3834,6 +3834,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Wenn E-Mail gesendet werden soll
       if (sendEmail) {
         const customer = await storage.getCustomer(repair.customerId, userId);
+        console.log(`🔍 DEBUG Customer:`, customer);
         if (!customer || !customer.email) {
           return res.status(400).json({ message: "Kunde hat keine E-Mail-Adresse" });
         }
@@ -3866,6 +3867,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           `;
 
           // E-Mail über den bestehenden Service senden
+          console.log(`Sende Kostenvoranschlag an ${customer.email} für Benutzer ${userId}`);
           const emailResult = await emailService.sendEmail(
             {
               to: customer.email,
