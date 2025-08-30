@@ -3855,24 +3855,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // E-Mail über die FUNKTIONIERENDE Methode senden
           console.log(`🚀 SENDE KOSTENVORANSCHLAG: E-Mail an ${customer.email} für Benutzer ${userId}`);
           
-          const emailResult = await emailService.sendEmailWithCustomContent(
+          const emailResult = await emailService.sendRepairStatusEmail(
             userId,
-            customer.email,
-            `Kostenvoranschlag für ${repair.model} - ${businessSettings?.businessName}`,
-            `
-              <h2>Kostenvoranschlag für Ihre Reparatur</h2>
-              <p>Liebe/r ${customer.firstName} ${customer.lastName},</p>
-              <p>wir haben einen Kostenvoranschlag für die Reparatur Ihres ${repair.brand} ${repair.model} erstellt:</p>
-              <p><strong>Geschätzter Preis: ${quotedAmount} €</strong></p>
-              ${quoteDescription ? `<p><strong>Beschreibung:</strong> ${quoteDescription}</p>` : ''}
-              <p>Sie können den Kostenvoranschlag direkt über die folgenden Links akzeptieren oder ablehnen:</p>
-              <p>
-                <a href="${acceptUrl}" style="background-color: #22c55e; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">✅ Preis akzeptieren</a>
-                &nbsp;&nbsp;
-                <a href="${declineUrl}" style="background-color: #ef4444; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">❌ Preis ablehnen</a>
-              </p>
-              <p>Mit freundlichen Grüßen<br>${businessSettings?.businessName}</p>
-            `
+            repair.id,
+            'kostenvoranschlag',
+            {
+              repairId: repair.id,
+              customer: customer,
+              repair: repair,
+              businessSettings: businessSettings,
+              quotedAmount: quotedAmount,
+              quoteDescription: quoteDescription,
+              acceptUrl: acceptUrl,
+              declineUrl: declineUrl
+            }
           );
 
           if (emailResult && emailResult.success === true) {
