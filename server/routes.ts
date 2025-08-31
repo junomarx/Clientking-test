@@ -3978,9 +3978,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let emailContent = template.body;
       let emailSubject = template.subject;
       
+      // Template-Variablen für das "Test Email" Template bereitstellen
       const variables = {
         zeitstempel: new Date().toLocaleString('de-DE'),
-        geschaeftsname: businessSettings?.businessName || 'Handyshop'
+        geschaeftsname: businessSettings?.businessName || 'Handyshop',
+        kundenname: `${customer.firstName} ${customer.lastName}`,
+        hersteller: repair.brand,
+        geraet: repair.model,
+        auftragsnummer: repair.orderCode,
+        fehler: repair.issue,
+        kosten: repair.estimatedCost?.toString() || '0',
+        telefon: businessSettings?.phone || '',
+        email: businessSettings?.email || ''
       };
       
       // Variablen im Subject und Content ersetzen
@@ -3993,6 +4002,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`🧪 Sende Test-E-Mail an ${customerEmail} mit Template: ${template.name}`);
       console.log(`🧪 Template Betreff VOR Ersetzung: ${template.subject}`);
       console.log(`🧪 Template Betreff NACH Ersetzung: ${emailSubject}`);
+      console.log(`🧪 E-Mail Inhalt (erste 200 Zeichen):`, emailContent.substring(0, 200));
       
       // Verwende den Standard-E-Mail-Versand mit dem aufbereiteten Template
       const emailSent = await storage.sendEmailWithAttachment({
