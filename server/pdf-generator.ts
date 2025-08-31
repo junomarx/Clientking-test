@@ -74,23 +74,23 @@ export async function generateAccessoryLabelPDF(data: AccessoryLabelData): Promi
   doc.text(`${data.accessory.quantity}x`, 20, y);
   
   doc.setFont('helvetica', 'bold');
-  doc.text('Preis:', 5, y + 4);
+  doc.text('Einzelpreis:', 5, y + 4);
   doc.setFont('helvetica', 'normal');
-  doc.text(data.accessory.totalPrice, 20, y + 4);
+  doc.text(data.accessory.unitPrice, 25, y + 4);
 
   y += 12;
 
   // Kunden-Informationen (falls vorhanden)
   if (data.customer) {
-    doc.setFontSize(8);
+    doc.setFontSize(10); // Größer für bessere Lesbarkeit
     doc.setFont('helvetica', 'bold');
     doc.text('KUNDE:', 5, y);
     
-    doc.setFont('helvetica', 'normal');
+    doc.setFont('helvetica', 'bold'); // Kundenname auch fett
     const customerName = `${data.customer.firstName} ${data.customer.lastName}`;
     const nameLines = doc.splitTextToSize(customerName, 60);
     doc.text(nameLines, 5, y + 4);
-    y += 4 + (nameLines.length - 1) * 2.5;
+    y += 4 + (nameLines.length - 1) * 3; // Mehr Abstand für größere Schrift
     
     doc.text(`Tel: ${data.customer.phone}`, 5, y + 3);
     if (data.customer.email) {
