@@ -996,30 +996,7 @@ export function OrdersTab() {
     }
   };
 
-  // Handler für E-Mail versenden
-  const handleSendArrivalEmail = async (accessory: Accessory) => {
-    // Mehrfacher E-Mail-Versand ist erlaubt
-    try {
-      const response = await apiRequest('POST', `/api/accessories/${accessory.id}/send-arrival-email`);
-      
-      if (response.ok) {
-        // Daten neu laden um den Email-Status zu aktualisieren
-        queryClient.invalidateQueries({ queryKey: ['/api/orders/accessories'] });
-        
-        toast({
-          title: "E-Mail gesendet",
-          description: "Die Benachrichtigung wurde erfolgreich an den Kunden gesendet.",
-        });
-      }
-    } catch (error: any) {
-      console.error('Fehler beim Senden der E-Mail:', error);
-      toast({
-        title: "Fehler beim E-Mail versenden",
-        description: "Die E-Mail konnte nicht gesendet werden.",
-        variant: "destructive",
-      });
-    }
-  };
+  // E-Mail-Funktion vorübergehend deaktiviert - wird noch entwickelt
 
   // Single accessory update mutation with auto-delete logic
   const singleAccessoryUpdateMutation = useMutation({
@@ -1660,7 +1637,13 @@ export function OrdersTab() {
                                 size="sm" 
                                 className="h-8 w-8 p-0" 
                                 title={accessory.emailSent ? "E-Mail erneut senden" : "E-Mail senden"}
-                                onClick={() => handleSendArrivalEmail(accessory)}
+                                onClick={() => {
+                                  toast({
+                                    title: "Funktion wird noch eingebaut",
+                                    description: "Die E-Mail-Benachrichtigung für eingetroffenes Zubehör wird noch entwickelt.",
+                                    variant: "default",
+                                  });
+                                }}
                               >
                                 {accessory.emailSent ? (
                                   <Mail className="h-4 w-4 text-green-600 fill-current" />
