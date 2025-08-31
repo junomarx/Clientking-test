@@ -3954,19 +3954,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Kunde nicht gefunden" });
       }
 
-      // Auftragsbestätigungs-Vorlage finden
-      const templates = await db.select()
-        .from(emailTemplates)
-        .where(and(
-          eq(emailTemplates.userId, userId),
-          eq(emailTemplates.type, 'auftragsbestaetigung')
-        ));
+      // Test Email Vorlage aus den globalen Templates finden
+      const { emailService } = await import('./email-service.js');
+      const globalTemplates = await emailService.getGlobalEmailTemplates();
+      const template = globalTemplates.find(t => t.name === 'Test Email');
 
-      if (templates.length === 0) {
-        return res.status(404).json({ message: "Auftragsbestätigungs-Vorlage nicht gefunden" });
+      if (!template) {
+        return res.status(404).json({ message: "Test Email Vorlage nicht gefunden" });
       }
-
-      const template = templates[0];
       
       // Geschäftseinstellungen abrufen
       const businessSettings = await storage.getBusinessSettings(userId);
@@ -3976,19 +3971,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let emailSubject = template.subject;
       
       const variables = {
-        customerName: `${customer.firstName} ${customer.lastName}`,
-        orderCode: repair.orderCode,
-        brand: repair.brand,
-        model: repair.model,
-        issue: repair.issue,
-        createdAt: format(new Date(repair.createdAt), 'dd.MM.yyyy'),
-        estimatedCost: repair.estimatedCost?.toString() || '0',
-        businessName: businessSettings?.businessName || 'Handyshop',
-        businessPhone: businessSettings?.phone || '',
-        businessEmail: businessSettings?.email || '',
-        businessAddress: businessSettings?.address || '',
-        businessZipCode: businessSettings?.zipCode || '',
-        businessCity: businessSettings?.city || ''
+        zeitstempel: new Date().toLocaleString('de-DE'),
+        geschaeftsname: businessSettings?.businessName || 'Handyshop'
       };
       
       // Variablen im Subject und Content ersetzen
@@ -3998,7 +3982,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         emailSubject = emailSubject.replace(regex, value);
       });
       
-      console.log(`🧪 Sende Auftragsbestätigung-Test-E-Mail an ${customerEmail}`);
+      console.log(`🧪 Sende Test-E-Mail an ${customerEmail}`);
       
       const emailSent = await storage.sendEmailWithAttachment({
         to: customerEmail,
@@ -4027,17 +4011,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         res.json({ 
           success: true, 
-          message: `Auftragsbestätigung wurde an ${customerEmail} gesendet` 
+          message: `Test-E-Mail wurde an ${customerEmail} gesendet` 
         });
       } else {
         res.status(500).json({ 
-          message: "Auftragsbestätigung konnte nicht gesendet werden" 
+          message: "Test-E-Mail konnte nicht gesendet werden" 
         });
       }
       
     } catch (error) {
-      console.error("Fehler beim Senden der Auftragsbestätigung:", error);
-      res.status(500).json({ message: "Fehler beim Senden der Auftragsbestätigung" });
+      console.error("Fehler beim Senden der Test-E-Mail:", error);
+      res.status(500).json({ message: "Fehler beim Senden der Test-E-Mail" });
     }
   });
 
