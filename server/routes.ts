@@ -6600,12 +6600,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         yPos += 15;
         
         doc.setFontSize(10);
-        // Header der Tabelle
+        // Header der Tabelle - Status-Spalte entfernt
         doc.text('Artikel', 20, yPos);
         doc.text('Menge', 70, yPos);
         doc.text('Kunde', 100, yPos);
-        doc.text('Status', 150, yPos);
-        doc.text('Erstellt', 180, yPos);
+        doc.text('Erstellt', 160, yPos);
         yPos += 10;
         
         // Zubehör-Daten
@@ -6615,7 +6614,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             yPos = 20;
           }
           
-          let customerName = '-';
+          let customerName = 'Geschäft'; // Default für Lagerartikel
           if (accessory.customerId) {
             const customer = await storage.getCustomer(accessory.customerId, req.user.id);
             if (customer) {
@@ -6625,9 +6624,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           doc.text((accessory.articleName || '').substring(0, 25), 20, yPos);
           doc.text((accessory.quantity || 1).toString(), 70, yPos);
-          doc.text(customerName || '-', 100, yPos);
-          doc.text(accessory.status || 'bestellen', 150, yPos);
-          doc.text(accessory.createdAt ? new Date(accessory.createdAt).toLocaleDateString('de-DE') : '-', 180, yPos);
+          doc.text(customerName, 100, yPos);
+          doc.text(accessory.createdAt ? new Date(accessory.createdAt).toLocaleDateString('de-DE') : '-', 160, yPos);
           yPos += 8;
         }
       }
