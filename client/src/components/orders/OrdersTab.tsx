@@ -998,16 +998,13 @@ export function OrdersTab() {
 
   // Handler für E-Mail versenden
   const handleSendArrivalEmail = async (accessory: Accessory) => {
-    if (accessory.emailSent) {
-      return; // E-Mail bereits gesendet
-    }
-
+    // Mehrfacher E-Mail-Versand ist erlaubt
     try {
       const response = await apiRequest('POST', `/api/accessories/${accessory.id}/send-arrival-email`);
       
       if (response.ok) {
         // Daten neu laden um den Email-Status zu aktualisieren
-        queryClient.invalidateQueries({ queryKey: ['/api/accessories'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/orders/accessories'] });
         
         toast({
           title: "E-Mail gesendet",
