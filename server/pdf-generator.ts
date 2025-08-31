@@ -91,7 +91,7 @@ export async function generateAccessoryLabelPDF(data: AccessoryLabelData): Promi
   doc.setFontSize(6);
   doc.setFont('helvetica', 'normal');
   doc.text('Gesamt', 16, y, { align: 'center' });
-  y += 4;
+  y += 8; // Mehr Abstand zwischen "Gesamt" und dem Preis
   
   doc.setFontSize(16); // 200% größer (8 * 2 = 16)
   doc.setFont('helvetica', 'bold');
