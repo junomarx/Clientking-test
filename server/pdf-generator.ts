@@ -86,12 +86,14 @@ export async function generateAccessoryLabelPDF(data: AccessoryLabelData): Promi
   y += 3;
 
   // Gesamtpreis - "Gesamt" und Preis untereinander
+  y += 4; // Mehr Abstand nach oben
+  
   doc.setFontSize(6);
   doc.setFont('helvetica', 'normal');
   doc.text('Gesamt', 16, y, { align: 'center' });
-  y += 3;
+  y += 4;
   
-  doc.setFontSize(8);
+  doc.setFontSize(16); // 200% größer (8 * 2 = 16)
   doc.setFont('helvetica', 'bold');
   // Preis formatieren: 30.00 -> 30€
   const formattedPrice = data.accessory.totalPrice.replace(/\.00$/, '');
