@@ -694,12 +694,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: user.email || ''
       };
       
-      const success = await emailService.sendTemplateEmail(
-        customer.email,
+      const result = await emailService.sendEmailWithTemplate(
         "Zubehör eingetroffen",
+        customer.email,
         variables,
         userId
       );
+      
+      const success = result !== false;
       
       if (success) {
         // E-Mail-Status in der Datenbank aktualisieren
