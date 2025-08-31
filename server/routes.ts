@@ -684,9 +684,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const variables = {
         kundenname: `${customer.firstName} ${customer.lastName}`,
-        artikelname: accessory.articleName,
-        menge: accessory.quantity.toString(),
-        preis: accessory.totalPrice,
+        zubehoerartikelname: accessory.articleName,
+        zubehoermenge: accessory.quantity.toString(),
+        zubehoerpreis: accessory.unitPrice,
+        zubehoergesamtpreis: accessory.totalPrice,
         oeffnungszeiten: user.shopOpeningHours || 'Mo-Fr: 9:00-18:00',
         geschaeftsname: user.shopName || 'Handyshop',
         adresse: user.shopAddress || '',
