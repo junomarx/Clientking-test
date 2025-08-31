@@ -652,36 +652,51 @@ export class EmailService {
     userId?: number
   ): Promise<boolean> {
     try {
-      console.log(`Suche E-Mail-Vorlage "${templateName}" für Benutzer ${userId}...`);
+      console.log(`🔍 DEBUG: Suche E-Mail-Vorlage "${templateName}" für Benutzer ${userId}...`);
       
       // E-Mail-Vorlage nach Namen suchen - erst globale, dann benutzer-spezifische
       let template;
       try {
         // Erst nach globaler Vorlage suchen (user_id IS NULL)
-        [template] = await db
+        const globalTemplates = await db
           .select()
           .from(emailTemplates)
           .where(eq(emailTemplates.name, templateName))
           .where(sql`${emailTemplates.userId} IS NULL`);
+        
+        console.log(`🔍 DEBUG: Gefundene globale Vorlagen für "${templateName}":`, globalTemplates.length);
+        
+        if (globalTemplates.length > 0) {
+          template = globalTemplates[0];
+          console.log(`✅ DEBUG: Verwende globale Vorlage: ID=${template.id}, Name="${template.name}", Subject="${template.subject}"`);
+        }
           
         if (!template && userId) {
           // Falls keine globale gefunden, nach benutzer-spezifischer suchen
-          [template] = await db
+          const userTemplates = await db
             .select()
             .from(emailTemplates)
             .where(eq(emailTemplates.name, templateName))
             .where(eq(emailTemplates.userId, userId));
+          
+          console.log(`🔍 DEBUG: Gefundene benutzer-spezifische Vorlagen für "${templateName}":`, userTemplates.length);
+          
+          if (userTemplates.length > 0) {
+            template = userTemplates[0];
+            console.log(`✅ DEBUG: Verwende benutzer-spezifische Vorlage: ID=${template.id}, Name="${template.name}", Subject="${template.subject}"`);
+          }
         }
       } catch (dbError) {
-        console.error('Fehler beim Abrufen der E-Mail-Vorlage:', dbError);
+        console.error('❌ DEBUG: Fehler beim Abrufen der E-Mail-Vorlage:', dbError);
       }
       
       if (!template) {
-        console.error(`E-Mail-Vorlage "${templateName}" nicht gefunden`);
+        console.error(`❌ DEBUG: E-Mail-Vorlage "${templateName}" nicht gefunden`);
         return false;
       }
       
-      console.log(`E-Mail-Vorlage gefunden: "${template.name}" mit Betreff: "${template.subject}"`);
+      console.log(`✅ DEBUG: E-Mail-Vorlage gefunden: "${template.name}" mit Betreff: "${template.subject}"`);
+      console.log(`✅ DEBUG: Template-Body ersten 100 Zeichen:`, template.body.substring(0, 100));
       
       // Die interne Methode aufrufen
       return await this.sendEmailWithTemplateInternal({
