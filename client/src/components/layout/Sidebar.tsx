@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Link } from 'wouter';
@@ -37,6 +39,13 @@ interface SidebarProps {
 export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
   const { user, logoutMutation } = useAuth();
   const [canViewStats, setCanViewStats] = useState(false);
+  
+  // Query für die Anzahl der zu bestellenden Artikel
+  const { data: orderCounts } = useQuery({
+    queryKey: ['/api/orders/counts'],
+    enabled: !!user,
+    refetchInterval: 30000, // Aktualisiere alle 30 Sekunden
+  });
   
   const handleLogout = () => {
     console.log("🖱️ Logout-Button geklickt in Sidebar");
@@ -111,7 +120,7 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
         </Button>
         <Button 
           variant={activeTab === 'orders' ? 'default' : 'ghost'}
-          className="w-full justify-start"
+          className="w-full justify-start relative"
           onClick={() => {
             onTabChange('orders');
             if (isMobile) closeMenu();
@@ -119,6 +128,14 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
         >
           <Package className="h-5 w-5 mr-2" />
           Bestellungen
+          {orderCounts && orderCounts.totalToOrder > 0 && (
+            <Badge 
+              variant="destructive" 
+              className="ml-auto text-xs px-1.5 py-0.5 min-w-[1.25rem] h-5 flex items-center justify-center"
+            >
+              {orderCounts.totalToOrder}
+            </Badge>
+          )}
         </Button>
         <Button 
           variant={activeTab === 'customers' ? 'default' : 'ghost'}

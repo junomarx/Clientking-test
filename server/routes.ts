@@ -377,6 +377,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Endpunkt für Order-Counts (Badge-Benachrichtigungen)
+  app.get("/api/orders/counts", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.header('X-User-ID') || '0');
+      if (!userId) {
+        return res.status(401).json({ message: "X-User-ID Header fehlt" });
+      }
+      
+      // Anzahl der Ersatzteile mit Status "bestellen" 
+      const sparePartsToOrder = await pool.query(
+        `SELECT COUNT(*) as count FROM spare_parts sp 
+         JOIN repairs r ON sp.repair_id = r.id 
+         WHERE sp.status = 'bestellen' AND r.user_id = $1`,
+        [userId]
+      );
+      
+      // Anzahl der Zubehörteile mit Status "bestellen"
+      const accessoriesToOrder = await pool.query(
+        `SELECT COUNT(*) as count FROM accessories a 
+         WHERE a.status = 'bestellen' AND a.user_id = $1`,
+        [userId]
+      );
+      
+      const sparePartsCount = parseInt(sparePartsToOrder.rows[0].count) || 0;
+      const accessoriesCount = parseInt(accessoriesToOrder.rows[0].count) || 0;
+      const totalToOrder = sparePartsCount + accessoriesCount;
+      
+      console.log(`📊 Order Counts für Benutzer ${userId}: ${sparePartsCount} Ersatzteile + ${accessoriesCount} Zubehör = ${totalToOrder} gesamt`);
+      
+      res.json({
+        sparePartsToOrder: sparePartsCount,
+        accessoriesToOrder: accessoriesCount,
+        totalToOrder: totalToOrder
+      });
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Order-Counts:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Abrufen der Order-Counts",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   app.put("/api/orders/accessories/bulk-update", async (req: Request, res: Response) => {
     try {
       const userId = parseInt(req.header('X-User-ID') || '0');
