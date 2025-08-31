@@ -924,6 +924,7 @@ export class EmailService {
         console.log(`Sende Kunden-E-Mail mit Vorlage "${templateName}" über shop-spezifische SMTP-Konfiguration`);
       }
       
+      console.log(`🔍 CRITICAL DEBUG: recipientEmail = "${recipientEmail}" (Typ: ${typeof recipientEmail})`);
       console.log(`Sende ${isSystemEmail ? 'System' : 'Kunden'}-E-Mail von: "${senderName}" <${senderEmail}> an: ${recipientEmail}`);
       
       // Erstelle E-Mail-Optionen mit den ausgewählten SMTP-Einstellungen

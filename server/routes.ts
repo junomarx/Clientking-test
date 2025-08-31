@@ -133,6 +133,93 @@ async function isAuthenticated(req: Request, res: Response, next: NextFunction) 
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
+  // ALLERHÖCHSTE PRIORITÄT: E-Mail für eingetroffenes Zubehör versenden - MUSS ZUERST SEIN!
+  app.post("/api/accessories/:id/send-arrival-email", async (req: Request, res: Response) => {
+    console.log("🚨🚨🚨 ALLERHÖCHSTE PRIORITÄT ZUBEHÖR E-MAIL ROUTE AUFGERUFEN! 🚨🚨🚨");
+    try {
+      const userId = parseInt(req.header('X-User-ID') || '0');
+      if (!userId) {
+        return res.status(401).json({ message: "X-User-ID Header fehlt" });
+      }
+      
+      const accessoryId = parseInt(req.params.id);
+      if (!accessoryId) {
+        return res.status(400).json({ message: "Ungültige Zubehör-ID" });
+      }
+      
+      console.log(`[E-MAIL-VERSAND] ALLERHÖCHSTE PRIORITÄT: Sende Ankunfts-E-Mail für Zubehör ${accessoryId} (Benutzer ${userId})`);
+      
+      // Zubehör-Daten abrufen
+      const accessory = await storage.getAccessory(accessoryId, userId);
+      if (!accessory) {
+        return res.status(404).json({ message: "Zubehör nicht gefunden oder keine Berechtigung" });
+      }
+      
+      // Kunde muss vorhanden sein für E-Mail-Versand
+      if (!accessory.customerId) {
+        return res.status(400).json({ message: "Keine Kunden-E-Mail vorhanden (Lager-Artikel)" });
+      }
+      
+      // Kunden-Daten abrufen
+      const customer = await storage.getCustomer(accessory.customerId, userId);
+      if (!customer || !customer.email) {
+        return res.status(400).json({ message: "Kunde nicht gefunden oder keine E-Mail-Adresse hinterlegt" });
+      }
+      
+      // Benutzer-Daten für Shop-Informationen abrufen
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Benutzer nicht gefunden" });
+      }
+      
+      console.log(`📧 ALLERHÖCHSTE PRIORITÄT: Sende E-Mail mit korrekter Vorlage "Zubehör eingetroffen" an ${customer.email}`);
+      
+      // E-Mail versenden mit der KORREKTEN E-Mail-Service-Funktion
+      const { EmailService } = await import('./email-service.js');
+      const emailServiceInstance = new EmailService();
+      
+      const emailVariables = {
+        kundenname: `${customer.firstName} ${customer.lastName}`,
+        zubehoerartikelname: accessory.articleName,
+        zubehoermenge: accessory.quantity.toString(),
+        zubehoerpreis: accessory.unitPrice,
+        zubehoergesamtpreis: accessory.totalPrice,
+        oeffnungszeiten: user.shopOpeningHours || 'Mo-Fr: 9:00-18:00',
+        geschaeftsname: user.shopName || 'Handyshop',
+        adresse: user.shopAddress || '',
+        telefon: user.phone || '',
+        email: user.email || ''
+      };
+
+      const emailResult = await emailServiceInstance.sendEmailByTemplateName(
+        'Zubehör eingetroffen',
+        customer.email,
+        emailVariables,
+        userId
+      );
+      
+      const success = emailResult;
+      
+      if (success) {
+        // E-Mail-Status in der Datenbank aktualisieren
+        await storage.updateAccessory(accessoryId, { emailSent: true }, userId);
+        
+        console.log(`[E-MAIL-VERSAND] ALLERHÖCHSTE PRIORITÄT: Ankunfts-E-Mail erfolgreich gesendet für Zubehör ${accessoryId}`);
+        res.json({ message: "E-Mail erfolgreich gesendet" });
+      } else {
+        console.error(`[E-MAIL-VERSAND] ALLERHÖCHSTE PRIORITÄT Fehler beim E-Mail-Versand`);
+        res.status(500).json({ message: "Fehler beim Senden der E-Mail" });
+      }
+      
+    } catch (error) {
+      console.error("[E-MAIL-VERSAND] ALLERHÖCHSTE PRIORITÄT Fehler beim Senden der Ankunfts-E-Mail:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Senden der E-Mail",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   // KRITISCH: SPARE PARTS ROUTES MÜSSEN GANZ AM ANFANG STEHEN!
   app.get("/api/orders/spare-parts", async (req: Request, res: Response) => {
     try {
