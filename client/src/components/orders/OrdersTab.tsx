@@ -967,9 +967,7 @@ export function OrdersTab() {
   // Handler für Etikett-Druck
   const handlePrintLabel = async (accessory: Accessory) => {
     try {
-      const response = await apiRequest(`/api/accessories/${accessory.id}/print-label`, {
-        method: 'POST',
-      });
+      const response = await apiRequest('POST', `/api/accessories/${accessory.id}/print-label`);
       
       if (response.ok) {
         const blob = await response.blob();
@@ -1005,9 +1003,7 @@ export function OrdersTab() {
     }
 
     try {
-      const response = await apiRequest(`/api/accessories/${accessory.id}/send-arrival-email`, {
-        method: 'POST',
-      });
+      const response = await apiRequest('POST', `/api/accessories/${accessory.id}/send-arrival-email`);
       
       if (response.ok) {
         // Daten neu laden um den Email-Status zu aktualisieren
