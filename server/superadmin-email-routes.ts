@@ -317,7 +317,7 @@ export const defaultCustomerEmailTemplates: DefaultEmailTemplate[] = [
     type: 'customer'
   },
   {
-    name: "Reparatur nicht möglich",
+    name: "Reparatur nicht erfolgreich",
     subject: "Information zu Ihrer Reparatur",
     body: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
@@ -360,7 +360,7 @@ export const defaultCustomerEmailTemplates: DefaultEmailTemplate[] = [
     type: 'customer'
   },
   {
-    name: "Kunde hat Reparatur abgelehnt",
+    name: "Reparatur nicht akzeptiert",
     subject: "Information zu Ihrer Reparatur",
     body: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
@@ -403,7 +403,7 @@ export const defaultCustomerEmailTemplates: DefaultEmailTemplate[] = [
     type: 'customer'
   },
   {
-    name: "[GLOBAL] Ersatzteil eingetroffen",
+    name: "Ersatzteil eingetroffen",
     subject: "Ersatzteil für Ihre Reparatur ist eingetroffen",
     body: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
@@ -481,6 +481,87 @@ export const defaultCustomerEmailTemplates: DefaultEmailTemplate[] = [
       </div>
     `,
     variables: ["kundenname", "hersteller", "geraet", "auftragsnummer", "fehler", "oeffnungszeiten", "geschaeftsname", "adresse", "telefon", "email"],
+    type: 'customer'
+  },
+  {
+    name: "Test Email",
+    subject: "Test E-Mail vom Handyshop Verwaltungssystem",
+    body: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h2 style="color: #4f46e5;">Test E-Mail</h2>
+        </div>
+        
+        <p>Sehr geehrte Damen und Herren,</p>
+        
+        <p>dies ist eine Test-E-Mail vom Handyshop Verwaltungssystem.</p>
+        
+        <p>Wenn Sie diese E-Mail erhalten, funktioniert die E-Mail-Konfiguration korrekt.</p>
+        
+        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+          <p style="margin: 5px 0;"><strong>System-Information:</strong></p>
+          <p style="margin: 5px 0;">Zeitstempel: {{zeitstempel}}</p>
+          <p style="margin: 5px 0;">Absender: {{geschaeftsname}}</p>
+        </div>
+        
+        <p>Mit freundlichen Grüßen,<br>
+        Ihr {{geschaeftsname}} Team</p>
+        
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666;">
+          <p>Diese E-Mail wurde automatisch vom Handyshop Verwaltungssystem gesendet.</p>
+        </div>
+      </div>
+    `,
+    variables: ["zeitstempel", "geschaeftsname"],
+    type: 'customer'
+  },
+  {
+    name: "Kostenvoranschlag",
+    subject: "Kostenvoranschlag für Ihre Reparatur",
+    body: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h2 style="color: #2563eb;">Kostenvoranschlag</h2>
+        </div>
+        
+        <p>Sehr geehrte(r) {{kundenname}},</p>
+        
+        <p>gerne erstellen wir Ihnen einen Kostenvoranschlag für die Reparatur Ihres Geräts.</p>
+        
+        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+          <p style="margin: 5px 0;"><strong>Gerät:</strong> {{hersteller}} {{geraet}}</p>
+          <p style="margin: 5px 0;"><strong>Auftragsnummer:</strong> {{auftragsnummer}}</p>
+          <p style="margin: 5px 0;"><strong>Problem:</strong> {{fehler}}</p>
+        </div>
+        
+        <div style="border: 2px solid #2563eb; padding: 20px; border-radius: 8px; margin: 20px 0; background-color: #eff6ff;">
+          <h3 style="color: #2563eb; margin-top: 0;">Geschätzte Kosten</h3>
+          <p style="margin: 5px 0; font-size: 18px;"><strong>Reparaturkosten: {{kosten}}</strong></p>
+          <p style="margin: 5px 0;">Arbeitszeit: {{arbeitszeit}}</p>
+          <p style="margin: 5px 0;">Ersatzteile: {{ersatzteile}}</p>
+        </div>
+        
+        <p><strong>Hinweis:</strong> Dies ist ein unverbindlicher Kostenvoranschlag. Die endgültigen Kosten können nach der detaillierten Diagnose variieren.</p>
+        
+        <p>Bitte teilen Sie uns mit, ob Sie mit dem Kostenvoranschlag einverstanden sind und wir mit der Reparatur fortfahren sollen.</p>
+        
+        <p>Bei Fragen stehen wir Ihnen gerne zur Verfügung.</p>
+        
+        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
+          <p style="margin: 5px 0;"><strong>{{geschaeftsname}}</strong></p>
+          <p style="margin: 5px 0;">{{adresse}}</p>
+          <p style="margin: 5px 0;">Telefon: {{telefon}}</p>
+          <p style="margin: 5px 0;">E-Mail: {{email}}</p>
+        </div>
+        
+        <p style="margin-top: 20px; font-style: italic; text-align: center;">Vielen Dank für Ihr Vertrauen!</p>
+        
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666;">
+          <p>Diese E-Mail wurde automatisch von {{geschaeftsname}} gesendet.</p>
+        </div>
+      </div>
+    `,
+    variables: ["kundenname", "hersteller", "geraet", "auftragsnummer", "fehler", "kosten", "arbeitszeit", "ersatzteile", "geschaeftsname", "adresse", "telefon", "email"],
     type: 'customer'
   }
 ];
@@ -768,23 +849,43 @@ export function registerSuperadminEmailRoutes(app: Express) {
    */
   app.post("/api/superadmin/email/create-default-templates", isSuperadmin, async (req: Request, res: Response) => {
     try {
-      const success = await createDefaultAppEmailTemplates();
+      const { type } = req.body;
+      let success = false;
+      let message = "";
+      
+      console.log(`📧 Erstelle Templates für Typ: "${type}"`);
+      
+      if (type === 'customer') {
+        console.log(`📧 Erstelle Customer-Templates...`);
+        // Erstelle die globalen Customer-Templates (mit userId=null, shopId=0)
+        success = await createEmailTemplates(defaultCustomerEmailTemplates, 'customer', null, 0);
+        message = success 
+          ? "Standard-Kunden-E-Mail-Vorlagen wurden erfolgreich erstellt" 
+          : "Fehler beim Erstellen der Standard-Kunden-E-Mail-Vorlagen";
+      } else {
+        console.log(`📧 Erstelle App-Templates...`);
+        // Standardverhalten für App-Templates
+        success = await createDefaultAppEmailTemplates();
+        message = success 
+          ? "Standard-App-E-Mail-Vorlagen wurden erfolgreich erstellt" 
+          : "Fehler beim Erstellen der Standard-App-E-Mail-Vorlagen";
+      }
       
       if (success) {
         res.status(200).json({ 
           success: true, 
-          message: "Standard-App-E-Mail-Vorlagen wurden erfolgreich erstellt" 
+          message 
         });
       } else {
         res.status(500).json({ 
           success: false, 
-          message: "Fehler beim Erstellen der Standard-App-E-Mail-Vorlagen" 
+          message 
         });
       }
     } catch (error: any) {
       res.status(500).json({ 
         success: false, 
-        message: `Fehler beim Erstellen der Standard-App-E-Mail-Vorlagen: ${error.message}` 
+        message: `Fehler beim Erstellen der Standard-E-Mail-Vorlagen: ${error.message}` 
       });
     }
   });
