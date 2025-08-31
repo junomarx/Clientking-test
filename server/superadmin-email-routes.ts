@@ -921,6 +921,188 @@ export function registerSuperadminEmailRoutes(app: Express) {
   });
 
   /**
+   * Alle E-Mail-Templates abrufen (nur globale Templates)
+   */
+  app.get("/api/superadmin/email-templates", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const { type } = req.query;
+      
+      let whereCondition = and(
+        isNull(emailTemplates.userId),
+        eq(emailTemplates.shopId, 0)
+      );
+      
+      // Filter nach Template-Typ wenn angegeben
+      if (type && (type === 'app' || type === 'customer')) {
+        whereCondition = and(
+          whereCondition,
+          eq(emailTemplates.type, type as string)
+        );
+      }
+      
+      const templates = await db.select()
+        .from(emailTemplates)
+        .where(whereCondition)
+        .orderBy(emailTemplates.name);
+      
+      res.status(200).json(templates);
+    } catch (error: any) {
+      console.error("Fehler beim Abrufen der E-Mail-Templates:", error);
+      res.status(500).json({ message: `Fehler beim Abrufen der E-Mail-Templates: ${error.message}` });
+    }
+  });
+
+  /**
+   * E-Mail-Template erstellen (nur globale Templates)
+   */
+  app.post("/api/superadmin/email-templates", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const { name, subject, body, variables, type } = req.body;
+      
+      if (!name || !subject || !body) {
+        return res.status(400).json({ message: "Name, Betreff und Inhalt sind erforderlich" });
+      }
+      
+      // Prüfen ob Template mit diesem Namen bereits existiert
+      const existing = await db.select()
+        .from(emailTemplates)
+        .where(and(
+          eq(emailTemplates.name, name),
+          isNull(emailTemplates.userId),
+          eq(emailTemplates.shopId, 0)
+        ));
+      
+      if (existing.length > 0) {
+        return res.status(400).json({ message: "Ein Template mit diesem Namen existiert bereits" });
+      }
+      
+      const [newTemplate] = await db.insert(emailTemplates).values({
+        name,
+        subject,
+        body,
+        variables: variables || [],
+        type: type || 'customer',
+        userId: null, // Globales Template
+        shopId: 0,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }).returning();
+      
+      res.status(201).json(newTemplate);
+    } catch (error: any) {
+      console.error("Fehler beim Erstellen des E-Mail-Templates:", error);
+      res.status(500).json({ message: `Fehler beim Erstellen des E-Mail-Templates: ${error.message}` });
+    }
+  });
+
+  /**
+   * E-Mail-Template aktualisieren (nur globale Templates)
+   */
+  app.put("/api/superadmin/email-templates/:id", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { name, subject, body, variables, type } = req.body;
+      
+      if (!name || !subject || !body) {
+        return res.status(400).json({ message: "Name, Betreff und Inhalt sind erforderlich" });
+      }
+      
+      // Prüfen ob Template existiert und global ist
+      const [existing] = await db.select()
+        .from(emailTemplates)
+        .where(and(
+          eq(emailTemplates.id, parseInt(id)),
+          isNull(emailTemplates.userId),
+          eq(emailTemplates.shopId, 0)
+        ));
+      
+      if (!existing) {
+        return res.status(404).json({ message: "Template nicht gefunden oder nicht global" });
+      }
+      
+      // Prüfen ob Name bereits von anderem Template verwendet wird
+      const nameConflict = await db.select()
+        .from(emailTemplates)
+        .where(and(
+          eq(emailTemplates.name, name),
+          isNull(emailTemplates.userId),
+          eq(emailTemplates.shopId, 0),
+          sql`${emailTemplates.id} != ${parseInt(id)}`
+        ));
+      
+      if (nameConflict.length > 0) {
+        return res.status(400).json({ message: "Ein anderes Template mit diesem Namen existiert bereits" });
+      }
+      
+      const [updatedTemplate] = await db.update(emailTemplates)
+        .set({
+          name,
+          subject,
+          body,
+          variables: variables || [],
+          type: type || 'customer',
+          updatedAt: new Date()
+        })
+        .where(eq(emailTemplates.id, parseInt(id)))
+        .returning();
+      
+      res.status(200).json(updatedTemplate);
+    } catch (error: any) {
+      console.error("Fehler beim Aktualisieren des E-Mail-Templates:", error);
+      res.status(500).json({ message: `Fehler beim Aktualisieren des E-Mail-Templates: ${error.message}` });
+    }
+  });
+
+  /**
+   * E-Mail-Template löschen (nur globale Templates)
+   */
+  app.delete("/api/superadmin/email-templates/:id", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      
+      // Prüfen ob Template existiert und global ist
+      const [existing] = await db.select()
+        .from(emailTemplates)
+        .where(and(
+          eq(emailTemplates.id, parseInt(id)),
+          isNull(emailTemplates.userId),
+          eq(emailTemplates.shopId, 0)
+        ));
+      
+      if (!existing) {
+        return res.status(404).json({ message: "Template nicht gefunden oder nicht global" });
+      }
+      
+      // Prüfen ob Template in E-Mail-Historie verwendet wird
+      const usageCheck = await db.select()
+        .from(emailHistory)
+        .where(eq(emailHistory.emailTemplateId, parseInt(id)))
+        .limit(1);
+      
+      if (usageCheck.length > 0) {
+        // Template wird verwendet, archivieren statt löschen
+        await db.update(emailTemplates)
+          .set({
+            name: `[Archiviert] ${existing.name}`,
+            updatedAt: new Date()
+          })
+          .where(eq(emailTemplates.id, parseInt(id)));
+        
+        res.status(200).json({ message: "Template wurde archiviert, da es bereits verwendet wurde" });
+      } else {
+        // Template kann sicher gelöscht werden
+        await db.delete(emailTemplates)
+          .where(eq(emailTemplates.id, parseInt(id)));
+        
+        res.status(200).json({ message: "Template erfolgreich gelöscht" });
+      }
+    } catch (error: any) {
+      console.error("Fehler beim Löschen des E-Mail-Templates:", error);
+      res.status(500).json({ message: `Fehler beim Löschen des E-Mail-Templates: ${error.message}` });
+    }
+  });
+
+  /**
    * Die separate Superadmin-E-Mail-Einstellungs-Route wurde mit der SMTP-Konfigurationsroute konsolidiert
    */
 
@@ -1029,7 +1211,8 @@ export function registerSuperadminEmailRoutes(app: Express) {
   // Test-E-Mail senden (Superadmin)
   app.post('/api/superadmin/email/test', async (req, res) => {
     try {
-      if (!isSuperadmin(req)) {
+      const userId = req.headers['x-user-id'];
+      if (!userId || !await isSuperadmin(req, res, () => {})) {
         return res.status(403).json({ message: 'Zugriff verweigert' });
       }
 
@@ -1039,8 +1222,9 @@ export function registerSuperadminEmailRoutes(app: Express) {
       }
 
       // Prüfe ob der SMTP-Server Beschränkungen hat
-      const superadminConfig = await storage.getSuperadminEmailConfig();
-      if (superadminConfig && superadminConfig.smtpHost?.includes('world4you')) {
+      const superadminConfig = await db.select().from(superadminEmailSettings).limit(1);
+      const config = superadminConfig[0];
+      if (config && config.smtpHost?.includes('world4you')) {
         // Bei world4you SMTP - prüfe ob Empfänger-E-Mail-Adresse @clientking.at ist
         if (!email.endsWith('@clientking.at')) {
           return res.status(400).json({ 
@@ -1050,7 +1234,7 @@ export function registerSuperadminEmailRoutes(app: Express) {
       }
 
       // Verwende die Superadmin-E-Mail-Konfiguration
-      await sendTestEmail(email);
+      await emailService.sendTestEmail(email);
       
       res.json({ 
         success: true, 

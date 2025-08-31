@@ -53,6 +53,7 @@ import { registerMultiShopRoutes } from "./multi-shop-routes";
 import { multiShopService } from "./multi-shop-service";
 import { registerTwoFARoutes } from "./two-fa-routes";
 import { registerMultiShopAdminRoutes } from "./multi-shop-admin-routes";
+import { registerSuperadminEmailRoutes } from "./superadmin-email-routes";
 import path from 'path';
 import fs from 'fs';
 // jsPDF will be imported dynamically
@@ -7576,6 +7577,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Fehler beim Löschen des Kiosk-Mitarbeiters" });
     }
   });
+
+  // Registriere Superadmin E-Mail-Routen
+  await registerSuperadminEmailRoutes(app);
+  console.log("✅ Superadmin E-Mail routes registered");
 
   const httpServer = createServer(app);
   

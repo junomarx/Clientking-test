@@ -1165,6 +1165,29 @@ export class EmailService {
       console.error(`Fehler bei der Bereinigung der "Reparatur abgeschlossen" Vorlage für Benutzer ${userId}:`, error);
     }
   }
+
+  /**
+   * Holt alle globalen E-Mail-Templates aus dem Superadmin-Bereich
+   * Diese Methode ersetzt die benutzerspezifischen Templates
+   */
+  async getGlobalEmailTemplates(): Promise<EmailTemplate[]> {
+    try {
+      const templates = await db.select()
+        .from(emailTemplates)
+        .where(and(
+          isNull(emailTemplates.userId),
+          eq(emailTemplates.shopId, 0),
+          eq(emailTemplates.type, 'customer')
+        ))
+        .orderBy(emailTemplates.name);
+      
+      console.log(`🌍 Gefundene globale Templates: ${templates.length}`);
+      return templates;
+    } catch (error) {
+      console.error('Fehler beim Abrufen der globalen E-Mail-Templates:', error);
+      return [];
+    }
+  }
   /**
    * Sendet eine E-Mail-Benachrichtigung für Reparatur-Statusänderungen
    * @param userId Benutzer-ID
@@ -1186,10 +1209,10 @@ export class EmailService {
         customerEmail: variables?.customer?.email
       });
       
-      // Hole die E-Mail-Vorlage
-      console.log(`🔍 Hole E-Mail-Vorlagen für Benutzer ${userId}...`);
-      const templates = await this.getAllEmailTemplates(userId);
-      console.log(`🔍 Gefundene Vorlagen: ${templates.length}`);
+      // Hole die globalen E-Mail-Vorlagen aus dem Superadmin-Bereich
+      console.log(`🔍 Hole globale E-Mail-Vorlagen aus Superadmin-Bereich...`);
+      const templates = await this.getGlobalEmailTemplates();
+      console.log(`🔍 Gefundene globale Vorlagen: ${templates.length}`);
       templates.forEach(t => console.log(`   - ${t.name} (Type: ${t.type})`));
       
       // Template-Mapping für verschiedene Status-Arten
@@ -1198,10 +1221,12 @@ export class EmailService {
       // Fallback-Suche nach Name, wenn kein Type-Match gefunden wurde
       if (!template) {
         if (templateType === 'fertig' || templateType === 'Reparatur erfolgreich abgeschlossen') {
+          // Priorität für "Reparatur erfolgreich abgeschlossen" bei Status "fertig"
           template = templates.find(t => 
+            t.name.toLowerCase().includes('erfolgreich abgeschlossen') ||
+            t.name.toLowerCase().includes('erfolgreich') ||
             t.name.toLowerCase().includes('abholbereit') || 
             t.name.toLowerCase().includes('fertig') ||
-            t.name.toLowerCase().includes('erfolgreich') ||
             t.type === 'ready_for_pickup'
           );
         } else if (templateType === 'Reparatur nicht möglich') {

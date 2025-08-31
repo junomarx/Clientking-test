@@ -112,11 +112,11 @@ export default function SuperadminEmailTab() {
     }
   });
 
-  // E-Mail-Vorlagen abrufen mit Typ-Filter
+  // E-Mail-Vorlagen abrufen mit Typ-Filter (Globale Templates)
   const { data: emailTemplates, isLoading: isLoadingTemplates, error: templatesError, refetch: refetchTemplates } = useQuery<EmailTemplate[]>({
-    queryKey: ['/api/superadmin/email/templates', templateType],
+    queryKey: ['/api/superadmin/email-templates', templateType],
     queryFn: async () => {
-      const response = await apiRequest('GET', `/api/superadmin/email/templates?type=${templateType}`);
+      const response = await apiRequest('GET', `/api/superadmin/email-templates?type=${templateType}`);
       return await response.json();
     }
   });
@@ -156,19 +156,19 @@ export default function SuperadminEmailTab() {
   
   // Die Superadmin-SMTP-Konfiguration wurde mit der globalen SMTP-Konfiguration konsolidiert
   
-  // E-Mail-Vorlage erstellen
+  // E-Mail-Vorlage erstellen (Globale Templates)
   const createTemplateMutation = useMutation({
     mutationFn: async (template: typeof newTemplate) => {
-      const response = await apiRequest('POST', '/api/superadmin/email/templates', template);
+      const response = await apiRequest('POST', '/api/superadmin/email-templates', template);
       return await response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/superadmin/email/templates'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/superadmin/email-templates'] });
       setIsCreateTemplateOpen(false);
       setNewTemplate({ name: '', subject: '', body: '', variables: [], type: 'customer' });
       toast({
-        title: 'Vorlage erstellt',
-        description: 'Die E-Mail-Vorlage wurde erfolgreich erstellt.'
+        title: 'Globale Vorlage erstellt',
+        description: 'Die globale E-Mail-Vorlage wurde erfolgreich erstellt.'
       });
     },
     onError: (error: Error) => {
@@ -180,19 +180,19 @@ export default function SuperadminEmailTab() {
     }
   });
   
-  // E-Mail-Vorlage aktualisieren
+  // E-Mail-Vorlage aktualisieren (Globale Templates)
   const updateTemplateMutation = useMutation({
     mutationFn: async ({ id, template }: { id: number, template: Partial<EmailTemplate> }) => {
-      const response = await apiRequest('PATCH', `/api/superadmin/email/templates/${id}`, template);
+      const response = await apiRequest('PATCH', `/api/superadmin/email-templates/${id}`, template);
       return await response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/superadmin/email/templates'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/superadmin/email-templates'] });
       setIsEditTemplateOpen(false);
       setSelectedTemplate(null);
       toast({
-        title: 'Vorlage aktualisiert',
-        description: 'Die E-Mail-Vorlage wurde erfolgreich aktualisiert.'
+        title: 'Globale Vorlage aktualisiert',
+        description: 'Die globale E-Mail-Vorlage wurde erfolgreich aktualisiert.'
       });
     },
     onError: (error: Error) => {
@@ -204,17 +204,17 @@ export default function SuperadminEmailTab() {
     }
   });
   
-  // E-Mail-Vorlage löschen
+  // E-Mail-Vorlage löschen (Globale Templates)
   const deleteTemplateMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await apiRequest('DELETE', `/api/superadmin/email/templates/${id}`);
+      const response = await apiRequest('DELETE', `/api/superadmin/email-templates/${id}`);
       return response.status === 204 ? {} : await response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/superadmin/email/templates'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/superadmin/email-templates'] });
       toast({
-        title: 'Vorlage gelöscht',
-        description: 'Die E-Mail-Vorlage wurde erfolgreich gelöscht.'
+        title: 'Globale Vorlage gelöscht',
+        description: 'Die globale E-Mail-Vorlage wurde erfolgreich gelöscht.'
       });
     },
     onError: (error: Error) => {
@@ -595,10 +595,25 @@ export default function SuperadminEmailTab() {
                 </div>
               </div>
               <CardDescription>
-                Verwalten Sie E-Mail-Vorlagen für verschiedene Benachrichtigungen. Sie können Variablen wie {`{{kundenname}}`} verwenden, die beim Versand automatisch ersetzt werden.
+                Verwalten Sie **globale E-Mail-Vorlagen** für das gesamte System. Diese Templates werden von allen Shops verwendet und ersetzen shop-spezifische Vorlagen. Sie können Variablen wie {`{{kundenname}}`} verwenden, die beim Versand automatisch ersetzt werden.
               </CardDescription>
             </CardHeader>
             <CardContent>
+              {/* Info-Box für globale Templates */}
+              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <h4 className="font-semibold text-green-900 mb-2">🌍 Zentrale Template-Verwaltung</h4>
+                <p className="text-sm text-green-800">
+                  <strong>Alle E-Mail-Templates</strong> werden jetzt zentral verwaltet und ersetzen shop-spezifische Vorlagen:
+                </p>
+                <ul className="text-sm text-green-800 mt-2 ml-4 list-disc">
+                  <li><strong>Kunden-Vorlagen:</strong> Für Status-Updates (z.B. "Reparatur erfolgreich abgeschlossen")</li>
+                  <li><strong>System-Vorlagen:</strong> Für App-Benachrichtigungen (z.B. Benutzer-Registrierung)</li>
+                </ul>
+                <p className="text-sm text-green-800 mt-2">
+                  <strong>Wichtig:</strong> Diese Templates werden systemweit für alle Shops verwendet und sorgen für eine einheitliche Unternehmensidentität.
+                </p>
+              </div>
+              
               {/* Vorlagetypen-Tabs */}
               <Tabs defaultValue={templateType} className="mt-4" onValueChange={(value) => setTemplateType(value as 'app' | 'customer')}>
                 <TabsList>
