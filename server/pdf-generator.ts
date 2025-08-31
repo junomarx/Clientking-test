@@ -77,8 +77,13 @@ export async function generateAccessoryLabelPDF(data: AccessoryLabelData): Promi
   doc.text('Einzelpreis:', 5, y + 4);
   doc.setFont('helvetica', 'normal');
   doc.text(data.accessory.unitPrice, 25, y + 4);
+  
+  doc.setFont('helvetica', 'bold');
+  doc.text('Gesamtpreis:', 5, y + 8);
+  doc.setFont('helvetica', 'normal');
+  doc.text(data.accessory.totalPrice, 25, y + 8);
 
-  y += 12;
+  y += 16;
 
   // Kunden-Informationen (falls vorhanden)
   if (data.customer) {
