@@ -10,7 +10,7 @@ import { hasAccess, hasAccessAsync } from './permissions';
 import { checkTrialExpiry } from './middleware/check-trial-expiry';
 import { format } from 'date-fns';
 import { db, pool } from './db';
-import { eq, desc, and, sql, gte, lte, lt, isNotNull, or } from 'drizzle-orm';
+import { eq, desc, and, sql, gte, lte, lt, isNotNull, or, asc, isNull } from 'drizzle-orm';
 import { 
   insertCustomerSchema, 
   insertRepairSchema,
@@ -3234,44 +3234,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "Unauthorized" });
       }
       
-      // Rollenbasierte Berechtigung: Nur Shop-Owner haben Zugriff auf E-Mail-Vorlagen
-      const userRole = (req.user as any).role;
-      if (userRole !== 'owner') {
-        return res.status(403).json({ error: "Zugriff verweigert: Nur Shop-Owner können E-Mail-Vorlagen verwalten" });
-      }
+      console.log(`📧 Normale Benutzer rufen globale E-Mail-Templates ab (User ID: ${userId})`);
       
-      // userId an die Methode übergeben, um shop-basierte Filterung zu ermöglichen
-      const allTemplates = await storage.getAllEmailTemplates(userId);
+      // Lade ALLE globalen Templates (Customer-Type) aus der emailTemplates Tabelle
+      // Globale Templates haben userId = null und shopId = 0
+      const globalTemplates = await db
+        .select()
+        .from(emailTemplates)
+        .where(
+          and(
+            isNull(emailTemplates.userId),
+            eq(emailTemplates.shopId, 0),
+            eq(emailTemplates.type, 'customer')
+          )
+        )
+        .orderBy(asc(emailTemplates.name));
       
-      // Sammle zuerst alle Vorlagen nach Namen für die Deduplizierung
-      const dedupMap = new Map();
+      console.log(`📧 ${globalTemplates.length} globale Kunden-Templates gefunden:`, globalTemplates.map(t => t.name));
       
-      // Erste Iteration: Finde benutzerspezifische Vorlagen und speichere sie in der Map
-      allTemplates.forEach(template => {
-        const baseName = template.name.replace(/^\[GLOBAL\]\s*/, '');
-        // Wenn es eine benutzerspezifische Vorlage ist, immer bevorzugen
-        if (template.userId === userId) {
-          dedupMap.set(baseName, template);
-        }
-      });
+      // Formatiere die Templates für das Frontend (gleiche Struktur wie früher)
+      const formattedTemplates = globalTemplates.map(template => ({
+        id: template.id,
+        name: template.name,
+        subject: template.subject,
+        body: template.body,
+        variables: template.variables || [],
+        type: template.type,
+        isGlobal: true,
+        userId: null, // Globale Templates haben keine userId
+        shopId: null, // Globale Templates haben keine shopId
+        createdAt: template.createdAt,
+        updatedAt: template.updatedAt
+      }));
       
-      // Zweite Iteration: Füge globale Vorlagen hinzu, aber nur wenn keine benutzerspezifische existiert
-      allTemplates.forEach(template => {
-        const baseName = template.name.replace(/^\[GLOBAL\]\s*/, '');
-        // Wenn es eine globale Vorlage ist, nur hinzufügen wenn keine benutzerspezifische existiert
-        if (template.userId !== userId && !dedupMap.has(baseName)) {
-          dedupMap.set(baseName, template);
-        }
-      });
+      console.log(`📧 Zurückgegebene Templates für normalen Benutzer ${userId}:`, formattedTemplates.map(t => t.name));
       
-      // Map in eine Liste konvertieren
-      const filteredTemplates = Array.from(dedupMap.values());
-      
-      console.log(`Für Benutzer ${userId} wurden ${allTemplates.length} Vorlagen auf ${filteredTemplates.length} dedupliziert`);
-      
-      return res.status(200).json(filteredTemplates);
+      return res.status(200).json(formattedTemplates);
     } catch (error) {
-      console.error("Error retrieving email templates:", error);
+      console.error("Fehler beim Abrufen der globalen E-Mail-Templates:", error);
       return res.status(500).json({ error: "Internal server error" });
     }
   });

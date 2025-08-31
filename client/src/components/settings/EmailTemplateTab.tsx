@@ -1,19 +1,12 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { queryClient, apiRequest } from '@/lib/queryClient';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Label } from '@/components/ui/label';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetClose } from '@/components/ui/sheet';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialog } from '@/components/ui/alert-dialog';
-import { useToast } from '@/hooks/use-toast';
-import { Loader2, Trash2, Edit, Mail, Plus, MessageSquare } from 'lucide-react';
+import { AlertTriangle, Mail, Eye } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import type { EmailTemplate as DBEmailTemplate } from '@shared/schema';
 
 // Erweiterte EmailTemplate-Schnittstelle für unser UI
@@ -21,571 +14,178 @@ interface EmailTemplate extends DBEmailTemplate {
   description?: string;
 }
 
-// Interface für das Formular zum Erstellen/Bearbeiten von Vorlagen
-interface EmailTemplateFormData {
-  name: string;
-  subject: string;
-  body: string;
-  description: string;
-  variables: string[];
-}
-
-// Komponente für den Email-Template Tab
+// Komponente für den Email-Template Tab (Read-Only für normale Benutzer)
 export function EmailTemplateTab() {
-  const { toast } = useToast();
-  const [editingTemplate, setEditingTemplate] = useState<EmailTemplate | null>(null);
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false);
-  const [isRestoreAlertOpen, setIsRestoreAlertOpen] = useState(false);
-  const [templateToDelete, setTemplateToDelete] = useState<number | null>(null);
-  const [isSendDialogOpen, setIsSendDialogOpen] = useState(false);
-  const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null);
-  const [emailAddress, setEmailAddress] = useState('');
-  const [variables, setVariables] = useState<Record<string, string>>({});
-
-  // Abfrage aller E-Mail-Vorlagen
-  const { data: templates, isLoading } = useQuery({
+  // Abfrage aller globalen E-Mail-Vorlagen (nur Kunden-Templates für normale Benutzer)
+  const { data: templates, isLoading, error } = useQuery({
     queryKey: ['/api/email-templates'],
-    queryFn: () => fetch('/api/email-templates').then(res => {
-      if (!res.ok) throw new Error('Fehler beim Laden der E-Mail-Vorlagen');
-      return res.json();
-    })
-  });
-
-  // Mutation zum Erstellen einer neuen Vorlage
-  const createMutation = useMutation({
-    mutationFn: async (data: EmailTemplateFormData) => {
-      const response = await apiRequest('POST', '/api/email-templates', {
-        name: data.name,
-        subject: data.subject,
-        body: data.body,
-        description: data.description,
-        variables: data.variables.join(',')
-      });
+    queryFn: async () => {
+      const response = await fetch('/api/email-templates');
+      if (!response.ok) throw new Error('Fehler beim Laden der globalen E-Mail-Vorlagen');
       return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/email-templates'] });
-      setIsSheetOpen(false);
-      toast({
-        title: 'Vorlage erstellt',
-        description: 'Die E-Mail-Vorlage wurde erfolgreich erstellt.'
-      });
-    },
-    onError: (error) => {
-      toast({
-        variant: 'destructive',
-        title: 'Fehler',
-        description: `Fehler beim Erstellen der Vorlage: ${error.message}`
-      });
     }
   });
-
-  // Mutation zum Aktualisieren einer Vorlage
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number, data: Partial<EmailTemplateFormData> }) => {
-      const templateData: any = { ...data };
-      
-      // Konvertiere variables zurück in einen String für die API
-      if (data.variables) {
-        templateData.variables = data.variables.join(',');
-      }
-      
-      const response = await apiRequest('PATCH', `/api/email-templates/${id}`, templateData);
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/email-templates'] });
-      setIsSheetOpen(false);
-      toast({
-        title: 'Vorlage aktualisiert',
-        description: 'Die E-Mail-Vorlage wurde erfolgreich aktualisiert.'
-      });
-    },
-    onError: (error) => {
-      toast({
-        variant: 'destructive',
-        title: 'Fehler',
-        description: `Fehler beim Aktualisieren der Vorlage: ${error.message}`
-      });
-    }
-  });
-
-  // Mutation zum Löschen einer Vorlage
-  const deleteMutation = useMutation({
-    mutationFn: async (id: number) => {
-      await apiRequest('DELETE', `/api/email-templates/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/email-templates'] });
-      toast({
-        title: 'Vorlage gelöscht',
-        description: 'Die E-Mail-Vorlage wurde erfolgreich gelöscht.'
-      });
-    },
-    onError: (error) => {
-      toast({
-        variant: 'destructive',
-        title: 'Fehler',
-        description: `Fehler beim Löschen der Vorlage: ${error.message}`
-      });
-    }
-  });
-
-  // Mutation zum Senden einer E-Mail mit einer Vorlage
-  const sendEmailMutation = useMutation({
-    mutationFn: async ({ templateId, to, variables }: { templateId: number, to: string, variables: Record<string, string> }) => {
-      const response = await apiRequest('POST', '/api/send-email', { templateId, to, variables });
-      return response.json();
-    },
-    onSuccess: () => {
-      setIsSendDialogOpen(false);
-      toast({
-        title: 'E-Mail gesendet',
-        description: 'Die E-Mail wurde erfolgreich gesendet.'
-      });
-    },
-    onError: (error) => {
-      toast({
-        variant: 'destructive',
-        title: 'Fehler',
-        description: `Fehler beim Senden der E-Mail: ${error.message}`
-      });
-    }
-  });
-  
-  // Mutation zum Wiederherstellen der Standard-Kundenvorlagen
-  const restoreCustomerTemplatesMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest('POST', '/api/email/restore-customer-templates');
-      return response.json();
-    },
-    onSuccess: (data) => {
-      // Bei erfolgreicher Antwort mit Templates direkt die Daten setzen
-      if (data.templates && Array.isArray(data.templates)) {
-        queryClient.setQueryData(['/api/email-templates'], data.templates);
-      } else {
-        // Sonst normal invalidieren und neu laden
-        queryClient.invalidateQueries({ queryKey: ['/api/email-templates'] });
-      }
-      
-      toast({
-        title: 'Standardvorlagen wiederhergestellt',
-        description: 'Die Standard-Kundenkommunikationsvorlagen wurden erfolgreich aktualisiert.'
-      });
-    },
-    onError: (error) => {
-      toast({
-        variant: 'destructive',
-        title: 'Fehler',
-        description: `Fehler beim Wiederherstellen der Standardvorlagen: ${error.message}`
-      });
-    }
-  });
-
-  const handleCreateTemplate = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const name = formData.get('name') as string;
-    const subject = formData.get('subject') as string;
-    const body = formData.get('body') as string;
-    const description = formData.get('description') as string;
-    const variablesStr = formData.get('variables') as string;
-    const variables = variablesStr.split(',').map(v => v.trim()).filter(v => v);
-
-    createMutation.mutate({
-      name,
-      subject,
-      body,
-      description,
-      variables
-    });
-  };
-
-  const handleUpdateTemplate = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!editingTemplate) return;
-
-    const formData = new FormData(e.currentTarget);
-    const name = formData.get('name') as string;
-    const subject = formData.get('subject') as string;
-    const body = formData.get('body') as string;
-    const description = formData.get('description') as string;
-    const variablesStr = formData.get('variables') as string;
-    const variables = variablesStr.split(',').map(v => v.trim()).filter(v => v);
-
-    updateMutation.mutate({
-      id: editingTemplate.id,
-      data: {
-        name,
-        subject,
-        body,
-        description,
-        variables
-      }
-    });
-  };
-
-  const handleDelete = (id: number) => {
-    setTemplateToDelete(id);
-    setIsAlertDialogOpen(true);
-  };
-
-  const confirmDelete = () => {
-    if (templateToDelete !== null) {
-      deleteMutation.mutate(templateToDelete);
-      setIsAlertDialogOpen(false);
-      setTemplateToDelete(null);
-    }
-  };
-
-  const openCreateSheet = () => {
-    setEditingTemplate(null);
-    setIsSheetOpen(true);
-  };
-
-  const openEditSheet = (template: EmailTemplate) => {
-    // Konvertiere den variables-String in ein Array für das Formular
-    const templateWithArrayVars = {
-      ...template,
-      variables: Array.isArray(template.variables) 
-        ? template.variables 
-        : []
-    } as EmailTemplate & { variables: string[] };
-    
-    setEditingTemplate(templateWithArrayVars);
-    setIsSheetOpen(true);
-  };
-
-  const openSendDialog = (templateId: number) => {
-    const template = templates?.find((t: EmailTemplate) => t.id === templateId);
-    if (template) {
-      setSelectedTemplateId(templateId);
-      
-      // Initialisiere die Variablen-State mit leeren Werten für alle Variablen dieser Vorlage
-      const initialVars: Record<string, string> = {};
-      if (template.variables && Array.isArray(template.variables)) {
-        template.variables.forEach((v: string) => {
-          const varName = v.trim();
-          if (varName) initialVars[varName] = '';
-        });
-      }
-      
-      setVariables(initialVars);
-      setIsSendDialogOpen(true);
-    }
-  };
-
-  const handleSendEmail = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (selectedTemplateId && emailAddress) {
-      sendEmailMutation.mutate({
-        templateId: selectedTemplateId,
-        to: emailAddress,
-        variables
-      });
-    }
-  };
-
-  const handleVariableChange = (key: string, value: string) => {
-    setVariables(prev => ({
-      ...prev,
-      [key]: value
-    }));
-  };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+          <p className="text-sm text-muted-foreground">Lade E-Mail-Vorlagen...</p>
+        </div>
       </div>
     );
   }
 
-  return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center border-b pb-4">
-        <h2 className="font-semibold text-lg">E-Mail Vorlagen</h2>
-        <div className="flex space-x-2">
-          <Button 
-            onClick={() => setIsRestoreAlertOpen(true)} 
-            size="sm" 
-            variant="outline" 
-            disabled={restoreCustomerTemplatesMutation.isPending}
-            title="Standard-Kundenkommunikationsvorlagen wiederherstellen"
-          >
-            {restoreCustomerTemplatesMutation.isPending ? (
-              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-            ) : (
-              <MessageSquare className="h-4 w-4 mr-1" />
-            )}
-            Standardvorlagen
-          </Button>
-          <Button onClick={openCreateSheet} size="sm">
-            <Plus className="h-4 w-4 mr-1" /> Neue Vorlage
-          </Button>
-        </div>
-      </div>
-
-      {templates?.length === 0 ? (
-        <div className="border rounded-md p-8 text-center">
-          <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold">Keine Vorlagen vorhanden</h3>
-          <p className="text-center text-muted-foreground mt-2">
-            Sie haben noch keine E-Mail-Vorlagen erstellt. Klicken Sie auf "Neue Vorlage",
-            um Ihre erste Vorlage zu erstellen.
-          </p>
-          <Button onClick={openCreateSheet} className="mt-4">
-            <Plus className="mr-2 h-4 w-4" /> Neue Vorlage
-          </Button>
-        </div>
-      ) : (
-        <div className="border rounded-md">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Betreff</TableHead>
-                <TableHead className="text-right">Aktionen</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {templates?.filter(template => !template.name.includes("[ARCHIVIERT]")).map((template: EmailTemplate) => (
-                <TableRow key={template.id}>
-                  <TableCell className="font-medium">{template.name}</TableCell>
-                  <TableCell>{template.subject}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end space-x-1">
-                      <Button 
-                        size="icon" 
-                        variant="ghost" 
-                        onClick={() => openEditSheet(template)}
-                        title="Vorlage bearbeiten"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        size="icon" 
-                        variant="ghost" 
-                        onClick={() => openSendDialog(template.id)}
-                        title="E-Mail mit dieser Vorlage senden"
-                      >
-                        <Mail className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        size="icon" 
-                        variant="ghost" 
-                        onClick={() => handleDelete(template.id)}
-                        title="Vorlage löschen"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
-
-      {/* Sheet für das Erstellen/Bearbeiten von Vorlagen */}
-      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        <SheetContent className="sm:max-w-2xl overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle>{editingTemplate ? 'Vorlage bearbeiten' : 'Neue Vorlage erstellen'}</SheetTitle>
-            <SheetDescription>
-              Erstellen Sie eine E-Mail-Vorlage mit Variablen für personalisierte Nachrichten.
-              Variablen werden im Format {'{{'} Variable {'}}' } eingefügt.
-            </SheetDescription>
-          </SheetHeader>
-          <form onSubmit={editingTemplate ? handleUpdateTemplate : handleCreateTemplate} className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name der Vorlage</Label>
-              <Input
-                id="name"
-                name="name"
-                placeholder="z.B. Reparatur abgeschlossen"
-                defaultValue={editingTemplate?.name || ''}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Beschreibung (optional)</Label>
-              <Input
-                id="description"
-                name="description"
-                placeholder="Kurze Beschreibung der Vorlage"
-                defaultValue={editingTemplate?.description || ''}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="subject">Betreff</Label>
-              <Input
-                id="subject"
-                name="subject"
-                placeholder="z.B. Ihre Reparatur ist abgeschlossen"
-                defaultValue={editingTemplate?.subject || ''}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="variables">Variablen (durch Komma getrennt)</Label>
-              <Input
-                id="variables"
-                name="variables"
-                placeholder="z.B. kundenName, reparaturCode, abholDatum"
-                defaultValue={editingTemplate?.variables ? 
-                  (Array.isArray(editingTemplate.variables) ? 
-                    editingTemplate.variables.join(',') : 
-                    editingTemplate.variables
-                  ) : ''
-                }
-              />
-              <p className="text-xs text-muted-foreground">
-                Diese Variablen können im Betreff und Inhalt im Format {'{{'} Variable {'}}' } verwendet werden.
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-center p-8 text-center">
+            <div>
+              <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Fehler beim Laden</h3>
+              <p className="text-muted-foreground">
+                Die E-Mail-Vorlagen konnten nicht geladen werden.
               </p>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="body">Inhalt</Label>
-              <Textarea
-                id="body"
-                name="body"
-                placeholder="Schreiben Sie hier den Inhalt Ihrer E-Mail."
-                defaultValue={editingTemplate?.body || ''}
-                className="min-h-[200px]"
-                required
-              />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Info-Box über zentrale Verwaltung */}
+      <Card className="border-blue-200 bg-blue-50">
+        <CardContent className="pt-6">
+          <div className="flex items-start space-x-3">
+            <Mail className="h-5 w-5 text-blue-600 mt-0.5" />
+            <div>
+              <h4 className="font-semibold text-blue-900 mb-1">Zentrale E-Mail-Vorlagen</h4>
+              <p className="text-sm text-blue-800">
+                Alle E-Mail-Templates werden jetzt zentral über den Superadmin-Bereich verwaltet. 
+                Diese Vorlagen werden automatisch für alle Status-Updates und Benachrichtigungen verwendet.
+              </p>
+              <p className="text-sm text-blue-700 mt-2 font-medium">
+                💡 Änderungen an den Templates können nur vom Superadmin vorgenommen werden.
+              </p>
             </div>
-            <SheetFooter className="pt-2">
-              <SheetClose asChild>
-                <Button type="button" variant="outline">Abbrechen</Button>
-              </SheetClose>
-              <Button 
-                type="submit" 
-                disabled={createMutation.isPending || updateMutation.isPending}
-              >
-                {(createMutation.isPending || updateMutation.isPending) && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                )}
-                {editingTemplate ? 'Aktualisieren' : 'Erstellen'}
-              </Button>
-            </SheetFooter>
-          </form>
-        </SheetContent>
-      </Sheet>
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Dialog zum Senden einer E-Mail */}
-      <Dialog open={isSendDialogOpen} onOpenChange={setIsSendDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>E-Mail senden</DialogTitle>
-            <DialogDescription>
-              Senden Sie eine E-Mail mit der ausgewählten Vorlage. Füllen Sie die Variablen aus.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleSendEmail}>
-            <div className="space-y-4 py-2">
-              <div className="space-y-2">
-                <Label htmlFor="email">E-Mail-Adresse des Empfängers</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="email@example.com"
-                  value={emailAddress}
-                  onChange={(e) => setEmailAddress(e.target.value)}
-                  required
-                />
-              </div>
-              
-              {/* Eingabefelder für Variablen */}
-              {Object.keys(variables).length > 0 && (
-                <div className="space-y-3">
-                  <Label>Variablen:</Label>
-                  {Object.keys(variables).map(key => (
-                    <div key={key} className="space-y-1">
-                      <Label htmlFor={`var-${key}`} className="text-sm">
-                        {key}
-                      </Label>
-                      <Input
-                        id={`var-${key}`}
-                        value={variables[key]}
-                        onChange={(e) => handleVariableChange(key, e.target.value)}
-                        placeholder={`Wert für ${key}`}
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
+      {/* Templates Tabelle */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Mail className="h-5 w-5 mr-2" />
+            Verfügbare E-Mail-Vorlagen
+          </CardTitle>
+          <CardDescription>
+            Diese globalen Templates werden für Kunden-E-Mails verwendet. Sie sind für alle Shops einheitlich.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {templates && templates.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Betreff</TableHead>
+                  <TableHead>Variablen</TableHead>
+                  <TableHead>Zuletzt aktualisiert</TableHead>
+                  <TableHead className="text-right">Aktionen</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {templates.map((template: EmailTemplate) => (
+                  <TableRow key={template.id}>
+                    <TableCell className="font-medium">{template.name}</TableCell>
+                    <TableCell className="max-w-xs truncate">{template.subject}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1 max-w-xs">
+                        {template.variables && Array.isArray(template.variables) && template.variables.length > 0 ? (
+                          template.variables.slice(0, 3).map((variable: string, index: number) => (
+                            <Badge key={index} variant="outline" className="text-xs">
+                              {variable}
+                            </Badge>
+                          ))
+                        ) : (
+                          <span className="text-muted-foreground text-sm">Keine Variablen</span>
+                        )}
+                        {template.variables && Array.isArray(template.variables) && template.variables.length > 3 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{template.variables.length - 3} weitere
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {new Date(template.updatedAt).toLocaleDateString('de-DE')}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button size="sm" variant="outline">
+                            <Eye className="h-4 w-4 mr-1" />
+                            Anzeigen
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-4xl max-h-[80vh]">
+                          <DialogHeader>
+                            <DialogTitle>{template.name}</DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-4">
+                            <div>
+                              <label className="font-semibold text-sm">Betreff:</label>
+                              <p className="mt-1 p-2 bg-gray-50 rounded border">{template.subject}</p>
+                            </div>
+                            
+                            {template.variables && Array.isArray(template.variables) && template.variables.length > 0 && (
+                              <div>
+                                <label className="font-semibold text-sm">Verfügbare Variablen:</label>
+                                <div className="mt-1 flex flex-wrap gap-2">
+                                  {template.variables.map((variable: string, index: number) => (
+                                    <Badge key={index} variant="secondary">
+                                      {`{{${variable}}}`}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            
+                            <div>
+                              <label className="font-semibold text-sm">E-Mail-Inhalt:</label>
+                              <ScrollArea className="mt-1 h-96 w-full rounded border">
+                                <div className="p-4">
+                                  <div 
+                                    dangerouslySetInnerHTML={{ __html: template.body }} 
+                                    className="prose prose-sm max-w-none"
+                                  />
+                                </div>
+                              </ScrollArea>
+                            </div>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="text-center py-8">
+              <Mail className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Keine E-Mail-Vorlagen gefunden</h3>
+              <p className="text-muted-foreground">
+                Es sind noch keine globalen E-Mail-Vorlagen verfügbar.
+              </p>
             </div>
-            <DialogFooter className="pt-4">
-              <Button type="button" variant="outline" onClick={() => setIsSendDialogOpen(false)}>
-                Abbrechen
-              </Button>
-              <Button 
-                type="submit" 
-                disabled={sendEmailMutation.isPending || !emailAddress}
-              >
-                {sendEmailMutation.isPending && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                )}
-                Senden
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Alert Dialog für Löschbestätigung */}
-      <AlertDialog open={isAlertDialogOpen} onOpenChange={setIsAlertDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Vorlage löschen</AlertDialogTitle>
-            <AlertDialogDescription>
-              Möchten Sie diese E-Mail-Vorlage wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={confirmDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {deleteMutation.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Löschen
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Alert Dialog für Wiederherstellung der Standardvorlagen */}
-      <AlertDialog open={isRestoreAlertOpen} onOpenChange={setIsRestoreAlertOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Standardvorlagen wiederherstellen</AlertDialogTitle>
-            <AlertDialogDescription>
-              <div className="space-y-2">
-                <p>Achtung: Bei dieser Aktion werden alle vorhandenen E-Mail-Vorlagen mit den Standardvorlagen <strong>überschrieben</strong>, wenn sie den gleichen Namen haben.</p>
-                <p>Alle Ihre eigenen Anpassungen an den Standardvorlagen gehen dabei verloren.</p>
-                <p>Möchten Sie trotzdem fortfahren?</p>
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={() => {
-                setIsRestoreAlertOpen(false);
-                restoreCustomerTemplatesMutation.mutate();
-              }}
-            >
-              Ja, Standardvorlagen wiederherstellen
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
