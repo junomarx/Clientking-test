@@ -6519,9 +6519,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         doc.setFontSize(10);
         // Header der Tabelle - neue Spaltenstruktur: Modell | Ersatzteil | Lieferant | Erstellt am
         doc.text('Modell', 20, yPos);
-        doc.text('Ersatzteil', 70, yPos);
-        doc.text('Lieferant', 130, yPos);
-        doc.text('Erstellt am', 170, yPos);
+        doc.text('Ersatzteil', 90, yPos);
+        doc.text('Lieferant', 140, yPos);
+        doc.text('Erstellt am', 175, yPos);
         yPos += 10;
         
         // Ersatzteile-Daten
@@ -6533,12 +6533,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Reparatur abrufen, um Modell-Info zu bekommen
           const repair = await storage.getRepair(part.repairId, req.user.id);
-          const deviceModel = repair ? `${repair.brand} ${repair.model}`.substring(0, 25) : 'Unbekannt';
+          const deviceModel = repair ? `${repair.brand} ${repair.model}`.substring(0, 35) : 'Unbekannt';
           
           doc.text(deviceModel, 20, yPos);
-          doc.text(part.partName.substring(0, 25), 70, yPos);
-          doc.text(part.supplier?.substring(0, 15) || '-', 130, yPos);
-          doc.text(new Date(part.createdAt).toLocaleDateString('de-DE'), 170, yPos);
+          doc.text(part.partName.substring(0, 20), 90, yPos);
+          doc.text(part.supplier?.substring(0, 15) || '-', 140, yPos);
+          doc.text(new Date(part.createdAt).toLocaleDateString('de-DE'), 175, yPos);
           yPos += 8;
         }
         
