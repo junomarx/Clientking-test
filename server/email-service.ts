@@ -1231,27 +1231,34 @@ export class EmailService {
           );
         } else if (templateType === 'Reparatur nicht möglich') {
           template = templates.find(t => 
+            t.name.toLowerCase().includes('nicht erfolgreich') ||
             t.name.toLowerCase().includes('nicht möglich') ||
             t.name.toLowerCase().includes('nicht reparierbar') ||
-            t.name === 'Reparatur nicht möglich'
+            t.name === 'Reparatur nicht möglich' ||
+            t.name === 'Reparatur nicht erfolgreich'
           );
         } else if (templateType === 'Kunde hat Reparatur abgelehnt') {
           template = templates.find(t => 
+            t.name.toLowerCase().includes('nicht akzeptiert') ||
             t.name.toLowerCase().includes('abgelehnt') ||
             t.name.toLowerCase().includes('kunde hat') ||
-            t.name === 'Kunde hat Reparatur abgelehnt'
+            t.name === 'Kunde hat Reparatur abgelehnt' ||
+            t.name === 'Reparatur nicht akzeptiert'
           );
         } else if (templateType === 'ersatzteil_eingetroffen') {
-          // Für "Ersatzteil eingetroffen" verwende die Vorlage "Gerät zur Reparatur bringen"
           template = templates.find(t => 
+            t.name.toLowerCase().includes('ersatzteil eingetroffen') ||
             t.name.toLowerCase().includes('gerät zur reparatur') ||
             t.name.toLowerCase().includes('reparatur bringen') ||
             t.name.toLowerCase().includes('ersatzteil') ||
+            t.name === 'Ersatzteil eingetroffen' ||
             t.type === 'parts_arrived'
           );
         } else {
-          // Generische Suche nach Namen
-          template = templates.find(t => t.name.toLowerCase().includes(templateType.toLowerCase()));
+          // Generische Suche nach Namen - erst exakte Übereinstimmung, dann teilweise Übereinstimmung
+          template = templates.find(t => t.name === templateType) ||
+                    templates.find(t => t.name.toLowerCase() === templateType.toLowerCase()) ||
+                    templates.find(t => t.name.toLowerCase().includes(templateType.toLowerCase()));
         }
       }
       
