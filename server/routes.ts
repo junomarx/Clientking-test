@@ -657,10 +657,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "E-Mail kann nur für eingetroffenes Zubehör gesendet werden" });
       }
       
-      // E-Mail bereits gesendet?
-      if (accessory.emailSent) {
-        return res.status(400).json({ message: "E-Mail wurde bereits gesendet" });
-      }
+      // Mehrfacher E-Mail-Versand ist erlaubt für Zubehör-Ankünfte
       
       // Kunde muss vorhanden sein für E-Mail-Versand
       if (!accessory.customerId) {

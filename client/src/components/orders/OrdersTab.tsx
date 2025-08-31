@@ -1657,19 +1657,18 @@ export function OrdersTab() {
                                 <Printer className="h-4 w-4" />
                               </Button>
                               
-                              {/* E-Mail-Icon - Outline wenn nicht gesendet, Filled wenn gesendet */}
+                              {/* E-Mail-Icon - Rot wenn nicht gesendet, Grün wenn gesendet */}
                               <Button 
                                 variant="ghost" 
                                 size="sm" 
                                 className="h-8 w-8 p-0" 
-                                title={accessory.emailSent ? "E-Mail bereits gesendet" : "E-Mail senden"}
+                                title={accessory.emailSent ? "E-Mail erneut senden" : "E-Mail senden"}
                                 onClick={() => handleSendArrivalEmail(accessory)}
-                                disabled={accessory.emailSent}
                               >
                                 {accessory.emailSent ? (
-                                  <Mail className="h-4 w-4 fill-current" />
+                                  <Mail className="h-4 w-4 text-green-600 fill-current" />
                                 ) : (
-                                  <Mail className="h-4 w-4" />
+                                  <Mail className="h-4 w-4 text-red-600" />
                                 )}
                               </Button>
                             </>
