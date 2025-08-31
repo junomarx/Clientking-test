@@ -1099,7 +1099,7 @@ export function registerSuperadminEmailRoutes(app: Express) {
   /**
    * E-Mail-Template aktualisieren (nur globale Templates)
    */
-  app.put("/api/superadmin/email-templates/:id", isSuperadmin, async (req: Request, res: Response) => {
+  app.patch("/api/superadmin/email-templates/:id", isSuperadmin, async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
       const { name, subject, body, variables, type } = req.body;
