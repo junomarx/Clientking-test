@@ -131,9 +131,9 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
           {orderCounts && orderCounts.totalToOrder > 0 && (
             <Badge 
               variant="destructive" 
-              className="ml-auto text-xs px-1.5 py-0.5 min-w-[1.25rem] h-5 flex items-center justify-center"
+              className="ml-auto text-xs px-1.5 py-0.5 min-w-[1.25rem] h-5 flex items-center justify-center font-bold"
             >
-              {orderCounts.totalToOrder}
+              !
             </Badge>
           )}
         </Button>
