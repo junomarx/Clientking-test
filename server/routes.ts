@@ -39,6 +39,7 @@ import {
   spareParts,
   repairStatusHistory,
   emailTemplates,
+  emailHistory,
   loanerDevices
 } from "@shared/schema";
 import { ZodError } from "zod";
@@ -3982,28 +3983,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         emailSubject = emailSubject.replace(regex, value);
       });
       
-      console.log(`🧪 Sende Test-E-Mail an ${customerEmail}`);
+      console.log(`🧪 Sende Test-E-Mail an ${customerEmail} mit Template: ${template.name}`);
       
-      const emailSent = await storage.sendEmailWithAttachment({
-        to: customerEmail,
-        from: `"${businessSettings?.businessName || 'Handyshop'}" <${businessSettings?.email || process.env.SMTP_USER}>`,
+      // Verwende die E-Mail-Service-Methode für Template-basierte E-Mails
+      const success = await emailService.sendEmailWithTemplate({
+        templateName: template.name,
+        recipientEmail: customerEmail,
+        data: variables,
         subject: emailSubject,
-        htmlBody: emailContent.replace(/\n/g, '<br>'),
-        textBody: emailContent,
-        attachments: [],
-        userId: userId
+        body: emailContent
       });
       
+      const emailSent = success;
+      
       if (emailSent) {
-        // E-Mail-Historie speichern
+        // E-Mail-Historie speichern - verwende manuelle DB-Insertion
         try {
-          await storage.saveEmailHistory({
+          await db.insert(emailHistory).values({
             repairId: repair.id,
-            templateId: template.id,
+            templateId: null, // Globale Templates haben keine lokale Template-ID
+            templateName: template.name,
             recipient: customerEmail,
             subject: emailSubject,
             status: 'sent',
-            userId: userId
+            userId: userId,
+            shopId: repair.shopId,
+            sentAt: new Date()
           });
         } catch (historyError) {
           console.warn('Fehler beim Speichern der E-Mail-Historie:', historyError);
