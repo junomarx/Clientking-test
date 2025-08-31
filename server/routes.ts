@@ -3985,26 +3985,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`🧪 Sende Test-E-Mail an ${customerEmail} mit Template: ${template.name}`);
       
-      // Verwende die E-Mail-Service-Methode für Template-basierte E-Mails
-      const success = await emailService.sendEmailWithTemplate({
-        templateName: template.name,
-        recipientEmail: customerEmail,
-        data: variables,
+      // Verwende den Standard-E-Mail-Versand mit dem aufbereiteten Template
+      const emailSent = await storage.sendEmailWithAttachment({
+        to: customerEmail,
+        from: `"${businessSettings?.businessName || 'Handyshop'}" <${businessSettings?.email || process.env.SMTP_USER}>`,
         subject: emailSubject,
-        body: emailContent
+        htmlBody: emailContent.replace(/\n/g, '<br>'),
+        textBody: emailContent.replace(/<[^>]*>/g, ''), // HTML-Tags entfernen für Text-Version
+        attachments: [],
+        userId: userId
       });
-      
-      const emailSent = success;
       
       if (emailSent) {
         // E-Mail-Historie speichern - verwende manuelle DB-Insertion
         try {
           await db.insert(emailHistory).values({
             repairId: repair.id,
-            templateId: null, // Globale Templates haben keine lokale Template-ID
-            templateName: template.name,
-            recipient: customerEmail,
+            emailTemplateId: null, // Globale Templates haben keine lokale Template-ID  
             subject: emailSubject,
+            recipient: customerEmail,
             status: 'sent',
             userId: userId,
             shopId: repair.shopId,
