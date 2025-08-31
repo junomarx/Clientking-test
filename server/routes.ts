@@ -3955,13 +3955,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Kunde nicht gefunden" });
       }
 
-      // Test Email Vorlage direkt aus der Superadmin-Route laden
-      const { defaultEmailTemplates } = await import('./superadmin-email-routes.js');
-      const template = defaultEmailTemplates.find(t => t.name === 'Test Email');
+      // Test Email Template aus der Datenbank laden (Superadmin-Template)
+      const adminTemplate = await db.select()
+        .from(emailTemplates)
+        .where(and(
+          eq(emailTemplates.name, 'Test Email'),
+          isNull(emailTemplates.userId) // Globale Superadmin-Templates haben userId = null
+        ))
+        .limit(1);
 
-      if (!template) {
+      if (adminTemplate.length === 0) {
         return res.status(404).json({ message: "Test Email Vorlage nicht gefunden" });
       }
+
+      const template = adminTemplate[0];
+
       
       // Geschäftseinstellungen abrufen
       const businessSettings = await storage.getBusinessSettings(userId);
