@@ -1268,6 +1268,7 @@ export class EmailService {
         oeffnungszeiten: variables.businessSettings?.openingHours?.replace(/,\s*/g, ',<br>') || '',
         auftragsnummer: repair.orderCode || repair.id?.toString() || '',
         fehler: repair.issue || '',
+        abholzeit: 'ab sofort',
         
         // Englische Variablennamen (für Kompatibilität)
         customerFirstName: customer.firstName || '',
