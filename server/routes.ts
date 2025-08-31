@@ -668,15 +668,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`✅ Template gefunden: ${template.name} (ID: ${template.id})`);
       
-      // E-Mail senden mit korrekter Vorlage
+      // Hole Kunden-Daten für die E-Mail
+      const customer = accessory.customerId ? await storage.getCustomerById(accessory.customerId) : null;
+      if (!customer || !customer.email) {
+        console.error("❌ Keine Kunden-E-Mail-Adresse für Zubehör gefunden!");
+        return res.status(400).json({ message: "Keine Kunden-E-Mail-Adresse verfügbar" });
+      }
+      
+      console.log(`📧 Sende E-Mail an Kunde: ${customer.firstName} ${customer.lastName} (${customer.email})`);
+      
+      // E-Mail senden mit korrekter Vorlage und Kunden-Daten
       const emailResult = await emailService.sendEmailByTemplateName(
         'Zubehör eingetroffen',
         {
+          customer: customer,
           zubehoer: {
             articleName: accessory.articleName,
             orderCode: accessory.orderCode,
-            customerName: accessory.customerName || "N/A",
-            customerEmail: accessory.customerEmail || "N/A",
+            customerName: `${customer.firstName} ${customer.lastName}`,
+            customerEmail: customer.email,
             orderedAt: accessory.orderedAt ? new Date(accessory.orderedAt).toLocaleDateString('de-DE') : 'N/A',
             estimatedArrival: accessory.estimatedArrival ? new Date(accessory.estimatedArrival).toLocaleDateString('de-DE') : 'N/A'
           }
