@@ -631,82 +631,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // NEUE E-Mail-Route für eingetroffenes Zubehör mit DIREKTER Template-Auswahl
-  app.post("/api/accessories/:id/send-arrival-email-fixed", async (req: Request, res: Response) => {
-    console.log("🚨🚨🚨 NEUE ZUBEHÖR E-MAIL ROUTE! 🚨🚨🚨");
-    try {
-      const userId = parseInt(req.header('X-User-ID') || '0');
-      if (!userId) {
-        return res.status(401).json({ message: "X-User-ID Header fehlt" });
-      }
-      
-      const accessoryId = parseInt(req.params.id);
-      if (!accessoryId) {
-        return res.status(400).json({ message: "Ungültige Zubehör-ID" });
-      }
-      
-      const user = await storage.getUserById(userId);
-      if (!user) {
-        return res.status(404).json({ message: "Benutzer nicht gefunden" });
-      }
-      
-      const accessory = await storage.getAccessoryById(accessoryId);
-      if (!accessory) {
-        return res.status(404).json({ message: "Zubehör nicht gefunden" });
-      }
-      
-      // Hole direkt die "Zubehör eingetroffen" Vorlage aus der Datenbank
-      const { EmailService } = await import('./email-service.js');
-      const emailService = new EmailService();
-      const templates = await emailService.getGlobalEmailTemplates();
-      const template = templates.find(t => t.name === "Zubehör eingetroffen");
-      
-      if (!template) {
-        console.error("❌ Template 'Zubehör eingetroffen' nicht gefunden!");
-        return res.status(500).json({ message: "E-Mail-Vorlage nicht gefunden" });
-      }
-      
-      console.log(`✅ Template gefunden: ${template.name} (ID: ${template.id})`);
-      
-      // Hole Kunden-Daten für die E-Mail
-      const customer = accessory.customerId ? await storage.getCustomerById(accessory.customerId) : null;
-      if (!customer || !customer.email) {
-        console.error("❌ Keine Kunden-E-Mail-Adresse für Zubehör gefunden!");
-        return res.status(400).json({ message: "Keine Kunden-E-Mail-Adresse verfügbar" });
-      }
-      
-      console.log(`📧 Sende E-Mail an Kunde: ${customer.firstName} ${customer.lastName} (${customer.email})`);
-      
-      // E-Mail senden mit korrekter Vorlage und Kunden-Daten
-      const emailResult = await emailService.sendEmailByTemplateName(
-        'Zubehör eingetroffen',
-        {
-          customer: customer,
-          zubehoer: {
-            articleName: accessory.articleName,
-            orderCode: accessory.orderCode,
-            customerName: `${customer.firstName} ${customer.lastName}`,
-            customerEmail: customer.email,
-            orderedAt: accessory.orderedAt ? new Date(accessory.orderedAt).toLocaleDateString('de-DE') : 'N/A',
-            estimatedArrival: accessory.estimatedArrival ? new Date(accessory.estimatedArrival).toLocaleDateString('de-DE') : 'N/A'
-          }
-        }
-      );
-      
-      if (emailResult.success) {
-        console.log("[E-MAIL-VERSAND] Neue Route - E-Mail erfolgreich gesendet!");
-        await storage.updateAccessory(accessoryId, { lastEmailSent: new Date() });
-        return res.json({ message: "E-Mail erfolgreich gesendet" });
-      } else {
-        console.error("[E-MAIL-VERSAND] Neue Route - Fehler:", emailResult.error);
-        return res.status(500).json({ message: emailResult.error });
-      }
-      
-    } catch (error) {
-      console.error("Fehler beim Senden der Zubehör-E-Mail (neue Route):", error);
-      return res.status(500).json({ message: "Interner Serverfehler" });
-    }
-  });
 
   // E-Mail für eingetroffenes Zubehör versenden
   app.post("/api/accessories/:id/send-arrival-email", async (req: Request, res: Response) => {
@@ -757,30 +681,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Benutzer nicht gefunden" });
       }
       
-      // E-Mail versenden
-      const { emailService } = await import('./email-service');
+      // E-Mail versenden mit der KORREKTEN E-Mail-Service-Funktion
+      const { EmailService } = await import('./email-service.js');
+      const emailServiceInstance = new EmailService();
       
-      const variables = {
-        kundenname: `${customer.firstName} ${customer.lastName}`,
-        zubehoerartikelname: accessory.articleName,
-        zubehoermenge: accessory.quantity.toString(),
-        zubehoerpreis: accessory.unitPrice,
-        zubehoergesamtpreis: accessory.totalPrice,
-        oeffnungszeiten: user.shopOpeningHours || 'Mo-Fr: 9:00-18:00',
-        geschaeftsname: user.shopName || 'Handyshop',
-        adresse: user.shopAddress || '',
-        telefon: user.phone || '',
-        email: user.email || ''
-      };
+      console.log(`📧 Sende E-Mail mit korrekter Vorlage "Zubehör eingetroffen"`);
       
-      const result = await emailService.sendEmailByTemplateName(
-        "Zubehör eingetroffen",
-        customer.email,
-        variables,
-        userId
+      const emailResult = await emailServiceInstance.sendEmailByTemplateName(
+        'Zubehör eingetroffen',
+        {
+          customer: customer,
+          zubehoer: {
+            articleName: accessory.articleName,
+            orderCode: accessory.orderCode,
+            customerName: `${customer.firstName} ${customer.lastName}`,
+            customerEmail: customer.email,
+            quantity: accessory.quantity,
+            unitPrice: accessory.unitPrice,
+            totalPrice: accessory.totalPrice,
+            orderedAt: accessory.orderedAt ? new Date(accessory.orderedAt).toLocaleDateString('de-DE') : 'N/A',
+            estimatedArrival: accessory.estimatedArrival ? new Date(accessory.estimatedArrival).toLocaleDateString('de-DE') : 'N/A'
+          },
+          shop: {
+            name: user.shopName || 'Handyshop',
+            openingHours: user.shopOpeningHours || 'Mo-Fr: 9:00-18:00',
+            address: user.shopAddress || '',
+            phone: user.phone || '',
+            email: user.email || ''
+          }
+        }
       );
       
-      const success = result !== false;
+      const success = emailResult.success;
       
       if (success) {
         // E-Mail-Status in der Datenbank aktualisieren

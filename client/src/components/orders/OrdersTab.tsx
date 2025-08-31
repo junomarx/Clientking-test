@@ -1000,7 +1000,7 @@ export function OrdersTab() {
   const handleSendArrivalEmail = async (accessory: Accessory) => {
     // Mehrfacher E-Mail-Versand ist erlaubt
     try {
-      const response = await apiRequest('POST', `/api/accessories/${accessory.id}/send-arrival-email-fixed`);
+      const response = await apiRequest('POST', `/api/accessories/${accessory.id}/send-arrival-email`);
       
       if (response.ok) {
         // Daten neu laden um den Email-Status zu aktualisieren
