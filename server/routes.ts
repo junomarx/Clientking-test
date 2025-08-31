@@ -633,8 +633,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // E-Mail für eingetroffenes Zubehör versenden
   app.post("/api/accessories/:id/send-arrival-email", async (req: Request, res: Response) => {
+    console.log("🚨🚨🚨 ZUBEHÖR E-MAIL ROUTE AUFGERUFEN! 🚨🚨🚨");
+    console.log("Request params:", req.params);
+    console.log("Request headers:", req.headers);
     try {
       const userId = parseInt(req.header('X-User-ID') || '0');
+      console.log("🚨 User ID:", userId);
       if (!userId) {
         return res.status(401).json({ message: "X-User-ID Header fehlt" });
       }
