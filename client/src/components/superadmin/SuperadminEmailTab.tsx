@@ -65,8 +65,8 @@ export default function SuperadminEmailTab() {
     type: 'customer' as 'app' | 'customer' // Standardmäßig eine Kunden-Vorlage
   });
   
-  // Aktiver Tab für E-Mail-Vorlagentypen (app oder customer)
-  const [templateType, setTemplateType] = useState<'app' | 'customer'>('app');
+  // Aktiver Tab für E-Mail-Vorlagentypen (app, customer oder variables)
+  const [templateType, setTemplateType] = useState<'app' | 'customer' | 'variables'>('app');
   
   // States für den Vorlagen-Test
   const [templateTestDialogOpen, setTemplateTestDialogOpen] = useState(false);
@@ -615,20 +615,285 @@ export default function SuperadminEmailTab() {
               </div>
               
               {/* Vorlagetypen-Tabs */}
-              <Tabs defaultValue={templateType} className="mt-4" onValueChange={(value) => setTemplateType(value as 'app' | 'customer')}>
+              <Tabs defaultValue={templateType} className="mt-4" onValueChange={(value) => setTemplateType(value as 'app' | 'customer' | 'variables')}>
                 <TabsList>
                   <TabsTrigger value="app">System-Vorlagen</TabsTrigger>
                   <TabsTrigger value="customer">Kunden-Vorlagen</TabsTrigger>
+                  <TabsTrigger value="variables">Verfügbare Variablen</TabsTrigger>
                 </TabsList>
+                
+                {/* Variablen-Tab Content */}
+                <TabsContent value="variables" className="mt-4">
+                  <div className="space-y-6">
+                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      <h4 className="font-semibold text-blue-900 mb-2">📋 Vollständiger Variablen-Katalog</h4>
+                      <p className="text-sm text-blue-800">
+                        Hier finden Sie alle verfügbaren Variablen, die Sie in E-Mail-Templates verwenden können. 
+                        Kopieren Sie einfach die Variable (inklusive der geschweiften Klammern) in Ihre Templates.
+                      </p>
+                    </div>
+
+                    {/* Kunden-Variablen */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">👤 Kunden-Informationen</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{kundenname}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Name des Kunden</p>
+                        </div>
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{kundenemail}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">E-Mail-Adresse des Kunden</p>
+                        </div>
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{kundentelefon}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Telefonnummer des Kunden</p>
+                        </div>
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{kundenadresse}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Adresse des Kunden</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Geräte-Variablen */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">📱 Geräte-Informationen</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{hersteller}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Hersteller des Geräts (z.B. Apple, Samsung)</p>
+                        </div>
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{geraet}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Gerätemodell (z.B. iPhone 13, Galaxy S21)</p>
+                        </div>
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{geraetetyp}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Typ des Geräts (z.B. Smartphone, Tablet)</p>
+                        </div>
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{seriennummer}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Seriennummer des Geräts</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Reparatur-Variablen */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">🔧 Reparatur-Informationen</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{auftragsnummer}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Eindeutige Auftragsnummer der Reparatur</p>
+                        </div>
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{fehler}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Beschreibung des Problems/Defekts</p>
+                        </div>
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{reparaturarbeit}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Durchgeführte Reparaturarbeiten</p>
+                        </div>
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{status}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Aktueller Status der Reparatur</p>
+                        </div>
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{notizen}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Zusätzliche Notizen zur Reparatur</p>
+                        </div>
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{technikerbemerkung}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Bemerkungen des Technikers</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Kosten-Variablen */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">💰 Kosten-Informationen</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{kosten}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Geschätzte oder finale Reparaturkosten</p>
+                        </div>
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{reparaturkosten}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Detaillierte Reparaturkosten</p>
+                        </div>
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{arbeitszeit}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Geschätzte Arbeitszeit</p>
+                        </div>
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{ersatzteile}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Benötigte Ersatzteile und Kosten</p>
+                        </div>
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{anzahlung}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Geleistete Anzahlung</p>
+                        </div>
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{restbetrag}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Noch zu zahlender Restbetrag</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Shop-Variablen */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">🏪 Shop-Informationen</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{geschaeftsname}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Name des Geschäfts/Shops</p>
+                        </div>
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{adresse}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Geschäftsadresse</p>
+                        </div>
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{telefon}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Telefonnummer des Geschäfts</p>
+                        </div>
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{email}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">E-Mail-Adresse des Geschäfts</p>
+                        </div>
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{website}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Website-URL des Geschäfts</p>
+                        </div>
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{oeffnungszeiten}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Öffnungszeiten des Geschäfts</p>
+                        </div>
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{logo}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">URL zum Firmenlogo</p>
+                        </div>
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{firmenfarbe}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Corporate Design Farbe</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* System-Variablen */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">⚙️ System-Variablen</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{datum}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Aktuelles Datum</p>
+                        </div>
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{uhrzeit}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Aktuelle Uhrzeit</p>
+                        </div>
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{zeitstempel}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Vollständiger Zeitstempel</p>
+                        </div>
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{aktuellesJahr}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Aktuelles Jahr</p>
+                        </div>
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{benutzername}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Name des angemeldeten Benutzers</p>
+                        </div>
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{benutzerrolle}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Rolle des Benutzers (Admin, Mitarbeiter, etc.)</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Link-Variablen */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">🔗 Link-Variablen</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{bewertungslink}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Link zur Bewertungsseite</p>
+                        </div>
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{loginLink}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Link zur Anmeldeseite</p>
+                        </div>
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{resetLink}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Link zum Passwort zurücksetzen</p>
+                        </div>
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{datenschutzlink}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Link zur Datenschutzerklärung</p>
+                        </div>
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{impressumlink}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Link zum Impressum</p>
+                        </div>
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{agblink}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Link zu den Allgemeinen Geschäftsbedingungen</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Sonstige Variablen */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">🎯 Weitere Variablen</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{qrcode}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">QR-Code für Reparaturstatus</p>
+                        </div>
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{tracking}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Tracking-Nummer oder -Code</p>
+                        </div>
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{garantie}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Garantieinformationen</p>
+                        </div>
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{leihgeraet}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Informationen zum Leihgerät</p>
+                        </div>
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{abholtermin}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Voraussichtlicher Abholtermin</p>
+                        </div>
+                        <div className="p-3 border rounded-lg bg-gray-50">
+                          <code className="text-blue-600 font-mono">{'{{prioritaet}}'}</code>
+                          <p className="text-sm text-gray-600 mt-1">Prioritätsstufe der Reparatur</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                      <h4 className="font-semibold text-amber-900 mb-2">💡 Verwendungshinweise</h4>
+                      <ul className="text-sm text-amber-800 space-y-1">
+                        <li>• Kopieren Sie die Variablen inklusive der doppelten geschweiften Klammern: <code>{'{{variable}}'}</code></li>
+                        <li>• Nicht alle Variablen sind in jedem Kontext verfügbar (z.B. sind Reparatur-Variablen nur bei Reparatur-E-Mails verfügbar)</li>
+                        <li>• Unbekannte oder nicht verfügbare Variablen werden als <code>{'<variable>'}</code> angezeigt</li>
+                        <li>• Verwenden Sie aussagekräftige Fallback-Texte für optionale Informationen</li>
+                      </ul>
+                    </div>
+                  </div>
+                </TabsContent>
               </Tabs>
               
-              {/* Vorlagentabelle */}
-              <div className="mt-4">
-                {isLoadingTemplates ? (
-                  <div className="flex justify-center py-8">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  </div>
-                ) : emailTemplates && emailTemplates.length > 0 ? (
+              {/* Vorlagentabelle - nur für App und Customer Tabs */}
+              {templateType !== 'variables' && (
+                <div className="mt-4">
+                  {isLoadingTemplates ? (
+                    <div className="flex justify-center py-8">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    </div>
+                  ) : emailTemplates && emailTemplates.length > 0 ? (
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -715,7 +980,8 @@ export default function SuperadminEmailTab() {
                     </p>
                   </div>
                 )}
-              </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
