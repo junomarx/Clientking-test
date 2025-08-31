@@ -84,10 +84,15 @@ export async function generateAccessoryLabelPDF(data: AccessoryLabelData): Promi
   doc.text(`${data.accessory.quantity}x ${data.accessory.unitPrice}`, 16, y, { align: 'center' });
   y += 3;
 
-  // Gesamtpreis
-  doc.setFontSize(7);
+  // Gesamtpreis - "Gesamt" und Preis untereinander
+  doc.setFontSize(6);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Gesamt', 16, y, { align: 'center' });
+  y += 3;
+  
+  doc.setFontSize(8);
   doc.setFont('helvetica', 'bold');
-  doc.text(`Gesamt: ${data.accessory.totalPrice}`, 16, y, { align: 'center' });
+  doc.text(`${data.accessory.totalPrice} €`, 16, y, { align: 'center' });
 
   return Buffer.from(doc.output('arraybuffer'));
 }
