@@ -641,6 +641,63 @@ export class EmailService {
       return false;
     }
   }
+
+  /**
+   * Sendet eine E-Mail mit einer Vorlage über den Namen
+   */
+  async sendEmailByTemplateName(
+    templateName: string,
+    recipientEmail: string,
+    variables: Record<string, string>,
+    userId?: number
+  ): Promise<boolean> {
+    try {
+      console.log(`Suche E-Mail-Vorlage "${templateName}" für Benutzer ${userId}...`);
+      
+      // E-Mail-Vorlage nach Namen suchen - erst globale, dann benutzer-spezifische
+      let template;
+      try {
+        // Erst nach globaler Vorlage suchen (user_id IS NULL)
+        [template] = await db
+          .select()
+          .from(emailTemplates)
+          .where(eq(emailTemplates.name, templateName))
+          .where(sql`${emailTemplates.userId} IS NULL`);
+          
+        if (!template && userId) {
+          // Falls keine globale gefunden, nach benutzer-spezifischer suchen
+          [template] = await db
+            .select()
+            .from(emailTemplates)
+            .where(eq(emailTemplates.name, templateName))
+            .where(eq(emailTemplates.userId, userId));
+        }
+      } catch (dbError) {
+        console.error('Fehler beim Abrufen der E-Mail-Vorlage:', dbError);
+      }
+      
+      if (!template) {
+        console.error(`E-Mail-Vorlage "${templateName}" nicht gefunden`);
+        return false;
+      }
+      
+      console.log(`E-Mail-Vorlage gefunden: "${template.name}" mit Betreff: "${template.subject}"`);
+      
+      // Die interne Methode aufrufen
+      return await this.sendEmailWithTemplateInternal({
+        templateName: template.name,
+        recipientEmail,
+        data: variables,
+        subject: template.subject,
+        body: template.body,
+        isSystemEmail: false,
+        forceUserId: userId
+      });
+    } catch (error) {
+      console.error('Fehler beim Senden der E-Mail mit Vorlagen-Name:', error);
+      return false;
+    }
+  }
   
   /**
    * Überladene Methode für Abwärtskompatibilität mit älteren API-Aufrufen
