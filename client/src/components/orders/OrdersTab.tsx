@@ -26,7 +26,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Package, Settings, Search, Filter, Download, Plus, MoreVertical, CheckSquare, Calendar, FileText } from "lucide-react";
+import { Package, Settings, Search, Filter, Download, Plus, MoreVertical, CheckSquare, Calendar, FileText, Printer, Mail } from "lucide-react";
 import { SparePartsManagementDialog } from "./SparePartsManagementDialog";
 import { AddSparePartDialog } from "./AddSparePartDialog";
 import { AddAccessoryDialog } from "./AddAccessoryDialog";
@@ -78,6 +78,7 @@ interface Accessory {
   type: "lager" | "kundenbestellung";
   status: string;
   notes?: string;
+  emailSent: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -963,6 +964,70 @@ export function OrdersTab() {
     });
   };
 
+  // Handler für Etikett-Druck
+  const handlePrintLabel = async (accessory: Accessory) => {
+    try {
+      const response = await apiRequest(`/api/accessories/${accessory.id}/print-label`, {
+        method: 'POST',
+      });
+      
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        
+        // PDF in neuem Tab öffnen zum Drucken
+        const printWindow = window.open(url);
+        if (printWindow) {
+          printWindow.onload = () => {
+            printWindow.print();
+          };
+        }
+        
+        toast({
+          title: "Etikett wird vorbereitet",
+          description: "Das Etikett öffnet sich zum Drucken in einem neuen Tab.",
+        });
+      }
+    } catch (error: any) {
+      console.error('Fehler beim Drucken des Etiketts:', error);
+      toast({
+        title: "Fehler beim Drucken",
+        description: "Das Etikett konnte nicht erstellt werden.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handler für E-Mail versenden
+  const handleSendArrivalEmail = async (accessory: Accessory) => {
+    if (accessory.emailSent) {
+      return; // E-Mail bereits gesendet
+    }
+
+    try {
+      const response = await apiRequest(`/api/accessories/${accessory.id}/send-arrival-email`, {
+        method: 'POST',
+      });
+      
+      if (response.ok) {
+        // Daten neu laden um den Email-Status zu aktualisieren
+        queryClient.invalidateQueries({ queryKey: ['/api/accessories'] });
+        
+        toast({
+          title: "E-Mail gesendet",
+          description: "Die Benachrichtigung wurde erfolgreich an den Kunden gesendet.",
+        });
+      }
+    } catch (error: any) {
+      console.error('Fehler beim Senden der E-Mail:', error);
+      toast({
+        title: "Fehler beim E-Mail versenden",
+        description: "Die E-Mail konnte nicht gesendet werden.",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Single accessory update mutation with auto-delete logic
   const singleAccessoryUpdateMutation = useMutation({
     mutationFn: async ({ accessoryIds, status }: { accessoryIds: number[]; status: string }) => {
@@ -1581,12 +1646,46 @@ export function OrdersTab() {
                         {format(new Date(accessory.createdAt), 'dd.MM.yyyy', { locale: de })}
                       </TableCell>
                       <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
+                        <div className="flex items-center justify-end gap-1">
+                          {/* Icons nur bei Status "eingetroffen" anzeigen */}
+                          {accessory.status === "eingetroffen" && (
+                            <>
+                              {/* Drucker-Icon */}
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-8 w-8 p-0" 
+                                title="Etikett drucken"
+                                onClick={() => handlePrintLabel(accessory)}
+                              >
+                                <Printer className="h-4 w-4" />
+                              </Button>
+                              
+                              {/* E-Mail-Icon - Outline wenn nicht gesendet, Filled wenn gesendet */}
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-8 w-8 p-0" 
+                                title={accessory.emailSent ? "E-Mail bereits gesendet" : "E-Mail senden"}
+                                onClick={() => handleSendArrivalEmail(accessory)}
+                                disabled={accessory.emailSent}
+                              >
+                                {accessory.emailSent ? (
+                                  <Mail className="h-4 w-4 fill-current" />
+                                ) : (
+                                  <Mail className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </>
+                          )}
+                          
+                          {/* Dropdown-Menu */}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem 
                               onClick={() => handleAccessoryStatusChange(accessory.id, "bestellt")}
@@ -1626,6 +1725,7 @@ export function OrdersTab() {
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))

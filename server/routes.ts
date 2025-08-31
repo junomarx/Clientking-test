@@ -568,6 +568,158 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Etikett-PDF für Zubehör-Bestellung generieren
+  app.post("/api/accessories/:id/print-label", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.header('X-User-ID') || '0');
+      if (!userId) {
+        return res.status(401).json({ message: "X-User-ID Header fehlt" });
+      }
+      
+      const accessoryId = parseInt(req.params.id);
+      if (!accessoryId) {
+        return res.status(400).json({ message: "Ungültige Zubehör-ID" });
+      }
+      
+      console.log(`[ETIKETT-DRUCK] Erstelle Etikett für Zubehör-Bestellung ${accessoryId} (Benutzer ${userId})`);
+      
+      // Zubehör-Daten abrufen
+      const accessory = await storage.getAccessory(accessoryId, userId);
+      if (!accessory) {
+        return res.status(404).json({ message: "Zubehör nicht gefunden oder keine Berechtigung" });
+      }
+      
+      // Nur bei Status "eingetroffen" erlaubt
+      if (accessory.status !== "eingetroffen") {
+        return res.status(400).json({ message: "Etikett kann nur für eingetroffenes Zubehör gedruckt werden" });
+      }
+      
+      // Kunden-Daten abrufen falls vorhanden
+      let customer = null;
+      if (accessory.customerId) {
+        customer = await storage.getCustomer(accessory.customerId, userId);
+      }
+      
+      // Benutzer-Daten für Shop-Informationen abrufen
+      const user = await storage.getUser(userId);
+      
+      // PDF generieren
+      const { generateAccessoryLabelPDF } = await import('./pdf-generator');
+      const pdfBuffer = await generateAccessoryLabelPDF({
+        accessory,
+        customer,
+        shopInfo: {
+          name: user?.shopName || 'Handyshop',
+          address: user?.shopAddress || '',
+          phone: user?.phone || '',
+          email: user?.email || ''
+        }
+      });
+      
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="Etikett_Zubehoer_${accessory.articleName.replace(/[^a-zA-Z0-9]/g, '_')}.pdf"`);
+      res.send(pdfBuffer);
+      
+      console.log(`[ETIKETT-DRUCK] PDF erfolgreich generiert für Zubehör ${accessoryId}`);
+      
+    } catch (error) {
+      console.error("[ETIKETT-DRUCK] Fehler beim Generieren des Etiketts:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Generieren des Etiketts",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // E-Mail für eingetroffenes Zubehör versenden
+  app.post("/api/accessories/:id/send-arrival-email", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.header('X-User-ID') || '0');
+      if (!userId) {
+        return res.status(401).json({ message: "X-User-ID Header fehlt" });
+      }
+      
+      const accessoryId = parseInt(req.params.id);
+      if (!accessoryId) {
+        return res.status(400).json({ message: "Ungültige Zubehör-ID" });
+      }
+      
+      console.log(`[E-MAIL-VERSAND] Sende Ankunfts-E-Mail für Zubehör ${accessoryId} (Benutzer ${userId})`);
+      
+      // Zubehör-Daten abrufen
+      const accessory = await storage.getAccessory(accessoryId, userId);
+      if (!accessory) {
+        return res.status(404).json({ message: "Zubehör nicht gefunden oder keine Berechtigung" });
+      }
+      
+      // Nur bei Status "eingetroffen" erlaubt
+      if (accessory.status !== "eingetroffen") {
+        return res.status(400).json({ message: "E-Mail kann nur für eingetroffenes Zubehör gesendet werden" });
+      }
+      
+      // E-Mail bereits gesendet?
+      if (accessory.emailSent) {
+        return res.status(400).json({ message: "E-Mail wurde bereits gesendet" });
+      }
+      
+      // Kunde muss vorhanden sein für E-Mail-Versand
+      if (!accessory.customerId) {
+        return res.status(400).json({ message: "Keine Kunden-E-Mail vorhanden (Lager-Artikel)" });
+      }
+      
+      // Kunden-Daten abrufen
+      const customer = await storage.getCustomer(accessory.customerId, userId);
+      if (!customer || !customer.email) {
+        return res.status(400).json({ message: "Kunde nicht gefunden oder keine E-Mail-Adresse hinterlegt" });
+      }
+      
+      // Benutzer-Daten für Shop-Informationen abrufen
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Benutzer nicht gefunden" });
+      }
+      
+      // E-Mail versenden
+      const { emailService } = await import('./email-service');
+      
+      const variables = {
+        kundenname: `${customer.firstName} ${customer.lastName}`,
+        artikelname: accessory.articleName,
+        menge: accessory.quantity.toString(),
+        preis: accessory.totalPrice,
+        oeffnungszeiten: user.shopOpeningHours || 'Mo-Fr: 9:00-18:00',
+        geschaeftsname: user.shopName || 'Handyshop',
+        adresse: user.shopAddress || '',
+        telefon: user.phone || '',
+        email: user.email || ''
+      };
+      
+      const success = await emailService.sendTemplateEmail(
+        customer.email,
+        "Zubehör eingetroffen",
+        variables,
+        userId
+      );
+      
+      if (success) {
+        // E-Mail-Status in der Datenbank aktualisieren
+        await storage.updateAccessory(accessoryId, { emailSent: true }, userId);
+        
+        console.log(`[E-MAIL-VERSAND] Ankunfts-E-Mail erfolgreich gesendet für Zubehör ${accessoryId}`);
+        res.json({ message: "E-Mail erfolgreich gesendet" });
+      } else {
+        res.status(500).json({ message: "Fehler beim Senden der E-Mail" });
+      }
+      
+    } catch (error) {
+      console.error("[E-MAIL-VERSAND] Fehler beim Senden der Ankunfts-E-Mail:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Senden der E-Mail",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   // DELETE individual spare part from orders
   app.delete("/api/orders/spare-parts/:id", async (req: Request, res: Response) => {
     try {

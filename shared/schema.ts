@@ -1045,6 +1045,9 @@ export const accessories = pgTable("accessories", {
   // Archivierung für erledigte Zubehör-Artikel
   archived: boolean("archived").notNull().default(false),
   
+  // E-Mail Status für "eingetroffen" Benachrichtigung
+  emailSent: boolean("email_sent").notNull().default(false),
+  
   // Zugehörigkeit zu Benutzer und Shop
   userId: integer("user_id").references(() => users.id),
   shopId: integer("shop_id").default(1),
