@@ -694,7 +694,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: user.email || ''
       };
       
-      const result = await emailService.sendEmailWithTemplate(
+      const result = await emailService.sendEmailWithTemplateName(
         "Zubehör eingetroffen",
         customer.email,
         variables,
