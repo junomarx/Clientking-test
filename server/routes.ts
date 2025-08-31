@@ -3955,10 +3955,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Kunde nicht gefunden" });
       }
 
-      // Test Email Vorlage aus den globalen Templates finden
-      const { emailService } = await import('./email-service.js');
-      const globalTemplates = await emailService.getGlobalEmailTemplates();
-      const template = globalTemplates.find(t => t.name === 'Test Email');
+      // Test Email Vorlage direkt aus der Superadmin-Route laden
+      const { defaultEmailTemplates } = await import('./superadmin-email-routes.js');
+      const template = defaultEmailTemplates.find(t => t.name === 'Test Email');
 
       if (!template) {
         return res.status(404).json({ message: "Test Email Vorlage nicht gefunden" });
@@ -3984,6 +3983,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       console.log(`🧪 Sende Test-E-Mail an ${customerEmail} mit Template: ${template.name}`);
+      console.log(`🧪 Template Betreff VOR Ersetzung: ${template.subject}`);
+      console.log(`🧪 Template Betreff NACH Ersetzung: ${emailSubject}`);
       
       // Verwende den Standard-E-Mail-Versand mit dem aufbereiteten Template
       const emailSent = await storage.sendEmailWithAttachment({
