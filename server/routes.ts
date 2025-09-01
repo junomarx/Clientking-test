@@ -3987,7 +3987,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const reviewTemplate = templates.find(t => 
         t.name.toLowerCase().includes("bewertung") || 
-        t.name.toLowerCase().includes("feedback")
+        t.name.toLowerCase().includes("feedback") ||
+        t.name.toLowerCase().includes("bewertungen")
       );
       
       if (reviewTemplate) {
