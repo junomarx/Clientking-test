@@ -3977,8 +3977,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "userId": userId.toString()
       };
       
-      // Suche nach der Bewertungs-E-Mail-Vorlage mit Benutzer-ID für Shop-Isolation
-      const templates = await storage.getAllEmailTemplates(userId);
+      // Direkte Datenbankabfrage für E-Mail-Vorlagen (globale + benutzerspezifische)
+      console.log(`DEBUG: Suche Templates für userId ${userId}...`);
+      
+      // Erst alle globalen Templates abfragen
+      const globalTemplates = await db.select()
+        .from(emailTemplates)
+        .where(isNull(emailTemplates.userId));
+      
+      console.log(`DEBUG: ${globalTemplates.length} globale Templates gefunden:`, globalTemplates.map(t => t.name));
+      
+      // Dann benutzer-spezifische Templates abfragen
+      const userTemplates = await db.select()
+        .from(emailTemplates)
+        .where(eq(emailTemplates.userId, userId));
+      
+      console.log(`DEBUG: ${userTemplates.length} benutzer-spezifische Templates gefunden:`, userTemplates.map(t => t.name));
+      
+      // Kombiniere beide Listen
+      const templates = [...globalTemplates, ...userTemplates];
       
       console.log(`Suche nach Bewertungsvorlage für Benutzer ${userId}. Gefundene Vorlagen: ${templates.length}`);
       templates.forEach((t, index) => {
