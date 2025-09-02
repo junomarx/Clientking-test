@@ -127,284 +127,246 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
     const labelWidth = settings?.labelWidth || 32;
     const labelHeight = settings?.labelHeight || 57;
     
-    // Fülle das Druckfenster mit Inhalten
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Etikett für Reparatur ${orderCode || `#${repairId}`}</title>
-          <meta charset="UTF-8">
-          <style>
-            @page {
-              size: ${labelWidth}mm ${labelHeight}mm;
-              margin: 0;
-            }
-            html, body {
-              margin: 0;
-              padding: 0;
-              width: ${labelWidth}mm;
-              height: ${labelHeight}mm;
-              overflow: hidden;
-              font-family: Arial, sans-serif;
-            }
-            .label {
-              width: ${labelWidth}mm;
-              height: ${labelHeight}mm;
-              box-sizing: border-box;
-              padding: 2mm;
-              background-color: white;
-              display: flex;
-              flex-direction: ${labelFormat === 'landscape' ? 'row' : 'column'};
-              align-items: center;
-              justify-content: ${labelFormat === 'landscape' ? 'space-between' : 'flex-start'};
-            }
-            .print-area {
-              width: ${labelWidth - 4}mm;
-              height: ${labelHeight - 4}mm;
-              display: flex;
-              flex-direction: ${labelFormat === 'landscape' ? 'row' : 'column'};
-              align-items: ${labelFormat === 'landscape' ? 'flex-start' : 'center'};
-              justify-content: space-between;
-              ${labelFormat === 'landscape' ? 'gap: 12px;' : ''}
-            }
-            
-            /* QUERFORMAT: EXAKTE KOPIE der Vorschau-Werte */
-            ${labelFormat === 'landscape' ? `
-            .left-section {
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              width: 90px;
-              height: 100%;
-              justify-content: space-between;
-            }
-            .right-section {
-              display: flex;
-              flex-direction: column;
-              width: 120px;
-              height: 100%;
-              justify-content: flex-start;
-              gap: 4px;
-            }
-            .repair-number {
-              font-size: 11px;
-              font-weight: bold;
-              margin-bottom: 2px;
-              text-align: center;
-            }
-            .customer-name {
-              font-size: 10px;
-              font-weight: bold;
-              margin-bottom: 0;
-              text-align: left;
-              line-height: 1.1;
-            }
-            .customer-phone {
-              font-size: 8px;
-              margin-bottom: 0;
-              color: rgb(75, 85, 99);
-              text-align: left;
-              line-height: 1.1;
-            }
-            .qr-code {
-              width: 12mm;
-              height: 12mm;
-              flex-shrink: 0;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-            }
-            .qr-code svg {
-              width: 12mm;
-              height: 12mm;
-            }
-            .model {
-              font-size: 10px;
-              font-weight: bold;
-              margin-bottom: 0;
-              text-align: left;
-              line-height: 1.1;
-            }
-            .device-code {
-              font-size: 8px;
-              font-weight: bold;
-              color: #333;
-              border: 1px solid rgb(209, 213, 219);
-              padding: 2px 4px;
-              background-color: rgb(243, 244, 246);
-              border-radius: 2px;
-              display: inline-block;
-              text-align: center;
-              margin-top: 1px;
-              margin-bottom: 0;
-            }
-            .issue {
-              font-size: 8px;
-              text-align: left;
-              line-height: 1.1;
-              margin-top: auto;
-            }
-            
-            @media print {
-              body {
+    // Fülle das Druckfenster mit Inhalten - Verbesserter Code für Querformat
+    if (labelFormat === 'landscape') {
+      // QUERFORMAT: Komplett neuer verbesserter Code mit mm-Maßen
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Etikett für Reparatur ${orderCode}</title>
+            <meta charset="UTF-8">
+            <style>
+              @page { 
+                size: 57mm 32mm; 
+                margin: 0; 
+              }
+              html, body {
+                margin: 0;
+                padding: 0;
+                font-family: Arial, sans-serif;
+              }
+              @media print {
+                html, body { 
+                  margin: 0; 
+                  padding: 0; 
+                }
+                #label-57x32 { 
+                  width: 57mm; 
+                  height: 32mm; 
+                  box-shadow: none; 
+                  border: 0; 
+                }
+              }
+              .label-container {
                 width: 57mm;
                 height: 32mm;
-                margin: 0;
-                padding: 1mm;
-              }
-              .print-area {
-                width: 100%;
-                height: 100%;
+                padding: 2mm;
+                background-color: white;
+                box-sizing: border-box;
                 display: flex;
               }
-              .left-section {
+              .left-column {
+                width: 28mm;
+                display: flex;
+                flex-direction: column;
+              }
+              .repair-number {
+                font-weight: bold;
+                line-height: 1;
+                margin-bottom: 1mm;
+                font-size: 14px;
+              }
+              .qr-section {
+                display: flex;
+                align-items: flex-start;
+              }
+              .right-column {
+                flex: 1;
+                padding-left: 2mm;
+                display: flex;
+                flex-direction: column;
+              }
+              .customer-info {
+                display: flex;
+                justify-content: flex-end;
+                text-align: right;
+                line-height: 1.1;
+              }
+              .customer-name {
+                font-weight: bold;
+                font-size: 13px;
+                line-height: 1;
+              }
+              .customer-phone {
+                font-size: 11px;
+                color: #6b7280;
+                line-height: 1;
+              }
+              .device-code-section {
+                display: flex;
+                justify-content: center;
+                padding: 1mm 0;
+              }
+              .device-code {
+                display: inline-block;
+                border: 1px solid #9ca3af;
+                border-radius: 12px;
+                padding: 1mm 2mm;
+                font-weight: 600;
+                font-size: 11px;
+                line-height: 1;
+              }
+              .device-model {
+                text-align: center;
+                font-weight: bold;
+                font-size: 13px;
+                line-height: 1.1;
+              }
+              .issue-description {
+                text-align: center;
+                font-size: 11px;
+                line-height: 1.1;
+                white-space: pre-line;
+              }
+            </style>
+          </head>
+          <body>
+            <div id="label-57x32" class="label-container">
+              <!-- Linke Spalte: Auftragsnummer oben, QR unten -->
+              <div class="left-column">
+                <div class="repair-number">${orderCode}</div>
+                <div class="qr-section">
+                  ${qrCode.replace(/width="60"/, 'width="72"').replace(/height="60"/, 'height="72"')}
+                </div>
+              </div>
+
+              <!-- Rechte Spalte: Kunde → Code → Modell → Fehler -->
+              <div class="right-column">
+                <div class="customer-info">
+                  <div>
+                    <div class="customer-name">${firstName} ${lastName}</div>
+                    ${customerPhone ? `<div class="customer-phone">${customerPhone}</div>` : ''}
+                  </div>
+                </div>
+
+                ${deviceCode ? `
+                <div class="device-code-section">
+                  <div class="device-code">${deviceCode}</div>
+                </div>
+                ` : ''}
+
+                <div class="device-model">${model}</div>
+
+                <div class="issue-description">${repairIssue || ""}</div>
+              </div>
+            </div>
+            <script>
+              window.onload = function() {
+                setTimeout(function() {
+                  window.print();
+                  window.close();
+                }, 500);
+              };
+            </script>
+          </body>
+        </html>
+      `);
+    } else {
+      // HOCHFORMAT: Ursprünglicher Code bleibt unverändert
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Etikett für Reparatur ${orderCode || `#${repairId}`}</title>
+            <meta charset="UTF-8">
+            <style>
+              @page {
+                size: ${labelWidth}mm ${labelHeight}mm;
+                margin: 0;
+              }
+              html, body {
+                margin: 0;
+                padding: 0;
+                width: ${labelWidth}mm;
+                height: ${labelHeight}mm;
+                overflow: hidden;
+                font-family: Arial, sans-serif;
+              }
+              .label {
+                width: ${labelWidth}mm;
+                height: ${labelHeight}mm;
+                box-sizing: border-box;
+                padding: 2mm;
+                background-color: white;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
                 justify-content: flex-start;
-                width: 22mm;
-                padding-right: 2mm;
               }
-              .right-section {
+              .print-area {
+                width: ${labelWidth - 4}mm;
+                height: ${labelHeight - 4}mm;
                 display: flex;
                 flex-direction: column;
-                align-items: flex-start;
-                width: 31mm;
-                height: 100%;
-                justify-content: flex-start;
-                gap: 1mm;
+                align-items: center;
+                justify-content: space-between;
               }
               .repair-number {
-                font-size: 11px;
+                font-size: 14px;
                 font-weight: bold;
-                margin-bottom: 2mm;
+                margin-bottom: 0.2mm;
                 text-align: center;
               }
               .customer-name {
                 font-size: 10px;
                 font-weight: bold;
-                margin-bottom: 0;
-                text-align: left;
-                line-height: 1.1;
+                margin-bottom: 0.3mm;
+                text-align: center;
               }
               .customer-phone {
                 font-size: 8px;
-                margin-bottom: 0;
-                color: rgb(75, 85, 99);
-                text-align: left;
-                line-height: 1.1;
+                margin-bottom: 0.5mm;
+                color: #333;
+                text-align: center;
               }
               .qr-code {
-                width: 12mm;
-                height: 12mm;
-                flex-shrink: 0;
-                display: flex;
-                align-items: center;
-                justify-content: center;
+                margin-bottom: 1.5mm;
+                width: 17mm;
+                height: 17mm;
               }
               .qr-code svg {
-                width: 12mm;
-                height: 12mm;
-              }
-              .model {
-                font-size: 8px;
-                font-weight: bold;
-                margin-bottom: 0;
-                text-align: left;
-                line-height: 1.1;
+                width: 100%;
+                height: 100%;
               }
               .device-code {
                 font-size: 8px;
+                margin-bottom: 1.5mm;
                 font-weight: bold;
                 color: #333;
-                border: 1px solid rgb(209, 213, 219);
-                padding: 2px 4px;
-                background-color: rgb(243, 244, 246);
-                border-radius: 2px;
+                border: 1px solid #666;
+                padding: 1mm;
+                background-color: #f0f0f0;
+                border-radius: 1mm;
                 display: inline-block;
                 text-align: center;
-                margin-top: 1px;
-                margin-bottom: 0;
+              }
+              .model {
+                font-size: 9px;
+                font-weight: bold;
+                margin-bottom: 1mm;
+                text-align: center;
               }
               .issue {
                 font-size: 8px;
-                text-align: left;
-                line-height: 1.1;
-                margin-top: 1mm;
+                white-space: pre-wrap;
+                text-align: center;
               }
-            }
-            ` : `
-            /* HOCHFORMAT: Original Styling */
-            .repair-number {
-              font-size: 14px;
-              font-weight: bold;
-              margin-bottom: 0.2mm;
-              text-align: center;
-            }
-            .customer-name {
-              font-size: 10px;
-              font-weight: bold;
-              margin-bottom: 0.3mm;
-              text-align: center;
-            }
-            .customer-phone {
-              font-size: 8px;
-              margin-bottom: 0.5mm;
-              color: #333;
-              text-align: center;
-            }
-            .qr-code {
-              margin-bottom: 1.5mm;
-              width: 17mm;
-              height: 17mm;
-            }
-            .qr-code svg {
-              width: 100%;
-              height: 100%;
-            }
-            .device-code {
-              font-size: 8px;
-              margin-bottom: 1.5mm;
-              font-weight: bold;
-              color: #333;
-              border: 1px solid #666;
-              padding: 1mm;
-              background-color: #f0f0f0;
-              border-radius: 1mm;
-              display: inline-block;
-              text-align: center;
-            }
-            .model {
-              font-size: 9px;
-              font-weight: bold;
-              margin-bottom: 1mm;
-              text-align: center;
-            }
-            .issue {
-              font-size: 8px;
-              white-space: pre-wrap;
-              text-align: center;
-            }
-            `}
-          </style>
-        </head>
-        <body>
-          <div class="label">
-            <div class="print-area">
-              ${labelFormat === 'landscape' ? `
-                <!-- Querformat Layout: EXAKTE KOPIE der funktionierenden Vorschau -->
-                <div class="left-section">
-                  <div class="repair-number">${orderCode}</div>
-                  <div class="qr-code">${qrCode}</div>
-                </div>
-                <div class="right-section">
-                  <div class="customer-name">${firstName} ${lastName}</div>
-                  ${customerPhone ? `<div class="customer-phone">${customerPhone}</div>` : ''}
-                  <div class="model">${model}</div>
-                  <div class="issue">${repairIssue ? repairIssue.split(',').map(item => item.trim()).join('<br>') : ''}</div>
-                  ${deviceCode ? `<div class="device-code">${deviceCode}</div>` : ''}
-                </div>
-              ` : `
+            </style>
+          </head>
+          <body>
+            <div class="label">
+              <div class="print-area">
                 <!-- Hochformat Layout: Vertikal gestapelt -->
                 <div class="repair-number">${orderCode}</div>
                 <div class="customer-name">${firstName} ${lastName}</div>
@@ -413,21 +375,20 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
                 ${deviceCode ? `<div class="device-code">${deviceCode}</div>` : ''}
                 <div class="model">${model}</div>
                 <div class="issue">${repairIssue ? repairIssue.split(',').join('\\n') : ''}</div>
-              `}
+              </div>
             </div>
-          </div>
-          <script>
-            // Drucken nach vollständigem Laden
-            window.onload = function() {
-              setTimeout(function() {
-                window.print();
-                window.close(); // Fenster direkt schließen, ohne auf onafterprint zu warten
-              }, 500);
-            };
-          </script>
-        </body>
-      </html>
-    `);
+            <script>
+              window.onload = function() {
+                setTimeout(function() {
+                  window.print();
+                  window.close();
+                }, 500);
+              };
+            </script>
+          </body>
+        </html>
+      `);
+    }
     
     printWindow.document.close();
     onClose();
@@ -457,78 +418,69 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
                     const isLandscape = labelFormat === 'landscape';
                     
                     if (isLandscape) {
-                      // Querformat-Vorschau
+                      // Querformat-Vorschau - Verbesserter Code mit mm-Maßen
+                      const deviceLabel = repair?.model || '';
+                      const qrValue = `${window.location.origin}/repairs/${repair?.orderCode || repair?.id}`;
+                      
                       return (
-                        <div style={{ 
-                          width: '220px', 
-                          height: '120px', 
-                          margin: '0 auto', 
-                          display: 'flex', 
-                          flexDirection: 'row', 
-                          alignItems: 'flex-start', 
-                          gap: '12px',
-                          border: '1px solid #e5e5e5',
-                          padding: '8px',
-                          backgroundColor: 'white'
-                        }}>
-                          {/* Linke Sektion: Auftragsnummer oben, QR-Code unten */}
-                          <div style={{ 
-                            display: 'flex', 
-                            flexDirection: 'column', 
-                            alignItems: 'center', 
-                            width: '90px',
-                            height: '100%',
-                            justifyContent: 'space-between'
-                          }}>
-                            <div className="text-center" style={{ marginBottom: '4px' }}>
-                              <p className="text-sm font-bold">{repair?.orderCode || `#${repair?.id}`}</p>
-                            </div>
-                            <div style={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
-                              <QRCodeSVG 
-                                value={`${window.location.origin}/repairs/${repair?.orderCode || repair?.id}`} 
-                                size={60} 
-                                level="M"
-                              />
-                            </div>
-                          </div>
-                          
-                          {/* Rechte Sektion: Kundendaten vertikal angeordnet */}
-                          <div style={{ 
-                            display: 'flex', 
-                            flexDirection: 'column', 
-                            width: '120px',
-                            height: '100%',
-                            justifyContent: 'flex-start',
-                            gap: '4px'
-                          }}>
-                            <div>
-                              <p className="text-sm font-bold leading-tight">
-                                {customer?.firstName || 'Kunde'} {customer?.lastName || ''}
-                              </p>
-                            </div>
-                            
-                            {customer?.phone && (
-                              <div>
-                                <p className="text-xs text-gray-600 leading-tight">{customer.phone}</p>
+                        <div className="flex items-center justify-center">
+                          {/* Print CSS inline für bessere Kompatibilität */}
+                          <style>{`
+                            @page { size: 57mm 32mm; margin: 0; }
+                            @media print {
+                              html, body { margin: 0; padding: 0; }
+                              #label-57x32 { width: 57mm; height: 32mm; box-shadow: none; border: 0; }
+                            }
+                          `}</style>
+
+                          {/* Etikett-Rahmen in mm für bessere Druckqualität */}
+                          <div
+                            id="label-57x32"
+                            style={{ width: "57mm", height: "32mm", padding: "2mm" }}
+                            className="bg-white border border-gray-300 rounded-md shadow-sm box-border flex"
+                          >
+                            {/* Linke Spalte: Auftragsnr. oben, QR unten/zentriert */}
+                            <div style={{ width: "28mm" }} className="flex flex-col">
+                              <div className="font-bold leading-none mb-[1mm] truncate" style={{ fontSize: 14 }}>
+                                {repair?.orderCode || `#${repair?.id}`}
                               </div>
-                            )}
-                            
-                            <div>
-                              <p className="text-sm font-bold leading-tight">{repair?.model}</p>
+                              <div className="flex items-start">
+                                <QRCodeSVG value={qrValue} size={72} level="M" />
+                                {/* 72px ≈ 19mm, optimiert für Druckschärfe */}
+                              </div>
                             </div>
-                            
-                            {deviceCodeData && formatDeviceCodeForLabel(deviceCodeData) && (
-                              <div style={{ marginTop: '2px' }}>
-                                <div className="text-xs font-bold bg-gray-100 border border-gray-300 rounded px-2 py-1 inline-block">
-                                  {formatDeviceCodeForLabel(deviceCodeData) as string}
+
+                            {/* Rechte Spalte: Kunde → Code → Modell → Fehler */}
+                            <div className="flex-1 pl-[2mm] flex flex-col">
+                              <div className="flex justify-end text-right leading-tight">
+                                <div>
+                                  <div className="font-bold text-[13px] leading-none truncate">
+                                    {customer?.firstName || 'Kunde'} {customer?.lastName || ''}
+                                  </div>
+                                  <div className="text-[11px] text-gray-500 leading-none truncate">
+                                    {customer?.phone || ""}
+                                  </div>
                                 </div>
                               </div>
-                            )}
-                            
-                            <div style={{ marginTop: 'auto' }}>
-                              <p className="text-xs leading-tight">
-                                {repair?.issue ? (repair.issue.length > 35 ? repair.issue.substring(0, 35) + '...' : repair.issue) : ''}
-                              </p>
+
+                              {/* Gerätecode als Pill */}
+                              {deviceCodeData && formatDeviceCodeForLabel(deviceCodeData) && (
+                                <div className="flex justify-center py-[1mm]">
+                                  <div className="inline-block border border-gray-400 rounded-2xl px-2 py-[1mm] font-semibold text-[11px] leading-none">
+                                    {formatDeviceCodeForLabel(deviceCodeData)}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Gerätemodell (mit Fallback) */}
+                              <div className="text-center font-bold text-[13px] leading-tight truncate">
+                                {deviceLabel}
+                              </div>
+
+                              {/* Fehlerbeschreibung */}
+                              <div className="text-center text-[11px] leading-tight whitespace-pre-line">
+                                {repair?.issue || ""}
+                              </div>
                             </div>
                           </div>
                         </div>
