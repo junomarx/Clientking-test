@@ -35,7 +35,7 @@ const businessSettingsSchema = z.object({
   email: z.string().optional(),
   website: z.string().optional(),
   receiptWidth: z.enum(["58mm", "80mm"]),
-  labelFormat: z.enum(["portrait", "landscape"]).default("portrait"),
+  labelFormat: z.enum(["portrait", "landscape", "landscape_large"]).default("portrait"),
   labelWidth: z.number().min(10).max(200).optional(),
   labelHeight: z.number().min(10).max(200).optional(),
   // SMTP-Einstellungen
@@ -823,6 +823,7 @@ export function SettingsPageContent() {
                             <SelectContent>
                               <SelectItem value="portrait">Hochformat (32mm x 57mm)</SelectItem>
                               <SelectItem value="landscape">Querformat (57mm x 32mm)</SelectItem>
+                              <SelectItem value="landscape_large">Querformat (62mm x 35mm)</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />

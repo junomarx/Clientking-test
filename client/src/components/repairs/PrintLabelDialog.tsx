@@ -127,7 +127,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
     const labelWidth = settings?.labelWidth || 32;
     const labelHeight = settings?.labelHeight || 57;
     
-    // Fülle das Druckfenster mit Inhalten - Verbesserter Code für Querformat
+    // Fülle das Druckfenster mit Inhalten - Erweitert für drei Formate
     if (labelFormat === 'landscape') {
       // QUERFORMAT: Ihr neuer Code mit mathematisch präziserer Spaltenaufteilung
       printWindow.document.write(`
@@ -251,6 +251,163 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
                 <div class="repair-number">${orderCode}</div>
                 <div class="qr-section">
                   ${qrCode.replace(/width="60"/, 'width="52"').replace(/height="60"/, 'height="52"')}
+                </div>
+              </div>
+
+              <!-- Rechte Spalte: 3/4 der Gesamtbreite -->
+              <div class="right-column">
+                <div class="customer-info">
+                  <div>
+                    <div class="customer-name">${firstName} ${lastName}</div>
+                    ${customerPhone ? `<div class="customer-phone">${customerPhone}</div>` : ''}
+                  </div>
+                </div>
+
+                ${deviceCode ? `
+                <div class="device-code-section">
+                  <div class="device-code">${deviceCode}</div>
+                </div>
+                ` : ''}
+
+                <div class="device-model">${model}</div>
+
+                <div class="issue-description">${repairIssue || ""}</div>
+              </div>
+            </div>
+            <script>
+              window.onload = function() {
+                setTimeout(function() {
+                  window.print();
+                  window.close();
+                }, 500);
+              };
+            </script>
+          </body>
+        </html>
+      `);
+    } else if (labelFormat === 'landscape_large') {
+      // 62mm x 35mm QUERFORMAT: Ihr neuer Code
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Etikett für Reparatur ${orderCode}</title>
+            <meta charset="UTF-8">
+            <style>
+              @page { 
+                size: 62mm 35mm; 
+                margin: 0; 
+              }
+              html, body {
+                margin: 0;
+                padding: 0;
+                font-family: Arial, sans-serif;
+              }
+              @media print {
+                html, body { 
+                  margin: 0; 
+                  padding: 0; 
+                }
+                #label-62x35 { 
+                  width: 62mm; 
+                  height: 35mm; 
+                  box-shadow: none; 
+                  border: 0; 
+                }
+              }
+              .label-container {
+                width: 62mm;
+                height: 35mm;
+                padding: 2mm;
+                background-color: white;
+                box-sizing: border-box;
+                display: flex;
+              }
+              .left-column {
+                width: calc(62mm / 4);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+              }
+              .repair-number {
+                font-weight: bold;
+                line-height: 1;
+                margin-bottom: 1mm;
+                font-size: 14px;
+                text-overflow: ellipsis;
+                overflow: hidden;
+                white-space: nowrap;
+              }
+              .qr-section {
+                display: flex;
+                align-items: flex-start;
+              }
+              .right-column {
+                flex: 1;
+                padding-left: 2mm;
+                display: flex;
+                flex-direction: column;
+              }
+              .customer-info {
+                display: flex;
+                justify-content: flex-end;
+                text-align: right;
+                line-height: 1.1;
+              }
+              .customer-name {
+                font-weight: bold;
+                font-size: 13px;
+                line-height: 1;
+                text-overflow: ellipsis;
+                overflow: hidden;
+                white-space: nowrap;
+              }
+              .customer-phone {
+                font-size: 11px;
+                color: #6b7280;
+                line-height: 1;
+                text-overflow: ellipsis;
+                overflow: hidden;
+                white-space: nowrap;
+              }
+              .device-code-section {
+                display: flex;
+                justify-content: center;
+                padding: 1mm 0;
+              }
+              .device-code {
+                display: inline-block;
+                border: 1px solid #9ca3af;
+                border-radius: 12px;
+                padding: 1mm 2mm;
+                font-weight: 600;
+                font-size: 11px;
+                line-height: 1;
+              }
+              .device-model {
+                text-align: center;
+                font-weight: bold;
+                font-size: 13px;
+                line-height: 1.1;
+                text-overflow: ellipsis;
+                overflow: hidden;
+                white-space: nowrap;
+              }
+              .issue-description {
+                text-align: center;
+                font-size: 11px;
+                line-height: 1.1;
+                white-space: pre-line;
+              }
+            </style>
+          </head>
+          <body>
+            <div id="label-62x35" class="label-container">
+              <!-- Linke Spalte: 1/4 der Gesamtbreite -->
+              <div class="left-column">
+                <div class="repair-number">${orderCode}</div>
+                <div class="qr-section">
+                  ${qrCode.replace(/width="60"/, 'width="55"').replace(/height="60"/, 'height="55"')}
                 </div>
               </div>
 
@@ -428,13 +585,11 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
                   {/* Vorschau basierend auf den gewählten Einstellungen */}
                   {(() => {
                     const labelFormat = settings?.labelFormat || 'portrait';
-                    const isLandscape = labelFormat === 'landscape';
+                    const deviceLabel = repair?.model || '';
+                    const qrValue = `${window.location.origin}/repairs/${repair?.orderCode || repair?.id}`;
                     
-                    if (isLandscape) {
-                      // Querformat-Vorschau - Verbesserter Code mit mm-Maßen
-                      const deviceLabel = repair?.model || '';
-                      const qrValue = `${window.location.origin}/repairs/${repair?.orderCode || repair?.id}`;
-                      
+                    if (labelFormat === 'landscape') {
+                      // 57mm x 32mm Querformat-Vorschau
                       return (
                         <div className="flex items-center justify-center">
                           {/* Print CSS inline für bessere Kompatibilität */}
@@ -458,6 +613,64 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
                                 {repair?.orderCode || `#${repair?.id}`}
                               </div>
                               <QRCodeSVG value={qrValue} size={52} level="M" />
+                            </div>
+
+                            {/* Rechte Spalte: 3/4 der Gesamtbreite */}
+                            <div style={{ paddingLeft: "2mm" }} className="flex-1 flex flex-col">
+                              <div className="flex justify-end text-right leading-tight">
+                                <div>
+                                  <div className="font-bold text-[13px] leading-none truncate">
+                                    {customer?.firstName || 'Kunde'} {customer?.lastName || ''}
+                                  </div>
+                                  <div className="text-[11px] text-gray-500 leading-none truncate">
+                                    {customer?.phone || ""}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Gerätecode als Pill */}
+                              {deviceCodeData && formatDeviceCodeForLabel(deviceCodeData) && (
+                                <div style={{ paddingTop: "1mm", paddingBottom: "1mm" }} className="flex justify-center">
+                                  <div className="inline-block border border-gray-400 rounded-2xl px-2 py-[1mm] font-semibold text-[11px] leading-none">
+                                    {formatDeviceCodeForLabel(deviceCodeData)}
+                                  </div>
+                                </div>
+                              )}
+
+                              <div className="text-center font-bold text-[13px] leading-tight truncate">
+                                {deviceLabel}
+                              </div>
+
+                              <div className="text-center text-[11px] leading-tight whitespace-pre-line">
+                                {repair?.issue || ""}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    } else if (labelFormat === 'landscape_large') {
+                      // 62mm x 35mm Querformat-Vorschau - Ihr neuer Code
+                      return (
+                        <div className="flex items-center justify-center">
+                          <style>{`
+                            @page { size: 62mm 35mm; margin: 0; }
+                            @media print {
+                              html, body { margin: 0; padding: 0; }
+                              #label-62x35 { width: 62mm; height: 35mm; box-shadow: none; border: 0; }
+                            }
+                          `}</style>
+
+                          <div
+                            id="label-62x35"
+                            style={{ width: "62mm", height: "35mm", padding: "2mm" }}
+                            className="bg-white border border-gray-300 rounded-md shadow-sm box-border flex"
+                          >
+                            {/* Linke Spalte: 1/4 der Gesamtbreite */}
+                            <div style={{ width: "calc(62mm / 4)" }} className="flex flex-col items-center">
+                              <div className="font-bold leading-none mb-[1mm] truncate" style={{ fontSize: 14 }}>
+                                {repair?.orderCode || `#${repair?.id}`}
+                              </div>
+                              <QRCodeSVG value={qrValue} size={55} level="M" />
                             </div>
 
                             {/* Rechte Spalte: 3/4 der Gesamtbreite */}

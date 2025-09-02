@@ -475,7 +475,7 @@ export const businessSettings = pgTable("business_settings", {
   maxEmployees: integer("max_employees").default(2).notNull(),
   
   // Etikett-Druck-Einstellungen
-  labelFormat: text("label_format").default("portrait").notNull(), // portrait oder landscape
+  labelFormat: text("label_format").default("portrait").notNull(), // portrait, landscape, landscape_large
   labelWidth: integer("label_width").default(32), // Etikett-Breite in mm (Standard: 32mm)
   labelHeight: integer("label_height").default(57), // Etikett-Höhe in mm (Standard: 57mm)
   
