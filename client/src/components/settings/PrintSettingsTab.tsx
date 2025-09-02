@@ -29,7 +29,7 @@ interface PrintTemplate {
 // Schema für die Bon-Einstellungen
 const receiptSettingsSchema = z.object({
   receiptWidth: z.enum(["58mm", "80mm"]),
-  labelFormat: z.enum(["portrait", "landscape"]),
+  labelFormat: z.enum(["portrait", "landscape", "landscape_large"]),
   labelWidth: z.number(),
   labelHeight: z.number()
 });
@@ -75,7 +75,7 @@ export function PrintSettingsTab() {
       
       receiptForm.reset({ 
         receiptWidth,
-        labelFormat: (settings.labelFormat === "landscape" ? "landscape" : "portrait") as "portrait" | "landscape",
+        labelFormat: (settings.labelFormat === "landscape" ? "landscape" : settings.labelFormat === "landscape_large" ? "landscape_large" : "portrait") as "portrait" | "landscape" | "landscape_large",
         labelWidth: settings.labelWidth || 32,
         labelHeight: settings.labelHeight || 57
       });
@@ -221,6 +221,7 @@ export function PrintSettingsTab() {
                         <SelectContent>
                           <SelectItem value="portrait">Hochformat (32mm x 57mm)</SelectItem>
                           <SelectItem value="landscape">Querformat (57mm x 32mm)</SelectItem>
+                          <SelectItem value="landscape_large">Querformat (62mm x 35mm)</SelectItem>
                         </SelectContent>
                       </Select>
                     </FormControl>
