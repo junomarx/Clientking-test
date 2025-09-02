@@ -1,0 +1,51 @@
+ <div className="min-h-screen w-full flex items-center justify-center bg-neutral-100 p-6">
+      <style>{`
+        @page { size: 62mm 35mm; margin: 0; }
+        @media print {
+          html, body { margin: 0; padding: 0; }
+          #label-62x35 { width: 62mm; height: 35mm; box-shadow: none; border: 0; }
+        }
+      `}</style>
+
+      <div
+        id="label-62x35"
+        style={{ width: "62mm", height: "35mm", padding: "2mm" }}
+        className="bg-white border border-gray-300 rounded-md shadow-sm box-border flex"
+      >
+        {/* Linke Spalte: 1/4 der Gesamtbreite */}
+        <div style={{ width: "calc(62mm / 4)" }} className="flex flex-col items-center">
+          <div className="font-bold leading-none mb-[1mm] truncate" style={{ fontSize: 14 }}>
+            {repair.orderCode}
+          </div>
+          <QRCodeSVG value={qrValue} size={55} level="M" />
+        </div>
+
+        {/* Rechte Spalte: 3/4 der Gesamtbreite */}
+        <div style={{ paddingLeft: "2mm" }} className="flex-1 flex flex-col">
+          <div className="flex justify-end text-right leading-tight">
+            <div>
+              <div className="font-bold text-[13px] leading-none truncate">
+                {customer.firstName} {customer.lastName}
+              </div>
+              <div className="text-[11px] text-gray-500 leading-none truncate">
+                {customer.phone || ""}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ paddingTop: "1mm", paddingBottom: "1mm" }} className="flex justify-center">
+            <div className="inline-block border border-gray-400 rounded-2xl px-2 py-[1mm] font-semibold text-[11px] leading-none">
+              {deviceCode}
+            </div>
+          </div>
+
+          <div className="text-center font-bold text-[13px] leading-tight truncate">
+            {deviceLabel}
+          </div>
+
+          <div className="text-center text-[11px] leading-tight whitespace-pre-line">
+            {repair.issue || ""}
+          </div>
+        </div>
+      </div>
+    </div>
