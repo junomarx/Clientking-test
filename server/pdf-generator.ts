@@ -7,6 +7,7 @@ interface AccessoryLabelData {
     quantity: number;
     unitPrice: string;
     totalPrice: string;
+    downPayment?: string;
     status: string;
     createdAt: Date;
   };
@@ -85,6 +86,13 @@ export async function generateAccessoryLabelPDF(data: AccessoryLabelData): Promi
   doc.text(`${data.accessory.quantity}x ${formattedUnitPrice} €`, 16, y, { align: 'center' });
   y += 3;
 
+  // Anzahlung
+  doc.setFontSize(6);
+  doc.setFont('helvetica', 'normal');
+  const formattedDownPayment = data.accessory.downPayment?.replace(/\.00$/, '') || '0';
+  doc.text(`Anzahlung: ${formattedDownPayment} €`, 16, y, { align: 'center' });
+  y += 3;
+
   // Gesamtpreis - "Gesamt" und Preis untereinander
   y += 4; // Mehr Abstand nach oben
   
@@ -98,6 +106,16 @@ export async function generateAccessoryLabelPDF(data: AccessoryLabelData): Promi
   // Preis formatieren: 30.00 -> 30€
   const formattedPrice = data.accessory.totalPrice.replace(/\.00$/, '');
   doc.text(`${formattedPrice} €`, 16, y, { align: 'center' });
+  y += 6;
+
+  // Offener Betrag
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  const totalPrice = parseFloat(data.accessory.totalPrice || '0');
+  const downPayment = parseFloat(data.accessory.downPayment || '0');
+  const openAmount = totalPrice - downPayment;
+  const formattedOpenAmount = openAmount.toFixed(2).replace(/\.00$/, '');
+  doc.text(`Offen: ${formattedOpenAmount} €`, 16, y, { align: 'center' });
 
   return Buffer.from(doc.output('arraybuffer'));
 }
