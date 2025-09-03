@@ -1697,7 +1697,7 @@ export function OrdersTab() {
                                 {sendAccessoryEmailMutation.isPending && sendAccessoryEmailMutation.variables === accessory.id ? (
                                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
                                 ) : accessory.emailSent ? (
-                                  <Mail className="h-4 w-4 text-green-600 fill-current" />
+                                  <Mail className="h-4 w-4 text-green-600" />
                                 ) : (
                                   <Mail className="h-4 w-4 text-red-600" />
                                 )}
