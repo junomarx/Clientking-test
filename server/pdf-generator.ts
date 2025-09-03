@@ -36,85 +36,87 @@ export async function generateAccessoryLabelPDF(data: AccessoryLabelData): Promi
   // Schrift-Setup
   doc.setFont('helvetica');
   
-  let y = 6;
+  let y = 8;
 
   // Kunden-Informationen oben (falls vorhanden)
   if (data.customer) {
-    // Kundenname
-    doc.setFontSize(8);
+    // Kundenname - groß und fett
+    doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
     const customerName = `${data.customer.firstName} ${data.customer.lastName}`;
     doc.text(customerName, 16, y, { align: 'center' });
-    y += 4;
+    y += 8;
     
-    // Telefonnummer
-    doc.setFontSize(6);
+    // Telefonnummer - mittelgroß
+    doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
     doc.text(data.customer.phone, 16, y, { align: 'center' });
-    y += 3;
+    y += 5;
     
-    // E-Mail (falls vorhanden)
+    // E-Mail (falls vorhanden) - mittelgroß
     if (data.customer.email) {
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
       const emailLines = doc.splitTextToSize(data.customer.email, 30);
       doc.text(emailLines, 16, y, { align: 'center' });
-      y += 3 + (emailLines.length - 1) * 2;
+      y += 5 + (emailLines.length - 1) * 3;
     }
   } else {
     // Fallback für Lager-Artikel
-    doc.setFontSize(7);
+    doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
     doc.text('LAGER-ARTIKEL', 16, y, { align: 'center' });
-    y += 4;
+    y += 8;
   }
 
   // Trennlinie
-  doc.setLineWidth(0.3);
-  doc.line(2, y, 30, y);
-  y += 4;
+  y += 2;
+  doc.setLineWidth(0.5);
+  doc.line(3, y, 29, y);
+  y += 6;
 
-  // Artikel Name
-  doc.setFontSize(7);
+  // Artikel Name - groß und fett, mehrzeilig
+  doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
   const articleLines = doc.splitTextToSize(data.accessory.articleName, 28);
   doc.text(articleLines, 16, y, { align: 'center' });
-  y += 3 + (articleLines.length - 1) * 2;
+  y += 6 + (articleLines.length - 1) * 4;
 
-  // Menge x Preis
-  doc.setFontSize(6);
+  // Menge x Preis - mittelgroß
+  doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   const formattedUnitPrice = data.accessory.unitPrice.replace(/\.00$/, '');
   doc.text(`${data.accessory.quantity}x ${formattedUnitPrice} €`, 16, y, { align: 'center' });
-  y += 3;
+  y += 5;
 
-  // Anzahlung
-  doc.setFontSize(6);
+  // Anzahlung - mittelgroß
+  doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   const formattedDownPayment = data.accessory.downPayment?.replace(/\.00$/, '') || '0';
   doc.text(`Anzahlung: ${formattedDownPayment} €`, 16, y, { align: 'center' });
-  y += 3;
+  y += 8;
 
-  // Gesamtpreis - "Gesamt" und Preis untereinander
-  y += 4; // Mehr Abstand nach oben
-  
-  doc.setFontSize(6);
+  // "Gesamt" - mittelgroß
+  doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   doc.text('Gesamt', 16, y, { align: 'center' });
-  y += 8; // Mehr Abstand zwischen "Gesamt" und dem Preis
+  y += 6;
   
-  doc.setFontSize(16); // 200% größer (8 * 2 = 16)
+  // Gesamtpreis - sehr groß und fett
+  doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
-  // Preis formatieren: 30.00 -> 30€
   const formattedPrice = data.accessory.totalPrice.replace(/\.00$/, '');
   doc.text(`${formattedPrice} €`, 16, y, { align: 'center' });
-  y += 6;
+  y += 10;
 
-  // Offener Betrag - "Offen" und Betrag untereinander
-  doc.setFontSize(6);
+  // "Offen:" - mittelgroß mit Doppelpunkt
+  doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
-  doc.text('Offen', 16, y, { align: 'center' });
-  y += 8; // Mehr Abstand zwischen "Offen" und dem Betrag
+  doc.text('Offen:', 16, y, { align: 'center' });
+  y += 6;
   
-  doc.setFontSize(16);
+  // Offener Betrag - sehr groß und fett
+  doc.setFontSize(20);
   doc.setFont('helvetica', 'bold');
   const totalPrice = parseFloat(data.accessory.totalPrice || '0');
   const downPayment = parseFloat(data.accessory.downPayment || '0');
