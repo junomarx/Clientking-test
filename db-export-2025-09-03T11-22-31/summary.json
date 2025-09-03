@@ -1,0 +1,18 @@
+{
+  "exportDate": "2025-09-03T11:22:31.990Z",
+  "totalRecords": 0,
+  "tables": [
+    "shops",
+    "users",
+    "customers",
+    "repairs",
+    "spare_parts",
+    "accessories",
+    "business_settings",
+    "email_templates",
+    "print_templates",
+    "activity_logs",
+    "device_issues",
+    "email_history"
+  ]
+}

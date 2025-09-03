@@ -1,0 +1,13 @@
+{
+  "exportDate": "2025-09-03T11:22:00.997Z",
+  "totalTables": 35,
+  "totalRecords": 0,
+  "exportDir": "database-export-2025-09-03T11-21-59-103Z",
+  "files": {
+    "complete-database-export.sql": "Vollständiger SQL-Export für Import",
+    "schema.json": "Datenbankschema-Information",
+    "*.json": "Tabellendaten als JSON",
+    "*.csv": "Tabellendaten als CSV",
+    "*.sql": "Einzelne SQL-Dateien pro Tabelle"
+  }
+}
