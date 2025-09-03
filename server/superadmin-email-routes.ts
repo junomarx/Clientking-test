@@ -437,6 +437,54 @@ export const defaultCustomerEmailTemplates: DefaultEmailTemplate[] = [
     type: 'customer'
   },
   {
+    name: "Zubehör eingetroffen",
+    subject: "Ihr bestelltes Zubehör ist eingetroffen",
+    body: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h2 style="color: #10b981;">Ihr Zubehör ist da!</h2>
+        </div>
+        
+        <p>Sehr geehrte(r) {{kundenname}},</p>
+        
+        <p>wir freuen uns, Ihnen mitteilen zu können, dass Ihr bestelltes Zubehör eingetroffen ist und zur Abholung bereitsteht.</p>
+        
+        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+          <p style="margin: 5px 0;"><strong>Bestellnummer:</strong> {{bestellnummer}}</p>
+          <p style="margin: 5px 0;"><strong>Artikel:</strong> {{artikel}}</p>
+          <p style="margin: 5px 0;"><strong>Menge:</strong> {{menge}}</p>
+          <p style="margin: 5px 0;"><strong>Gesamtpreis:</strong> {{gesamtpreis}} €</p>
+        </div>
+        
+        <p style="font-weight: bold; color: #10b981; font-size: 16px; text-align: center; margin: 25px 0; padding: 10px; border: 2px solid #10b981; border-radius: 5px;">
+          Ihr Zubehör kann jetzt abgeholt werden!
+        </p>
+        
+        <p>Unsere Öffnungszeiten sind:</p>
+        <p style="margin-left: 20px; font-weight: bold;">{{oeffnungszeiten}}</p>
+        
+        <p>Bitte bringen Sie zur Abholung einen gültigen Ausweis und diese E-Mail mit.</p>
+        
+        <p>Falls Sie Fragen haben, können Sie uns gerne kontaktieren.</p>
+        
+        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
+          <p style="margin: 5px 0;"><strong>{{geschaeftsname}}</strong></p>
+          <p style="margin: 5px 0;">{{adresse}}</p>
+          <p style="margin: 5px 0;">Telefon: {{telefon}}</p>
+          <p style="margin: 5px 0;">E-Mail: {{email}}</p>
+        </div>
+        
+        <p style="margin-top: 20px; font-style: italic; text-align: center;">Vielen Dank für Ihren Einkauf!</p>
+        
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666;">
+          <p>Diese E-Mail wurde automatisch von {{geschaeftsname}} gesendet.</p>
+        </div>
+      </div>
+    `,
+    variables: ["kundenname", "bestellnummer", "artikel", "menge", "gesamtpreis", "oeffnungszeiten", "geschaeftsname", "adresse", "telefon", "email"],
+    type: 'customer'
+  },
+  {
     name: "Gerät zur Reparatur bringen",
     subject: "Ersatzteile sind eingetroffen - Bitte bringen Sie Ihr Gerät vorbei",
     body: `
