@@ -772,13 +772,23 @@ export class EmailService {
       let processedBody = body;
       
       // KRITISCH: Business-Settings für korrekte Variablen laden
-      if (forceUserId && data && typeof data === 'object') {
+      // UNIVERSELL: Prüfe alle E-Mail-Versendungen nach Zubehör eingetroffen
+      if (data && typeof data === 'object' && (data.artikel || templateName.includes('Zubehör') || subject.includes('Zubehör'))) {
         try {
+          // Ermittle userId aus verschiedenen Quellen
+          const targetUserId = forceUserId || (data.userId ? parseInt(data.userId) : null);
+          console.log(`🔍 FIXING: Ermittelte userId für Business-Settings: ${targetUserId}`);
+          
+          if (!targetUserId) {
+            console.log(`⚠️ FIXING: Keine userId gefunden, kann Business-Settings nicht laden`);
+            return;
+          }
+          
           // Hole die NEUESTEN Geschäftseinstellungen für korrekte E-Mail-Variablen
           const [businessSetting] = await db
             .select()
             .from(businessSettings)
-            .where(eq(businessSettings.userId, forceUserId))
+            .where(eq(businessSettings.userId, targetUserId))
             .orderBy(desc(businessSettings.id))
             .limit(1);
           
