@@ -211,9 +211,7 @@ export default function Home() {
                 <CustomersTab onNewOrder={handleNewOrder} />
               )}
               
-              {activeTab === 'statistics' && (
-                <StatisticsTab onTabChange={handleTabChange} />
-              )}
+              {/* STATISTIK-TAB ENTFERNT - SICHERHEITSFIX */}
               
               {activeTab === 'cost-estimates' && (
                 <CostEstimatesTab onNewCostEstimate={() => console.log('Neuer Kostenvoranschlag erstellen')} />
