@@ -198,11 +198,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: user.email || ''
       };
 
-      const emailResult = await emailServiceInstance.sendEmailByTemplateName(
-        'Zubehör eingetroffen',
+      // Verwende direkt die Template-ID um sicherzustellen, dass die richtige Vorlage verwendet wird
+      const emailResult = await emailServiceInstance.sendEmailWithTemplateById(
+        78,  // ID der "Zubehör eingetroffen" Vorlage
         customer.email,
-        emailVariables,
-        userId
+        emailVariables
       );
       
       const success = emailResult;
