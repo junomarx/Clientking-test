@@ -170,7 +170,7 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
           <Tablet className="h-5 w-5 mr-2" />
           Leihgeräte
         </Button>
-        {/* STATISTIKEN KOMPLETT ENTFERNT - CACHE REFRESH ERZWUNGEN v2 */}
+        {/* STATISTIKEN KOMPLETT ENTFERNT - CACHE REFRESH ERZWUNGEN v3 */}
       </div>
       
       {/* Einstellungen Kategorie */}
