@@ -108,14 +108,19 @@ export async function generateAccessoryLabelPDF(data: AccessoryLabelData): Promi
   doc.text(`${formattedPrice} €`, 16, y, { align: 'center' });
   y += 6;
 
-  // Offener Betrag
+  // Offener Betrag - "Offen" und Betrag untereinander
+  doc.setFontSize(6);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Offen', 16, y, { align: 'center' });
+  y += 8; // Mehr Abstand zwischen "Offen" und dem Betrag
+  
   doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
   const totalPrice = parseFloat(data.accessory.totalPrice || '0');
   const downPayment = parseFloat(data.accessory.downPayment || '0');
   const openAmount = totalPrice - downPayment;
   const formattedOpenAmount = openAmount.toFixed(2).replace(/\.00$/, '');
-  doc.text(`Offen: ${formattedOpenAmount} €`, 16, y, { align: 'center' });
+  doc.text(`${formattedOpenAmount} €`, 16, y, { align: 'center' });
 
   return Buffer.from(doc.output('arraybuffer'));
 }
