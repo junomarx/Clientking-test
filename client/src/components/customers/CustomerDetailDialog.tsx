@@ -62,6 +62,7 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
   const [selectedRepairId, setSelectedRepairId] = useState<number | null>(null);
   const [showDeleteRepairDialog, setShowDeleteRepairDialog] = useState(false);
   const [repairToDelete, setRepairToDelete] = useState<number | null>(null);
+  const [showDeleteCustomerDialog, setShowDeleteCustomerDialog] = useState(false);
   const [, navigate] = useLocation();
   const { toast } = useToast();
   
@@ -185,6 +186,36 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
     },
   });
 
+  // Delete customer mutation
+  const deleteCustomerMutation = useMutation({
+    mutationFn: async (customerId: number) => {
+      const response = await apiRequest('DELETE', `/api/customers/${customerId}`);
+      if (!response.ok) {
+        throw new Error('Fehler beim Löschen des Kunden');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/customers'] });
+      setShowDeleteCustomerDialog(false);
+      onClose(); // Dialog schließen
+      toast({
+        title: "Kunde gelöscht",
+        description: "Der Kunde wurde erfolgreich gelöscht.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDeleteCustomer = () => {
+    setShowDeleteCustomerDialog(true);
+  };
+
   const isLoading = isLoadingCustomer || isLoadingRepairs || isLoadingCostEstimates;
   
   if (!open) return null;
@@ -235,15 +266,26 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
                 <User className="h-4 w-4 md:h-5 md:w-5 flex-shrink-0" />
                 Kundendaten
               </h3>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleEditCustomer}
-                className="flex items-center gap-1 md:gap-2 px-2 md:px-3"
-              >
-                <Pencil className="h-3 w-3 md:h-4 md:w-4" />
-                <span className="hidden sm:inline">Bearbeiten</span>
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleEditCustomer}
+                  className="flex items-center gap-1 md:gap-2 px-2 md:px-3"
+                >
+                  <Pencil className="h-3 w-3 md:h-4 md:w-4" />
+                  <span className="hidden sm:inline">Bearbeiten</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDeleteCustomer}
+                  className="flex items-center gap-1 md:gap-2 px-2 md:px-3 text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <Trash2 className="h-3 w-3 md:h-4 md:w-4" />
+                  <span className="hidden sm:inline">Löschen</span>
+                </Button>
+              </div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
@@ -501,6 +543,18 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
           description="Möchten Sie diese Reparatur wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
 
           isDeleting={deleteRepairMutation.isPending}
+        />
+      )}
+
+      {/* Delete Customer Confirmation Dialog */}
+      {showDeleteCustomerDialog && customerId && (
+        <DeleteConfirmDialog
+          open={showDeleteCustomerDialog}
+          onClose={() => setShowDeleteCustomerDialog(false)}
+          onConfirm={() => deleteCustomerMutation.mutate(customerId)}
+          title="Kunde löschen"
+          description={`Möchten Sie den Kunden "${customer?.firstName} ${customer?.lastName}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden und löscht auch alle zugehörigen Reparaturen und Kostenvoranschläge.`}
+          isDeleting={deleteCustomerMutation.isPending}
         />
       )}
     </Dialog>
