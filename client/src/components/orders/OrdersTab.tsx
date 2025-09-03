@@ -755,6 +755,36 @@ export function OrdersTab() {
     }
   };
 
+  // Mutation für E-Mail-Versand
+  const sendAccessoryEmailMutation = useMutation({
+    mutationFn: async (accessoryId: number) => {
+      const response = await apiRequest("POST", `/api/accessories/${accessoryId}/send-arrival-email`);
+      if (!response.ok) {
+        throw new Error("Fehler beim Senden der E-Mail");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/orders/accessories"] });
+      toast({
+        title: "E-Mail versendet",
+        description: "Die Ankunfts-E-Mail wurde erfolgreich gesendet.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handler für E-Mail-Versand
+  const handleSendAccessoryEmail = (accessoryId: number) => {
+    sendAccessoryEmailMutation.mutate(accessoryId);
+  };
+
   // Exportfunktionen
 
 
@@ -1637,15 +1667,12 @@ export function OrdersTab() {
                                 size="sm" 
                                 className="h-8 w-8 p-0" 
                                 title={accessory.emailSent ? "E-Mail erneut senden" : "E-Mail senden"}
-                                onClick={() => {
-                                  toast({
-                                    title: "Funktion wird noch eingebaut",
-                                    description: "Die E-Mail-Benachrichtigung für eingetroffenes Zubehör wird noch entwickelt.",
-                                    variant: "default",
-                                  });
-                                }}
+                                disabled={sendAccessoryEmailMutation.isPending}
+                                onClick={() => handleSendAccessoryEmail(accessory.id)}
                               >
-                                {accessory.emailSent ? (
+                                {sendAccessoryEmailMutation.isPending ? (
+                                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
+                                ) : accessory.emailSent ? (
                                   <Mail className="h-4 w-4 text-green-600 fill-current" />
                                 ) : (
                                   <Mail className="h-4 w-4 text-red-600" />
