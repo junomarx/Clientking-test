@@ -472,26 +472,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "X-User-ID Header fehlt" });
       }
       
-      // Anzahl der Ersatzteile mit Status "bestellen" 
+      // Hole die Shop-ID des Benutzers für Multi-Tenant Isolation
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Benutzer nicht gefunden" });
+      }
+      
+      // Anzahl der Ersatzteile mit Status "bestellen" (shop-weit) 
       const sparePartsToOrder = await pool.query(
         `SELECT COUNT(*) as count FROM spare_parts sp 
          JOIN repairs r ON sp.repair_id = r.id 
-         WHERE sp.status = 'bestellen' AND r.user_id = $1`,
-        [userId]
+         WHERE sp.status = 'bestellen' AND r.shop_id = $1`,
+        [user.shopId]
       );
       
-      // Anzahl der Zubehörteile mit Status "bestellen"
+      // Anzahl der Zubehörteile mit Status "bestellen" (shop-weit)
       const accessoriesToOrder = await pool.query(
         `SELECT COUNT(*) as count FROM accessories a 
-         WHERE a.status = 'bestellen' AND a.user_id = $1`,
-        [userId]
+         WHERE a.status = 'bestellen' AND a.shop_id = $1`,
+        [user.shopId]
       );
       
       const sparePartsCount = parseInt(sparePartsToOrder.rows[0].count) || 0;
       const accessoriesCount = parseInt(accessoriesToOrder.rows[0].count) || 0;
       const totalToOrder = sparePartsCount + accessoriesCount;
       
-      console.log(`📊 Order Counts für Benutzer ${userId}: ${sparePartsCount} Ersatzteile + ${accessoriesCount} Zubehör = ${totalToOrder} gesamt`);
+      console.log(`📊 Order Counts für Shop ${user.shopId} (Benutzer ${userId}): ${sparePartsCount} Ersatzteile + ${accessoriesCount} Zubehör = ${totalToOrder} gesamt`);
       
       res.json({
         sparePartsToOrder: sparePartsCount,
