@@ -763,14 +763,56 @@ export class EmailService {
     forceUserId?: number
   }): Promise<boolean> {
     try {
+      console.log(`🔍 EMAIL-SERVICE: sendEmailWithTemplateInternal aufgerufen für ${templateName}, forceUserId: ${forceUserId}`);
+      console.log(`🔍 EMAIL-SERVICE: data keys:`, Object.keys(data || {}));
+      console.log(`🔍 EMAIL-SERVICE: aktuelle telefon/email Werte:`, { telefon: data?.telefon, email: data?.email });
+      
       // Ersetze Platzhalter in Betreff und Text mit den übergebenen Daten
       let processedSubject = subject;
       let processedBody = body;
       
+      // KRITISCH: Business-Settings für korrekte Variablen laden
+      if (forceUserId && data && typeof data === 'object') {
+        try {
+          // Hole die NEUESTEN Geschäftseinstellungen für korrekte E-Mail-Variablen
+          const [businessSetting] = await db
+            .select()
+            .from(businessSettings)
+            .where(eq(businessSettings.userId, forceUserId))
+            .orderBy(desc(businessSettings.id))
+            .limit(1);
+          
+          if (businessSetting) {
+            console.log(`🔍 FIXING: Lade Business-Daten für E-Mail-Variablen (User ${forceUserId})`);
+            
+            // KRITISCH: Überschreibe telefon und email mit korrekten Business-Settings-Werten
+            if (businessSetting.phone) {
+              data.telefon = businessSetting.phone;
+              console.log(`✅ telefon Variable korrigiert: ${data.telefon}`);
+            }
+            if (businessSetting.email) {
+              data.email = businessSetting.email;
+              console.log(`✅ email Variable korrigiert: ${data.email}`);
+            }
+            if (businessSetting.businessName) {
+              data.geschaeftsname = businessSetting.businessName;
+              console.log(`✅ geschaeftsname Variable korrigiert: ${data.geschaeftsname}`);
+            }
+            if (businessSetting.openingHours) {
+              data.oeffnungszeiten = businessSetting.openingHours;
+              console.log(`✅ oeffnungszeiten Variable korrigiert: ${data.oeffnungszeiten}`);
+            }
+          }
+        } catch (error) {
+          console.error(`❌ Fehler beim Laden der Business-Settings für E-Mail-Variablen:`, error);
+        }
+      }
+
       // WICHTIG: Öffnungszeiten direkt hinzufügen, falls nicht vorhanden
       if (data && typeof data === 'object') {
-        if (!data.openingHours) {
+        if (!data.openingHours && !data.oeffnungszeiten) {
           data.openingHours = 'Mo - Fr: 10:00 - 18:00 Uhr; Sa geschlossen';
+          data.oeffnungszeiten = 'Mo - Fr: 10:00 - 18:00 Uhr; Sa geschlossen';
           console.log(`✅ openingHours Variable hinzugefügt: ${data.openingHours}`);
         }
       }

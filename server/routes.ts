@@ -148,9 +148,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       console.log(`[E-MAIL-VERSAND] ALLERHÖCHSTE PRIORITÄT: Sende Ankunfts-E-Mail für Zubehör ${accessoryId} (Benutzer ${userId})`);
+      console.log(`🔍 DEBUG: Nach ersten Debug-Logs - beginne Datenladung`);
       
       // Zubehör-Daten abrufen
-      const accessory = await storage.getAccessory(accessoryId, userId);
+      let accessory;
+      try {
+        console.log(`🔍 DEBUG: Rufe storage.getAccessory auf...`);
+        accessory = await storage.getAccessory(accessoryId, userId);
+        console.log(`🔍 DEBUG: storage.getAccessory erfolgreich:`, !!accessory);
+      } catch (storageError) {
+        console.error(`🔍 DEBUG: EXCEPTION bei storage.getAccessory:`, storageError);
+        throw storageError;
+      }
+      
       if (!accessory) {
         return res.status(404).json({ message: "Zubehör nicht gefunden oder keine Berechtigung" });
       }
@@ -173,9 +183,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // KRITISCH: Geschäftseinstellungen des Shop-Owners laden für korrekte Daten
-      const { db } = await import('./db.js');
-      const { businessSettings } = await import('@shared/schema.js');
-      const { eq, desc } = await import('drizzle-orm');
+      console.log(`🔍 STEP 1: Starte Laden der Geschäftsdaten für Benutzer ${userId}`);
       
       const [businessSetting] = await db
         .select()
