@@ -454,6 +454,8 @@ export const defaultCustomerEmailTemplates: DefaultEmailTemplate[] = [
           <p style="margin: 5px 0;"><strong>Artikel:</strong> {{artikel}}</p>
           <p style="margin: 5px 0;"><strong>Menge:</strong> {{menge}}</p>
           <p style="margin: 5px 0;"><strong>Gesamtpreis:</strong> {{gesamtpreis}} €</p>
+          <p style="margin: 5px 0;"><strong>Anzahlung:</strong> {{anzahlung}} €</p>
+          <p style="margin: 5px 0;"><strong>Noch offener Betrag:</strong> {{offener_betrag}} €</p>
         </div>
         
         <p style="font-weight: bold; color: #10b981; font-size: 16px; text-align: center; margin: 25px 0; padding: 10px; border: 2px solid #10b981; border-radius: 5px;">
@@ -481,7 +483,7 @@ export const defaultCustomerEmailTemplates: DefaultEmailTemplate[] = [
         </div>
       </div>
     `,
-    variables: ["kundenname", "bestellnummer", "artikel", "menge", "gesamtpreis", "oeffnungszeiten", "geschaeftsname", "adresse", "telefon", "email"],
+    variables: ["kundenname", "bestellnummer", "artikel", "menge", "gesamtpreis", "anzahlung", "offener_betrag", "oeffnungszeiten", "geschaeftsname", "adresse", "telefon", "email"],
     type: 'customer'
   },
   {
