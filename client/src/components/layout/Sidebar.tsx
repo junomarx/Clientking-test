@@ -282,10 +282,12 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
           </Button>
         )}
         
-        {/* Kiosk-Modus Aktivierung */}
-        <div className="pt-2 border-t">
-          <KioskActivationButton />
-        </div>
+        {/* Kiosk-Modus Aktivierung - nur für Kiosk-Mitarbeiter */}
+        {user && user.role === 'kiosk' && (
+          <div className="pt-2 border-t">
+            <KioskActivationButton />
+          </div>
+        )}
       </div>
     </>
   );
