@@ -184,31 +184,8 @@ export function Header({ variant = "landing", activeTab, onTabChange }: HeaderPr
                       <Tablet className="h-5 w-5 mr-2" />
                       Leihgeräte
                     </Button>
-                    {/* Statistiken nur für Shop-Owner sichtbar */}
-                    {user && user.role === 'owner' && (
-                      <Button 
-                        variant={activeTab === 'statistics' ? 'default' : 'ghost'}
-                        className="w-full justify-start"
-                        onClick={() => {
-                          if (onTabChange) onTabChange('statistics');
-                          setMenuOpen(false);
-                        }}
-                      >
-                        <BarChart2 className="h-5 w-5 mr-2" />
-                        Statistiken
-                      </Button>
-                    )}
-                    <Button 
-                      variant={activeTab === 'kiosk' ? 'default' : 'ghost'}
-                      className="w-full justify-start"
-                      onClick={() => {
-                        if (onTabChange) onTabChange('kiosk');
-                        setMenuOpen(false);
-                      }}
-                    >
-                      <Smartphone className="h-5 w-5 mr-2" />
-                      Kiosk Modus
-                    </Button>
+                    
+                    
                     {/* Einstellungskategorie nur für Shop-Owner sichtbar */}
                     {user && user.role === 'owner' && (
                       <>
