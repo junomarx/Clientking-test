@@ -31,13 +31,19 @@ export function KioskActivationButton() {
       
       if (isExitMode) {
         // Kiosk-Modus verlassen → Kioskmitarbeiter direkt ausloggen
-        console.log('🚪 Kiosk-Modus verlassen - Starte Logout');
+        console.log('🚪 Kiosk-Modus verlassen - Starte direkten Logout');
         toast({
           title: 'Kiosk-Modus verlassen',
           description: 'Sie werden ausgeloggt...',
         });
-        // Sofort ausloggen
-        logoutMutation.mutate();
+        // Direkter API-Aufruf für Logout
+        apiRequest('POST', '/api/logout').then(() => {
+          console.log('✅ Logout erfolgreich - Weiterleitung...');
+          window.location.href = '/auth';
+        }).catch((error) => {
+          console.error('❌ Logout Fehler:', error);
+          window.location.href = '/auth';
+        });
       } else {
         // Kiosk-Modus aktivieren
         activateKioskMode();
