@@ -8,12 +8,15 @@ import { useKioskMode } from '@/hooks/use-kiosk-mode';
 import { useToast } from '@/hooks/use-toast';
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
+import { useAuth } from '@/hooks/use-auth';
 
 export function KioskActivationButton() {
   const { isKioskMode, activateKioskMode, deactivateKioskMode } = useKioskMode();
+  const { logoutMutation } = useAuth();
   const { toast } = useToast();
   const [showPinDialog, setShowPinDialog] = useState(false);
   const [pin, setPin] = useState('');
+  const [isExitMode, setIsExitMode] = useState(false); // Neue State für Exit vs. Activate
 
   const validatePinMutation = useMutation({
     mutationFn: async (enteredPin: string) => {
@@ -23,13 +26,30 @@ export function KioskActivationButton() {
       return response.json();
     },
     onSuccess: () => {
-      activateKioskMode();
       setShowPinDialog(false);
       setPin('');
-      toast({
-        title: 'Kiosk-Modus aktiviert',
-        description: 'Das Gerät wurde erfolgreich in den Kiosk-Modus geschaltet.',
-      });
+      
+      if (isExitMode) {
+        // Kiosk-Modus verlassen → Kioskmitarbeiter direkt ausloggen
+        deactivateKioskMode();
+        toast({
+          title: 'Kiosk-Modus verlassen',
+          description: 'Sie werden ausgeloggt...',
+        });
+        // Nach kurzer Verzögerung ausloggen, damit Toast sichtbar ist
+        setTimeout(() => {
+          logoutMutation.mutate();
+        }, 500);
+      } else {
+        // Kiosk-Modus aktivieren
+        activateKioskMode();
+        toast({
+          title: 'Kiosk-Modus aktiviert',
+          description: 'Das Gerät wurde erfolgreich in den Kiosk-Modus geschaltet.',
+        });
+      }
+      
+      setIsExitMode(false);
     },
     onError: (error: any) => {
       toast({
@@ -42,12 +62,12 @@ export function KioskActivationButton() {
 
   const handleKioskToggle = () => {
     if (isKioskMode) {
-      deactivateKioskMode();
-      toast({
-        title: 'Kiosk-Modus deaktiviert',
-        description: 'Das Gerät wurde vom Kiosk-Modus zurückgeschaltet.',
-      });
+      // Kiosk-Modus verlassen → PIN-Dialog anzeigen
+      setIsExitMode(true);
+      setShowPinDialog(true);
     } else {
+      // Kiosk-Modus aktivieren → PIN-Dialog anzeigen
+      setIsExitMode(false);
       setShowPinDialog(true);
     }
   };
@@ -79,11 +99,13 @@ export function KioskActivationButton() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Lock className="h-5 w-5 text-blue-600" />
-              Kiosk-Modus aktivieren
+              <Lock className={`h-5 w-5 ${isExitMode ? 'text-red-600' : 'text-blue-600'}`} />
+              {isExitMode ? 'Kiosk-Modus verlassen' : 'Kiosk-Modus aktivieren'}
             </DialogTitle>
             <DialogDescription>
-              Bitte geben Sie die Kiosk-PIN ein, um den Kiosk-Modus zu aktivieren.
+              {isExitMode 
+                ? 'Bitte geben Sie die PIN ein, um den Kiosk-Modus zu verlassen. Sie werden anschließend ausgeloggt.'
+                : 'Bitte geben Sie die Kiosk-PIN ein, um den Kiosk-Modus zu aktivieren.'}
             </DialogDescription>
           </DialogHeader>
           
@@ -109,6 +131,7 @@ export function KioskActivationButton() {
                 onClick={() => {
                   setShowPinDialog(false);
                   setPin('');
+                  setIsExitMode(false);
                 }}
                 disabled={validatePinMutation.isPending}
               >
@@ -117,7 +140,7 @@ export function KioskActivationButton() {
               <Button
                 type="submit"
                 disabled={pin.length < 4 || validatePinMutation.isPending}
-                className="bg-blue-600 hover:bg-blue-700"
+                className={isExitMode ? "bg-red-600 hover:bg-red-700" : "bg-blue-600 hover:bg-blue-700"}
               >
                 {validatePinMutation.isPending ? (
                   <div className="flex items-center gap-2">
@@ -127,7 +150,7 @@ export function KioskActivationButton() {
                 ) : (
                   <>
                     <CheckCircle className="h-4 w-4 mr-2" />
-                    Aktivieren
+                    {isExitMode ? 'Verlassen & Abmelden' : 'Aktivieren'}
                   </>
                 )}
               </Button>
