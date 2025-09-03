@@ -31,6 +31,12 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { KioskActivationButton } from '@/components/kiosk/KioskActivationButton';
 
+interface OrderCounts {
+  sparePartsToOrder: number;
+  accessoriesToOrder: number;
+  totalToOrder: number;
+}
+
 interface SidebarProps {
   activeTab: string;
   onTabChange: (tab: any) => void;
@@ -41,7 +47,7 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
   const [canViewStats, setCanViewStats] = useState(false);
   
   // Query für die Anzahl der zu bestellenden Artikel
-  const { data: orderCounts } = useQuery({
+  const { data: orderCounts } = useQuery<OrderCounts>({
     queryKey: ['/api/orders/counts'],
     enabled: !!user,
     refetchInterval: 30000, // Aktualisiere alle 30 Sekunden

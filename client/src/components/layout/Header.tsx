@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
 import { 
   Smartphone, 
@@ -20,9 +21,11 @@ import {
   CreditCard,
   UserCog,
   Monitor,
-  Tablet
+  Tablet,
+  Package
 } from "lucide-react";
 import { useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import ClientKingLogo from "@assets/logo_new.png";
 import { useAuth } from "@/hooks/use-auth";
 import {
@@ -34,6 +37,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+
+interface OrderCounts {
+  sparePartsToOrder: number;
+  accessoriesToOrder: number;
+  totalToOrder: number;
+}
 
 type HeaderProps = {
   variant?: "landing" | "auth" | "app";
@@ -52,6 +61,13 @@ const NavLink = ({ href, children }: { href: string; children: React.ReactNode }
 export function Header({ variant = "landing", activeTab, onTabChange }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const { user, logoutMutation } = useAuth();
+  
+  // Query für die Anzahl der zu bestellenden Artikel
+  const { data: orderCounts } = useQuery<OrderCounts>({
+    queryKey: ['/api/orders/counts'],
+    enabled: !!user,
+    refetchInterval: 30000, // Aktualisiere alle 30 Sekunden
+  });
 
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
@@ -142,14 +158,22 @@ export function Header({ variant = "landing", activeTab, onTabChange }: HeaderPr
                     </Button>
                     <Button 
                       variant={activeTab === 'orders' ? 'default' : 'ghost'}
-                      className="w-full justify-start"
+                      className="w-full justify-start relative"
                       onClick={() => {
                         if (onTabChange) onTabChange('orders');
                         setMenuOpen(false);
                       }}
                     >
-                      <PlusCircle className="h-5 w-5 mr-2" />
+                      <Package className="h-5 w-5 mr-2" />
                       Bestellungen
+                      {orderCounts && orderCounts.totalToOrder > 0 && (
+                        <Badge 
+                          variant="destructive" 
+                          className="ml-auto text-xs px-1.5 py-0.5 min-w-[1.25rem] h-5 flex items-center justify-center font-bold"
+                        >
+                          !
+                        </Badge>
+                      )}
                     </Button>
                     <Button 
                       variant={activeTab === 'customers' ? 'default' : 'ghost'}
