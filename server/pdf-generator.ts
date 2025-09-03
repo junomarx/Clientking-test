@@ -41,7 +41,7 @@ export async function generateAccessoryLabelPDF(data: AccessoryLabelData): Promi
   // Kunden-Informationen oben (falls vorhanden)
   if (data.customer) {
     // Kundenname - groß und fett
-    doc.setFontSize(6);
+    doc.setFontSize(8);
     doc.setFont('helvetica', 'bold');
     const customerName = `${data.customer.firstName} ${data.customer.lastName}`;
     doc.text(customerName, 16, y, { align: 'center' });
@@ -63,7 +63,7 @@ export async function generateAccessoryLabelPDF(data: AccessoryLabelData): Promi
     }
   } else {
     // Fallback für Lager-Artikel
-    doc.setFontSize(6);
+    doc.setFontSize(8);
     doc.setFont('helvetica', 'bold');
     doc.text('LAGER-ARTIKEL', 16, y, { align: 'center' });
     y += 8;
