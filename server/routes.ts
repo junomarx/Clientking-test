@@ -172,6 +172,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Benutzer nicht gefunden" });
       }
       
+      // KRITISCH: Geschäftseinstellungen des Shop-Owners laden für korrekte Daten
+      const { businessSettings } = await import('./storage.js');
+      const { db } = await import('./db/index.js');
+      const { eq, desc } = await import('drizzle-orm');
+      
+      const [businessSetting] = await db
+        .select()
+        .from(businessSettings)
+        .where(eq(businessSettings.userId, userId))
+        .orderBy(desc(businessSettings.id))
+        .limit(1);
+        
+      console.log(`🔍 GESCHÄFTSDATEN: Für Benutzer ${userId} geladen:`, {
+        businessName: businessSetting?.businessName,
+        businessPhone: businessSetting?.businessPhone,
+        businessEmail: businessSetting?.businessEmail,
+        openingHours: businessSetting?.openingHours
+      });
+      
+      console.log(`🔍 USER FALLBACK-DATEN:`, {
+        shopName: user.shopName,
+        phone: user.phone,
+        email: user.email,
+        shopOpeningHours: user.shopOpeningHours
+      });
+      
       console.log(`📧 ALLERHÖCHSTE PRIORITÄT: Sende E-Mail mit korrekter Vorlage "Zubehör eingetroffen" an ${customer.email}`);
       
       // E-Mail versenden mit der KORREKTEN E-Mail-Service-Funktion
@@ -191,12 +217,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         gesamtpreis: accessory.totalPrice,
         anzahlung: accessory.downPayment || '0,00',
         offener_betrag: openAmountNum.toFixed(2).replace('.', ','),
-        oeffnungszeiten: user.shopOpeningHours || 'Mo-Fr: 9:00-18:00',
-        geschaeftsname: user.shopName || 'Handyshop',
-        adresse: user.shopAddress || '',
-        telefon: user.phone || '',
-        email: user.email || ''
+        // KRITISCH: Verwende Shop-Owner Geschäftsdaten statt user-Daten
+        oeffnungszeiten: businessSetting?.openingHours || user.shopOpeningHours || 'Mo-Fr: 9:00-18:00',
+        geschaeftsname: businessSetting?.businessName || user.shopName || 'Handyshop',
+        adresse: businessSetting?.businessAddress || user.shopAddress || '',
+        telefon: businessSetting?.businessPhone || user.phone || '',
+        email: businessSetting?.businessEmail || user.email || '',
+        // Zusätzliche Varianten, die in E-Mail-Vorlagen verwendet werden könnten
+        businessName: businessSetting?.businessName || 'Mac and Phone Doc',
+        business_name: businessSetting?.businessName || 'Mac and Phone Doc',
+        shopName: businessSetting?.businessName || 'Mac and Phone Doc',
+        shop_name: businessSetting?.businessName || 'Mac and Phone Doc',
+        firmename: businessSetting?.businessName || 'Mac and Phone Doc',
+        firmenname: businessSetting?.businessName || 'Mac and Phone Doc'
       };
+      
+      console.log(`🔍 E-MAIL-VARIABLEN:`, emailVariables);
 
       // Verwende direkt die Template-ID um sicherzustellen, dass die richtige Vorlage verwendet wird
       // WICHTIG: userId in emailVariables hinzufügen, damit Shop-Owner-SMTP verwendet wird
