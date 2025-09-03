@@ -4894,6 +4894,7 @@ export class DatabaseStorage implements IStorage {
           type: accessories.type,
           status: accessories.status,
           notes: accessories.notes,
+          emailSent: accessories.emailSent,
           createdAt: accessories.createdAt,
           updatedAt: accessories.updatedAt,
           shopId: accessories.shopId,
