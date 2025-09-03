@@ -31,15 +31,13 @@ export function KioskActivationButton() {
       
       if (isExitMode) {
         // Kiosk-Modus verlassen → Kioskmitarbeiter direkt ausloggen
-        deactivateKioskMode();
+        console.log('🚪 Kiosk-Modus verlassen - Starte Logout');
         toast({
           title: 'Kiosk-Modus verlassen',
           description: 'Sie werden ausgeloggt...',
         });
-        // Nach kurzer Verzögerung ausloggen, damit Toast sichtbar ist
-        setTimeout(() => {
-          logoutMutation.mutate();
-        }, 500);
+        // Sofort ausloggen
+        logoutMutation.mutate();
       } else {
         // Kiosk-Modus aktivieren
         activateKioskMode();
