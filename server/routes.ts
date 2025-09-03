@@ -173,8 +173,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // KRITISCH: Geschäftseinstellungen des Shop-Owners laden für korrekte Daten
-      const { businessSettings } = await import('./storage.js');
-      const { db } = await import('./db/index.js');
+      const { db } = await import('./db.js');
+      const { businessSettings } = await import('@shared/schema.js');
       const { eq, desc } = await import('drizzle-orm');
       
       const [businessSetting] = await db
