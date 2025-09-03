@@ -582,24 +582,27 @@ export class EmailService {
     templateId: number,
     recipientEmail: string,
     variables: Record<string, string>,
-    isSystemEmail = false
+    isSystemEmail = false,
+    userId?: number
   ): Promise<boolean> {
     try {
       console.log(`Sende E-Mail mit Vorlage ID ${templateId} an ${recipientEmail}...`);
       
-      // Benutzer-ID aus den Variablen extrahieren (wenn vorhanden) für Zugriffskontrolle
-      const userId = variables.userId ? parseInt(variables.userId) : undefined;
+      // Benutzer-ID als Parameter priorisieren, ansonsten aus Variablen extrahieren
+      const actualUserId = userId || (variables.userId ? parseInt(variables.userId) : undefined);
+      
+      console.log(`🔍 KRITISCH: actualUserId = ${actualUserId}, userId Parameter = ${userId}, variables.userId = ${variables.userId}`);
       
       // E-Mail-Vorlage aus der Datenbank abrufen
       let template;
       try {
         // Zwei separate Abfragen, um Typprobleme zu vermeiden
-        if (userId) {
+        if (actualUserId) {
           [template] = await db
             .select()
             .from(emailTemplates)
             .where(eq(emailTemplates.id, templateId))
-            .where(eq(emailTemplates.userId, userId));
+            .where(eq(emailTemplates.userId, actualUserId));
         } else {
           [template] = await db
             .select()
@@ -634,7 +637,7 @@ export class EmailService {
         subject: template.subject,
         body: template.body,
         isSystemEmail,
-        forceUserId: userId // Verwende die Benutzer-ID für die SMTP-Einstellungen
+        forceUserId: actualUserId // Verwende die Benutzer-ID für die SMTP-Einstellungen
       });
     } catch (error) {
       console.error('Fehler beim Senden der E-Mail mit Vorlagen-ID:', error);

@@ -206,7 +206,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         78,  // ID der "Zubehör eingetroffen" Vorlage
         customer.email,
         emailVariables,
-        false  // isSystemEmail = false, um Shop-Owner-SMTP zu verwenden
+        false,  // isSystemEmail = false, um Shop-Owner-SMTP zu verwenden
+        userId  // KRITISCH: userId als separater Parameter für Shop-Owner SMTP
       );
       
       const success = emailResult;
