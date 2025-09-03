@@ -764,14 +764,38 @@ export function OrdersTab() {
       }
       return response.json();
     },
-    onSuccess: () => {
+    onMutate: async (accessoryId) => {
+      // Optimistischer Update: sofort Icon auf grün setzen
+      await queryClient.cancelQueries({ queryKey: ["/api/orders/accessories"] });
+      
+      const previousAccessories = queryClient.getQueryData(["/api/orders/accessories"]);
+      
+      queryClient.setQueryData(["/api/orders/accessories"], (old: any[]) => 
+        old?.map(accessory => 
+          accessory.id === accessoryId 
+            ? { ...accessory, emailSent: true }
+            : accessory
+        ) || []
+      );
+      
+      return { previousAccessories };
+    },
+    onSuccess: (data, accessoryId) => {
+      // Invalidiere Queries für endgültige Datensynchronisation
       queryClient.invalidateQueries({ queryKey: ["/api/orders/accessories"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/spare-parts/with-repairs"] });
+      
       toast({
         title: "E-Mail versendet",
         description: "Die Ankunfts-E-Mail wurde erfolgreich gesendet.",
       });
     },
-    onError: (error: Error) => {
+    onError: (error: Error, accessoryId, context) => {
+      // Rollback bei Fehler
+      if (context?.previousAccessories) {
+        queryClient.setQueryData(["/api/orders/accessories"], context.previousAccessories);
+      }
+      
       toast({
         title: "Fehler",
         description: error.message,
@@ -1667,10 +1691,10 @@ export function OrdersTab() {
                                 size="sm" 
                                 className="h-8 w-8 p-0" 
                                 title={accessory.emailSent ? "E-Mail erneut senden" : "E-Mail senden"}
-                                disabled={sendAccessoryEmailMutation.isPending}
+                                disabled={sendAccessoryEmailMutation.isPending && sendAccessoryEmailMutation.variables === accessory.id}
                                 onClick={() => handleSendAccessoryEmail(accessory.id)}
                               >
-                                {sendAccessoryEmailMutation.isPending ? (
+                                {sendAccessoryEmailMutation.isPending && sendAccessoryEmailMutation.variables === accessory.id ? (
                                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
                                 ) : accessory.emailSent ? (
                                   <Mail className="h-4 w-4 text-green-600 fill-current" />

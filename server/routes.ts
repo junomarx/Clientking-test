@@ -199,10 +199,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       // Verwende direkt die Template-ID um sicherzustellen, dass die richtige Vorlage verwendet wird
+      // WICHTIG: userId in emailVariables hinzufügen, damit Shop-Owner-SMTP verwendet wird
+      emailVariables.userId = userId.toString();
+      
       const emailResult = await emailServiceInstance.sendEmailWithTemplateById(
         78,  // ID der "Zubehör eingetroffen" Vorlage
         customer.email,
-        emailVariables
+        emailVariables,
+        false  // isSystemEmail = false, um Shop-Owner-SMTP zu verwenden
       );
       
       const success = emailResult;
