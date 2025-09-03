@@ -1,20 +1,18 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { User, Phone, MapPin, Save, X } from 'lucide-react';
+import { User, X } from 'lucide-react';
 
+// DSGVO-konforme Kundendaten-Struktur basierend auf shared/schema.ts
 interface CustomerFormData {
   firstName: string;
   lastName: string;
   phone: string;
   email: string;
-  address: string;
-  zipCode: string;
+  address: string;    // Mapped von "street" im Originalcode
+  zipCode: string;    // Mapped von "postalCode" im Originalcode  
   city: string;
 }
 
@@ -25,7 +23,8 @@ interface KioskCustomerFormProps {
 
 export function KioskCustomerForm({ onCancel, onSuccess }: KioskCustomerFormProps) {
   const { toast } = useToast();
-  const firstInputRef = useRef<HTMLInputElement>(null);
+  const [step, setStep] = useState<1 | 2>(1);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<CustomerFormData>({
     firstName: '',
     lastName: '',
@@ -36,18 +35,54 @@ export function KioskCustomerForm({ onCancel, onSuccess }: KioskCustomerFormProp
     city: ''
   });
 
-  // Automatisches Fokussieren des ersten Eingabefelds für Tablet-Tastatur
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // --- Mobile Viewport (Keyboard) Handling -----------------------------------
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (firstInputRef.current) {
-        firstInputRef.current.focus();
-        // Zusätzlicher Trigger für iOS/Android
-        firstInputRef.current.click();
-      }
-    }, 100);
-    
-    return () => clearTimeout(timer);
+    const vv = (window as any).visualViewport as VisualViewport | undefined;
+    if (!vv || !containerRef.current) return;
+
+    const el = containerRef.current;
+    const onResize = () => {
+      const keyboardOverlap = Math.max(0, window.innerHeight - vv.height);
+      el.style.paddingBottom = `${keyboardOverlap + 16}px`;
+    };
+    vv.addEventListener("resize", onResize);
+    vv.addEventListener("scroll", onResize);
+    onResize();
+    return () => {
+      vv.removeEventListener("resize", onResize);
+      vv.removeEventListener("scroll", onResize);
+      el.style.paddingBottom = "";
+    };
   }, []);
+
+  // Scrollt aktives Feld in Sicht, wenn Tastatur erscheint
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      setTimeout(() => {
+        target.scrollIntoView({ block: "center", behavior: "smooth" });
+      }, 100);
+    };
+    document.addEventListener("focusin", handler);
+    return () => document.removeEventListener("focusin", handler);
+  }, []);
+
+  const basicValid = useMemo(() => {
+    return (
+      formData.firstName.trim().length > 0 &&
+      formData.lastName.trim().length > 0 &&
+      formData.phone.trim().length >= 6
+    );
+  }, [formData]);
+
+  const handleChange =
+    (key: keyof CustomerFormData) =>
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setFormData((d) => ({ ...d, [key]: e.target.value }));
+    };
 
   const createCustomerMutation = useMutation({
     mutationFn: async (data: CustomerFormData) => {
@@ -67,227 +102,195 @@ export function KioskCustomerForm({ onCancel, onSuccess }: KioskCustomerFormProp
         description: 'Beim Speichern der Kundendaten ist ein Fehler aufgetreten.',
         variant: 'destructive',
       });
+      setLoading(false);
     },
   });
 
-  const handleInputChange = (field: keyof CustomerFormData, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!isFormValid) {
-      toast({
-        title: 'Fehlende Daten',
-        description: 'Bitte füllen Sie alle Pflichtfelder aus.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
+  const handleSave = async () => {
+    if (!basicValid) return;
+    setLoading(true);
     createCustomerMutation.mutate(formData);
   };
 
-  const isFormValid = formData.firstName.trim() && formData.lastName.trim() && formData.phone.trim();
-
   return (
-    <div className="fixed inset-0 bg-white z-50 flex flex-col">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 p-4 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-3">
-          <User className="h-6 w-6 text-blue-600" />
-          <h1 className="text-xl font-semibold text-gray-900">Kundendaten erfassen</h1>
+    <div
+      ref={containerRef}
+      className="min-h-[100dvh] bg-gray-50 text-gray-900 fixed inset-0 z-50"
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+    >
+      {/* Header mit Buttons oben rechts */}
+      <header className="sticky top-0 z-10 bg-white/90 backdrop-blur border-b border-gray-200">
+        <div className="mx-auto max-w-3xl px-4 py-3 flex items-center justify-between">
+          <h1 className="text-xl font-semibold">Kundendaten erfassen</h1>
+          <div className="flex gap-2">
+            {step === 1 ? (
+              <>
+                <button
+                  type="button"
+                  className="px-4 h-10 rounded-lg border border-gray-300 text-gray-800 text-sm font-medium"
+                  onClick={() => setStep(2)}
+                >
+                  Adresse eingeben
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={!basicValid || loading}
+                  className="px-4 h-10 rounded-lg bg-blue-600 text-white text-sm font-semibold disabled:opacity-50"
+                >
+                  {loading ? "Speichern…" : "Speichern"}
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  className="px-4 h-10 rounded-lg border border-gray-300 text-gray-800 text-sm font-medium"
+                  onClick={() => setStep(1)}
+                >
+                  Zurück
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={!basicValid || loading}
+                  className="px-4 h-10 rounded-lg bg-blue-600 text-white text-sm font-semibold disabled:opacity-50"
+                >
+                  {loading ? "Speichern…" : "Speichern"}
+                </button>
+              </>
+            )}
+            <button
+              onClick={onCancel}
+              className="px-3 h-10 rounded-lg border border-gray-300 hover:bg-gray-100 text-sm"
+            >
+              Abbrechen
+            </button>
+          </div>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onCancel}
-          className="text-gray-600 hover:bg-gray-100"
-        >
-          <X className="h-5 w-5" />
-        </Button>
-      </div>
+      </header>
 
-      {/* Scrollable Form Content */}
-      <div className="flex-1 overflow-y-auto p-8 pb-20 bg-white">
-        <div className="max-w-4xl mx-auto">
-          <Card className="w-full">
-            <CardHeader className="pb-6">
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <User className="h-6 w-6 text-blue-600" />
-                Kundendaten erfassen
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Erste Zeile: Vorname und Nachname */}
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <Label htmlFor="firstName" className="text-lg font-medium">
-                    Vorname <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    ref={firstInputRef}
-                    id="firstName"
-                    value={formData.firstName}
-                    onChange={(e) => handleInputChange('firstName', e.target.value)}
-                    placeholder="Ihr Vorname"
-                    className="text-lg h-12 mt-2"
-                    required
-                    autoCapitalize="words"
-                    autoCorrect="off"
-                    spellCheck="false"
-                    inputMode="text"
-                    autoFocus
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="lastName" className="text-lg font-medium">
-                    Nachname <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="lastName"
-                    value={formData.lastName}
-                    onChange={(e) => handleInputChange('lastName', e.target.value)}
-                    placeholder="Ihr Nachname"
-                    className="text-lg h-12 mt-2"
-                    required
-                    autoCapitalize="words"
-                    autoCorrect="off"
-                    spellCheck="false"
-                    inputMode="text"
-                  />
-                </div>
-              </div>
-
-              {/* Zweite Zeile: Telefon und E-Mail */}
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <Label htmlFor="phone" className="text-lg font-medium">
-                    Telefon <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="phone"
-                    value={formData.phone}
-                    onChange={(e) => handleInputChange('phone', e.target.value)}
-                    placeholder="Ihre Telefonnummer"
-                    className="text-lg h-12 mt-2"
-                    type="tel"
-                    required
-                    autoCorrect="off"
-                    spellCheck="false"
-                    inputMode="tel"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="email" className="text-lg font-medium">
-                    E-Mail
-                  </Label>
-                  <Input
-                    id="email"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
-                    placeholder="Ihre E-Mail-Adresse"
-                    className="text-lg h-12 mt-2"
-                    type="email"
-                    autoCorrect="off"
-                    spellCheck="false"
-                    autoCapitalize="off"
-                    inputMode="email"
-                  />
-                </div>
-              </div>
-
-              {/* Dritte Zeile: Straße und Hausnummer (volle Breite) */}
-              <div>
-                <Label htmlFor="address" className="text-lg font-medium">
-                  Straße und Hausnummer
-                </Label>
-                <Input
-                  id="address"
-                  value={formData.address}
-                  onChange={(e) => handleInputChange('address', e.target.value)}
+      {/* Inhalt */}
+      <main className="mx-auto max-w-3xl px-4 py-4">
+        {step === 1 ? (
+          <Section title="Grunddaten">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Field
+                label="Vorname *"
+                placeholder="Ihr Vorname"
+                value={formData.firstName}
+                onChange={handleChange("firstName")}
+                autoFocus
+                autoComplete="given-name"
+                inputMode="text"
+              />
+              <Field
+                label="Nachname *"
+                placeholder="Ihr Nachname"
+                value={formData.lastName}
+                onChange={handleChange("lastName")}
+                autoComplete="family-name"
+                inputMode="text"
+              />
+              <Field
+                label="Telefon *"
+                placeholder="Ihre Telefonnummer"
+                value={formData.phone}
+                onChange={handleChange("phone")}
+                autoComplete="tel"
+                inputMode="tel"
+                pattern="[0-9+() -]*"
+              />
+              <Field
+                label="E-Mail"
+                placeholder="Ihre E-Mail-Adresse"
+                value={formData.email}
+                onChange={handleChange("email")}
+                autoComplete="email"
+                inputMode="email"
+                type="email"
+              />
+            </div>
+          </Section>
+        ) : (
+          <Section title="Adresse (optional)">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="md:col-span-2">
+                <Field
+                  label="Straße und Hausnummer"
                   placeholder="Ihre Adresse"
-                  className="text-lg h-12 mt-2"
-                  autoCorrect="off"
-                  spellCheck="false"
+                  value={formData.address}
+                  onChange={handleChange("address")}
+                  autoComplete="street-address"
                   inputMode="text"
                 />
               </div>
-
-              {/* Vierte Zeile: PLZ und Ort */}
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <Label htmlFor="zipCode" className="text-lg font-medium">
-                    PLZ
-                  </Label>
-                  <Input
-                    id="zipCode"
-                    value={formData.zipCode}
-                    onChange={(e) => handleInputChange('zipCode', e.target.value)}
-                    placeholder="Postleitzahl"
-                    className="text-lg h-12 mt-2"
-                    autoCorrect="off"
-                    spellCheck="false"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="city" className="text-lg font-medium">
-                    Ort
-                  </Label>
-                  <Input
-                    id="city"
-                    value={formData.city}
-                    onChange={(e) => handleInputChange('city', e.target.value)}
-                    placeholder="Ihr Wohnort"
-                    className="text-lg h-12 mt-2"
-                    autoCapitalize="words"
-                    autoCorrect="off"
-                    spellCheck="false"
-                    inputMode="text"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      {/* Fixed Action Bar */}
-      <div className="bg-white border-t p-6 shrink-0">
-        <div className="max-w-4xl mx-auto flex justify-end gap-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onCancel}
-            className="px-6 py-2"
-          >
-            Abbrechen
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={!isFormValid || createCustomerMutation.isPending}
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-700"
-          >
-            {createCustomerMutation.isPending ? (
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Speichern...
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Save className="h-4 w-4" />
-                Speichern
-              </div>
-            )}
-          </Button>
-        </div>
-      </div>
+              <Field
+                label="PLZ"
+                placeholder="Postleitzahl"
+                value={formData.zipCode}
+                onChange={handleChange("zipCode")}
+                autoComplete="postal-code"
+                inputMode="numeric"
+                pattern="[0-9]*"
+              />
+              <Field
+                label="Ort"
+                placeholder="Ihr Wohnort"
+                value={formData.city}
+                onChange={handleChange("city")}
+                autoComplete="address-level2"
+                inputMode="text"
+              />
+            </div>
+          </Section>
+        )}
+      </main>
     </div>
+  );
+}
+
+// ----------------- Hilfskomponenten -----------------
+function Section({ title, children }: React.PropsWithChildren<{ title: string }>) {
+  return (
+    <section className="bg-white rounded-2xl shadow-sm border border-gray-200">
+      <div className="px-5 py-4 border-b border-gray-100">
+        <h2 className="text-lg font-semibold">{title}</h2>
+      </div>
+      <div className="p-5">{children}</div>
+    </section>
+  );
+}
+
+type FieldProps = {
+  label: string;
+  placeholder?: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  autoFocus?: boolean;
+  autoComplete?: string;
+  inputMode?: "text" | "search" | "email" | "tel" | "url" | "numeric" | "decimal";
+  type?: string;
+  pattern?: string;
+};
+
+function Field({ label, placeholder, value, onChange, autoFocus, autoComplete, inputMode = "text", type = "text", pattern }: FieldProps) {
+  const id = useMemo(() => "f_" + Math.random().toString(36).slice(2, 9), []);
+  return (
+    <label htmlFor={id} className="block">
+      <div className="text-base font-medium mb-2">{label}</div>
+      <input
+        id={id}
+        type={type}
+        inputMode={inputMode as any}
+        pattern={pattern}
+        autoFocus={autoFocus}
+        autoComplete={autoComplete}
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        className="w-full h-14 text-lg px-4 rounded-xl border border-gray-300 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 placeholder:text-gray-400 bg-white"
+      />
+    </label>
   );
 }
