@@ -547,6 +547,7 @@ export const emailTemplates = pgTable("email_templates", {
   userId: integer("user_id"), // Benutzer, dem die Vorlage gehört
   shopId: integer("shop_id").default(1), // Shop, zu dem die Vorlage gehört (für Multi-Tenant-Isolation)
   type: text("type"), // Typ der Vorlage: 'app' (System) oder 'customer' (Kunde)
+  isSuperadminTemplate: boolean("is_superadmin_template").default(false), // Markiert Superadmin-Templates (shop_id = 0)
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
