@@ -113,7 +113,7 @@ export async function generateAccessoryLabelPDF(data: AccessoryLabelData): Promi
   doc.setFontSize(5);
   doc.setFont('helvetica', 'normal');
   doc.text('Offen:', 16, y, { align: 'center' });
-  y += 3;
+  y += 5; // Mehr Abstand zwischen "Offen:" und dem Betrag
   
   // Offener Betrag - sehr groß und fett
   doc.setFontSize(12);
