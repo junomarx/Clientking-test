@@ -4,9 +4,9 @@ import { Express } from "express";
 import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
-import nodemailer from "nodemailer";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
+import { EmailService } from "./email-service";
 
 // Hilfsfunktion zur Prüfung, ob ein Benutzer Superadmin ist
 export function isSuperadmin(user: Express.User | null | undefined): boolean {
@@ -37,6 +37,9 @@ async function comparePasswords(supplied: string, stored: string) {
   const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
   return timingSafeEqual(hashedBuf, suppliedBuf);
 }
+
+// EmailService-Instanz für systemrelevante E-Mails
+const emailService = new EmailService();
 
 export function setupAuth(app: Express) {
   // Stellen Sie sicher, dass das SECRET im Produktion gesetzt ist
@@ -613,13 +616,12 @@ export function setupAuth(app: Express) {
         </html>
       `;
       
-      // Jetzt senden wir die E-Mail
-      const sent = await sendPasswordResetEmail(
-        user.email, 
-        `Zurücksetzen Ihres Passworts für ${businessSettings.businessName}`,
-        emailHtml,
-        user.id
-      );
+      // Jetzt senden wir die E-Mail über den zentralen EmailService
+      const sent = await emailService.sendSystemEmail({
+        to: user.email,
+        subject: `Zurücksetzen Ihres Passworts für ${businessSettings.businessName}`,
+        html: emailHtml
+      });
       
       if (sent) {
         res.status(200).json({
@@ -664,59 +666,4 @@ export function setupAuth(app: Express) {
     
     res.status(200).json({ message: "Passwort erfolgreich zurückgesetzt" });
   });
-}
-
-// Hilfsfunktion zum Senden einer Passwort-Zurücksetzungs-E-Mail
-async function sendPasswordResetEmail(to: string, subject: string, html: string, userId: number): Promise<boolean> {
-  try {
-    // Verwende die globalen SMTP-Einstellungen aus den Umgebungsvariablen für systemrelevante E-Mails
-    const smtpHost = process.env.SMTP_HOST;
-    const smtpPort = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT) : 587;
-    const smtpUser = process.env.SMTP_USER;
-    const smtpPassword = process.env.SMTP_PASSWORD;
-    const smtpSenderName = process.env.SMTP_SENDER_NAME || "Handyshop Verwaltung";
-    const smtpSenderEmail = process.env.SMTP_SENDER_EMAIL || process.env.SMTP_USER;
-    
-    if (!smtpHost || !smtpPort || !smtpUser || !smtpPassword) {
-      console.error("Globale SMTP-Einstellungen fehlen - Passwort-Zurücksetzungs-E-Mail kann nicht gesendet werden");
-      return false;
-    }
-    
-    console.log("[E-Mail-Debug] Verwende globale SMTP-Konfiguration für systemrelevante E-Mail:", {
-      host: smtpHost,
-      port: smtpPort,
-      secure: smtpPort === 465,
-      user: smtpUser,
-      senderName: smtpSenderName,
-      senderEmail: smtpSenderEmail
-    });
-    
-    // Erstelle einen SMTP-Transporter
-    const transporter = nodemailer.createTransport({
-      host: smtpHost,
-      port: smtpPort,
-      secure: smtpPort === 465,
-      auth: {
-        user: smtpUser,
-        pass: smtpPassword
-      }
-    });
-    
-    console.log("[E-Mail-Debug] Sende Passwort-Zurücksetzungs-E-Mail an:", to);
-    
-    // Sende die E-Mail
-    const info = await transporter.sendMail({
-      from: `"${smtpSenderName}" <${smtpSenderEmail}>`,
-      to,
-      subject,
-      html
-    });
-    
-    console.log("[E-Mail-Debug] Passwort-Zurücksetzungs-E-Mail gesendet:", info.messageId);
-    console.log("[E-Mail-Debug] Weitere Info:", info.response);
-    return true;
-  } catch (error) {
-    console.error("[E-Mail-Debug] Fehler beim Senden der Passwort-Zurücksetzungs-E-Mail:", error);
-    return false;
-  }
 }

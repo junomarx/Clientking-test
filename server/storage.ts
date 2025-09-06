@@ -122,6 +122,11 @@ export interface IStorage {
   updateUserLastActivity(id: number): Promise<boolean>;
   updateUserLoginTimestamp(id: number): Promise<boolean>;
   updateUserLogoutTimestamp(id: number): Promise<boolean>;
+  
+  // Passwort-Reset Methoden
+  setPasswordResetToken(email: string, token: string, expiryTime: Date): Promise<boolean>;
+  getUserByResetToken(token: string): Promise<User | undefined>;
+  clearResetToken(userId: number): Promise<boolean>;
 
   // Multi-Shop Methoden
   getUserAccessibleShops(userId: number): Promise<Shop[]>;
@@ -7074,6 +7079,60 @@ export class DatabaseStorage implements IStorage {
   async getAllActivityLogs(userId: number): Promise<ActivityLog[]> {
     // TODO: Legacy method - use getActivityLogs instead
     return await this.getActivityLogs(userId);
+  }
+
+  // Passwort-Reset Methoden
+  async setPasswordResetToken(email: string, token: string, expiryTime: Date): Promise<boolean> {
+    try {
+      await db
+        .update(users)
+        .set({ 
+          resetToken: token, 
+          resetTokenExpires: expiryTime 
+        })
+        .where(eq(users.email, email));
+      
+      return true;
+    } catch (error) {
+      console.error("Error setting password reset token:", error);
+      return false;
+    }
+  }
+
+  async getUserByResetToken(token: string): Promise<User | undefined> {
+    try {
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(
+          and(
+            eq(users.resetToken, token),
+            gte(users.resetTokenExpires, new Date())
+          )
+        );
+      
+      return user;
+    } catch (error) {
+      console.error("Error getting user by reset token:", error);
+      return undefined;
+    }
+  }
+
+  async clearResetToken(userId: number): Promise<boolean> {
+    try {
+      await db
+        .update(users)
+        .set({ 
+          resetToken: null, 
+          resetTokenExpires: null 
+        })
+        .where(eq(users.id, userId));
+      
+      return true;
+    } catch (error) {
+      console.error("Error clearing reset token:", error);
+      return false;
+    }
   }
 }
 
