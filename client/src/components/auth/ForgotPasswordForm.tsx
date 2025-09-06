@@ -46,7 +46,7 @@ export function ForgotPasswordForm() {
 
   const mutation = useMutation({
     mutationFn: async (data: { email: string }) => {
-      const response = await apiRequest("POST", "/api/forgot-password", data);
+      const response = await apiRequest("POST", "/api/auth/password-reset/request", data);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Fehler bei der Anfrage zur Passwort-Zurücksetzung");

@@ -2,7 +2,7 @@ import React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { Loader2, ArrowLeft, CheckCircle2, AlertCircle, Clock } from "lucide-react";
 import { Link } from "wouter";
 
 // Schema für die Passwort-Zurücksetzung
@@ -49,6 +49,20 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
   const [_, navigate] = useLocation();
   const [resetSuccess, setResetSuccess] = React.useState(false);
 
+  // Validate token when component mounts
+  const { data: tokenValidation, isLoading: isValidating, error: validationError } = useQuery({
+    queryKey: ['validatePasswordResetToken', token],
+    queryFn: async () => {
+      const response = await apiRequest('GET', `/api/auth/password-reset/validate?token=${encodeURIComponent(token)}`);
+      if (!response.ok) {
+        throw new Error('Token validation failed');
+      }
+      return await response.json();
+    },
+    retry: false,
+    refetchOnWindowFocus: false
+  });
+
   const form = useForm<ResetPasswordFormValues>({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
@@ -59,7 +73,7 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
 
   const mutation = useMutation({
     mutationFn: async (data: { token: string; newPassword: string }) => {
-      const response = await apiRequest("POST", "/api/reset-password", data);
+      const response = await apiRequest("POST", "/api/auth/password-reset/confirm", data);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Fehler beim Zurücksetzen des Passworts");
@@ -90,6 +104,53 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
       newPassword: data.newPassword,
     });
   }
+
+  // Show loading state during token validation
+  if (isValidating) {
+    return (
+      <Card className="w-full max-w-md mx-auto">
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Token wird überprüft...
+          </CardTitle>
+          <CardDescription>
+            Bitte warten Sie, während wir Ihren Reset-Link überprüfen.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
+
+  // Show error for invalid token
+  if (validationError || (tokenValidation && !tokenValidation.valid)) {
+    const errorMessage = tokenValidation?.message || "Ungültiger oder abgelaufener Reset-Link";
+    
+    return (
+      <Card className="w-full max-w-md mx-auto">
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <AlertCircle className="mr-2 h-5 w-5 text-red-500" />
+            Reset-Link ungültig
+          </CardTitle>
+          <CardDescription>
+            {errorMessage}
+          </CardDescription>
+        </CardHeader>
+        <CardFooter className="flex justify-center">
+          <Button variant="outline" asChild>
+            <Link href="/forgot-password">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Neuen Link anfordern
+            </Link>
+          </Button>
+        </CardFooter>
+      </Card>
+    );
+  }
+
+  // Show expiry warning if token is expiring soon
+  const showExpiryWarning = tokenValidation?.expiresAt && new Date(tokenValidation.expiresAt).getTime() - Date.now() < 5 * 60 * 1000; // 5 minutes
 
   if (resetSuccess) {
     return (
@@ -125,6 +186,16 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {showExpiryWarning && (
+          <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="flex items-center">
+              <Clock className="mr-2 h-4 w-4 text-yellow-600" />
+              <span className="text-sm text-yellow-800">
+                Dieser Link läuft in wenigen Minuten ab. Bitte setzen Sie Ihr Passwort jetzt zurück.
+              </span>
+            </div>
+          </div>
+        )}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
