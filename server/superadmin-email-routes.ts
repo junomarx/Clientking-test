@@ -1039,17 +1039,37 @@ export function registerSuperadminEmailRoutes(app: Express) {
    */
   app.get("/api/superadmin/email/config", isSuperadmin, async (req: Request, res: Response) => {
     try {
-      // SMTP-Konfiguration aus den Umgebungsvariablen auslesen
-      const config: SMTPConfig = {
-        smtpHost: process.env.SMTP_HOST || "",
-        smtpPort: process.env.SMTP_PORT || "587",
-        smtpUser: process.env.SMTP_USER || "",
-        smtpPassword: process.env.SMTP_PASSWORD || "",
-        smtpSenderName: process.env.SMTP_SENDER_NAME || "",
-        smtpSenderEmail: process.env.SMTP_SENDER_EMAIL || ""
-      };
+      // SMTP-Konfiguration aus der Datenbank abrufen
+      const [dbConfig] = await db
+        .select()
+        .from(superadminEmailSettings)
+        .where(eq(superadminEmailSettings.isActive, true))
+        .limit(1);
       
-      res.status(200).json(config);
+      if (dbConfig) {
+        const config: SMTPConfig = {
+          smtpHost: dbConfig.smtpHost || "",
+          smtpPort: dbConfig.smtpPort?.toString() || "587",
+          smtpUser: dbConfig.smtpUser || "",
+          smtpPassword: dbConfig.smtpPassword || "",
+          smtpSenderName: dbConfig.smtpSenderName || "",
+          smtpSenderEmail: dbConfig.smtpSenderEmail || ""
+        };
+        
+        res.status(200).json(config);
+      } else {
+        // Fallback auf leere Konfiguration, falls keine in der DB existiert
+        const config: SMTPConfig = {
+          smtpHost: "",
+          smtpPort: "587",
+          smtpUser: "",
+          smtpPassword: "",
+          smtpSenderName: "",
+          smtpSenderEmail: ""
+        };
+        
+        res.status(200).json(config);
+      }
     } catch (error: any) {
       res.status(500).json({ message: `Fehler beim Abrufen der SMTP-Konfiguration: ${error.message}` });
     }
@@ -1069,27 +1089,70 @@ export function registerSuperadminEmailRoutes(app: Express) {
         });
       }
       
-      // Speichere die Konfiguration in den Umgebungsvariablen
-      await updateEnvironmentVariable("SMTP_HOST", config.smtpHost);
-      await updateEnvironmentVariable("SMTP_PORT", config.smtpPort);
-      await updateEnvironmentVariable("SMTP_USER", config.smtpUser);
-      await updateEnvironmentVariable("SMTP_PASSWORD", config.smtpPassword);
-      await updateEnvironmentVariable("SMTP_SENDER_NAME", config.smtpSenderName);
-      await updateEnvironmentVariable("SMTP_SENDER_EMAIL", config.smtpSenderEmail);
-      
-      // Aktualisiere den SMTP-Transporter
-      await emailService.updateSmtpTransporter({
+      console.log('Speichere SMTP-Konfiguration in Datenbank:', {
         host: config.smtpHost,
-        port: parseInt(config.smtpPort),
-        secure: parseInt(config.smtpPort) === 465,
-        auth: {
-          user: config.smtpUser,
-          pass: config.smtpPassword
-        }
+        port: config.smtpPort,
+        user: config.smtpUser,
+        senderName: config.smtpSenderName,
+        senderEmail: config.smtpSenderEmail
       });
+      
+      // SMTP-Einstellungs-Objekt für die Datenbank erstellen
+      const settingsData = {
+        smtpSenderName: config.smtpSenderName || "Handyshop Verwaltung",
+        smtpSenderEmail: config.smtpSenderEmail,
+        smtpHost: config.smtpHost,
+        smtpUser: config.smtpUser,
+        smtpPassword: config.smtpPassword,
+        smtpPort: typeof config.smtpPort === 'string' ? parseInt(config.smtpPort) : config.smtpPort,
+        isActive: true
+      };
+      
+      // Prüfen, ob bereits Einstellungen existieren
+      const [existingSettings] = await db
+        .select()
+        .from(superadminEmailSettings)
+        .limit(1);
+      
+      if (existingSettings) {
+        // Aktualisieren der vorhandenen Einstellungen
+        await db
+          .update(superadminEmailSettings)
+          .set({
+            ...settingsData,
+            updatedAt: new Date()
+          })
+          .where(eq(superadminEmailSettings.id, existingSettings.id));
+        
+        console.log(`SMTP-Einstellungen mit ID ${existingSettings.id} in der Datenbank aktualisiert`);
+      } else {
+        // Neue Einstellungen erstellen
+        await db
+          .insert(superadminEmailSettings)
+          .values({
+            ...settingsData,
+            isActive: true
+          });
+        
+        console.log('Neue SMTP-Einstellungen in der Datenbank erstellt');
+      }
+      
+      // Aktualisiere die Einstellungen im E-Mail-Service
+      console.log('Aktualisiere E-Mail-Service mit neuen Einstellungen...');
+      const testSuccess = await emailService.updateSuperadminSmtpSettings(settingsData);
+      
+      if (!testSuccess) {
+        console.warn('SMTP-Test fehlgeschlagen, aber Einstellungen wurden in der Datenbank gespeichert');
+        return res.status(200).json({ 
+          success: true, 
+          warning: true,
+          message: "SMTP-Einstellungen gespeichert, aber der SMTP-Verbindungstest ist fehlgeschlagen. Die Einstellungen sollten überprüft werden."
+        });
+      }
       
       res.status(200).json({ success: true, message: "SMTP-Konfiguration erfolgreich gespeichert" });
     } catch (error: any) {
+      console.error('Fehler beim Speichern der SMTP-Konfiguration:', error);
       res.status(500).json({ message: `Fehler beim Speichern der SMTP-Konfiguration: ${error.message}` });
     }
   });
