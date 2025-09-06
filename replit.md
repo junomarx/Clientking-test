@@ -45,6 +45,7 @@ Implementation Control: Only implement changes when explicitly commanded with "O
 - **Multi-Kiosk System**: Supports multiple concurrent kiosk terminals per shop with individual online status tracking, email-based authentication for kiosk employees, and automatic kiosk mode activation upon login.
 - **Multi-Shop Admin Dashboard**: Dedicated interface for multi-shop management with KPIs, shop overview, employee overview, and backend API for statistics.
 - **Multi-Shop Permission System**: DSGVO-compliant explicit consent workflow for shop owners to grant multi-shop admin access.
+- **Secure Password Reset**: Industry-standard token-based password reset system with 15-minute expiry, rate limiting, hashed tokens, and comprehensive email templates. Includes frontend validation and security features like enumeration protection and IP tracking.
 
 ## External Dependencies
 
