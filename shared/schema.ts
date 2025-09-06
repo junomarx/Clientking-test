@@ -1119,4 +1119,44 @@ export const loanerDevicesRelations = relations(loanerDevices, ({ one, many }) =
   repairs: many(repairs), // Ein Leihgerät kann für mehrere Reparaturen verwendet werden (nacheinander)
 }));
 
+// Password Reset Tokens - Sichere Token-basierte Passwort-Zurücksetzung
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: serial("id").primaryKey(),
+  // Multi-tenant isolation
+  shopId: integer("shop_id").references(() => shops.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  
+  // Token-Sicherheit: Nur gehashte Tokens in DB speichern
+  tokenHash: text("token_hash").notNull().unique(), // HMAC-SHA256 Hash des Tokens
+  
+  // Zeitbasierte Sicherheit
+  expiresAt: timestamp("expires_at").notNull(), // 15 Minuten TTL
+  usedAt: timestamp("used_at"), // NULL = nicht verwendet, Timestamp = verwendet
+  
+  // Audit Trail
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  ipAddress: text("ip_address"), // IP-Adresse für Sicherheitsanalyse
+  userAgent: text("user_agent"), // User-Agent für Anomalieerkennung
+});
+
+export const insertPasswordResetTokenSchema = createInsertSchema(passwordResetTokens).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
+export type InsertPasswordResetToken = z.infer<typeof insertPasswordResetTokenSchema>;
+
+// Relations für Password Reset Tokens
+export const passwordResetTokensRelations = relations(passwordResetTokens, ({ one }) => ({
+  user: one(users, {
+    fields: [passwordResetTokens.userId],
+    references: [users.id],
+  }),
+  shop: one(shops, {
+    fields: [passwordResetTokens.shopId],
+    references: [shops.id],
+  }),
+}));
+
 
