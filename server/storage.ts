@@ -70,6 +70,9 @@ import {
   activityLogs,
   type ActivityLog,
   type InsertActivityLog,
+  passwordResetTokens,
+  type PasswordResetToken,
+  type InsertPasswordResetToken,
 } from "@shared/schema";
 import crypto from "crypto";
 import { db } from "./db";
@@ -123,10 +126,18 @@ export interface IStorage {
   updateUserLoginTimestamp(id: number): Promise<boolean>;
   updateUserLogoutTimestamp(id: number): Promise<boolean>;
   
-  // Passwort-Reset Methoden
+  // Passwort-Reset Methoden (legacy)
   setPasswordResetToken(email: string, token: string, expiryTime: Date): Promise<boolean>;
   getUserByResetToken(token: string): Promise<User | undefined>;
   clearResetToken(userId: number): Promise<boolean>;
+  
+  // New Secure Password Reset Methods
+  createPasswordResetToken(data: Omit<InsertPasswordResetToken, 'id' | 'createdAt'>): Promise<PasswordResetToken>;
+  getPasswordResetToken(tokenHash: string): Promise<PasswordResetToken | undefined>;
+  clearPasswordResetTokens(userId: number): Promise<boolean>;
+  deletePasswordResetToken(id: number): Promise<boolean>;
+  markPasswordResetTokenAsUsed(id: number): Promise<boolean>;
+  getUserById(id: number): Promise<User | undefined>;
 
   // Multi-Shop Methoden
   getUserAccessibleShops(userId: number): Promise<Shop[]>;
@@ -7132,6 +7143,90 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error("Error clearing reset token:", error);
       return false;
+    }
+  }
+
+  // ==================== NEW SECURE PASSWORD RESET METHODS ====================
+
+  async createPasswordResetToken(data: Omit<InsertPasswordResetToken, 'id' | 'createdAt'>): Promise<PasswordResetToken> {
+    try {
+      const [token] = await db
+        .insert(passwordResetTokens)
+        .values(data)
+        .returning();
+      
+      return token;
+    } catch (error) {
+      console.error("Error creating password reset token:", error);
+      throw error;
+    }
+  }
+
+  async getPasswordResetToken(tokenHash: string): Promise<PasswordResetToken | undefined> {
+    try {
+      const [token] = await db
+        .select()
+        .from(passwordResetTokens)
+        .where(eq(passwordResetTokens.tokenHash, tokenHash));
+      
+      return token;
+    } catch (error) {
+      console.error("Error getting password reset token:", error);
+      return undefined;
+    }
+  }
+
+  async clearPasswordResetTokens(userId: number): Promise<boolean> {
+    try {
+      await db
+        .delete(passwordResetTokens)
+        .where(eq(passwordResetTokens.userId, userId));
+      
+      return true;
+    } catch (error) {
+      console.error("Error clearing password reset tokens:", error);
+      return false;
+    }
+  }
+
+  async deletePasswordResetToken(id: number): Promise<boolean> {
+    try {
+      await db
+        .delete(passwordResetTokens)
+        .where(eq(passwordResetTokens.id, id));
+      
+      return true;
+    } catch (error) {
+      console.error("Error deleting password reset token:", error);
+      return false;
+    }
+  }
+
+  async markPasswordResetTokenAsUsed(id: number): Promise<boolean> {
+    try {
+      await db
+        .update(passwordResetTokens)
+        .set({ usedAt: new Date() })
+        .where(eq(passwordResetTokens.id, id));
+      
+      return true;
+    } catch (error) {
+      console.error("Error marking password reset token as used:", error);
+      return false;
+    }
+  }
+
+  async getUserById(id: number): Promise<User | undefined> {
+    try {
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, id));
+      
+      return user;
+    } catch (error) {
+      console.error("Error getting user by ID:", error);
+      return undefined;
     }
   }
 }

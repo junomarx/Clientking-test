@@ -2,7 +2,7 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Express } from "express";
 import session from "express-session";
-import { scrypt, randomBytes, timingSafeEqual } from "crypto";
+import { scrypt, randomBytes, timingSafeEqual, createHmac } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
@@ -36,6 +36,46 @@ async function comparePasswords(supplied: string, stored: string) {
   const hashedBuf = Buffer.from(hashed, "hex");
   const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
   return timingSafeEqual(hashedBuf, suppliedBuf);
+}
+
+// Password Reset Token Security Functions
+const TOKEN_SECRET = process.env.TOKEN_SECRET || "handyshop-token-secret-2024";
+
+function generateSecureToken(): string {
+  // Generate 128-bit token (32 hex characters)
+  return randomBytes(16).toString('hex');
+}
+
+function hashToken(token: string): string {
+  // HMAC-SHA256 hash of the token with server secret
+  return createHmac('sha256', TOKEN_SECRET).update(token).digest('hex');
+}
+
+function isValidToken(token: string, hash: string): boolean {
+  const expectedHash = hashToken(token);
+  return timingSafeEqual(Buffer.from(expectedHash, 'hex'), Buffer.from(hash, 'hex'));
+}
+
+// Rate limiting storage (in production, use Redis)
+const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+
+function checkRateLimit(identifier: string, maxAttempts: number = 5, windowMs: number = 15 * 60 * 1000): boolean {
+  const now = Date.now();
+  const key = identifier;
+  
+  const record = rateLimitStore.get(key);
+  if (!record || now > record.resetTime) {
+    // New window or expired window
+    rateLimitStore.set(key, { count: 1, resetTime: now + windowMs });
+    return true;
+  }
+  
+  if (record.count >= maxAttempts) {
+    return false; // Rate limit exceeded
+  }
+  
+  record.count++;
+  return true;
 }
 
 // EmailService-Instanz für systemrelevante E-Mails
@@ -665,5 +705,253 @@ export function setupAuth(app: Express) {
     await storage.clearResetToken(user.id);
     
     res.status(200).json({ message: "Passwort erfolgreich zurückgesetzt" });
+  });
+
+  // ==================== NEW SECURE PASSWORD RESET SYSTEM ====================
+  
+  // POST /api/auth/password-reset/request - Request password reset
+  app.post("/api/auth/password-reset/request", async (req, res) => {
+    const { email } = req.body;
+    const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
+    const userAgent = req.get('User-Agent') || '';
+    
+    // Input validation
+    if (!email || typeof email !== 'string' || !email.includes('@')) {
+      return res.status(400).json({ 
+        message: "Gültige E-Mail-Adresse erforderlich" 
+      });
+    }
+    
+    // Rate limiting: 5 attempts per 15 minutes per IP
+    if (!checkRateLimit(clientIp, 5, 15 * 60 * 1000)) {
+      return res.status(429).json({ 
+        message: "Zu viele Anfragen. Bitte versuchen Sie es später erneut." 
+      });
+    }
+    
+    // Rate limiting: 3 attempts per 15 minutes per email
+    if (!checkRateLimit(`email:${email}`, 3, 15 * 60 * 1000)) {
+      return res.status(429).json({ 
+        message: "Zu viele Anfragen für diese E-Mail-Adresse." 
+      });
+    }
+    
+    try {
+      // Always return same response for enumeration protection
+      const genericResponse = {
+        message: "Wenn ein Konto mit dieser E-Mail-Adresse existiert, wurde eine Anleitung zum Zurücksetzen des Passworts gesendet."
+      };
+      
+      // Find user by email
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        // Return same response but don't do anything
+        return res.status(200).json(genericResponse);
+      }
+      
+      // Generate secure token
+      const token = generateSecureToken();
+      const tokenHash = hashToken(token);
+      const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes TTL
+      
+      // Invalidate old tokens for this user
+      await storage.clearPasswordResetTokens(user.id);
+      
+      // Store hashed token in database
+      await storage.createPasswordResetToken({
+        userId: user.id,
+        shopId: user.shopId,
+        tokenHash,
+        expiresAt,
+        ipAddress: clientIp,
+        userAgent
+      });
+      
+      // Create reset URL
+      const resetUrl = `${req.protocol}://${req.get('host')}/reset-password?token=${token}`;
+      
+      // Send email with professional template matching existing design
+      const emailHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="color: #4f46e5;">Passwort zurücksetzen</h2>
+          </div>
+          
+          <p>Hallo,</p>
+          
+          <p>Sie haben eine Passwort-Zurücksetzung für Ihr Konto angefordert.</p>
+          
+          <p>Klicken Sie auf den folgenden Button, um ein neues Passwort zu erstellen:</p>
+          
+          <p style="text-align: center; margin: 30px 0;">
+            <a href="${resetUrl}" 
+               style="display: inline-block; padding: 12px 24px; background-color: #4f46e5; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">
+              Passwort zurücksetzen
+            </a>
+          </p>
+          
+          <p>Dieser Link ist nur 15 Minuten gültig.</p>
+          
+          <p>Falls Sie diese Anfrage nicht gestellt haben, können Sie diese E-Mail einfach ignorieren.</p>
+          
+          <p>Mit freundlichen Grüßen,<br>Ihr Handyshop Verwaltungs-Team</p>
+          
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666;">
+            <p>Diese E-Mail wurde automatisch generiert. Bitte antworten Sie nicht darauf.</p>
+            <p>Alternativ-Link: <a href="${resetUrl}" style="color: #4f46e5;">${resetUrl}</a></p>
+          </div>
+        </div>
+      `;
+      
+      const sent = await emailService.sendSystemEmail({
+        to: user.email,
+        subject: "Passwort zurücksetzen - Handyshop Verwaltung",
+        html: emailHtml
+      });
+      
+      if (sent) {
+        console.log(`Password reset requested for user ${user.email} from IP ${clientIp}`);
+      }
+      
+      // Always return success response
+      return res.status(200).json(genericResponse);
+      
+    } catch (error) {
+      console.error("Password reset request error:", error);
+      return res.status(500).json({ 
+        message: "Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut." 
+      });
+    }
+  });
+  
+  // GET /api/auth/password-reset/validate - Validate token without side effects
+  app.get("/api/auth/password-reset/validate", async (req, res) => {
+    const { token } = req.query;
+    
+    if (!token || typeof token !== 'string') {
+      return res.status(400).json({ valid: false, message: "Token erforderlich" });
+    }
+    
+    try {
+      const tokenHash = hashToken(token);
+      const resetToken = await storage.getPasswordResetToken(tokenHash);
+      
+      if (!resetToken) {
+        return res.status(200).json({ valid: false, message: "Ungültiger Token" });
+      }
+      
+      if (resetToken.usedAt) {
+        return res.status(200).json({ valid: false, message: "Token bereits verwendet" });
+      }
+      
+      if (new Date() > resetToken.expiresAt) {
+        return res.status(200).json({ valid: false, message: "Token abgelaufen" });
+      }
+      
+      return res.status(200).json({ 
+        valid: true, 
+        expiresAt: resetToken.expiresAt.toISOString() 
+      });
+      
+    } catch (error) {
+      console.error("Token validation error:", error);
+      return res.status(500).json({ valid: false, message: "Validierungsfehler" });
+    }
+  });
+  
+  // POST /api/auth/password-reset/confirm - Confirm password reset
+  app.post("/api/auth/password-reset/confirm", async (req, res) => {
+    const { token, newPassword } = req.body;
+    const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
+    
+    // Input validation
+    if (!token || typeof token !== 'string') {
+      return res.status(400).json({ message: "Token erforderlich" });
+    }
+    
+    if (!newPassword || typeof newPassword !== 'string' || newPassword.length < 6) {
+      return res.status(400).json({ message: "Passwort muss mindestens 6 Zeichen lang sein" });
+    }
+    
+    // Rate limiting for password reset confirmation
+    if (!checkRateLimit(`confirm:${clientIp}`, 10, 15 * 60 * 1000)) {
+      return res.status(429).json({ 
+        message: "Zu viele Bestätigungsversuche. Bitte warten Sie." 
+      });
+    }
+    
+    try {
+      const tokenHash = hashToken(token);
+      const resetToken = await storage.getPasswordResetToken(tokenHash);
+      
+      if (!resetToken) {
+        return res.status(400).json({ message: "Ungültiger oder abgelaufener Token" });
+      }
+      
+      if (resetToken.usedAt) {
+        return res.status(400).json({ message: "Token bereits verwendet" });
+      }
+      
+      if (new Date() > resetToken.expiresAt) {
+        await storage.deletePasswordResetToken(resetToken.id);
+        return res.status(400).json({ message: "Token abgelaufen" });
+      }
+      
+      // Get user
+      const user = await storage.getUserById(resetToken.userId);
+      if (!user) {
+        return res.status(400).json({ message: "Benutzer nicht gefunden" });
+      }
+      
+      // Hash new password
+      const hashedPassword = await hashPassword(newPassword);
+      
+      // Update password
+      const success = await storage.updateUserPassword(user.id, hashedPassword);
+      if (!success) {
+        return res.status(500).json({ message: "Fehler beim Aktualisieren des Passworts" });
+      }
+      
+      // Mark token as used
+      await storage.markPasswordResetTokenAsUsed(resetToken.id);
+      
+      // Log password change
+      console.log(`Password successfully reset for user ${user.email} from IP ${clientIp}`);
+      
+      // Send confirmation email
+      const confirmationHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="color: #4f46e5;">Passwort erfolgreich geändert</h2>
+          </div>
+          
+          <p>Hallo,</p>
+          
+          <p>Ihr Passwort wurde erfolgreich zurückgesetzt.</p>
+          
+          <p>Falls Sie diese Änderung nicht vorgenommen haben, wenden Sie sich sofort an den Support.</p>
+          
+          <p>Mit freundlichen Grüßen,<br>Ihr Handyshop Verwaltungs-Team</p>
+          
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666;">
+            <p>Diese E-Mail wurde automatisch generiert. Bitte antworten Sie nicht darauf.</p>
+          </div>
+        </div>
+      `;
+      
+      await emailService.sendSystemEmail({
+        to: user.email,
+        subject: "Passwort erfolgreich geändert - Handyshop Verwaltung",
+        html: confirmationHtml
+      });
+      
+      return res.status(200).json({ message: "Passwort erfolgreich zurückgesetzt" });
+      
+    } catch (error) {
+      console.error("Password reset confirmation error:", error);
+      return res.status(500).json({ 
+        message: "Fehler beim Zurücksetzen des Passworts. Bitte versuchen Sie es erneut." 
+      });
+    }
   });
 }
