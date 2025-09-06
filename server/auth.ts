@@ -773,8 +773,12 @@ export function setupAuth(app: Express) {
       // Send email with professional template matching existing design
       const emailHtml = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-          <div style="text-align: center; margin-bottom: 20px;">
-            <h2 style="color: #4f46e5;">Passwort zurücksetzen</h2>
+          <div style="text-align: center; margin-bottom: 30px;">
+            <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+              <h1 style="color: #1e40af; font-size: 28px; margin: 0; font-weight: bold;">ClientKing</h1>
+              <p style="color: #64748b; font-size: 16px; margin: 5px 0 0 0;">Handyshop Verwaltung</p>
+            </div>
+            <h2 style="color: #4f46e5; margin: 0;">Passwort zurücksetzen</h2>
           </div>
           
           <p>Hallo,</p>
