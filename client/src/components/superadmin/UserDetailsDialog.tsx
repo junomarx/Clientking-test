@@ -47,7 +47,10 @@ interface UserWithBusinessSettings {
   isActive: boolean;
   isAdmin: boolean;
   isSuperadmin: boolean;
+  isMultiShopAdmin?: boolean;
+  role?: string;
   canAssignMultiShopAdmins: boolean;
+  newsletterSubscribed?: boolean;
   pricingPlan: string | null;
   shopId: number | null;
   createdAt: string;
@@ -111,6 +114,31 @@ export function UserDetailsDialog({ open, onClose, userId, onEdit, onToggleActiv
       toast({
         title: "Fehler",
         description: error.message || "Fehler beim Aktualisieren der Multi-Shop-Berechtigung",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Mutation für Newsletter-Abonnement Update
+  const updateNewsletterSubscriptionMutation = useMutation({
+    mutationFn: async ({ userId, newsletterSubscribed }: { userId: number; newsletterSubscribed: boolean }) => {
+      const response = await apiRequest('PATCH', `/api/superadmin/users/${userId}/newsletter-subscription`, {
+        newsletterSubscribed
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Newsletter-Einstellung aktualisiert",
+        description: "Newsletter-Abonnement wurde erfolgreich geändert",
+      });
+      // Cache invalidieren um neue Daten zu laden
+      queryClient.invalidateQueries({ queryKey: [`/api/superadmin/users/${userId}`] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Fehler",
+        description: error.message || "Fehler beim Aktualisieren des Newsletter-Abonnements",
         variant: "destructive",
       });
     },
@@ -394,6 +422,38 @@ export function UserDetailsDialog({ open, onClose, userId, onEdit, onToggleActiv
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
                   Erlaubt diesem Shop-Owner, Multi-Shop-Admins zuzuweisen und damit externen Administratoren Zugriff zu gewähren.
+                </p>
+              </div>
+            )}
+
+            {/* Newsletter-Abonnement (nur für Shop-Owner und Multi-Shop-Admins) */}
+            {((user.role === 'owner' && user.shopId) || user.isMultiShopAdmin) && (
+              <div className="bg-orange-50 dark:bg-orange-950 p-4 rounded-lg">
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-orange-600" />
+                  Newsletter-Abonnement
+                </h3>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="newsletterSubscribed"
+                    checked={user.newsletterSubscribed ?? true}
+                    onCheckedChange={(checked) => {
+                      updateNewsletterSubscriptionMutation.mutate({
+                        userId: user.id,
+                        newsletterSubscribed: !!checked
+                      });
+                    }}
+                    disabled={updateNewsletterSubscriptionMutation.isPending}
+                  />
+                  <label 
+                    htmlFor="newsletterSubscribed" 
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Newsletter abonniert
+                  </label>
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  Erhält Updates und wichtige Informationen zu ClientKing Handyshop Verwaltung per E-Mail.
                 </p>
               </div>
             )}

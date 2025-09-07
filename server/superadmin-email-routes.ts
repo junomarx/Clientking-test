@@ -2114,6 +2114,65 @@ ${existingTemplate.body}`;
   });
 
   /**
+   * Newsletter-Abonnement für User aktualisieren (Superadmin-Bereich)
+   */
+  app.patch("/api/superadmin/users/:userId/newsletter-subscription", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const { newsletterSubscribed } = req.body;
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Ungültige Benutzer-ID" });
+      }
+
+      if (typeof newsletterSubscribed !== 'boolean') {
+        return res.status(400).json({ message: "newsletterSubscribed muss ein Boolean sein" });
+      }
+
+      // Benutzer abrufen und prüfen ob er Newsletter abonnieren darf (nur Owner/Multi-Shop-Admins)
+      const [user] = await db
+        .select({
+          id: users.id,
+          role: users.role,
+          isMultiShopAdmin: users.isMultiShopAdmin,
+          email: users.email
+        })
+        .from(users)
+        .where(eq(users.id, userId));
+
+      if (!user) {
+        return res.status(404).json({ message: "Benutzer nicht gefunden" });
+      }
+
+      // Prüfen ob Benutzer berechtigt ist Newsletter zu abonnieren
+      const isEligible = user.role === 'owner' || user.isMultiShopAdmin;
+      
+      if (!isEligible && newsletterSubscribed) {
+        return res.status(403).json({ 
+          message: "Nur Shop-Owner und Multi-Shop-Admins können Newsletter abonnieren" 
+        });
+      }
+
+      // Newsletter-Status aktualisieren
+      await db
+        .update(users)
+        .set({ newsletterSubscribed })
+        .where(eq(users.id, userId));
+
+      console.log(`📧 Superadmin hat Newsletter-Abonnement für Benutzer ${user.email} (ID: ${userId}) ${newsletterSubscribed ? 'aktiviert' : 'deaktiviert'}`);
+
+      res.json({ 
+        message: `Newsletter-Abonnement ${newsletterSubscribed ? 'aktiviert' : 'deaktiviert'}`,
+        newsletterSubscribed 
+      });
+
+    } catch (error: any) {
+      console.error("Fehler beim Ändern des Newsletter-Abonnements:", error);
+      res.status(500).json({ message: `Fehler beim Ändern des Newsletter-Abonnements: ${error.message}` });
+    }
+  });
+
+  /**
    * Newsletter-Statistiken für Dashboard
    */
   app.get("/api/superadmin/newsletters/stats", isSuperadmin, async (req: Request, res: Response) => {
