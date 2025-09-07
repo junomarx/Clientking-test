@@ -1977,11 +1977,11 @@ ${existingTemplate.body}`;
         .leftJoin(businessSettings, eq(users.id, businessSettings.userId))
         .where(
           and(
-            eq(users.is_active, true),
-            eq(users.newsletter_subscribed, true),
+            eq(users.isActive, true),
+            eq(users.newsletterSubscribed, true),
             or(
               eq(users.role, 'owner'),
-              eq(users.is_multi_shop_admin, true)
+              eq(users.isMultiShopAdmin, true)
             )
           )
         );
@@ -2178,11 +2178,11 @@ ${existingTemplate.body}`;
         .from(users)
         .where(
           and(
-            eq(users.is_active, true),
-            eq(users.newsletter_subscribed, true),
+            eq(users.isActive, true),
+            eq(users.newsletterSubscribed, true),
             or(
               eq(users.role, 'owner'),
-              eq(users.is_multi_shop_admin, true)
+              eq(users.isMultiShopAdmin, true)
             )
           )
         ) as [{ subscribedUsers: number }];
