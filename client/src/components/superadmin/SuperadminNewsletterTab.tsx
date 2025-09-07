@@ -90,6 +90,7 @@ interface NewsletterSend {
 }
 
 export default function SuperadminNewsletterTab() {
+  console.log('🔍 SuperadminNewsletterTab wird gerendert');
   const { toast } = useToast();
   
   // States
@@ -240,6 +241,10 @@ export default function SuperadminNewsletterTab() {
 
   return (
     <div className="space-y-6">
+      {/* DEBUG: Newsletter Component Rendering Check */}
+      <div style={{background: 'green', color: 'white', padding: '10px', textAlign: 'center'}}>
+        ✅ Newsletter-Komponente wird gerendert! Loading states: newsletters={newslettersLoading}, stats={statsLoading}
+      </div>
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
