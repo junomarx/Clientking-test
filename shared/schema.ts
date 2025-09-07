@@ -299,6 +299,8 @@ export const users = pgTable("users", {
   backupCodes: text("backup_codes").array(),               // Recovery Codes
   email2FaCode: text("email_2fa_code"),                    // Aktueller Email-2FA-Code
   email2FaExpires: timestamp("email_2fa_expires"),         // Ablaufzeit des Email-Codes
+  // Newsletter-Abonnement (standardmäßig aktiviert für Owner und Multi-Shop-Admins)
+  newsletterSubscribed: boolean("newsletter_subscribed").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
