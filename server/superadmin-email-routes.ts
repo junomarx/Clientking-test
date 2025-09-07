@@ -2213,4 +2213,35 @@ ${existingTemplate.body}`;
       res.status(500).json({ message: `Fehler beim Abrufen der Newsletter-Statistiken: ${error.message}` });
     }
   });
+
+  /**
+   * Newsletter-Versand-Historie abrufen
+   */
+  app.get("/api/superadmin/newsletters/send-history", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const sendHistory = await db
+        .select({
+          id: newsletterSends.id,
+          newsletter: {
+            id: newsletters.id,
+            title: newsletters.title,
+            subject: newsletters.subject,
+          },
+          recipientEmail: newsletterSends.recipientEmail,
+          status: newsletterSends.status,
+          sentAt: newsletterSends.sentAt,
+        })
+        .from(newsletterSends)
+        .innerJoin(newsletters, eq(newsletterSends.newsletterId, newsletters.id))
+        .where(eq(newsletterSends.status, 'sent'))
+        .orderBy(desc(newsletterSends.sentAt))
+        .limit(50);
+
+      res.json(sendHistory);
+
+    } catch (error: any) {
+      console.error("Fehler beim Abrufen der Newsletter-Versand-Historie:", error);
+      res.status(500).json({ message: `Fehler beim Abrufen der Newsletter-Versand-Historie: ${error.message}` });
+    }
+  });
 }
