@@ -567,9 +567,12 @@ export default function SuperadminNewsletterTab() {
               </div>
               <Separator />
               <div>
-                <Label>Inhalt:</Label>
-                <div className="mt-2 p-4 border rounded-md bg-muted/10">
-                  <div className="whitespace-pre-wrap">{selectedNewsletter.content}</div>
+                <Label>Inhalt (HTML-Vorschau):</Label>
+                <div className="mt-2 border rounded-md bg-white max-h-96 overflow-y-auto">
+                  <div 
+                    dangerouslySetInnerHTML={{ __html: selectedNewsletter.content }}
+                    className="p-4"
+                  />
                 </div>
               </div>
             </div>
