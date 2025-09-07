@@ -81,12 +81,21 @@ interface NewsletterStats {
   recentNewsletters: any[];
 }
 
-interface NewsletterSend {
+interface NewsletterHistoryItem {
+  newsletterId: number;
+  title: string;
+  subject: string;
+  recipientCount: number;
+  lastSentAt: string;
+  successfulSends: number;
+  failedSends: number;
+}
+
+interface NewsletterRecipient {
   id: number;
-  newsletter: Newsletter;
   recipientEmail: string;
-  sentAt: string;
   status: 'sent' | 'failed';
+  sentAt: string;
 }
 
 export default function SuperadminNewsletterTab() {
@@ -98,6 +107,8 @@ export default function SuperadminNewsletterTab() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isSendDialogOpen, setIsSendDialogOpen] = useState(false);
   const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
+  const [isRecipientsDialogOpen, setIsRecipientsDialogOpen] = useState(false);
+  const [selectedNewsletterForRecipients, setSelectedNewsletterForRecipients] = useState<NewsletterHistoryItem | null>(null);
   
   const [newNewsletter, setNewNewsletter] = useState({
     title: '',
@@ -114,8 +125,14 @@ export default function SuperadminNewsletterTab() {
     queryKey: ['/api/superadmin/newsletters/stats'],
   });
 
-  const { data: sendHistory, isLoading: historyLoading } = useQuery<NewsletterSend[]>({
+  const { data: sendHistory, isLoading: historyLoading } = useQuery<NewsletterHistoryItem[]>({
     queryKey: ['/api/superadmin/newsletters/send-history'],
+  });
+
+  // Query für detaillierte Empfänger-Liste 
+  const { data: recipients, isLoading: recipientsLoading } = useQuery<NewsletterRecipient[]>({
+    queryKey: ['/api/superadmin/newsletters', selectedNewsletterForRecipients?.newsletterId, 'recipients'],
+    enabled: !!selectedNewsletterForRecipients?.newsletterId,
   });
 
   // Mutations
@@ -564,23 +581,53 @@ export default function SuperadminNewsletterTab() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Newsletter</TableHead>
-                      <TableHead>Empfänger</TableHead>
-                      <TableHead>Gesendet am</TableHead>
-                      <TableHead>Status</TableHead>
+                      <TableHead className="hidden md:table-cell">Empfänger-Anzahl</TableHead>
+                      <TableHead className="hidden md:table-cell">Gesendet am</TableHead>
+                      <TableHead className="hidden md:table-cell">Status</TableHead>
+                      <TableHead>Aktionen</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {sendHistory?.map((send) => (
-                      <TableRow key={send.id}>
-                        <TableCell className="font-medium">{send.newsletter.subject}</TableCell>
-                        <TableCell>{send.recipientEmail}</TableCell>
-                        <TableCell>
-                          {format(new Date(send.sentAt), 'dd.MM.yyyy - HH:mm', { locale: de })}
+                    {sendHistory?.map((historyItem) => (
+                      <TableRow key={historyItem.newsletterId}>
+                        <TableCell className="font-medium">
+                          <div className="space-y-1">
+                            <div>{historyItem.subject}</div>
+                            <div className="text-sm text-gray-500 md:hidden">
+                              {historyItem.recipientCount} Empfänger • {format(new Date(historyItem.lastSentAt), 'dd.MM.yyyy', { locale: de })}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          {historyItem.recipientCount} Empfänger
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          {format(new Date(historyItem.lastSentAt), 'dd.MM.yyyy - HH:mm', { locale: de })}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          <div className="space-y-1">
+                            <Badge variant="default">
+                              {historyItem.successfulSends} Erfolgreich
+                            </Badge>
+                            {historyItem.failedSends > 0 && (
+                              <Badge variant="destructive">
+                                {historyItem.failedSends} Fehlgeschlagen
+                              </Badge>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={send.status === 'sent' ? 'default' : 'destructive'}>
-                            {send.status === 'sent' ? 'Erfolgreich' : 'Fehlgeschlagen'}
-                          </Badge>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedNewsletterForRecipients(historyItem);
+                              setIsRecipientsDialogOpen(true);
+                            }}
+                          >
+                            <Users className="h-4 w-4 mr-1" />
+                            Details
+                          </Button>
                         </TableCell>
                       </TableRow>
                     )) || []}
@@ -591,6 +638,113 @@ export default function SuperadminNewsletterTab() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Recipients Dialog */}
+      <Dialog open={isRecipientsDialogOpen} onOpenChange={setIsRecipientsDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
+          <DialogHeader>
+            <DialogTitle>Empfänger-Details</DialogTitle>
+            <DialogDescription>
+              Detaillierte Liste aller Empfänger für "{selectedNewsletterForRecipients?.subject}"
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto">
+            {recipientsLoading ? (
+              <div className="flex items-center justify-center h-32">
+                <Loader2 className="h-8 w-8 animate-spin" />
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Summary Stats */}
+                {selectedNewsletterForRecipients && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-600">
+                        {selectedNewsletterForRecipients.recipientCount}
+                      </div>
+                      <div className="text-sm text-gray-600">Gesamt</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-600">
+                        {selectedNewsletterForRecipients.successfulSends}
+                      </div>
+                      <div className="text-sm text-gray-600">Erfolgreich</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-red-600">
+                        {selectedNewsletterForRecipients.failedSends}
+                      </div>
+                      <div className="text-sm text-gray-600">Fehlgeschlagen</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-gray-600">
+                        {format(new Date(selectedNewsletterForRecipients.lastSentAt), 'dd.MM.yyyy', { locale: de })}
+                      </div>
+                      <div className="text-sm text-gray-600">Gesendet am</div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Recipients Table */}
+                <div className="border rounded-lg overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>E-Mail-Adresse</TableHead>
+                          <TableHead className="hidden md:table-cell">Status</TableHead>
+                          <TableHead className="hidden md:table-cell">Gesendet am</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {recipients?.map((recipient) => (
+                          <TableRow key={recipient.id}>
+                            <TableCell className="font-medium">
+                              <div className="space-y-1">
+                                <div>{recipient.recipientEmail}</div>
+                                <div className="md:hidden">
+                                  <Badge 
+                                    variant={recipient.status === 'sent' ? 'default' : 'destructive'}
+                                    className="mr-2"
+                                  >
+                                    {recipient.status === 'sent' ? 'Erfolgreich' : 'Fehlgeschlagen'}
+                                  </Badge>
+                                  <span className="text-sm text-gray-500">
+                                    {format(new Date(recipient.sentAt), 'dd.MM.yyyy HH:mm', { locale: de })}
+                                  </span>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell className="hidden md:table-cell">
+                              <Badge variant={recipient.status === 'sent' ? 'default' : 'destructive'}>
+                                {recipient.status === 'sent' ? 'Erfolgreich' : 'Fehlgeschlagen'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="hidden md:table-cell">
+                              {format(new Date(recipient.sentAt), 'dd.MM.yyyy - HH:mm', { locale: de })}
+                            </TableCell>
+                          </TableRow>
+                        )) || []}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+
+                {recipients?.length === 0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    Keine Empfänger-Daten verfügbar
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsRecipientsDialogOpen(false)}>
+              Schließen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
