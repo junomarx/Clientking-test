@@ -692,6 +692,7 @@ export default function SuperadminNewsletterTab() {
                       <TableHeader>
                         <TableRow>
                           <TableHead>E-Mail-Adresse</TableHead>
+                          <TableHead className="hidden lg:table-cell">Shop-Name</TableHead>
                           <TableHead className="hidden md:table-cell">Status</TableHead>
                           <TableHead className="hidden md:table-cell">Gesendet am</TableHead>
                         </TableRow>
@@ -702,6 +703,9 @@ export default function SuperadminNewsletterTab() {
                             <TableCell className="font-medium">
                               <div className="space-y-1">
                                 <div>{recipient.recipientEmail}</div>
+                                <div className="lg:hidden text-sm text-gray-500">
+                                  {recipient.shopName || 'Unbekannter Shop'}
+                                </div>
                                 <div className="md:hidden">
                                   <Badge 
                                     variant={recipient.status === 'sent' ? 'default' : 'destructive'}
@@ -713,6 +717,11 @@ export default function SuperadminNewsletterTab() {
                                     {format(new Date(recipient.sentAt), 'dd.MM.yyyy HH:mm', { locale: de })}
                                   </span>
                                 </div>
+                              </div>
+                            </TableCell>
+                            <TableCell className="hidden lg:table-cell">
+                              <div className="text-sm">
+                                {recipient.shopName || <span className="text-gray-400">Unbekannter Shop</span>}
                               </div>
                             </TableCell>
                             <TableCell className="hidden md:table-cell">
