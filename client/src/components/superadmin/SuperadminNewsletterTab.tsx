@@ -293,8 +293,9 @@ export default function SuperadminNewsletterTab() {
       </div>
 
       <Tabs defaultValue="newsletters" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="newsletters">Newsletter verwalten</TabsTrigger>
+          <TabsTrigger value="variables">Variablen</TabsTrigger>
           <TabsTrigger value="history">Versand-Historie</TabsTrigger>
         </TabsList>
 
@@ -444,6 +445,91 @@ export default function SuperadminNewsletterTab() {
                   </TableBody>
                 </Table>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="variables" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Newsletter-Variablen</CardTitle>
+              <CardDescription>
+                Verfügbare Variablen für die personalisierte Gestaltung Ihrer Newsletter
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 text-blue-600">👤 Empfänger-Informationen</h3>
+                  <div className="grid gap-3">
+                    <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                      <div>
+                        <code className="font-mono text-sm bg-white px-2 py-1 rounded border">{{empfaengername}}</code>
+                        <p className="text-sm text-gray-600 mt-1">Name des Newsletter-Empfängers (Shop-Owner)</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                      <div>
+                        <code className="font-mono text-sm bg-white px-2 py-1 rounded border">{{empfaengeremail}}</code>
+                        <p className="text-sm text-gray-600 mt-1">E-Mail-Adresse des Empfängers</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                      <div>
+                        <code className="font-mono text-sm bg-white px-2 py-1 rounded border">{{firmenname}}</code>
+                        <p className="text-sm text-gray-600 mt-1">Name der Firma/des Shops</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 text-green-600">📧 Newsletter-Management</h3>
+                  <div className="grid gap-3">
+                    <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                      <div>
+                        <code className="font-mono text-sm bg-white px-2 py-1 rounded border">{{abmeldelink}}</code>
+                        <p className="text-sm text-gray-600 mt-1">Automatisch generierter Link zum Abmelden vom Newsletter</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 text-purple-600">🏢 ClientKing Informationen</h3>
+                  <div className="grid gap-3">
+                    <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                      <div>
+                        <code className="font-mono text-sm bg-white px-2 py-1 rounded border">{{clientking_logo}}</code>
+                        <p className="text-sm text-gray-600 mt-1">ClientKing Logo (als HTML img-Tag)</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                      <div>
+                        <code className="font-mono text-sm bg-white px-2 py-1 rounded border">{{aktuellesjahr}}</code>
+                        <p className="text-sm text-gray-600 mt-1">Aktuelles Jahr (z.B. 2025)</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <h4 className="font-semibold text-yellow-800 mb-2">💡 Verwendung der Variablen</h4>
+                <p className="text-sm text-yellow-700 mb-2">
+                  Verwenden Sie diese Variablen direkt in Ihrem Newsletter-Inhalt. Sie werden automatisch durch die entsprechenden Werte ersetzt.
+                </p>
+                <div className="bg-white p-3 rounded border text-sm">
+                  <strong>Beispiel:</strong><br/>
+                  <code>Hallo {{empfaengername}},<br/>
+                  <br/>
+                  willkommen bei ClientKing!<br/>
+                  <br/>
+                  Ihr Team von {{firmenname}}<br/>
+                  <br/>
+                  <a href="{{abmeldelink}}">Newsletter abbestellen</a></code>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
