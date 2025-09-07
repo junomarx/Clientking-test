@@ -2272,4 +2272,22 @@ ${existingTemplate.body}`;
       res.status(500).json({ message: `Fehler beim Abrufen der Newsletter-Empfänger: ${error.message}` });
     }
   });
+
+  /**
+   * Gesamtzahl aller Shops für Reichweiten-Statistiken
+   */
+  app.get("/api/superadmin/shops/total-count", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const [result] = await db
+        .select({ totalShops: sql<number>`COUNT(DISTINCT ${businessSettings.shopId})` })
+        .from(businessSettings)
+        .where(isNotNull(businessSettings.shopId));
+
+      res.json({ totalShops: result.totalShops || 0 });
+
+    } catch (error: any) {
+      console.error("Fehler beim Abrufen der Gesamtzahl der Shops:", error);
+      res.status(500).json({ message: `Fehler beim Abrufen der Gesamtzahl der Shops: ${error.message}` });
+    }
+  });
 }
