@@ -64,7 +64,37 @@ export async function syncEmailTemplates(): Promise<void> {
         console.log(`Globale App-E-Mail-Vorlage '${template.name}' wurde in der Datenbank erstellt`);
       }
     } else {
-      console.log(`${appTemplatesCount} globale App-Vorlagen gefunden.`);
+      console.log(`${appTemplatesCount} globale App-Vorlagen gefunden. Aktualisiere mit ClientKing-Branding...`);
+      
+      // Aktualisiere bestehende App-Vorlagen mit ClientKing-Branding
+      for (const template of defaultAppEmailTemplates) {
+        const existingTemplates = await db.select()
+          .from(emailTemplates)
+          .where(and(
+            isNull(emailTemplates.userId),
+            eq(emailTemplates.shopId, 0),
+            eq(emailTemplates.name, template.name),
+            eq(emailTemplates.type, 'app')
+          ));
+          
+        if (existingTemplates.length > 0) {
+          await db.update(emailTemplates)
+            .set({
+              subject: template.subject,
+              body: template.body,
+              variables: template.variables,
+              updatedAt: now
+            })
+            .where(and(
+              isNull(emailTemplates.userId),
+              eq(emailTemplates.shopId, 0),
+              eq(emailTemplates.name, template.name),
+              eq(emailTemplates.type, 'app')
+            ));
+            
+          console.log(`✅ App-E-Mail-Vorlage '${template.name}' mit ClientKing-Branding aktualisiert`);
+        }
+      }
     }
     
     // Überprüfe und erstelle Kunden-Vorlagen
