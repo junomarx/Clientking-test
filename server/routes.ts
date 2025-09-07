@@ -55,6 +55,7 @@ import { multiShopService } from "./multi-shop-service";
 import { registerTwoFARoutes } from "./two-fa-routes";
 import { registerMultiShopAdminRoutes } from "./multi-shop-admin-routes";
 import { registerSuperadminEmailRoutes } from "./superadmin-email-routes";
+import { setupNewsletterRoutes } from "./newsletter-routes";
 import path from 'path';
 import fs from 'fs';
 // jsPDF will be imported dynamically
@@ -7849,6 +7850,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Registriere Superadmin E-Mail-Routen
   await registerSuperadminEmailRoutes(app);
   console.log("✅ Superadmin E-Mail routes registered");
+
+  // Registriere Newsletter-Routen (für Abmeldung und User-Abonnement)
+  setupNewsletterRoutes(app);
+  console.log("✅ Newsletter routes registered");
 
   const httpServer = createServer(app);
   

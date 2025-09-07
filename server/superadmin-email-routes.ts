@@ -2,8 +2,8 @@ import { Request, Response } from "express";
 import { Express } from "express";
 import { isSuperadmin } from "./superadmin-middleware";
 import { db } from "./db";
-import { emailTemplates, emailHistory, type EmailTemplate, type InsertEmailTemplate, superadminEmailSettings } from "@shared/schema";
-import { eq, desc, isNull, or, and, sql } from "drizzle-orm";
+import { emailTemplates, emailHistory, type EmailTemplate, type InsertEmailTemplate, superadminEmailSettings, newsletters, newsletterSends, users, type Newsletter, type InsertNewsletter } from "@shared/schema";
+import { eq, desc, isNull, or, and, sql, inArray } from "drizzle-orm";
 import nodemailer from "nodemailer";
 import { emailService } from "./email-service";
 
@@ -1869,6 +1869,305 @@ ${existingTemplate.body}`;
       res.status(204).send();
     } catch (error: any) {
       res.status(500).json({ message: `Fehler beim Löschen der E-Mail-Vorlage: ${error.message}` });
+    }
+  });
+
+  // =====================================================
+  // NEWSLETTER SYSTEM - Superadmin Newsletter Management
+  // =====================================================
+
+  /**
+   * Alle Newsletter abrufen
+   */
+  app.get("/api/superadmin/newsletters", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const allNewsletters = await db
+        .select({
+          id: newsletters.id,
+          title: newsletters.title,
+          subject: newsletters.subject,
+          content: newsletters.content,
+          status: newsletters.status,
+          totalRecipients: newsletters.totalRecipients,
+          successfulSends: newsletters.successfulSends,
+          failedSends: newsletters.failedSends,
+          createdAt: newsletters.createdAt,
+          sentAt: newsletters.sentAt,
+          createdByUsername: users.username,
+          createdByEmail: users.email
+        })
+        .from(newsletters)
+        .leftJoin(users, eq(newsletters.createdBy, users.id))
+        .orderBy(desc(newsletters.createdAt));
+
+      res.json(allNewsletters);
+    } catch (error: any) {
+      console.error("Fehler beim Abrufen der Newsletter:", error);
+      res.status(500).json({ message: `Fehler beim Abrufen der Newsletter: ${error.message}` });
+    }
+  });
+
+  /**
+   * Newsletter erstellen
+   */
+  app.post("/api/superadmin/newsletters", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const { title, subject, content } = req.body;
+      const superadminUserId = (req as any).user?.id;
+
+      if (!title || !subject || !content) {
+        return res.status(400).json({ message: "Titel, Betreff und Inhalt sind erforderlich" });
+      }
+
+      const newNewsletter: InsertNewsletter = {
+        title,
+        subject,
+        content,
+        createdBy: superadminUserId,
+        status: 'draft'
+      };
+
+      const [createdNewsletter] = await db
+        .insert(newsletters)
+        .values(newNewsletter)
+        .returning();
+
+      res.status(201).json(createdNewsletter);
+    } catch (error: any) {
+      console.error("Fehler beim Erstellen des Newsletters:", error);
+      res.status(500).json({ message: `Fehler beim Erstellen des Newsletters: ${error.message}` });
+    }
+  });
+
+  /**
+   * Newsletter versenden
+   */
+  app.post("/api/superadmin/newsletters/:id/send", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const newsletterId = parseInt(req.params.id);
+      
+      if (isNaN(newsletterId)) {
+        return res.status(400).json({ message: "Ungültige Newsletter-ID" });
+      }
+
+      // Newsletter abrufen
+      const [newsletter] = await db
+        .select()
+        .from(newsletters)
+        .where(eq(newsletters.id, newsletterId));
+
+      if (!newsletter) {
+        return res.status(404).json({ message: "Newsletter nicht gefunden" });
+      }
+
+      if (newsletter.status === 'sent') {
+        return res.status(400).json({ message: "Newsletter wurde bereits versendet" });
+      }
+
+      // Alle berechtigten und abonnierten Benutzer abrufen (nur Owner und Multi-Shop-Admins)
+      const recipients = await db
+        .select({
+          id: users.id,
+          email: users.email,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          companyName: users.companyName
+        })
+        .from(users)
+        .where(
+          and(
+            eq(users.isActive, true),
+            eq(users.newsletterSubscribed, true),
+            or(
+              eq(users.role, 'owner'),
+              eq(users.isMultiShopAdmin, true)
+            )
+          )
+        );
+
+      console.log(`📧 Versende Newsletter "${newsletter.title}" an ${recipients.length} Empfänger`);
+
+      let successCount = 0;
+      let failCount = 0;
+
+      // Newsletter an alle Empfänger versenden
+      for (const recipient of recipients) {
+        try {
+          // Newsletter-Send-Eintrag erstellen
+          const [newsletterSend] = await db
+            .insert(newsletterSends)
+            .values({
+              newsletterId: newsletter.id,
+              recipientId: recipient.id,
+              recipientEmail: recipient.email,
+              status: 'pending'
+            })
+            .returning();
+
+          // Unsubscribe-Link generieren
+          const unsubscribeLink = `${process.env.REPL_SLUG ? `https://${process.env.REPL_SLUG}.${process.env.REPLIT_DEV_DOMAIN || 'replit.dev'}` : 'http://localhost:5000'}/api/newsletter/unsubscribe?token=${Buffer.from(recipient.id.toString()).toString('base64')}&email=${encodeURIComponent(recipient.email)}`;
+
+          // E-Mail-Inhalt mit Unsubscribe-Link erweitern
+          const emailContent = `
+            ${newsletter.content}
+            <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; font-size: 12px; color: #666;">
+              <p>Sie erhalten diese E-Mail als registrierter Shop-Owner bei ClientKing Handyshop Verwaltung.</p>
+              <p><a href="${unsubscribeLink}" style="color: #666; text-decoration: underline;">Newsletter abbestellen</a></p>
+            </div>
+          `;
+
+          // E-Mail versenden
+          await emailService.sendEmail({
+            to: recipient.email,
+            subject: newsletter.subject,
+            html: emailContent,
+            from: 'ClientKing Newsletter <noreply@clientking.de>'
+          });
+
+          // Newsletter-Send als erfolgreich markieren
+          await db
+            .update(newsletterSends)
+            .set({
+              status: 'sent',
+              sentAt: new Date()
+            })
+            .where(eq(newsletterSends.id, newsletterSend.id));
+
+          successCount++;
+          console.log(`✅ Newsletter erfolgreich an ${recipient.email} gesendet`);
+
+        } catch (sendError: any) {
+          failCount++;
+          console.error(`❌ Fehler beim Senden an ${recipient.email}:`, sendError.message);
+
+          // Fehler in der Datenbank speichern
+          await db
+            .update(newsletterSends)
+            .set({
+              status: 'failed',
+              errorMessage: sendError.message
+            })
+            .where(
+              and(
+                eq(newsletterSends.newsletterId, newsletter.id),
+                eq(newsletterSends.recipientId, recipient.id)
+              )
+            );
+        }
+      }
+
+      // Newsletter-Status und Statistiken aktualisieren
+      await db
+        .update(newsletters)
+        .set({
+          status: 'sent',
+          sentAt: new Date(),
+          totalRecipients: recipients.length,
+          successfulSends: successCount,
+          failedSends: failCount
+        })
+        .where(eq(newsletters.id, newsletter.id));
+
+      res.json({
+        message: `Newsletter erfolgreich versendet`,
+        totalRecipients: recipients.length,
+        successfulSends: successCount,
+        failedSends: failCount
+      });
+
+    } catch (error: any) {
+      console.error("Fehler beim Versenden des Newsletters:", error);
+      res.status(500).json({ message: `Fehler beim Versenden des Newsletters: ${error.message}` });
+    }
+  });
+
+  /**
+   * Newsletter löschen
+   */
+  app.delete("/api/superadmin/newsletters/:id", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const newsletterId = parseInt(req.params.id);
+      
+      if (isNaN(newsletterId)) {
+        return res.status(400).json({ message: "Ungültige Newsletter-ID" });
+      }
+
+      // Prüfen ob Newsletter existiert
+      const [newsletter] = await db
+        .select()
+        .from(newsletters)
+        .where(eq(newsletters.id, newsletterId));
+
+      if (!newsletter) {
+        return res.status(404).json({ message: "Newsletter nicht gefunden" });
+      }
+
+      // Newsletter und zugehörige Sends löschen
+      await db.delete(newsletterSends).where(eq(newsletterSends.newsletterId, newsletterId));
+      await db.delete(newsletters).where(eq(newsletters.id, newsletterId));
+
+      res.status(204).send();
+    } catch (error: any) {
+      console.error("Fehler beim Löschen des Newsletters:", error);
+      res.status(500).json({ message: `Fehler beim Löschen des Newsletters: ${error.message}` });
+    }
+  });
+
+  /**
+   * Newsletter-Statistiken für Dashboard
+   */
+  app.get("/api/superadmin/newsletters/stats", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      // Gesamtanzahl Newsletter
+      const [{ totalNewsletters }] = await db
+        .select({ totalNewsletters: sql`count(*)` })
+        .from(newsletters) as [{ totalNewsletters: number }];
+
+      // Anzahl versendete Newsletter
+      const [{ sentNewsletters }] = await db
+        .select({ sentNewsletters: sql`count(*)` })
+        .from(newsletters)
+        .where(eq(newsletters.status, 'sent')) as [{ sentNewsletters: number }];
+
+      // Anzahl abonnierte Benutzer (Owner + Multi-Shop-Admins)
+      const [{ subscribedUsers }] = await db
+        .select({ subscribedUsers: sql`count(*)` })
+        .from(users)
+        .where(
+          and(
+            eq(users.isActive, true),
+            eq(users.newsletterSubscribed, true),
+            or(
+              eq(users.role, 'owner'),
+              eq(users.isMultiShopAdmin, true)
+            )
+          )
+        ) as [{ subscribedUsers: number }];
+
+      // Letzte 5 versendete Newsletter
+      const recentNewsletters = await db
+        .select({
+          id: newsletters.id,
+          title: newsletters.title,
+          sentAt: newsletters.sentAt,
+          totalRecipients: newsletters.totalRecipients,
+          successfulSends: newsletters.successfulSends
+        })
+        .from(newsletters)
+        .where(eq(newsletters.status, 'sent'))
+        .orderBy(desc(newsletters.sentAt))
+        .limit(5);
+
+      res.json({
+        totalNewsletters: Number(totalNewsletters),
+        sentNewsletters: Number(sentNewsletters),
+        subscribedUsers: Number(subscribedUsers),
+        recentNewsletters
+      });
+
+    } catch (error: any) {
+      console.error("Fehler beim Abrufen der Newsletter-Statistiken:", error);
+      res.status(500).json({ message: `Fehler beim Abrufen der Newsletter-Statistiken: ${error.message}` });
     }
   });
 }
