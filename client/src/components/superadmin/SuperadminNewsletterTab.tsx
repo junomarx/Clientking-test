@@ -300,6 +300,11 @@ export default function SuperadminNewsletterTab() {
             <div className="text-2xl font-bold">
               {statsLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : stats?.subscribedUsers || 0}
             </div>
+            {!statsLoading && totalShopsData?.totalShops && totalShopsData.totalShops > 0 && (
+              <p className="text-xs text-muted-foreground">
+                {Math.round(((stats?.subscribedUsers || 0) / totalShopsData.totalShops) * 100)}% aller Shops
+              </p>
+            )}
           </CardContent>
         </Card>
         
