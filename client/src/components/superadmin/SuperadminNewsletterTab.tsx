@@ -90,7 +90,6 @@ interface NewsletterSend {
 }
 
 export default function SuperadminNewsletterTab() {
-  console.log('🔍 SuperadminNewsletterTab wird gerendert');
   const { toast } = useToast();
   
   // States
@@ -241,10 +240,6 @@ export default function SuperadminNewsletterTab() {
 
   return (
     <div className="space-y-6">
-      {/* DEBUG: Newsletter Component Rendering Check */}
-      <div style={{background: 'green', color: 'white', padding: '10px', textAlign: 'center'}}>
-        ✅ Newsletter-Komponente wird gerendert! Loading states: newsletters={newslettersLoading}, stats={statsLoading}
-      </div>
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
@@ -469,19 +464,19 @@ export default function SuperadminNewsletterTab() {
                   <div className="grid gap-3">
                     <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
                       <div>
-                        <code className="font-mono text-sm bg-white px-2 py-1 rounded border">{{empfaengername}}</code>
+                        <code className="font-mono text-sm bg-white px-2 py-1 rounded border">{"{{empfaengername}}"}</code>
                         <p className="text-sm text-gray-600 mt-1">Name des Newsletter-Empfängers (Shop-Owner)</p>
                       </div>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
                       <div>
-                        <code className="font-mono text-sm bg-white px-2 py-1 rounded border">{{empfaengeremail}}</code>
+                        <code className="font-mono text-sm bg-white px-2 py-1 rounded border">{"{{empfaengeremail}}"}</code>
                         <p className="text-sm text-gray-600 mt-1">E-Mail-Adresse des Empfängers</p>
                       </div>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
                       <div>
-                        <code className="font-mono text-sm bg-white px-2 py-1 rounded border">{{firmenname}}</code>
+                        <code className="font-mono text-sm bg-white px-2 py-1 rounded border">{"{{firmenname}}"}</code>
                         <p className="text-sm text-gray-600 mt-1">Name der Firma/des Shops</p>
                       </div>
                     </div>
@@ -493,7 +488,7 @@ export default function SuperadminNewsletterTab() {
                   <div className="grid gap-3">
                     <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
                       <div>
-                        <code className="font-mono text-sm bg-white px-2 py-1 rounded border">{{abmeldelink}}</code>
+                        <code className="font-mono text-sm bg-white px-2 py-1 rounded border">{"{{abmeldelink}}"}</code>
                         <p className="text-sm text-gray-600 mt-1">Automatisch generierter Link zum Abmelden vom Newsletter</p>
                       </div>
                     </div>
@@ -505,13 +500,13 @@ export default function SuperadminNewsletterTab() {
                   <div className="grid gap-3">
                     <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
                       <div>
-                        <code className="font-mono text-sm bg-white px-2 py-1 rounded border">{{clientking_logo}}</code>
+                        <code className="font-mono text-sm bg-white px-2 py-1 rounded border">{"{{clientking_logo}}"}</code>
                         <p className="text-sm text-gray-600 mt-1">ClientKing Logo (als HTML img-Tag)</p>
                       </div>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
                       <div>
-                        <code className="font-mono text-sm bg-white px-2 py-1 rounded border">{{aktuellesjahr}}</code>
+                        <code className="font-mono text-sm bg-white px-2 py-1 rounded border">{"{{aktuellesjahr}}"}</code>
                         <p className="text-sm text-gray-600 mt-1">Aktuelles Jahr (z.B. 2025)</p>
                       </div>
                     </div>
@@ -526,13 +521,13 @@ export default function SuperadminNewsletterTab() {
                 </p>
                 <div className="bg-white p-3 rounded border text-sm">
                   <strong>Beispiel:</strong><br/>
-                  <code>Hallo {{empfaengername}},<br/>
+                  <code>{"Hallo {{empfaengername}},"}<br/>
                   <br/>
                   willkommen bei ClientKing!<br/>
                   <br/>
-                  Ihr Team von {{firmenname}}<br/>
+                  {"Ihr Team von {{firmenname}}"}<br/>
                   <br/>
-                  <a href="{{abmeldelink}}">Newsletter abbestellen</a></code>
+                  {"<a href=\"{{abmeldelink}}\">Newsletter abbestellen</a>"}</code>
                 </div>
               </div>
             </CardContent>
