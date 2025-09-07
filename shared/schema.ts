@@ -1161,4 +1161,74 @@ export const passwordResetTokensRelations = relations(passwordResetTokens, ({ on
   }),
 }));
 
+// Newsletter system - Für Superadmin-Newsletter an Shop-Owner und Multi-Shop-Admins
+export const newsletters = pgTable("newsletters", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  subject: text("subject").notNull(),
+  content: text("content").notNull(), // HTML-Content für E-Mail
+  createdBy: integer("created_by").notNull().references(() => users.id), // Superadmin der erstellt hat
+  status: text("status").default("draft").notNull(), // 'draft', 'sent'
+  // Statistiken
+  totalRecipients: integer("total_recipients").default(0).notNull(),
+  successfulSends: integer("successful_sends").default(0).notNull(),
+  failedSends: integer("failed_sends").default(0).notNull(),
+  // Zeitstempel
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  sentAt: timestamp("sent_at"), // NULL wenn noch nicht versendet
+});
+
+export const insertNewsletterSchema = createInsertSchema(newsletters).omit({
+  id: true,
+  createdAt: true,
+  sentAt: true,
+  totalRecipients: true,
+  successfulSends: true,
+  failedSends: true,
+});
+
+export type Newsletter = typeof newsletters.$inferSelect;
+export type InsertNewsletter = z.infer<typeof insertNewsletterSchema>;
+
+// Newsletter Sends - Tracking einzelner Newsletter-Versände
+export const newsletterSends = pgTable("newsletter_sends", {
+  id: serial("id").primaryKey(),
+  newsletterId: integer("newsletter_id").notNull().references(() => newsletters.id),
+  recipientId: integer("recipient_id").notNull().references(() => users.id),
+  recipientEmail: text("recipient_email").notNull(), // Backup für E-Mail-Adresse
+  status: text("status").default("pending").notNull(), // 'pending', 'sent', 'failed', 'unsubscribed'
+  errorMessage: text("error_message"), // Bei Fehlern
+  sentAt: timestamp("sent_at"),
+  unsubscribedAt: timestamp("unsubscribed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertNewsletterSendSchema = createInsertSchema(newsletterSends).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type NewsletterSend = typeof newsletterSends.$inferSelect;
+export type InsertNewsletterSend = z.infer<typeof insertNewsletterSendSchema>;
+
+// Relations für Newsletter System
+export const newslettersRelations = relations(newsletters, ({ one, many }) => ({
+  createdByUser: one(users, {
+    fields: [newsletters.createdBy],
+    references: [users.id],
+  }),
+  sends: many(newsletterSends),
+}));
+
+export const newsletterSendsRelations = relations(newsletterSends, ({ one }) => ({
+  newsletter: one(newsletters, {
+    fields: [newsletterSends.newsletterId],
+    references: [newsletters.id],
+  }),
+  recipient: one(users, {
+    fields: [newsletterSends.recipientId],
+    references: [users.id],
+  }),
+}));
+
 
