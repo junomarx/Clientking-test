@@ -273,7 +273,7 @@ export default function SuperadminNewsletterTab() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {statsLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : stats?.totalSubscribers || 0}
+              {statsLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : stats?.subscribedUsers || 0}
             </div>
           </CardContent>
         </Card>
