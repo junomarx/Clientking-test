@@ -1569,6 +1569,254 @@ export class EmailService {
       throw error;
     }
   }
+
+  /**
+   * Sendet einen Newsletter mit professioneller HTML-Vorlage an alle abonnierten Benutzer
+   * @param newsletter Newsletter-Daten (subject, content)
+   * @param recipients Array von Empfänger-E-Mail-Adressen
+   * @returns Promise<{ success: boolean; sentCount: number; failedCount: number; details: any[] }>
+   */
+  async sendNewsletter(newsletter: { subject: string; content: string }, recipients: { email: string; name?: string }[]): Promise<{ success: boolean; sentCount: number; failedCount: number; details: any[] }> {
+    try {
+      console.log(`📧 Starte Newsletter-Versand an ${recipients.length} Empfänger...`);
+      
+      if (!this.smtpTransporter || !this.superadminEmailConfig) {
+        console.error('❌ Kein SMTP-Transporter oder -Konfiguration verfügbar für Newsletter-Versand');
+        return { success: false, sentCount: 0, failedCount: recipients.length, details: [] };
+      }
+
+      let sentCount = 0;
+      let failedCount = 0;
+      const details: any[] = [];
+
+      // Newsletter-HTML-Template mit ClientKing Logo
+      const htmlTemplate = this.createNewsletterHtmlTemplate(newsletter.subject, newsletter.content);
+
+      const senderEmail = this.superadminEmailConfig.smtpSenderEmail || this.superadminEmailConfig.smtpUser;
+      const senderName = this.superadminEmailConfig.smtpSenderName || 'ClientKing Handyshop Verwaltung';
+
+      // Versende Newsletter an jeden Empfänger einzeln
+      for (const recipient of recipients) {
+        try {
+          // Personalisierte Unsubscribe-URL generieren
+          const unsubscribeUrl = `${process.env.FRONTEND_URL || 'http://localhost:5000'}/unsubscribe?email=${encodeURIComponent(recipient.email)}`;
+          
+          // Ersetze Platzhalter im HTML-Template
+          const personalizedHtml = htmlTemplate
+            .replace(/{{recipientName}}/g, recipient.name || 'Geschätzte/r Kunde/in')
+            .replace(/{{unsubscribeUrl}}/g, unsubscribeUrl);
+
+          const mailOptions = {
+            from: `"${senderName}" <${senderEmail}>`,
+            to: recipient.email,
+            subject: newsletter.subject,
+            html: personalizedHtml,
+            // Füge Unsubscribe-Header hinzu (RFC 8058)
+            headers: {
+              'List-Unsubscribe': `<${unsubscribeUrl}>`,
+              'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
+            }
+          };
+
+          console.log(`📤 Sende Newsletter an: ${recipient.email}...`);
+          const info = await this.smtpTransporter.sendMail(mailOptions);
+          
+          sentCount++;
+          details.push({
+            email: recipient.email,
+            status: 'sent',
+            messageId: info.messageId
+          });
+          
+          console.log(`✅ Newsletter erfolgreich an ${recipient.email} gesendet (ID: ${info.messageId})`);
+          
+          // Kleine Verzögerung zwischen E-Mails, um SMTP-Server nicht zu überlasten
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
+        } catch (error) {
+          console.error(`❌ Fehler beim Senden an ${recipient.email}:`, error);
+          failedCount++;
+          details.push({
+            email: recipient.email,
+            status: 'failed',
+            error: error instanceof Error ? error.message : 'Unbekannter Fehler'
+          });
+        }
+      }
+
+      console.log(`📊 Newsletter-Versand abgeschlossen: ${sentCount} erfolgreich, ${failedCount} fehlgeschlagen`);
+      
+      return {
+        success: sentCount > 0,
+        sentCount,
+        failedCount,
+        details
+      };
+      
+    } catch (error) {
+      console.error('❌ Fehler beim Newsletter-Versand:', error);
+      return {
+        success: false,
+        sentCount: 0,
+        failedCount: recipients.length,
+        details: [{ error: error instanceof Error ? error.message : 'Unbekannter Fehler' }]
+      };
+    }
+  }
+
+  /**
+   * Erstellt eine professionelle HTML-Vorlage für Newsletter mit ClientKing Logo
+   * @param subject Newsletter-Betreff
+   * @param content Newsletter-Inhalt (als Plain Text oder HTML)
+   * @returns HTML-String
+   */
+  private createNewsletterHtmlTemplate(subject: string, content: string): string {
+    // Basis-URL für Assets
+    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5000';
+    const logoUrl = `${baseUrl}/clientking-logo.png`;
+
+    return `
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${subject}</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .logo {
+            max-width: 150px;
+            height: auto;
+            margin-bottom: 20px;
+            background-color: white;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #4f46e5;
+            font-weight: 500;
+        }
+        .message {
+            font-size: 16px;
+            line-height: 1.8;
+            margin-bottom: 30px;
+            white-space: pre-wrap;
+        }
+        .footer {
+            background-color: #f8fafc;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e5e7eb;
+        }
+        .footer p {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #6b7280;
+        }
+        .unsubscribe {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+        .unsubscribe a {
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 12px;
+        }
+        .unsubscribe a:hover {
+            text-decoration: underline;
+        }
+        .brand-footer {
+            margin-top: 15px;
+            font-weight: 600;
+            color: #3b82f6;
+        }
+        
+        /* Responsive Design */
+        @media only screen and (max-width: 600px) {
+            .container {
+                margin: 10px;
+                border-radius: 5px;
+            }
+            .header {
+                padding: 20px 15px;
+            }
+            .header h1 {
+                font-size: 24px;
+            }
+            .content {
+                padding: 30px 20px;
+            }
+            .footer {
+                padding: 20px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="${logoUrl}" alt="ClientKing Logo" class="logo" />
+            <h1>${subject}</h1>
+        </div>
+        
+        <div class="content">
+            <div class="greeting">
+                Hallo {{recipientName}},
+            </div>
+            
+            <div class="message">
+${content}
+            </div>
+        </div>
+        
+        <div class="footer">
+            <div class="brand-footer">
+                ClientKing Handyshop Verwaltung
+            </div>
+            <p>Die professionelle Lösung für Ihr Reparaturgeschäft</p>
+            <p>Vielen Dank für Ihr Vertrauen in unsere Software!</p>
+            
+            <div class="unsubscribe">
+                <p>Sie erhalten diese E-Mail, weil Sie Newsletter von ClientKing abonniert haben.</p>
+                <a href="{{unsubscribeUrl}}">Hier abmelden</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>`;
+  }
 }
 
 export const emailService = new EmailService();

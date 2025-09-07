@@ -1987,65 +1987,45 @@ ${existingTemplate.body}`;
 
       console.log(`📧 Versende Newsletter "${newsletter.title}" an ${recipients.length} Empfänger`);
 
-      let successCount = 0;
-      let failCount = 0;
+      // Vorbereitung der Empfänger-Liste für das EmailService
+      const emailRecipients = recipients.map(recipient => ({
+        email: recipient.email,
+        name: recipient.firstName && recipient.lastName 
+          ? `${recipient.firstName} ${recipient.lastName}` 
+          : recipient.companyName || 'Geschätzte/r Kunde/in'
+      }));
 
-      // Newsletter an alle Empfänger versenden
-      for (const recipient of recipients) {
-        try {
-          // Newsletter-Send-Eintrag erstellen
-          const [newsletterSend] = await db
-            .insert(newsletterSends)
-            .values({
-              newsletterId: newsletter.id,
-              recipientId: recipient.id,
-              recipientEmail: recipient.email,
-              status: 'pending'
-            })
-            .returning();
+      // Newsletter-Send-Einträge für alle Empfänger erstellen
+      const newsletterSendData = recipients.map(recipient => ({
+        newsletterId: newsletter.id,
+        recipientId: recipient.id,
+        recipientEmail: recipient.email,
+        status: 'pending' as const
+      }));
 
-          // Unsubscribe-Link generieren
-          const unsubscribeLink = `${process.env.REPL_SLUG ? `https://${process.env.REPL_SLUG}.${process.env.REPLIT_DEV_DOMAIN || 'replit.dev'}` : 'http://localhost:5000'}/api/newsletter/unsubscribe?token=${Buffer.from(recipient.id.toString()).toString('base64')}&email=${encodeURIComponent(recipient.email)}`;
+      await db.insert(newsletterSends).values(newsletterSendData);
 
-          // E-Mail-Inhalt mit Unsubscribe-Link erweitern
-          const emailContent = `
-            ${newsletter.content}
-            <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; font-size: 12px; color: #666;">
-              <p>Sie erhalten diese E-Mail als registrierter Shop-Owner bei ClientKing Handyshop Verwaltung.</p>
-              <p><a href="${unsubscribeLink}" style="color: #666; text-decoration: underline;">Newsletter abbestellen</a></p>
-            </div>
-          `;
+      // Newsletter mit professioneller HTML-Vorlage und ClientKing Logo versenden
+      const sendResult = await emailService.sendNewsletter(
+        {
+          subject: newsletter.subject,
+          content: newsletter.content
+        },
+        emailRecipients
+      );
 
-          // E-Mail versenden
-          await emailService.sendEmail({
-            to: recipient.email,
-            subject: newsletter.subject,
-            html: emailContent,
-            from: 'ClientKing Newsletter <noreply@clientking.de>'
-          });
+      console.log(`📊 Newsletter-Versand Ergebnis: ${sendResult.sentCount} erfolgreich, ${sendResult.failedCount} fehlgeschlagen`);
 
-          // Newsletter-Send als erfolgreich markieren
+      // Newsletter-Send-Status in der Datenbank aktualisieren
+      for (const detail of sendResult.details) {
+        const recipient = recipients.find(r => r.email === detail.email);
+        if (recipient) {
           await db
             .update(newsletterSends)
             .set({
-              status: 'sent',
-              sentAt: new Date()
-            })
-            .where(eq(newsletterSends.id, newsletterSend.id));
-
-          successCount++;
-          console.log(`✅ Newsletter erfolgreich an ${recipient.email} gesendet`);
-
-        } catch (sendError: any) {
-          failCount++;
-          console.error(`❌ Fehler beim Senden an ${recipient.email}:`, sendError.message);
-
-          // Fehler in der Datenbank speichern
-          await db
-            .update(newsletterSends)
-            .set({
-              status: 'failed',
-              errorMessage: sendError.message
+              status: detail.status === 'sent' ? 'sent' : 'failed',
+              sentAt: detail.status === 'sent' ? new Date() : undefined,
+              errorMessage: detail.error || undefined
             })
             .where(
               and(
@@ -2055,6 +2035,9 @@ ${existingTemplate.body}`;
             );
         }
       }
+
+      const successCount = sendResult.sentCount;
+      const failCount = sendResult.failedCount;
 
       // Newsletter-Status und Statistiken aktualisieren
       await db
