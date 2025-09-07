@@ -126,6 +126,35 @@ export const defaultAppEmailTemplates: DefaultEmailTemplate[] = [
     `,
     variables: ["benutzername", "resetLink"],
     type: 'app'
+  },
+  {
+    name: "Passwort erfolgreich geändert",
+    subject: "Passwort erfolgreich geändert - ClientKing Handyshop Verwaltung",
+    body: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <h1 style="color: #1e40af; font-size: 28px; margin: 0; font-weight: bold;">ClientKing</h1>
+            <p style="color: #64748b; font-size: 16px; margin: 5px 0 0 0;">Handyshop Verwaltung</p>
+          </div>
+          <h2 style="color: #16a34a; margin: 0;">✓ Passwort erfolgreich geändert</h2>
+        </div>
+        
+        <p>Sehr geehrte(r) {{benutzername}},</p>
+        
+        <p>Ihr Passwort wurde erfolgreich zurückgesetzt.</p>
+        
+        <p>Falls Sie diese Änderung nicht vorgenommen haben, wenden Sie sich sofort an den Support.</p>
+        
+        <p>Mit freundlichen Grüßen,<br>Ihr ClientKing Handyshop Verwaltungs-Team</p>
+        
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666;">
+          <p>Diese E-Mail wurde automatisch generiert. Bitte antworten Sie nicht darauf.</p>
+        </div>
+      </div>
+    `,
+    variables: ["benutzername"],
+    type: 'app'
   }
 ];
 

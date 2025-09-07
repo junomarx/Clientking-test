@@ -770,48 +770,15 @@ export function setupAuth(app: Express) {
       // Create reset URL
       const resetUrl = `${req.protocol}://${req.get('host')}/reset-password?token=${token}`;
       
-      // Send email with professional template matching existing design
-      const emailHtml = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-          <div style="text-align: center; margin-bottom: 30px;">
-            <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-              <h1 style="color: #1e40af; font-size: 28px; margin: 0; font-weight: bold;">ClientKing</h1>
-              <p style="color: #64748b; font-size: 16px; margin: 5px 0 0 0;">Handyshop Verwaltung</p>
-            </div>
-            <h2 style="color: #4f46e5; margin: 0;">Passwort zurücksetzen</h2>
-          </div>
-          
-          <p>Hallo,</p>
-          
-          <p>Sie haben eine Passwort-Zurücksetzung für Ihr Konto angefordert.</p>
-          
-          <p>Klicken Sie auf den folgenden Button, um ein neues Passwort zu erstellen:</p>
-          
-          <p style="text-align: center; margin: 30px 0;">
-            <a href="${resetUrl}" 
-               style="display: inline-block; padding: 12px 24px; background-color: #4f46e5; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">
-              Passwort zurücksetzen
-            </a>
-          </p>
-          
-          <p>Dieser Link ist nur 15 Minuten gültig.</p>
-          
-          <p>Falls Sie diese Anfrage nicht gestellt haben, können Sie diese E-Mail einfach ignorieren.</p>
-          
-          <p>Mit freundlichen Grüßen,<br>Ihr Handyshop Verwaltungs-Team</p>
-          
-          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666;">
-            <p>Diese E-Mail wurde automatisch generiert. Bitte antworten Sie nicht darauf.</p>
-            <p>Alternativ-Link: <a href="${resetUrl}" style="color: #4f46e5;">${resetUrl}</a></p>
-          </div>
-        </div>
-      `;
-      
-      const sent = await emailService.sendSystemEmail({
-        to: user.email,
-        subject: "Passwort zurücksetzen - Handyshop Verwaltung",
-        html: emailHtml
-      });
+      // Send email using the superadmin template system with ClientKing branding
+      const sent = await emailService.sendEmailByTemplateName(
+        "Passwort zurücksetzen",
+        user.email,
+        {
+          benutzername: user.username || user.email,
+          resetLink: resetUrl
+        }
+      );
       
       if (sent) {
         console.log(`Password reset requested for user ${user.email} from IP ${clientIp}`);
@@ -922,36 +889,14 @@ export function setupAuth(app: Express) {
       // Log password change
       console.log(`Password successfully reset for user ${user.email} from IP ${clientIp}`);
       
-      // Send confirmation email
-      const confirmationHtml = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-          <div style="text-align: center; margin-bottom: 30px;">
-            <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-              <h1 style="color: #1e40af; font-size: 28px; margin: 0; font-weight: bold;">ClientKing</h1>
-              <p style="color: #64748b; font-size: 16px; margin: 5px 0 0 0;">Handyshop Verwaltung</p>
-            </div>
-            <h2 style="color: #16a34a; margin: 0;">✓ Passwort erfolgreich geändert</h2>
-          </div>
-          
-          <p>Hallo,</p>
-          
-          <p>Ihr Passwort wurde erfolgreich zurückgesetzt.</p>
-          
-          <p>Falls Sie diese Änderung nicht vorgenommen haben, wenden Sie sich sofort an den Support.</p>
-          
-          <p>Mit freundlichen Grüßen,<br>Ihr Handyshop Verwaltungs-Team</p>
-          
-          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666;">
-            <p>Diese E-Mail wurde automatisch generiert. Bitte antworten Sie nicht darauf.</p>
-          </div>
-        </div>
-      `;
-      
-      await emailService.sendSystemEmail({
-        to: user.email,
-        subject: "Passwort erfolgreich geändert - Handyshop Verwaltung",
-        html: confirmationHtml
-      });
+      // Send confirmation email using the superadmin template system
+      await emailService.sendEmailByTemplateName(
+        "Passwort erfolgreich geändert",
+        user.email,
+        {
+          benutzername: user.username || user.email
+        }
+      );
       
       return res.status(200).json({ message: "Passwort erfolgreich zurückgesetzt" });
       
