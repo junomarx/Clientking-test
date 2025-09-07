@@ -18,7 +18,8 @@ import {
   X,
   ShieldAlert,
   UserCog,
-  Building2
+  Building2,
+  Send
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { User, BusinessSettings } from "@shared/schema";
@@ -122,6 +123,17 @@ export function SuperadminSidebar({
         >
           <Mail className="h-5 w-5 mr-2" />
           E-Mail
+        </Button>
+        <Button 
+          variant={activeTab === "newsletter" ? "default" : "ghost"}
+          className="w-full justify-start"
+          onClick={() => {
+            setActiveTab("newsletter");
+            if (isMobile) closeMenu();
+          }}
+        >
+          <Send className="h-5 w-5 mr-2" />
+          Newsletter
         </Button>
         <Button 
           variant={activeTab === "print-templates" ? "default" : "ghost"}

@@ -13,6 +13,7 @@ import SuperadminUsersTab from "@/components/superadmin/SuperadminUsersTab";
 import ResponsiveSuperadminDevicesTab from "@/components/superadmin/ResponsiveSuperadminDevicesTab";
 import DeviceStatisticsTab from "@/components/superadmin/DeviceStatisticsTab";
 import SuperadminEmailTab from "@/components/superadmin/SuperadminEmailTab";
+import SuperadminNewsletterTab from "@/components/superadmin/SuperadminNewsletterTab";
 import SuperadminPrintTemplatesTab from "@/components/superadmin/SuperadminPrintTemplatesTab";
 import SuperadminSupportModeTab from "@/components/superadmin/SuperadminSupportModeTab";
 import SuperadminAccountTab from "@/components/superadmin/SuperadminAccountTab";
@@ -36,7 +37,7 @@ export default function SuperadminPage() {
     const userIdParam = params.get('userId');
     
     // Tab setzen, wenn in URL vorhanden
-    if (tabParam && ['dashboard', 'users', 'devices', 'device-statistics', 'email', 'print-templates', 'support-mode', 'account', 'multi-shop'].includes(tabParam)) {
+    if (tabParam && ['dashboard', 'users', 'devices', 'device-statistics', 'email', 'newsletter', 'print-templates', 'support-mode', 'account', 'multi-shop'].includes(tabParam)) {
       setActiveTab(tabParam);
     }
     
@@ -90,6 +91,7 @@ export default function SuperadminPage() {
               {activeTab === "devices" && "Geräte"}
               {activeTab === "device-statistics" && "Statistiken"}
               {activeTab === "email" && "E-Mail"}
+              {activeTab === "newsletter" && "Newsletter"}
               {activeTab === "print-templates" && "Vorlagen"}
               {activeTab === "support-mode" && "Support"}
               {activeTab === "account" && "Konto"}
@@ -106,6 +108,7 @@ export default function SuperadminPage() {
               {activeTab === "devices" && "Geräteverwaltung"}
               {activeTab === "device-statistics" && "Gerätestatistiken"}
               {activeTab === "email" && "E-Mail-Konfiguration"}
+              {activeTab === "newsletter" && "Newsletter-Verwaltung"}
               {activeTab === "print-templates" && "Vorlagenverwaltung"}
               {activeTab === "support-mode" && "Support-Modus"}
               {activeTab === "account" && "Konto-Einstellungen"}
@@ -133,6 +136,7 @@ export default function SuperadminPage() {
               {activeTab === "devices" && <ResponsiveSuperadminDevicesTab />}
               {activeTab === "device-statistics" && <DeviceStatisticsTab />}
               {activeTab === "email" && <SuperadminEmailTab />}
+              {activeTab === "newsletter" && <SuperadminNewsletterTab />}
               {activeTab === "print-templates" && <SuperadminPrintTemplatesTab />}
               {activeTab === "support-mode" && <SuperadminSupportModeTab />}
               {activeTab === "account" && <SuperadminAccountTab />}
