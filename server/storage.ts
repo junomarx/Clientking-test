@@ -2267,17 +2267,12 @@ export class DatabaseStorage implements IStorage {
       
       console.log(`bulkUpdateAccessoryStatus: Aktualisiere ${accessoryIds.length} Zubehör-Artikel für Benutzer ${userId} (Shop ${user.shopId}) auf Status '${status}'`);
       
-      // AUTO-ARCHIVE: If status is "erledigt", archive instead of delete
+      // AUTO-DELETE: If status is "erledigt", completely delete from database
       if (status === "erledigt") {
-        console.log(`🗃️ SERVER: Auto-archiving ${accessoryIds.length} accessories with status "erledigt"`);
+        console.log(`🗑️ SERVER: Auto-deleting ${accessoryIds.length} accessories with status "erledigt" from database`);
         
-        const archiveResult = await db
-          .update(accessories)
-          .set({ 
-            status: status,
-            archived: true, // Automatische Archivierung
-            updatedAt: new Date()
-          })
+        const deleteResult = await db
+          .delete(accessories)
           .where(
             and(
               inArray(accessories.id, accessoryIds),
@@ -2285,9 +2280,9 @@ export class DatabaseStorage implements IStorage {
             )
           );
         
-        const archivedCount = archiveResult.rowCount;
-        console.log(`✅ SERVER: Auto-archived ${archivedCount} accessories with "erledigt" status`);
-        return archivedCount > 0;
+        const deletedCount = deleteResult.rowCount;
+        console.log(`✅ SERVER: Auto-deleted ${deletedCount} accessories with "erledigt" status from database`);
+        return deletedCount > 0;
       }
       
       // Regular status update for non-"erledigt" statuses
