@@ -172,7 +172,8 @@ export default function SuperadminNewsletterTab() {
   const deleteNewsletterMutation = useMutation({
     mutationFn: async (id: number) => {
       const response = await apiRequest('DELETE', `/api/superadmin/newsletters/${id}`);
-      return response.json();
+      // 204 No Content hat keinen Response-Body
+      return response.ok;
     },
     onSuccess: () => {
       toast({
