@@ -2244,7 +2244,7 @@ ${existingTemplate.body}`;
   });
 
   /**
-   * Detaillierte Empfänger-Liste für einen Newsletter abrufen
+   * Detaillierte Empfänger-Liste für einen Newsletter abrufen (mit Shop-Namen)
    */
   app.get("/api/superadmin/newsletters/:id/recipients", isSuperadmin, async (req: Request, res: Response) => {
     try {
@@ -2256,8 +2256,12 @@ ${existingTemplate.body}`;
           recipientEmail: newsletterSends.recipientEmail,
           status: newsletterSends.status,
           sentAt: newsletterSends.sentAt,
+          shopName: businessSettings.businessName,
+          shopId: users.shopId,
         })
         .from(newsletterSends)
+        .leftJoin(users, eq(newsletterSends.recipientEmail, users.email))
+        .leftJoin(businessSettings, eq(users.shopId, businessSettings.shopId))
         .where(eq(newsletterSends.newsletterId, newsletterId))
         .orderBy(desc(newsletterSends.sentAt));
 
