@@ -1960,9 +1960,8 @@ ${existingTemplate.body}`;
         return res.status(404).json({ message: "Newsletter nicht gefunden" });
       }
 
-      if (newsletter.status === 'sent') {
-        return res.status(400).json({ message: "Newsletter wurde bereits versendet" });
-      }
+      // Newsletter kann mehrfach versendet werden - Sperre entfernt
+      console.log(`📧 Newsletter "${newsletter.title}" wird ${newsletter.status === 'sent' ? 'erneut' : ''} versendet`);
 
       // Alle berechtigten und abonnierten Benutzer abrufen (nur Owner und Multi-Shop-Admins)
       const recipients = await db
