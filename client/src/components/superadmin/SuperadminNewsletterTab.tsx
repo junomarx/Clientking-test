@@ -96,6 +96,8 @@ interface NewsletterRecipient {
   recipientEmail: string;
   status: 'sent' | 'failed';
   sentAt: string;
+  shopName?: string | null;
+  shopId?: number | null;
 }
 
 export default function SuperadminNewsletterTab() {
@@ -127,6 +129,11 @@ export default function SuperadminNewsletterTab() {
 
   const { data: sendHistory, isLoading: historyLoading } = useQuery<NewsletterHistoryItem[]>({
     queryKey: ['/api/superadmin/newsletters/send-history'],
+  });
+
+  // Query für Gesamtzahl der Shops
+  const { data: totalShopsData } = useQuery<{ totalShops: number }>({
+    queryKey: ['/api/superadmin/shops/total-count'],
   });
 
   // Query für detaillierte Empfänger-Liste 
@@ -594,12 +601,27 @@ export default function SuperadminNewsletterTab() {
                           <div className="space-y-1">
                             <div>{historyItem.subject}</div>
                             <div className="text-sm text-gray-500 md:hidden">
-                              {historyItem.recipientCount} Empfänger • {format(new Date(historyItem.lastSentAt), 'dd.MM.yyyy', { locale: de })}
+                              <div>
+                                {historyItem.recipientCount} Empfänger
+                                {totalShopsData?.totalShops && totalShopsData.totalShops > 0 && (
+                                  <span className="text-xs ml-1">
+                                    ({historyItem.recipientCount} von {totalShopsData.totalShops} Shops - {Math.round((historyItem.recipientCount / totalShopsData.totalShops) * 100)}%)
+                                  </span>
+                                )}
+                              </div>
+                              <div>{format(new Date(historyItem.lastSentAt), 'dd.MM.yyyy', { locale: de })}</div>
                             </div>
                           </div>
                         </TableCell>
                         <TableCell className="hidden md:table-cell">
-                          {historyItem.recipientCount} Empfänger
+                          <div className="space-y-1">
+                            <div>{historyItem.recipientCount} Empfänger</div>
+                            {totalShopsData?.totalShops && totalShopsData.totalShops > 0 && (
+                              <div className="text-xs text-gray-500">
+                                {historyItem.recipientCount} von {totalShopsData.totalShops} Shops ({Math.round((historyItem.recipientCount / totalShopsData.totalShops) * 100)}%)
+                              </div>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell className="hidden md:table-cell">
                           {format(new Date(historyItem.lastSentAt), 'dd.MM.yyyy - HH:mm', { locale: de })}
