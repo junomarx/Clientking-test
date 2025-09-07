@@ -465,7 +465,13 @@ export default function SuperadminNewsletterTab() {
                     <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
                       <div>
                         <code className="font-mono text-sm bg-white px-2 py-1 rounded border">{"{{empfaengername}}"}</code>
-                        <p className="text-sm text-gray-600 mt-1">Name des Newsletter-Empfängers (Shop-Owner)</p>
+                        <p className="text-sm text-gray-600 mt-1">Name des Newsletter-Empfängers (Vor- und Nachname, oder Firmenname als Fallback)</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                      <div>
+                        <code className="font-mono text-sm bg-white px-2 py-1 rounded border">{"{{shopowner_name}}"}</code>
+                        <p className="text-sm text-gray-600 mt-1">Name des Shop-Owners (identisch mit empfaengername)</p>
                       </div>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">

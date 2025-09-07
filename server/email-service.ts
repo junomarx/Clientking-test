@@ -1605,8 +1605,9 @@ export class EmailService {
           // Newsletter-Variablen definieren
           const newsletterVariables = {
             empfaengername: recipient.name || 'Geschätzte/r Kunde/in',
+            shopowner_name: recipient.name || 'Geschätzte/r Kunde/in', // Gleich wie empfaengername für Klarheit
             empfaengeremail: recipient.email,
-            firmenname: recipient.name || 'Ihr Shop', // Könnte später durch echte Firmendaten ersetzt werden
+            firmenname: recipient.name || 'Ihr Shop', // Firmenname als separate Variable
             abmeldelink: unsubscribeUrl,
             clientking_logo: logoHtml,
             aktuellesjahr: new Date().getFullYear().toString()

@@ -1969,18 +1969,18 @@ ${existingTemplate.body}`;
         .select({
           id: users.id,
           email: users.email,
-          firstName: users.firstName,
-          lastName: users.lastName,
-          companyName: users.companyName
+          firstName: users.first_name,
+          lastName: users.last_name,
+          companyName: users.company_name
         })
         .from(users)
         .where(
           and(
-            eq(users.isActive, true),
-            eq(users.newsletterSubscribed, true),
+            eq(users.is_active, true),
+            eq(users.newsletter_subscribed, true),
             or(
               eq(users.role, 'owner'),
-              eq(users.isMultiShopAdmin, true)
+              eq(users.is_multi_shop_admin, true)
             )
           )
         );
