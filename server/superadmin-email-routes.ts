@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { Express } from "express";
 import { isSuperadmin } from "./superadmin-middleware";
 import { db } from "./db";
-import { emailTemplates, emailHistory, type EmailTemplate, type InsertEmailTemplate, superadminEmailSettings, newsletters, newsletterSends, users, type Newsletter, type InsertNewsletter } from "@shared/schema";
+import { emailTemplates, emailHistory, type EmailTemplate, type InsertEmailTemplate, superadminEmailSettings, newsletters, newsletterSends, users, businessSettings, type Newsletter, type InsertNewsletter } from "@shared/schema";
 import { eq, desc, isNull, or, and, sql, inArray } from "drizzle-orm";
 import nodemailer from "nodemailer";
 import { emailService } from "./email-service";
@@ -1969,11 +1969,12 @@ ${existingTemplate.body}`;
         .select({
           id: users.id,
           email: users.email,
-          firstName: users.first_name,
-          lastName: users.last_name,
-          companyName: users.company_name
+          firstName: businessSettings.ownerFirstName,
+          lastName: businessSettings.ownerLastName,
+          companyName: businessSettings.businessName
         })
         .from(users)
+        .leftJoin(businessSettings, eq(users.id, businessSettings.userId))
         .where(
           and(
             eq(users.is_active, true),
