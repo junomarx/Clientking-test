@@ -1589,9 +1589,6 @@ export class EmailService {
       let failedCount = 0;
       const details: any[] = [];
 
-      // Newsletter-HTML-Template mit ClientKing Logo
-      const htmlTemplate = this.createNewsletterHtmlTemplate(newsletter.subject, newsletter.content);
-
       const senderEmail = this.superadminEmailConfig.smtpSenderEmail || this.superadminEmailConfig.smtpUser;
       const senderName = this.superadminEmailConfig.smtpSenderName || 'ClientKing Handyshop Verwaltung';
 
@@ -1601,16 +1598,32 @@ export class EmailService {
           // Personalisierte Unsubscribe-URL generieren
           const unsubscribeUrl = `${process.env.FRONTEND_URL || 'http://localhost:5000'}/unsubscribe?email=${encodeURIComponent(recipient.email)}`;
           
-          // Ersetze Platzhalter im HTML-Template
-          const personalizedHtml = htmlTemplate
-            .replace(/{{recipientName}}/g, recipient.name || 'Geschätzte/r Kunde/in')
-            .replace(/{{unsubscribeUrl}}/g, unsubscribeUrl);
+          // ClientKing Logo als HTML img-Tag
+          const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5000';
+          const logoHtml = `<img src="${baseUrl}/clientking-logo.png" alt="ClientKing Logo" style="height: 50px;" />`;
+          
+          // Newsletter-Variablen definieren
+          const newsletterVariables = {
+            empfaengername: recipient.name || 'Geschätzte/r Kunde/in',
+            empfaengeremail: recipient.email,
+            firmenname: recipient.name || 'Ihr Shop', // Könnte später durch echte Firmendaten ersetzt werden
+            abmeldelink: unsubscribeUrl,
+            clientking_logo: logoHtml,
+            aktuellesjahr: new Date().getFullYear().toString()
+          };
+          
+          // Ersetze alle Variablen im Newsletter-Content
+          let personalizedContent = newsletter.content;
+          Object.entries(newsletterVariables).forEach(([key, value]) => {
+            const regex = new RegExp(`{{${key}}}`, 'g');
+            personalizedContent = personalizedContent.replace(regex, value);
+          });
 
           const mailOptions = {
             from: `"${senderName}" <${senderEmail}>`,
             to: recipient.email,
             subject: newsletter.subject,
-            html: personalizedHtml,
+            html: personalizedContent,
             // Füge Unsubscribe-Header hinzu (RFC 8058)
             headers: {
               'List-Unsubscribe': `<${unsubscribeUrl}>`,
