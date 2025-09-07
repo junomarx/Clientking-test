@@ -2214,33 +2214,58 @@ ${existingTemplate.body}`;
   });
 
   /**
-   * Newsletter-Versand-Historie abrufen
+   * Newsletter-Versand-Historie abrufen (aggregiert)
    */
   app.get("/api/superadmin/newsletters/send-history", isSuperadmin, async (req: Request, res: Response) => {
     try {
-      const sendHistory = await db
+      // Aggregierte Historie: Gruppiert nach Newsletter mit Empfänger-Anzahl
+      const aggregatedHistory = await db
+        .select({
+          newsletterId: newsletters.id,
+          title: newsletters.title,
+          subject: newsletters.subject,
+          recipientCount: sql<number>`COUNT(${newsletterSends.id})`,
+          lastSentAt: sql<string>`MAX(${newsletterSends.sentAt})`,
+          successfulSends: sql<number>`COUNT(CASE WHEN ${newsletterSends.status} = 'sent' THEN 1 END)`,
+          failedSends: sql<number>`COUNT(CASE WHEN ${newsletterSends.status} = 'failed' THEN 1 END)`,
+        })
+        .from(newsletters)
+        .innerJoin(newsletterSends, eq(newsletters.id, newsletterSends.newsletterId))
+        .groupBy(newsletters.id, newsletters.title, newsletters.subject)
+        .orderBy(sql`MAX(${newsletterSends.sentAt}) DESC`)
+        .limit(50);
+
+      res.json(aggregatedHistory);
+
+    } catch (error: any) {
+      console.error("Fehler beim Abrufen der Newsletter-Versand-Historie:", error);
+      res.status(500).json({ message: `Fehler beim Abrufen der Newsletter-Versand-Historie: ${error.message}` });
+    }
+  });
+
+  /**
+   * Detaillierte Empfänger-Liste für einen Newsletter abrufen
+   */
+  app.get("/api/superadmin/newsletters/:id/recipients", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const newsletterId = parseInt(req.params.id);
+      
+      const recipients = await db
         .select({
           id: newsletterSends.id,
-          newsletter: {
-            id: newsletters.id,
-            title: newsletters.title,
-            subject: newsletters.subject,
-          },
           recipientEmail: newsletterSends.recipientEmail,
           status: newsletterSends.status,
           sentAt: newsletterSends.sentAt,
         })
         .from(newsletterSends)
-        .innerJoin(newsletters, eq(newsletterSends.newsletterId, newsletters.id))
-        .where(eq(newsletterSends.status, 'sent'))
-        .orderBy(desc(newsletterSends.sentAt))
-        .limit(50);
+        .where(eq(newsletterSends.newsletterId, newsletterId))
+        .orderBy(desc(newsletterSends.sentAt));
 
-      res.json(sendHistory);
+      res.json(recipients);
 
     } catch (error: any) {
-      console.error("Fehler beim Abrufen der Newsletter-Versand-Historie:", error);
-      res.status(500).json({ message: `Fehler beim Abrufen der Newsletter-Versand-Historie: ${error.message}` });
+      console.error("Fehler beim Abrufen der Newsletter-Empfänger:", error);
+      res.status(500).json({ message: `Fehler beim Abrufen der Newsletter-Empfänger: ${error.message}` });
     }
   });
 }
