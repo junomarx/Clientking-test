@@ -76,9 +76,9 @@ interface Newsletter {
 
 interface NewsletterStats {
   totalNewsletters: number;
-  totalSent: number;
-  totalSubscribers: number;
-  recentSends: number;
+  sentNewsletters: number;
+  subscribedUsers: number;
+  recentNewsletters: any[];
 }
 
 interface NewsletterSend {
@@ -261,7 +261,7 @@ export default function SuperadminNewsletterTab() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {statsLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : stats?.totalSent || 0}
+              {statsLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : stats?.sentNewsletters || 0}
             </div>
           </CardContent>
         </Card>
@@ -285,7 +285,7 @@ export default function SuperadminNewsletterTab() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {statsLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : stats?.recentSends || 0}
+              {statsLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : stats?.recentNewsletters?.length || 0}
             </div>
             <p className="text-xs text-muted-foreground">Letzte 30 Tage</p>
           </CardContent>
@@ -597,7 +597,7 @@ export default function SuperadminNewsletterTab() {
           {selectedNewsletter && (
             <div className="space-y-2">
               <p><strong>Betreff:</strong> {selectedNewsletter.subject}</p>
-              <p><strong>Empfänger:</strong> {stats?.totalSubscribers || 0} Abonnenten</p>
+              <p><strong>Empfänger:</strong> {stats?.subscribedUsers || 0} Abonnenten</p>
             </div>
           )}
           <DialogFooter>
