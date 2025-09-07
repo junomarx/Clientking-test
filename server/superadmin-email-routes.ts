@@ -2177,11 +2177,11 @@ ${existingTemplate.body}`;
         .from(users)
         .where(
           and(
-            eq(users.isActive, true),
-            eq(users.newsletterSubscribed, true),
+            eq(users.is_active, true),
+            eq(users.newsletter_subscribed, true),
             or(
               eq(users.role, 'owner'),
-              eq(users.isMultiShopAdmin, true)
+              eq(users.is_multi_shop_admin, true)
             )
           )
         ) as [{ subscribedUsers: number }];
