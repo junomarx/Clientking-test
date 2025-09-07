@@ -66,6 +66,7 @@ import {
 
 interface Newsletter {
   id: number;
+  title: string;
   subject: string;
   content: string;
   sentAt: string | null;
@@ -99,6 +100,7 @@ export default function SuperadminNewsletterTab() {
   const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
   
   const [newNewsletter, setNewNewsletter] = useState({
+    title: '',
     subject: '',
     content: ''
   });
@@ -118,7 +120,7 @@ export default function SuperadminNewsletterTab() {
 
   // Mutations
   const createNewsletterMutation = useMutation({
-    mutationFn: async (data: { subject: string; content: string }) => {
+    mutationFn: async (data: { title: string; subject: string; content: string }) => {
       const response = await apiRequest('POST', '/api/superadmin/newsletters', data);
       return response.json();
     },
@@ -130,7 +132,7 @@ export default function SuperadminNewsletterTab() {
       queryClient.invalidateQueries({ queryKey: ['/api/superadmin/newsletters'] });
       queryClient.invalidateQueries({ queryKey: ['/api/superadmin/newsletters/stats'] });
       setIsCreateDialogOpen(false);
-      setNewNewsletter({ subject: '', content: '' });
+      setNewNewsletter({ title: '', subject: '', content: '' });
     },
     onError: (error: any) => {
       toast({
@@ -321,6 +323,15 @@ export default function SuperadminNewsletterTab() {
                       </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="title">Titel</Label>
+                        <Input
+                          id="title"
+                          placeholder="Newsletter Titel..."
+                          value={newNewsletter.title}
+                          onChange={(e) => setNewNewsletter(prev => ({ ...prev, title: e.target.value }))}
+                        />
+                      </div>
                       <div className="space-y-2">
                         <Label htmlFor="subject">Betreff</Label>
                         <Input
