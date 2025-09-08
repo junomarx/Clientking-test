@@ -121,21 +121,6 @@ export default function SuperadminNewsletterTab() {
   const [recipientsCurrentPage, setRecipientsCurrentPage] = useState(1);
   const recipientsPerPage = 10;
   
-  // Filter und Paginierung für Recipients
-  const filteredRecipients = recipients?.filter(recipient => {
-    if (!recipientsSearchTerm) return true;
-    const searchLower = recipientsSearchTerm.toLowerCase();
-    return (
-      recipient.recipientEmail?.toLowerCase().includes(searchLower) ||
-      recipient.shopName?.toLowerCase().includes(searchLower)
-    );
-  }) || [];
-  
-  const totalRecipients = filteredRecipients.length;
-  const totalPages = Math.ceil(totalRecipients / recipientsPerPage);
-  const startIndex = (recipientsCurrentPage - 1) * recipientsPerPage;
-  const paginatedRecipients = filteredRecipients.slice(startIndex, startIndex + recipientsPerPage);
-  
   const [newNewsletter, setNewNewsletter] = useState({
     title: '',
     subject: '',
@@ -175,6 +160,20 @@ export default function SuperadminNewsletterTab() {
     staleTime: 0, // Immer frische Daten laden
   });
   
+  // Filter und Paginierung für Recipients (nach der recipients Query)
+  const filteredRecipients = recipients?.filter(recipient => {
+    if (!recipientsSearchTerm) return true;
+    const searchLower = recipientsSearchTerm.toLowerCase();
+    return (
+      recipient.recipientEmail?.toLowerCase().includes(searchLower) ||
+      recipient.shopName?.toLowerCase().includes(searchLower)
+    );
+  }) || [];
+  
+  const totalRecipients = filteredRecipients.length;
+  const totalPages = Math.ceil(totalRecipients / recipientsPerPage);
+  const startIndex = (recipientsCurrentPage - 1) * recipientsPerPage;
+  const paginatedRecipients = filteredRecipients.slice(startIndex, startIndex + recipientsPerPage);
 
   // Mutations
   const createNewsletterMutation = useMutation({
@@ -873,7 +872,7 @@ export default function SuperadminNewsletterTab() {
                     )}
 
                     {/* Keine Ergebnisse */}
-                    {filteredRecipients.length === 0 && recipients?.length > 0 && (
+                    {filteredRecipients.length === 0 && recipients && recipients.length > 0 && (
                       <div className="text-center py-8 text-gray-500">
                         Keine Empfänger gefunden für "{recipientsSearchTerm}"
                       </div>
@@ -882,7 +881,7 @@ export default function SuperadminNewsletterTab() {
                 )}
 
                 {/* Keine Recipients */}
-                {recipients?.length === 0 && (
+                {(!recipients || recipients.length === 0) && (
                   <div className="text-center py-8 text-gray-500">
                     Keine Empfänger-Daten verfügbar
                   </div>
