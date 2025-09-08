@@ -7855,6 +7855,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupNewsletterRoutes(app);
   console.log("✅ Newsletter routes registered");
 
+  // Newsletter-Logo Route hinzufügen - WICHTIG für Logo-Anzeige in E-Mails!
+  app.get("/public-objects/newsletter-logos/:filename", async (req, res) => {
+    try {
+      const filename = req.params.filename;
+      const { ObjectStorageService } = await import('./objectStorage');
+      const objectStorageService = new ObjectStorageService();
+      
+      // Versuche, das Logo über die öffentlichen Suchpfade zu finden
+      const logoPath = `newsletter-logos/${filename}`;
+      const file = await objectStorageService.searchPublicObject(logoPath);
+      
+      if (file) {
+        await objectStorageService.downloadObject(file, res);
+      } else {
+        res.status(404).json({ error: "Logo nicht gefunden" });
+      }
+    } catch (error) {
+      console.error("Fehler beim Laden des Newsletter-Logos:", error);
+      res.status(500).json({ error: "Interner Server-Fehler" });
+    }
+  });
+
   const httpServer = createServer(app);
   
   // WebSocket-Server initialisieren
