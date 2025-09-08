@@ -670,6 +670,9 @@ export class EmailService {
           .where(sql`${emailTemplates.userId} IS NULL`);
         
         console.log(`🔍 DEBUG: Gefundene globale Vorlagen für "${templateName}":`, globalTemplates.length);
+        globalTemplates.forEach((t, i) => {
+          console.log(`🔍 DEBUG: Template ${i}: ID=${t.id}, Name="${t.name}", Subject="${t.subject}"`);
+        });
         
         if (globalTemplates.length > 0) {
           template = globalTemplates[0];
