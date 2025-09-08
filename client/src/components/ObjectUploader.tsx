@@ -1,9 +1,5 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import type { ReactNode } from "react";
-import Uppy from "@uppy/core";
-import { DashboardModal } from "@uppy/react";
-import AwsS3 from "@uppy/aws-s3";
-import type { UploadResult } from "@uppy/core";
 import { Button } from "@/components/ui/button";
 
 interface ObjectUploaderProps {
@@ -14,28 +10,11 @@ interface ObjectUploaderProps {
     method: "PUT";
     url: string;
   }>;
-  onComplete?: (
-    result: UploadResult<Record<string, unknown>, Record<string, unknown>>
-  ) => void;
+  onComplete?: (result: any) => void;
   buttonClassName?: string;
   children: ReactNode;
 }
 
-/**
- * A file upload component that renders as a button and provides a modal interface for
- * file management.
- * 
- * Features:
- * - Renders as a customizable button that opens a file upload modal
- * - Provides a modal interface for:
- *   - File selection
- *   - File preview
- *   - Upload progress tracking
- *   - Upload status display
- * 
- * The component uses Uppy under the hood to handle all file upload functionality.
- * All file management features are automatically handled by the Uppy dashboard modal.
- */
 export function ObjectUploader({
   maxNumberOfFiles = 1,
   maxFileSize = 10485760, // 10MB default
@@ -45,45 +24,80 @@ export function ObjectUploader({
   buttonClassName,
   children,
 }: ObjectUploaderProps) {
-  const [showModal, setShowModal] = useState(false);
-  const [uppy] = useState(() =>
-    new Uppy({
-      restrictions: {
-        maxNumberOfFiles,
-        maxFileSize,
-        allowedFileTypes,
-      },
-      autoProceed: false,
-    })
-      .use(AwsS3, {
-        shouldUseMultipart: false,
-        getUploadParameters: onGetUploadParameters,
-      })
-      .on("complete", (result) => {
-        onComplete?.(result);
-        setShowModal(false);
-      })
-  );
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleButtonClick = () => {
-    console.log("Upload-Button geklickt!");
-    setShowModal(true);
-    console.log("Modal state gesetzt auf:", true);
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // File size check
+    if (file.size > maxFileSize) {
+      alert(`Datei ist zu groß. Maximum: ${Math.round(maxFileSize / 1024 / 1024)}MB`);
+      return;
+    }
+
+    try {
+      setUploading(true);
+      
+      // Get upload URL
+      const { url } = await onGetUploadParameters();
+      
+      // Upload file
+      const response = await fetch(url, {
+        method: 'PUT',
+        body: file,
+        headers: {
+          'Content-Type': file.type,
+        },
+      });
+
+      if (response.ok) {
+        // Call completion callback
+        onComplete?.({
+          successful: [{
+            uploadURL: url,
+            name: file.name,
+            type: file.type,
+            size: file.size
+          }]
+        });
+      } else {
+        throw new Error('Upload fehlgeschlagen');
+      }
+    } catch (error) {
+      console.error('Upload-Fehler:', error);
+      alert('Upload fehlgeschlagen. Bitte versuchen Sie es erneut.');
+    } finally {
+      setUploading(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
   };
 
   return (
     <div>
-      <Button onClick={handleButtonClick} className={buttonClassName}>
-        {children}
+      <Button 
+        onClick={handleButtonClick} 
+        className={buttonClassName}
+        disabled={uploading}
+      >
+        {uploading ? 'Hochladen...' : children}
       </Button>
-
-      <DashboardModal
-        uppy={uppy}
-        open={showModal}
-        onRequestClose={() => setShowModal(false)}
-        proudlyDisplayPoweredByUppy={false}
-        style={{ zIndex: 9999 }}
-        trigger={null}
+      
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept={allowedFileTypes?.join(',')}
+        onChange={handleFileSelect}
+        style={{ display: 'none' }}
+        multiple={maxNumberOfFiles > 1}
       />
     </div>
   );
