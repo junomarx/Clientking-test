@@ -777,7 +777,8 @@ export function setupAuth(app: Express) {
         {
           benutzername: user.username || user.email,
           resetLink: resetUrl
-        }
+        },
+        user.id  // Fix: userId-Parameter hinzufügen für korrekte Template-Auswahl
       );
       
       if (sent) {
