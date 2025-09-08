@@ -1,0 +1,57 @@
+[Log] Verbinde WebSocket für Online-Status: – "wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/ws/status" (use-online-status.tsx, line 42)
+[Log] WebSocket-Verbindung für Online-Status hergestellt (use-online-status.tsx, line 45)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] ✅ WebSocket-Authentifizierung erfolgreich (use-online-status.tsx, line 97)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] WebSocket-Verbindung geschlossen: – 1005 – "" (use-online-status.tsx, line 69)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] Versuche WebSocket-Wiederverbindung... (use-online-status.tsx, line 78)
+[Log] Verbinde WebSocket für Online-Status: – "wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/ws/status" (use-online-status.tsx, line 42)
+[Log] WebSocket-Verbindung für Online-Status hergestellt (use-online-status.tsx, line 45)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] ✅ WebSocket-Authentifizierung erfolgreich (use-online-status.tsx, line 97)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+[Log] WebSocket-Verbindung geschlossen: – 1005 – "" (use-online-status.tsx, line 69)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – Object (use-kiosk-mode.tsx, line 120)
+Object
+> Ausgewähltes Element
+< <div data-replit-metadata="client/src/components/superadmin/SuperadminNewsletterTab.tsx:438:14" data-component-name="div" class="flex justify-between items-center">…</div>
+[Log] Versuche WebSocket-Wiederverbindung... (use-online-status.tsx, line 78)
+[Log] Verbinde WebSocket für Online-Status: – "wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/ws/status" (use-online-status.tsx, line 42)
+[Log] WebSocket-Verbindung für Online-Status hergestellt (use-online-status.tsx, line 45)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – {isKioskMode: false, wsStatus: "connected", hasSendMessage: true, …} (use-kiosk-mode.tsx, line 120)
+{isKioskMode: false, wsStatus: "connected", hasSendMessage: true, hasUserId: true}Object
+[Log] ✅ WebSocket-Authentifizierung erfolgreich (use-online-status.tsx, line 97)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – {isKioskMode: false, wsStatus: "connected", hasSendMessage: true, …} (use-kiosk-mode.tsx, line 120)
+{isKioskMode: false, wsStatus: "connected", hasSendMessage: true, hasUserId: true}Object
+[Log] ❌ Kiosk-Registrierung nicht möglich: – {isKioskMode: false, wsStatus: "connected", hasSendMessage: true, …} (use-kiosk-mode.tsx, line 120)
+{isKioskMode: false, wsStatus: "connected", hasSendMessage: true, hasUserId: true}Object
+[Log] Upload-Button geklickt! (ObjectUploader.tsx, line 52)
+[Log] Modal state gesetzt auf: – true (ObjectUploader.tsx, line 54)
+[Log] WebSocket-Verbindung geschlossen: – 1005 – "" (use-online-status.tsx, line 69)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – {isKioskMode: false, wsStatus: "connecting", hasSendMessage: true, …} (use-kiosk-mode.tsx, line 120)
+{isKioskMode: false, wsStatus: "connecting", hasSendMessage: true, hasUserId: true}Object
+[Log] Upload-Button geklickt! (ObjectUploader.tsx, line 52)
+[Log] Modal state gesetzt auf: – true (ObjectUploader.tsx, line 54)
+[Log] Versuche WebSocket-Wiederverbindung... (use-online-status.tsx, line 78)
+[Log] Verbinde WebSocket für Online-Status: – "wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/ws/status" (use-online-status.tsx, line 42)
+[Log] WebSocket-Verbindung für Online-Status hergestellt (use-online-status.tsx, line 45)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – {isKioskMode: false, wsStatus: "connected", hasSendMessage: true, …} (use-kiosk-mode.tsx, line 120)
+{isKioskMode: false, wsStatus: "connected", hasSendMessage: true, hasUserId: true}Object
+[Log] ✅ WebSocket-Authentifizierung erfolgreich (use-online-status.tsx, line 97)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – {isKioskMode: false, wsStatus: "connected", hasSendMessage: true, …} (use-kiosk-mode.tsx, line 120)
+{isKioskMode: false, wsStatus: "connected", hasSendMessage: true, hasUserId: true}Object
+[Log] ❌ Kiosk-Registrierung nicht möglich: – {isKioskMode: false, wsStatus: "connected", hasSendMessage: true, …} (use-kiosk-mode.tsx, line 120)
+{isKioskMode: false, wsStatus: "connected", hasSendMessage: true, hasUserId: true}Object
+[Log] WebSocket-Verbindung geschlossen: – 1005 – "" (use-online-status.tsx, line 69)
+[Log] ❌ Kiosk-Registrierung nicht möglich: – {isKioskMode: false, wsStatus: "connecting", hasSendMessage: true, …} (use-kiosk-mode.tsx, line 120)
+{isKioskMode: false, wsStatus: "connecting", hasSendMessage: true, hasUserId: true}Object
