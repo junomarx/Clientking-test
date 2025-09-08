@@ -1614,33 +1614,31 @@ export class EmailService {
               .limit(1);
             
             if (activeLogo) {
-              // Logo als Content-ID verwenden (funktioniert in E-Mail-Clients)
-              newsletterLogoHtml = `<img src="cid:newsletter-logo" alt="${activeLogo.name}" style="max-height: 200px; max-width: 100%; height: auto; display:block; margin:0 auto;" />`;
+              console.log(`📸 Newsletter-Logo gefunden: ${activeLogo.name} - wird als Base64 eingebettet`);
               
-              // Logo-Datei frisch herunterladen und für Anhang vorbereiten
+              // Logo als Base64 einbetten (funktioniert in allen E-Mail-Clients)
               const logoFileName = activeLogo.filepath.split('/').pop();
               const logoUrl = `${baseUrl}/public-objects/newsletter-logos/${logoFileName}`;
-              const logoPath = `/tmp/newsletter-logo-${Date.now()}.png`;
               
-              // Logo herunterladen
               try {
+                // Logo als Base64 herunterladen und einbetten
                 const response = await fetch(logoUrl);
                 if (response.ok) {
                   const buffer = await response.buffer();
-                  require('fs').writeFileSync(logoPath, buffer);
+                  const base64Data = buffer.toString('base64');
+                  const dataUrl = `data:image/png;base64,${base64Data}`;
                   
-                  logoAttachment = {
-                    filename: 'newsletter-logo.png',
-                    path: logoPath,
-                    cid: 'newsletter-logo'
-                  };
-                  
-                  console.log(`📸 Newsletter-Logo ${activeLogo.name} heruntergeladen und bereit für CID-Anhang`);
+                  newsletterLogoHtml = `<img src="${dataUrl}" alt="${activeLogo.name}" style="max-height: 200px; max-width: 100%; height: auto; display:block; margin:0 auto;" />`;
+                  console.log(`📸 Newsletter-Logo ${activeLogo.name} als Base64 eingebettet (${base64Data.length} bytes)`);
                 } else {
                   console.error(`❌ Logo konnte nicht heruntergeladen werden: ${response.status}`);
+                  // Fallback: zeige Platzhalter
+                  newsletterLogoHtml = `<div style="text-align:center; padding:20px; background:#f0f0f0; border:2px dashed #ccc; margin:20px 0;"><strong>🖼️ ${activeLogo.name}</strong><br><small>(Logo konnte nicht geladen werden)</small></div>`;
                 }
               } catch (downloadError) {
                 console.error(`❌ Fehler beim Herunterladen des Logos:`, downloadError);
+                // Fallback: zeige Platzhalter
+                newsletterLogoHtml = `<div style="text-align:center; padding:20px; background:#f0f0f0; border:2px dashed #ccc; margin:20px 0;"><strong>🖼️ ${activeLogo.name}</strong><br><small>(Logo-Fehler)</small></div>`;
               }
             } else {
               console.log(`❌ Kein aktives Newsletter-Logo gefunden!`);
@@ -1682,8 +1680,7 @@ export class EmailService {
             to: recipient.email,
             subject: newsletter.subject,
             html: personalizedContent,
-            // Füge Logo als Anhang mit Content-ID hinzu
-            attachments: logoAttachment ? [logoAttachment] : [],
+            // Base64-Logo braucht keine Anhänge
             // Füge Unsubscribe-Header hinzu (RFC 8058)
             headers: {
               'List-Unsubscribe': `<${unsubscribeUrl}>`,
@@ -1702,15 +1699,6 @@ export class EmailService {
           });
           
           console.log(`✅ Newsletter erfolgreich an ${recipient.email} gesendet (ID: ${info.messageId})`);
-          
-          // Temporäre Logo-Datei löschen
-          if (logoAttachment && logoAttachment.path) {
-            try {
-              require('fs').unlinkSync(logoAttachment.path);
-            } catch (cleanupError) {
-              console.warn(`⚠️  Logo-Datei konnte nicht gelöscht werden: ${cleanupError}`);
-            }
-          }
           
           // Kleine Verzögerung zwischen E-Mails, um SMTP-Server nicht zu überlasten
           await new Promise(resolve => setTimeout(resolve, 100));
