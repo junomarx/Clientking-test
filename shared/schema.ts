@@ -1033,7 +1033,7 @@ export const accessories = pgTable("accessories", {
   downPayment: text("down_payment"), // Anzahlung (optional)
   
   // Kunden-Informationen (optional für Lager-Artikel)
-  customerId: integer("customer_id").references(() => customers.id),
+  customerId: integer("customer_id").references(() => customers.id, { onDelete: 'set null' }),
   
   // Typ: "lager" für Lager-Artikel, "kundenbestellung" für Kundenbestellungen
   type: text("type").notNull().default("kundenbestellung"),
