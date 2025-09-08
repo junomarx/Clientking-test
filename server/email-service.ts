@@ -1605,6 +1605,7 @@ export class EmailService {
           
           // Newsletter Logo laden (aktuell aktives Logo)
           let newsletterLogoHtml = '';
+          let logoAttachment = null;
           try {
             const [activeLogo] = await db
               .select()
@@ -1613,12 +1614,34 @@ export class EmailService {
               .limit(1);
             
             if (activeLogo) {
-              // Newsletter-Logo über den /public-objects/ Endpoint verfügbar machen
-              const logoFileName = activeLogo.filepath.split('/').pop(); // Dateiname extrahieren
+              // Logo als Content-ID verwenden (funktioniert in E-Mail-Clients)
+              newsletterLogoHtml = `<img src="cid:newsletter-logo" alt="${activeLogo.name}" style="max-height: 200px; max-width: 100%; height: auto; display:block; margin:0 auto;" />`;
+              
+              // Logo-Datei frisch herunterladen und für Anhang vorbereiten
+              const logoFileName = activeLogo.filepath.split('/').pop();
               const logoUrl = `${baseUrl}/public-objects/newsletter-logos/${logoFileName}`;
-              newsletterLogoHtml = `<img src="${logoUrl}" alt="${activeLogo.name}" style="max-height: 200px; max-width: 100%; height: auto;" />`;
-              console.log(`📸 Newsletter-Logo gefunden: ${activeLogo.name} - URL: ${logoUrl}`);
-              console.log(`📸 Newsletter-Logo HTML: ${newsletterLogoHtml}`);
+              const logoPath = `/tmp/newsletter-logo-${Date.now()}.png`;
+              
+              // Logo herunterladen
+              try {
+                const response = await fetch(logoUrl);
+                if (response.ok) {
+                  const buffer = await response.buffer();
+                  require('fs').writeFileSync(logoPath, buffer);
+                  
+                  logoAttachment = {
+                    filename: 'newsletter-logo.png',
+                    path: logoPath,
+                    cid: 'newsletter-logo'
+                  };
+                  
+                  console.log(`📸 Newsletter-Logo ${activeLogo.name} heruntergeladen und bereit für CID-Anhang`);
+                } else {
+                  console.error(`❌ Logo konnte nicht heruntergeladen werden: ${response.status}`);
+                }
+              } catch (downloadError) {
+                console.error(`❌ Fehler beim Herunterladen des Logos:`, downloadError);
+              }
             } else {
               console.log(`❌ Kein aktives Newsletter-Logo gefunden!`);
             }
@@ -1659,6 +1682,8 @@ export class EmailService {
             to: recipient.email,
             subject: newsletter.subject,
             html: personalizedContent,
+            // Füge Logo als Anhang mit Content-ID hinzu
+            attachments: logoAttachment ? [logoAttachment] : [],
             // Füge Unsubscribe-Header hinzu (RFC 8058)
             headers: {
               'List-Unsubscribe': `<${unsubscribeUrl}>`,
@@ -1677,6 +1702,15 @@ export class EmailService {
           });
           
           console.log(`✅ Newsletter erfolgreich an ${recipient.email} gesendet (ID: ${info.messageId})`);
+          
+          // Temporäre Logo-Datei löschen
+          if (logoAttachment && logoAttachment.path) {
+            try {
+              require('fs').unlinkSync(logoAttachment.path);
+            } catch (cleanupError) {
+              console.warn(`⚠️  Logo-Datei konnte nicht gelöscht werden: ${cleanupError}`);
+            }
+          }
           
           // Kleine Verzögerung zwischen E-Mails, um SMTP-Server nicht zu überlasten
           await new Promise(resolve => setTimeout(resolve, 100));
