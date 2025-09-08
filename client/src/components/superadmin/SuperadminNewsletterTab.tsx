@@ -864,6 +864,12 @@ export default function SuperadminNewsletterTab() {
                         <p className="text-sm text-gray-600 mt-1">Automatisch generierter Link zum Abmelden vom Newsletter</p>
                       </div>
                     </div>
+                    <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                      <div>
+                        <code className="font-mono text-sm bg-white px-2 py-1 rounded border">{"{{logoNewsletter}}"}</code>
+                        <p className="text-sm text-gray-600 mt-1">Aktuell aktives Newsletter-Logo (verwaltet in der Logo Verwaltung)</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
