@@ -2163,6 +2163,7 @@ ${existingTemplate.body}`;
         );
 
       console.log(`📧 Versende Newsletter "${newsletter.title}" an ${recipients.length} Empfänger`);
+      console.log(`🚨 LOGO-DEBUG: Starte Logo-Integration für Newsletter ${newsletter.id}`);
 
       // Vorbereitung der Empfänger-Liste für das EmailService
       const emailRecipients = recipients.map(recipient => ({
