@@ -108,6 +108,17 @@ interface NewsletterRecipient {
   shopId?: number | null;
 }
 
+interface NewsletterLogo {
+  id: number;
+  name: string;
+  filename: string;
+  filepath: string;
+  isActive: boolean;
+  createdBy: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export default function SuperadminNewsletterTab() {
   const { toast } = useToast();
   
@@ -136,6 +147,14 @@ export default function SuperadminNewsletterTab() {
   // Queries
   const { data: newsletters, isLoading: newslettersLoading } = useQuery<Newsletter[]>({
     queryKey: ['/api/superadmin/newsletters'],
+  });
+
+  const { data: newsletterLogos, isLoading: logosLoading } = useQuery<NewsletterLogo[]>({
+    queryKey: ['/api/superadmin/newsletter-logos'],
+  });
+
+  const { data: activeLogo } = useQuery<NewsletterLogo | null>({
+    queryKey: ['/api/superadmin/newsletter-logos/active'],
   });
 
   const { data: stats, isLoading: statsLoading } = useQuery<NewsletterStats>({
@@ -182,6 +201,49 @@ export default function SuperadminNewsletterTab() {
   const paginatedRecipients = filteredRecipients.slice(startIndex, startIndex + recipientsPerPage);
 
   // Mutations
+  // Logo mutations
+  const activateLogoMutation = useMutation({
+    mutationFn: async (logoId: number) => {
+      return apiRequest('PATCH', `/api/superadmin/newsletter-logos/${logoId}/activate`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/superadmin/newsletter-logos'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/superadmin/newsletter-logos/active'] });
+      toast({
+        title: "Logo aktiviert",
+        description: "Das Logo wurde erfolgreich aktiviert",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Fehler",
+        description: "Das Logo konnte nicht aktiviert werden",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteLogoMutation = useMutation({
+    mutationFn: async (logoId: number) => {
+      return apiRequest('DELETE', `/api/superadmin/newsletter-logos/${logoId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/superadmin/newsletter-logos'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/superadmin/newsletter-logos/active'] });
+      toast({
+        title: "Logo gelöscht",
+        description: "Das Logo wurde erfolgreich gelöscht",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Fehler",
+        description: "Das Logo konnte nicht gelöscht werden",
+        variant: "destructive",
+      });
+    },
+  });
+
   const createNewsletterMutation = useMutation({
     mutationFn: async (data: { title: string; subject: string; content: string; logoNewsletter?: string }) => {
       const response = await apiRequest('POST', '/api/superadmin/newsletters', data);
@@ -615,23 +677,24 @@ export default function SuperadminNewsletterTab() {
                       const logoName = prompt('Geben Sie einen Namen für das Logo ein:', filename);
                       if (logoName) {
                         try {
-                          const response = await fetch('/api/superadmin/newsletter-logos', {
-                            method: 'POST',
-                            credentials: 'include',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                              name: logoName,
-                              filename: filename,
-                              filepath: filepath
-                            })
+                          await apiRequest('POST', '/api/superadmin/newsletter-logos', {
+                            name: logoName,
+                            filename: filename,
+                            filepath: filepath
                           });
                           
-                          if (response.ok) {
-                            // Refresh logo list
-                            window.location.reload();
-                          }
+                          queryClient.invalidateQueries({ queryKey: ['/api/superadmin/newsletter-logos'] });
+                          toast({
+                            title: "Logo hochgeladen",
+                            description: "Das Logo wurde erfolgreich hochgeladen",
+                          });
                         } catch (error) {
                           console.error('Fehler beim Registrieren des Logos:', error);
+                          toast({
+                            title: "Fehler",
+                            description: "Das Logo konnte nicht gespeichert werden",
+                            variant: "destructive",
+                          });
                         }
                       }
                     }
@@ -650,14 +713,103 @@ export default function SuperadminNewsletterTab() {
                 </div>
               </div>
 
-              {/* Logo List placeholder - will be implemented with proper state management */}
+              {/* Logo List */}
               <div className="grid gap-4">
                 <h3 className="text-lg font-semibold">Verfügbare Logos</h3>
-                <div className="text-center py-8 text-muted-foreground">
-                  <Image className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                  <p>Noch keine Logos hochgeladen</p>
-                  <p className="text-sm">Laden Sie Ihr erstes Logo hoch, um zu beginnen</p>
-                </div>
+                
+                {logosLoading ? (
+                  <div className="text-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+                    <p className="text-muted-foreground">Logos werden geladen...</p>
+                  </div>
+                ) : !newsletterLogos || newsletterLogos.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Image className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                    <p>Noch keine Logos hochgeladen</p>
+                    <p className="text-sm">Laden Sie Ihr erstes Logo hoch, um zu beginnen</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {newsletterLogos.map((logo) => (
+                      <Card key={logo.id} className={`relative ${logo.isActive ? 'ring-2 ring-green-500' : ''}`}>
+                        <CardContent className="p-4">
+                          <div className="aspect-video bg-gray-100 rounded-lg mb-3 overflow-hidden">
+                            <img
+                              src={logo.filepath}
+                              alt={logo.name}
+                              className="w-full h-full object-contain"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                e.currentTarget.nextElementSibling!.style.display = 'flex';
+                              }}
+                            />
+                            <div className="w-full h-full flex items-center justify-center bg-gray-100" style={{display: 'none'}}>
+                              <Image className="h-8 w-8 text-gray-400" />
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <h4 className="font-medium truncate">{logo.name}</h4>
+                              {logo.isActive && (
+                                <Badge variant="default" className="bg-green-500 text-white">
+                                  Aktiv
+                                </Badge>
+                              )}
+                            </div>
+                            
+                            <p className="text-sm text-muted-foreground truncate">{logo.filename}</p>
+                            <p className="text-xs text-muted-foreground">
+                              Hochgeladen: {format(new Date(logo.createdAt), 'dd.MM.yyyy HH:mm', { locale: de })}
+                            </p>
+                            
+                            <div className="flex gap-2 pt-2">
+                              {!logo.isActive ? (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => activateLogoMutation.mutate(logo.id)}
+                                  disabled={activateLogoMutation.isPending}
+                                  className="flex-1"
+                                >
+                                  {activateLogoMutation.isPending ? (
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                  ) : (
+                                    <CheckCircle className="h-3 w-3" />
+                                  )}
+                                  Aktivieren
+                                </Button>
+                              ) : (
+                                <Button size="sm" variant="outline" disabled className="flex-1">
+                                  <CheckCircle className="h-3 w-3" />
+                                  Aktiv
+                                </Button>
+                              )}
+                              
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  if (confirm('Möchten Sie dieses Logo wirklich löschen?')) {
+                                    deleteLogoMutation.mutate(logo.id);
+                                  }
+                                }}
+                                disabled={deleteLogoMutation.isPending}
+                                className="text-red-600 hover:text-red-700"
+                              >
+                                {deleteLogoMutation.isPending ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                  <Trash2 className="h-3 w-3" />
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
