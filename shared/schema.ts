@@ -1179,6 +1179,18 @@ export const newsletters = pgTable("newsletters", {
   sentAt: timestamp("sent_at"), // NULL wenn noch nicht versendet
 });
 
+// Newsletter Logos table for logo management
+export const newsletterLogos = pgTable("newsletter_logos", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(), // User-friendly name like "Weihnachts-Logo", "Oster-Logo"
+  filename: text("filename").notNull(), // Original filename
+  filepath: text("filepath").notNull(), // Object storage path
+  isActive: boolean("is_active").default(false).notNull(), // Only one can be active at a time
+  createdBy: integer("created_by").notNull().references(() => users.id), // Superadmin who uploaded it
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const insertNewsletterSchema = createInsertSchema(newsletters).omit({
   id: true,
   createdAt: true,
@@ -1188,8 +1200,17 @@ export const insertNewsletterSchema = createInsertSchema(newsletters).omit({
   failedSends: true,
 });
 
+export const insertNewsletterLogoSchema = createInsertSchema(newsletterLogos).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export type Newsletter = typeof newsletters.$inferSelect;
 export type InsertNewsletter = z.infer<typeof insertNewsletterSchema>;
+
+export type NewsletterLogo = typeof newsletterLogos.$inferSelect;
+export type InsertNewsletterLogo = z.infer<typeof insertNewsletterLogoSchema>;
 
 // Newsletter Sends - Tracking einzelner Newsletter-Versände
 export const newsletterSends = pgTable("newsletter_sends", {
