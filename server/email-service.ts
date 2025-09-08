@@ -1613,7 +1613,10 @@ export class EmailService {
               .limit(1);
             
             if (activeLogo) {
-              newsletterLogoHtml = `<img src="${baseUrl}${activeLogo.filepath}" alt="${activeLogo.name}" style="max-height: 200px; max-width: 100%; height: auto;" />`;
+              // Newsletter-Logo über den /public-objects/ Endpoint verfügbar machen
+              const logoFileName = activeLogo.filepath.split('/').pop(); // Dateiname extrahieren
+              const logoUrl = `${baseUrl}/public-objects/newsletter-logos/${logoFileName}`;
+              newsletterLogoHtml = `<img src="${logoUrl}" alt="${activeLogo.name}" style="max-height: 200px; max-width: 100%; height: auto;" />`;
             }
           } catch (error) {
             console.warn('Fehler beim Laden des aktiven Newsletter-Logos:', error);
