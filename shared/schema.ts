@@ -1167,6 +1167,7 @@ export const newsletters = pgTable("newsletters", {
   title: text("title").notNull(),
   subject: text("subject").notNull(),
   content: text("content").notNull(), // HTML-Content für E-Mail
+  logoNewsletter: text("logo_newsletter"), // Pfad zum Newsletter-Logo (z.B. für Weihnachten, Ostern, etc.)
   createdBy: integer("created_by").notNull().references(() => users.id), // Superadmin der erstellt hat
   status: text("status").default("draft").notNull(), // 'draft', 'sent'
   // Statistiken
