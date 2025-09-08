@@ -732,11 +732,13 @@ export default function SuperadminNewsletterTab() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {recipients?.map((recipient) => (
+                        {recipients?.map((recipient) => {
+                          console.log('🔍 RECIPIENT DEBUG:', recipient);
+                          return (
                           <TableRow key={recipient.id}>
                             <TableCell className="font-medium">
                               <div className="space-y-1">
-                                <div>{recipient.recipientEmail}</div>
+                                <div>{recipient.recipientEmail || 'KEINE E-MAIL'}</div>
                                 <div className="lg:hidden text-sm text-gray-500">
                                   {recipient.shopName || 'Unbekannter Shop'}
                                 </div>
@@ -767,7 +769,7 @@ export default function SuperadminNewsletterTab() {
                               {format(new Date(recipient.sentAt), 'dd.MM.yyyy - HH:mm', { locale: de })}
                             </TableCell>
                           </TableRow>
-                        )) || []}
+                        )}) || []}
                       </TableBody>
                     </Table>
                   </div>
