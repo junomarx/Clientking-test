@@ -2218,8 +2218,6 @@ ${existingTemplate.body}`;
    */
   app.get("/api/superadmin/newsletters/send-history", isSuperadmin, async (req: Request, res: Response) => {
     try {
-      console.log('📨 DEBUG: Newsletter Send-History Request gestartet');
-      
       // Aggregierte Historie: Gruppiert nach Newsletter mit Empfänger-Anzahl
       const aggregatedHistory = await db
         .select({
@@ -2237,11 +2235,6 @@ ${existingTemplate.body}`;
         .orderBy(sql`MAX(${newsletterSends.sentAt}) DESC`)
         .limit(50);
 
-      console.log('📨 DEBUG: Send-History Gefunden:', aggregatedHistory.length, 'Newsletter');
-      aggregatedHistory.forEach((item, index) => {
-        console.log(`📨 DEBUG: Newsletter ${index + 1}: ID=${item.newsletterId}, Subject="${item.subject}", Recipients=${item.recipientCount}, LastSent=${item.lastSentAt}`);
-      });
-
       res.json(aggregatedHistory);
 
     } catch (error: any) {
@@ -2256,7 +2249,6 @@ ${existingTemplate.body}`;
   app.get("/api/superadmin/newsletters/:id/recipients", isSuperadmin, async (req: Request, res: Response) => {
     try {
       const newsletterId = parseInt(req.params.id);
-      console.log(`📧 DEBUG: Newsletter Recipients Request für Newsletter ID: ${newsletterId}`);
       
       // Alle Newsletter-Empfänger abrufen
       const allRecipients = await db
@@ -2270,16 +2262,9 @@ ${existingTemplate.body}`;
         .where(eq(newsletterSends.newsletterId, newsletterId))
         .orderBy(desc(newsletterSends.sentAt));
 
-      console.log(`📧 DEBUG: Gefunden ${allRecipients.length} Empfänger für Newsletter ${newsletterId}:`);
-      allRecipients.forEach((recipient, index) => {
-        console.log(`📧 DEBUG: Empfänger ${index + 1}: ${recipient.recipientEmail} - Status: ${recipient.status} - ID: ${recipient.id}`);
-      });
-
       // Shop-Namen nachschlagen für E-Mail-Adressen die in der Users-Tabelle sind
       const recipientsWithShops = await Promise.all(
-        allRecipients.map(async (recipient, index) => {
-          console.log(`📧 DEBUG: Suche Shop für E-Mail: ${recipient.recipientEmail}`);
-          
+        allRecipients.map(async (recipient) => {
           const userWithShop = await db
             .select({
               shopName: businessSettings.businessName,
@@ -2290,22 +2275,15 @@ ${existingTemplate.body}`;
             .where(eq(users.email, recipient.recipientEmail))
             .limit(1);
 
-          console.log(`📧 DEBUG: Shop-Lookup für ${recipient.recipientEmail}:`, userWithShop);
-
-          const finalRecipient = {
+          return {
             ...recipient,
             shopName: userWithShop[0]?.shopName || null,
             shopId: userWithShop[0]?.shopId || null,
           };
-          
-          console.log(`📧 DEBUG: Final Empfänger ${index + 1}:`, finalRecipient);
-          return finalRecipient;
         })
       );
 
       const recipients = recipientsWithShops;
-      console.log(`📧 DEBUG: Sende ${recipients.length} Empfänger zurück für Newsletter ${newsletterId}`);
-      console.log('📧 DEBUG: Final Response:', JSON.stringify(recipients, null, 2));
 
       res.json(recipients);
 

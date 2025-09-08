@@ -137,15 +137,13 @@ export default function SuperadminNewsletterTab() {
   });
 
   // Query für detaillierte Empfänger-Liste 
-  const { data: recipients, isLoading: recipientsLoading } = useQuery<NewsletterRecipient[]>({
+  const { data: recipients, isLoading: recipientsLoading, refetch: refetchRecipients } = useQuery<NewsletterRecipient[]>({
     queryKey: ['/api/superadmin/newsletters', selectedNewsletterForRecipients?.newsletterId, 'recipients'],
     enabled: !!selectedNewsletterForRecipients?.newsletterId,
+    refetchOnMount: true,
+    staleTime: 0, // Immer frische Daten laden
   });
   
-  // DEBUG: Newsletter ID tracking
-  console.log('🔍 Frontend DEBUG: selectedNewsletterForRecipients:', selectedNewsletterForRecipients);
-  console.log('🔍 Frontend DEBUG: Recipients Query Newsletter ID:', selectedNewsletterForRecipients?.newsletterId);
-  console.log('🔍 Frontend DEBUG: Recipients Data:', recipients);
 
   // Mutations
   const createNewsletterMutation = useMutation({
@@ -653,6 +651,10 @@ export default function SuperadminNewsletterTab() {
                             variant="outline"
                             size="sm"
                             onClick={() => {
+                              // Cache für Recipients invalidieren
+                              queryClient.invalidateQueries({ 
+                                queryKey: ['/api/superadmin/newsletters', historyItem.newsletterId, 'recipients'] 
+                              });
                               setSelectedNewsletterForRecipients(historyItem);
                               setIsRecipientsDialogOpen(true);
                             }}
