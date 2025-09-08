@@ -65,9 +65,15 @@ export function ObjectUploader({
       })
   );
 
+  const handleButtonClick = () => {
+    console.log("Upload-Button geklickt!");
+    setShowModal(true);
+    console.log("Modal state gesetzt auf:", true);
+  };
+
   return (
     <div>
-      <Button onClick={() => setShowModal(true)} className={buttonClassName}>
+      <Button onClick={handleButtonClick} className={buttonClassName}>
         {children}
       </Button>
 
