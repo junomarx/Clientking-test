@@ -740,7 +740,8 @@ export default function SuperadminNewsletterTab() {
                               className="w-full h-full object-contain"
                               onError={(e) => {
                                 e.currentTarget.style.display = 'none';
-                                e.currentTarget.nextElementSibling!.style.display = 'flex';
+                                const nextEl = e.currentTarget.nextElementSibling as HTMLElement;
+                                if (nextEl) nextEl.style.display = 'flex';
                               }}
                             />
                             <div className="w-full h-full flex items-center justify-center bg-gray-100" style={{display: 'none'}}>
@@ -1298,7 +1299,7 @@ export default function SuperadminNewsletterTab() {
                     id: selectedNewsletter.id,
                     subject: selectedNewsletter.subject,
                     content: selectedNewsletter.content,
-                    logoNewsletter: selectedNewsletter.logoNewsletter
+                    logoNewsletter: selectedNewsletter.logoNewsletter || undefined
                   });
                 }
               }}
