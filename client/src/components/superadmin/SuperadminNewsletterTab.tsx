@@ -139,6 +139,13 @@ export default function SuperadminNewsletterTab() {
   // Query für detaillierte Empfänger-Liste 
   const { data: recipients, isLoading: recipientsLoading, refetch: refetchRecipients } = useQuery<NewsletterRecipient[]>({
     queryKey: ['/api/superadmin/newsletters', selectedNewsletterForRecipients?.newsletterId, 'recipients'],
+    queryFn: async () => {
+      if (!selectedNewsletterForRecipients?.newsletterId) return [];
+      const response = await fetch(`/api/superadmin/newsletters/${selectedNewsletterForRecipients.newsletterId}/recipients`, {
+        headers: { 'X-User-ID': localStorage.getItem('userId') || '' }
+      });
+      return response.json();
+    },
     enabled: !!selectedNewsletterForRecipients?.newsletterId,
     refetchOnMount: true,
     staleTime: 0, // Immer frische Daten laden
