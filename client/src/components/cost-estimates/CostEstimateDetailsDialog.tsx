@@ -772,7 +772,7 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                   <Button 
                     variant="destructive" 
                     onClick={() => setShowDeleteConfirm(true)}
-                    disabled={deleteMutation.isPending || estimate.convertedToRepair}
+                    disabled={deleteMutation.isPending}
                   >
                     <Trash2 className="h-4 w-4 mr-2" />
                     Löschen
