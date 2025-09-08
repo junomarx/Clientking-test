@@ -2278,12 +2278,12 @@ ${existingTemplate.body}`;
    */
   app.get("/api/superadmin/shops/total-count", isSuperadmin, async (req: Request, res: Response) => {
     try {
-      const [result] = await db
+      const result = await db
         .select({ totalShops: sql<number>`COUNT(DISTINCT ${businessSettings.shopId})` })
         .from(businessSettings)
-        .where(isNotNull(businessSettings.shopId));
+        .where(sql`${businessSettings.shopId} IS NOT NULL`);
 
-      res.json({ totalShops: result.totalShops || 0 });
+      res.json({ totalShops: result[0]?.totalShops || 0 });
 
     } catch (error: any) {
       console.error("Fehler beim Abrufen der Gesamtzahl der Shops:", error);
