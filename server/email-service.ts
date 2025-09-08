@@ -8,7 +8,8 @@ import {
   type InsertEmailHistory, 
   users,
   superadminEmailSettings,
-  type SuperadminEmailSettings
+  type SuperadminEmailSettings,
+  newsletterLogos
 } from '@shared/schema';
 import { eq, desc, isNull, or, and, SQL, count, sql } from 'drizzle-orm';
 import { storage } from './storage';
@@ -1602,6 +1603,22 @@ export class EmailService {
           const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5000';
           const logoHtml = `<img src="${baseUrl}/clientking-logo.png" alt="ClientKing Logo" style="height: 50px;" />`;
           
+          // Newsletter Logo laden (aktuell aktives Logo)
+          let newsletterLogoHtml = '';
+          try {
+            const [activeLogo] = await db
+              .select()
+              .from(newsletterLogos)
+              .where(eq(newsletterLogos.isActive, true))
+              .limit(1);
+            
+            if (activeLogo) {
+              newsletterLogoHtml = `<img src="${baseUrl}${activeLogo.filepath}" alt="${activeLogo.name}" style="max-height: 200px; max-width: 100%; height: auto;" />`;
+            }
+          } catch (error) {
+            console.warn('Fehler beim Laden des aktiven Newsletter-Logos:', error);
+          }
+          
           // Newsletter-Variablen definieren
           const newsletterVariables = {
             empfaengername: recipient.name || 'Geschätzte/r Kunde/in',
@@ -1610,6 +1627,7 @@ export class EmailService {
             firmenname: recipient.name || 'Ihr Shop', // Firmenname als separate Variable
             abmeldelink: unsubscribeUrl,
             clientking_logo: logoHtml,
+            logoNewsletter: newsletterLogoHtml, // Neues Newsletter-Logo
             aktuellesjahr: new Date().getFullYear().toString()
           };
           
