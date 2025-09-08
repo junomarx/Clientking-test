@@ -141,6 +141,11 @@ export default function SuperadminNewsletterTab() {
     queryKey: ['/api/superadmin/newsletters', selectedNewsletterForRecipients?.newsletterId, 'recipients'],
     enabled: !!selectedNewsletterForRecipients?.newsletterId,
   });
+  
+  // DEBUG: Newsletter ID tracking
+  console.log('🔍 Frontend DEBUG: selectedNewsletterForRecipients:', selectedNewsletterForRecipients);
+  console.log('🔍 Frontend DEBUG: Recipients Query Newsletter ID:', selectedNewsletterForRecipients?.newsletterId);
+  console.log('🔍 Frontend DEBUG: Recipients Data:', recipients);
 
   // Mutations
   const createNewsletterMutation = useMutation({

@@ -2218,6 +2218,8 @@ ${existingTemplate.body}`;
    */
   app.get("/api/superadmin/newsletters/send-history", isSuperadmin, async (req: Request, res: Response) => {
     try {
+      console.log('📨 DEBUG: Newsletter Send-History Request gestartet');
+      
       // Aggregierte Historie: Gruppiert nach Newsletter mit Empfänger-Anzahl
       const aggregatedHistory = await db
         .select({
@@ -2234,6 +2236,11 @@ ${existingTemplate.body}`;
         .groupBy(newsletters.id, newsletters.title, newsletters.subject)
         .orderBy(sql`MAX(${newsletterSends.sentAt}) DESC`)
         .limit(50);
+
+      console.log('📨 DEBUG: Send-History Gefunden:', aggregatedHistory.length, 'Newsletter');
+      aggregatedHistory.forEach((item, index) => {
+        console.log(`📨 DEBUG: Newsletter ${index + 1}: ID=${item.newsletterId}, Subject="${item.subject}", Recipients=${item.recipientCount}, LastSent=${item.lastSentAt}`);
+      });
 
       res.json(aggregatedHistory);
 
