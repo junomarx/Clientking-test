@@ -100,19 +100,47 @@ export async function createVectorPdf({
   // HTML: .header { display: flex; justify-content: space-between; margin-bottom: 40px; }
   
   // Logo-Sektion links (max-width: 200px, max-height: 80px)
-  const logoAreaWidth = 200 * pxToMm; // ≈ 52.9mm
-  const logoAreaHeight = 80 * pxToMm; // ≈ 21.2mm
+  const maxLogoWidth = 200 * pxToMm; // ≈ 52.9mm
+  const maxLogoHeight = 80 * pxToMm; // ≈ 21.2mm
   
   let logoActualHeight = 0;
   if (logoUrl && logoUrl.trim() !== '') {
     try {
-      // Logo als Base64-Image implementiert
+      // Logo als Base64-Image implementiert - mit proportionaler Skalierung
       const logoImg = new Image();
       logoImg.src = logoUrl;
       
-      // Logo hinzufügen mit korrekten Dimensionen
-      pdf.addImage(logoUrl, 'JPEG', marginLeft, marginTop, logoAreaWidth, logoAreaHeight);
-      logoActualHeight = logoAreaHeight;
+      // Warten bis Logo geladen ist, um Dimensionen zu erhalten
+      await new Promise<void>((resolve) => {
+        logoImg.onload = () => resolve();
+        logoImg.onerror = () => resolve(); // Fallback bei Fehler
+        // Fallback für bereits geladene Bilder
+        if (logoImg.complete) resolve();
+      });
+      
+      // Originale Logo-Dimensionen
+      const originalWidth = logoImg.naturalWidth || logoImg.width || 200;
+      const originalHeight = logoImg.naturalHeight || logoImg.height || 80;
+      const aspectRatio = originalWidth / originalHeight;
+      
+      // Proportionale Skalierung innerhalb der Maximalwerte
+      let logoWidth, logoHeight;
+      
+      if (aspectRatio > (200 / 80)) {
+        // Logo ist breiter - an maximaler Breite orientieren
+        logoWidth = maxLogoWidth;
+        logoHeight = maxLogoWidth / aspectRatio;
+      } else {
+        // Logo ist höher - an maximaler Höhe orientieren  
+        logoHeight = maxLogoHeight;
+        logoWidth = maxLogoHeight * aspectRatio;
+      }
+      
+      // Logo hinzufügen mit proportionalen Dimensionen
+      pdf.addImage(logoUrl, 'JPEG', marginLeft, marginTop, logoWidth, logoHeight);
+      logoActualHeight = logoHeight;
+      
+      console.log(`Logo skaliert: ${originalWidth}x${originalHeight} → ${Math.round(logoWidth/pxToMm)}x${Math.round(logoHeight/pxToMm)}px (Verhältnis: ${aspectRatio.toFixed(2)})`);
     } catch (error) {
       console.warn('Logo konnte nicht geladen werden:', error);
       // Fallback: Logo-Text
