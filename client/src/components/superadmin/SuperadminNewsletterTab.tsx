@@ -61,7 +61,10 @@ import {
   CheckCircle,
   Clock,
   FileText,
-  Loader2
+  Loader2,
+  ChevronDown,
+  ChevronRight,
+  Search
 } from 'lucide-react';
 
 interface Newsletter {
@@ -117,6 +120,21 @@ export default function SuperadminNewsletterTab() {
   const [recipientsSearchTerm, setRecipientsSearchTerm] = useState('');
   const [recipientsCurrentPage, setRecipientsCurrentPage] = useState(1);
   const recipientsPerPage = 10;
+  
+  // Filter und Paginierung für Recipients
+  const filteredRecipients = recipients?.filter(recipient => {
+    if (!recipientsSearchTerm) return true;
+    const searchLower = recipientsSearchTerm.toLowerCase();
+    return (
+      recipient.recipientEmail?.toLowerCase().includes(searchLower) ||
+      recipient.shopName?.toLowerCase().includes(searchLower)
+    );
+  }) || [];
+  
+  const totalRecipients = filteredRecipients.length;
+  const totalPages = Math.ceil(totalRecipients / recipientsPerPage);
+  const startIndex = (recipientsCurrentPage - 1) * recipientsPerPage;
+  const paginatedRecipients = filteredRecipients.slice(startIndex, startIndex + recipientsPerPage);
   
   const [newNewsletter, setNewNewsletter] = useState({
     title: '',
@@ -670,6 +688,10 @@ export default function SuperadminNewsletterTab() {
                               });
                               setSelectedNewsletterForRecipients(historyItem);
                               setIsRecipientsDialogOpen(true);
+                              // Reset states beim Öffnen
+                              setIsRecipientsExpanded(false);
+                              setRecipientsSearchTerm('');
+                              setRecipientsCurrentPage(1);
                             }}
                           >
                             <Users className="h-4 w-4 mr-1" />
@@ -732,10 +754,44 @@ export default function SuperadminNewsletterTab() {
                   </div>
                 )}
 
-                {/* Recipients Table */}
-                <div className="border rounded-lg overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <Table>
+                {/* Recipients Section Header mit Expand/Collapse */}
+                <div className="flex items-center gap-2 mb-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsRecipientsExpanded(!isRecipientsExpanded)}
+                    className="flex items-center gap-2"
+                  >
+                    {isRecipientsExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                    Empfänger-Details {isRecipientsExpanded ? 'ausblenden' : 'anzeigen'}
+                  </Button>
+                  <span className="text-sm text-gray-600">
+                    ({totalRecipients} {totalRecipients === 1 ? 'Empfänger' : 'Empfänger'})
+                  </span>
+                </div>
+
+                {/* Recipients Table - Nur anzeigen wenn expanded */}
+                {isRecipientsExpanded && (
+                  <div className="space-y-4">
+                    {/* Suchfeld */}
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Suche nach E-Mail oder Shop-Name..."
+                        value={recipientsSearchTerm}
+                        onChange={(e) => {
+                          setRecipientsSearchTerm(e.target.value);
+                          setRecipientsCurrentPage(1); // Reset zur ersten Seite bei Suche
+                        }}
+                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+
+                    {/* Recipients Table */}
+                    <div className="border rounded-lg overflow-hidden">
+                      <div className="overflow-x-auto">
+                        <Table>
                       <TableHeader>
                         <TableRow>
                           <TableHead>E-Mail-Adresse</TableHead>
@@ -745,7 +801,7 @@ export default function SuperadminNewsletterTab() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {recipients?.map((recipient) => (
+                        {paginatedRecipients.map((recipient) => (
                           <TableRow key={recipient.id}>
                             <TableCell className="font-medium">
                               <div className="space-y-1">
@@ -780,12 +836,52 @@ export default function SuperadminNewsletterTab() {
                               {format(new Date(recipient.sentAt), 'dd.MM.yyyy - HH:mm', { locale: de })}
                             </TableCell>
                           </TableRow>
-                        )) || []}
+                        ))}
                       </TableBody>
                     </Table>
-                  </div>
-                </div>
+                      </div>
+                    </div>
 
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm text-gray-600">
+                          Zeige {startIndex + 1}-{Math.min(startIndex + recipientsPerPage, totalRecipients)} von {totalRecipients} Empfängern
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setRecipientsCurrentPage(recipientsCurrentPage - 1)}
+                            disabled={recipientsCurrentPage === 1}
+                          >
+                            Zurück
+                          </Button>
+                          <span className="text-sm">
+                            Seite {recipientsCurrentPage} von {totalPages}
+                          </span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setRecipientsCurrentPage(recipientsCurrentPage + 1)}
+                            disabled={recipientsCurrentPage === totalPages}
+                          >
+                            Weiter
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Keine Ergebnisse */}
+                    {filteredRecipients.length === 0 && recipients?.length > 0 && (
+                      <div className="text-center py-8 text-gray-500">
+                        Keine Empfänger gefunden für "{recipientsSearchTerm}"
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Keine Recipients */}
                 {recipients?.length === 0 && (
                   <div className="text-center py-8 text-gray-500">
                     Keine Empfänger-Daten verfügbar
