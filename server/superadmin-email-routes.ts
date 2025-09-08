@@ -116,7 +116,7 @@ export const defaultAppEmailTemplates: DefaultEmailTemplate[] = [
           </a>
         </p>
         
-        <p>Der Link ist 24 Stunden gültig. Falls Sie keine Anfrage zum Zurücksetzen Ihres Passworts gestellt haben, können Sie diese E-Mail ignorieren.</p>
+        <p>Der Link ist 15 Minuten gültig. Falls Sie keine Anfrage zum Zurücksetzen Ihres Passworts gestellt haben, können Sie diese E-Mail ignorieren.</p>
         
         <p>Mit freundlichen Grüßen,<br>Ihr Handyshop Verwaltungs-Team</p>
         
