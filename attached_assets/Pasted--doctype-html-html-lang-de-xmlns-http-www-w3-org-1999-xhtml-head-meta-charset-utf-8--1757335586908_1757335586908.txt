@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="de" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8">
+  <meta name="x-apple-disable-message-reformatting">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ClientKing Newsletter</title>
+  <style>
+    html,body{margin:0!important;padding:0!important;height:100%!important;width:100%!important;}
+    *{box-sizing:border-box;}
+    img{border:0;outline:none;text-decoration:none;display:block;max-width:100%;height:auto;}
+    a{color:#0A66C2;text-decoration:none;}
+    @media screen and (max-width:600px){
+      .container{width:100% !important;}
+      .px{padding-left:16px !important;padding-right:16px !important;}
+      .hero-title{font-size:22px !important;line-height:1.25 !important;}
+      .lead{font-size:15px !important;}
+    }
+  </style>
+</head>
+<body style="background:#f4f6f8; font-family:Arial, sans-serif; margin:0; padding:0;">
+  <center class="body-bg" style="width:100%; background:#f4f6f8;">
+    <table role="presentation" class="container" width="600" style="margin:0 auto; background:#ffffff; border-radius:8px; overflow:hidden;">
+      <tr>
+        <td style="padding:24px; text-align:center;">
+          <!-- Inline-Logo als Base64 für maximale Kompatibilität in E-Mail-Clients -->
+          <!-- EMAIL-LOGO (CID-Variante für produktiven Versand)
+     Ersetzen Sie den <img>-Block durch die folgende Zeile, wenn Sie die Mail als
+     multipart/related mit eingebettetem Anhang (Content-ID) versenden:
+     <img src="{{logoNewsletter}}" alt="ClientKing Logo" width="200" style="display:block; margin:0 auto;">
+     MIME-Beispiel (vereinfachtes Schema):
+     Content-Type: multipart/related; boundary="BOUNDARY"
+
+     --BOUNDARY
+     Content-Type: text/html; charset=UTF-8
+
+     ... HTML mit <img src="{{logoNewsletter}}" alt="ClientKing Logo" width="200" style="display:block; margin:0 auto;"> ...
+
+     --BOUNDARY
+     Content-Type: image/png
+     Content-Transfer-Encoding: base64
+     Content-ID: <clientking-logo>
+     Content-Disposition: inline; filename="clientking.png"
+
+     iVBORw0KGgoAAA... (Base64 des Logos)
+     --BOUNDARY--
+
+     Alternativ (weniger zuverlässig, einige Clients blocken data:):
+     <img src="{{logoNewsletter}}" alt="ClientKing Logo" width="200" style="display:block; margin:0 auto;">
+-->
+<img src="{{logoNewsletter}}" alt="ClientKing Logo" width="200" style="display:block; margin:0 auto;">
+</td>
+      </tr>
+      <tr>
+        <td style="padding:24px; text-align:left;">
+          <h1 class="hero-title" style="font-size:26px; color:#0A66C2; margin:0 0 16px;">ClientKing startet voraussichtlich Anfang Oktober</h1>
+          <p class="lead" style="font-size:16px; line-height:1.5; color:#333; margin:0 0 16px;">
+            Liebe/r {{empfaengername}},
+          </p>
+          <p class="text" style="font-size:15px; line-height:1.5; color:#333; margin:0 0 16px;">
+            Es ist soweit: <strong>ClientKing</strong>, die neue Verwaltungssoftware speziell für Reparaturshops, wird voraussichtlich mit <strong>Anfang Oktober</strong> live gehen.
+          </p>
+          <p class="text" style="font-size:15px; line-height:1.5; color:#333; margin:0 0 16px;">
+            Mit ClientKing digitalisieren Sie den gesamten Geschäftsablauf – von der Kundenaufnahme über die Reparaturverwaltung bis zur Geräteabholung. Alle Daten sind in Echtzeit synchronisiert, egal ob Sie ein einzelnes Geschäft betreiben oder mehrere Standorte koordinieren.
+          </p>
+          <ul style="font-size:15px; line-height:1.5; color:#333; margin:0 0 24px; padding-left:20px;">
+            <li>Kundenverwaltung mit digitaler Signatur</li>
+            <li>Reparaturaufträge mit Statusverfolgung</li>
+            <li>Automatische Kundenbenachrichtigungen per E-Mail je nach Reparaturstatus (z.&nbsp;B. Eingegangen, In Arbeit, Fertig, Abholbereit)</li>
+            <li>Kostenvoranschläge schnell und professionell erstellen</li>
+            <li>Erstellung von Bestelllisten für Ersatzteile und Zubehör</li>
+            <li>Leihgeräte verwalten und direkt einer Reparatur zuweisen</li>
+            <li>Kiosk-Modus für schnelle Datenerfassung im Shop</li>
+            <li>Multi-Shop-Administration für mehrere Standorte</li>
+          </ul>
+          <p class="text" style="font-size:15px; line-height:1.5; color:#333; margin:0 0 24px;">
+            Wir sind überzeugt, dass ClientKing Ihren Arbeitsalltag spürbar erleichtern wird. Schon bald können Sie alle Abläufe in einer einzigen, modernen Plattform steuern.
+          </p>
+          <p style="margin:0 0 24px;">
+            <a href="https://clientking.at" class="btn" style="display:inline-block; padding:12px 20px; background:#0A66C2; color:#ffffff; border-radius:4px; font-size:15px; font-weight:bold;">Mehr über ClientKing</a>
+          </p>
+          <hr class="divider" style="border:none; border-top:1px solid #e0e0e0; margin:24px 0;">
+          <p class="muted" style="font-size:13px; line-height:1.4; color:#666; margin:0;">
+            {{firmenname}} &copy; {{aktuellesjahr}}<br>
+            Falls Sie keine weiteren Informationen wünschen, können Sie sich jederzeit <a href="{{abmeldelink}}">abmelden</a>.
+          </p>
+        </td>
+      </tr>
+    </table>
+  </center>
+</body>
+</html>

@@ -1617,6 +1617,10 @@ export class EmailService {
               const logoFileName = activeLogo.filepath.split('/').pop(); // Dateiname extrahieren
               const logoUrl = `${baseUrl}/public-objects/newsletter-logos/${logoFileName}`;
               newsletterLogoHtml = `<img src="${logoUrl}" alt="${activeLogo.name}" style="max-height: 200px; max-width: 100%; height: auto;" />`;
+              console.log(`📸 Newsletter-Logo gefunden: ${activeLogo.name} - URL: ${logoUrl}`);
+              console.log(`📸 Newsletter-Logo HTML: ${newsletterLogoHtml}`);
+            } else {
+              console.log(`❌ Kein aktives Newsletter-Logo gefunden!`);
             }
           } catch (error) {
             console.warn('Fehler beim Laden des aktiven Newsletter-Logos:', error);
@@ -1636,9 +1640,18 @@ export class EmailService {
           
           // Ersetze alle Variablen im Newsletter-Content
           let personalizedContent = newsletter.content;
+          console.log(`🔄 Ersetze Variablen für ${recipient.email}:`);
+          console.log(`🔄 logoNewsletter Wert: "${newsletterVariables.logoNewsletter}"`);
+          
           Object.entries(newsletterVariables).forEach(([key, value]) => {
             const regex = new RegExp(`{{${key}}}`, 'g');
+            const beforeReplace = personalizedContent;
             personalizedContent = personalizedContent.replace(regex, value);
+            if (key === 'logoNewsletter' && beforeReplace !== personalizedContent) {
+              console.log(`✅ Variable {{${key}}} wurde ersetzt!`);
+            } else if (key === 'logoNewsletter') {
+              console.log(`❌ Variable {{${key}}} wurde NICHT ersetzt!`);
+            }
           });
 
           const mailOptions = {
