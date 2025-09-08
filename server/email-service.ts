@@ -657,6 +657,7 @@ export class EmailService {
   ): Promise<boolean> {
     try {
       console.log(`🔍 DEBUG: Suche E-Mail-Vorlage "${templateName}" für Benutzer ${userId}...`);
+      console.log(`🚨 SUPER DEBUG: Template name exact match: "${templateName}"`);
       
       // E-Mail-Vorlage nach Namen suchen - erst globale, dann benutzer-spezifische
       let template;
