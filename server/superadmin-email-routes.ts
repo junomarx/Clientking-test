@@ -2182,11 +2182,34 @@ ${existingTemplate.body}`;
 
       await db.insert(newsletterSends).values(newsletterSendData);
 
+      // Logo-URL direkt in den Newsletter-Content einbauen (Workaround für Variable-Problem)
+      let newsletterContent = newsletter.content;
+      try {
+        const [activeLogo] = await db
+          .select()
+          .from(newsletterLogos)
+          .where(eq(newsletterLogos.isActive, true))
+          .limit(1);
+        
+        if (activeLogo) {
+          const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5000';
+          const logoFileName = activeLogo.filepath.split('/').pop();
+          const logoUrl = `${baseUrl}/public-objects/newsletter-logos/${logoFileName}`;
+          const logoHtml = `<img src="${logoUrl}" alt="${activeLogo.name}" style="max-height: 200px; max-width: 100%; height: auto;" />`;
+          
+          // Ersetze {{logoNewsletter}} direkt
+          newsletterContent = newsletterContent.replace(/\{\{logoNewsletter\}\}/g, logoHtml);
+          console.log(`📸 Logo direkt ersetzt: ${activeLogo.name} - ${logoUrl}`);
+        }
+      } catch (error) {
+        console.warn('Fehler beim Laden des Newsletter-Logos:', error);
+      }
+
       // Newsletter mit professioneller HTML-Vorlage und ClientKing Logo versenden
       const sendResult = await emailService.sendNewsletter(
         {
           subject: newsletter.subject,
-          content: newsletter.content
+          content: newsletterContent
         },
         emailRecipients
       );
