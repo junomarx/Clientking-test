@@ -112,6 +112,12 @@ export default function SuperadminNewsletterTab() {
   const [isRecipientsDialogOpen, setIsRecipientsDialogOpen] = useState(false);
   const [selectedNewsletterForRecipients, setSelectedNewsletterForRecipients] = useState<NewsletterHistoryItem | null>(null);
   
+  // States für Recipients-Features
+  const [isRecipientsExpanded, setIsRecipientsExpanded] = useState(false);
+  const [recipientsSearchTerm, setRecipientsSearchTerm] = useState('');
+  const [recipientsCurrentPage, setRecipientsCurrentPage] = useState(1);
+  const recipientsPerPage = 10;
+  
   const [newNewsletter, setNewNewsletter] = useState({
     title: '',
     subject: '',
@@ -739,9 +745,7 @@ export default function SuperadminNewsletterTab() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {recipients?.map((recipient) => {
-                          console.log('🔍 RECIPIENT DEBUG:', recipient);
-                          return (
+                        {recipients?.map((recipient) => (
                           <TableRow key={recipient.id}>
                             <TableCell className="font-medium">
                               <div className="space-y-1">
@@ -776,7 +780,7 @@ export default function SuperadminNewsletterTab() {
                               {format(new Date(recipient.sentAt), 'dd.MM.yyyy - HH:mm', { locale: de })}
                             </TableCell>
                           </TableRow>
-                        )}) || []}
+                        )) || []}
                       </TableBody>
                     </Table>
                   </div>
