@@ -2250,20 +2250,40 @@ ${existingTemplate.body}`;
     try {
       const newsletterId = parseInt(req.params.id);
       
-      const recipients = await db
+      // Alle Newsletter-Empfänger abrufen
+      const allRecipients = await db
         .select({
           id: newsletterSends.id,
           recipientEmail: newsletterSends.recipientEmail,
           status: newsletterSends.status,
           sentAt: newsletterSends.sentAt,
-          shopName: businessSettings.businessName,
-          shopId: users.shopId,
         })
         .from(newsletterSends)
-        .leftJoin(users, eq(newsletterSends.recipientEmail, users.email))
-        .leftJoin(businessSettings, eq(users.shopId, businessSettings.shopId))
         .where(eq(newsletterSends.newsletterId, newsletterId))
         .orderBy(desc(newsletterSends.sentAt));
+
+      // Shop-Namen nachschlagen für E-Mail-Adressen die in der Users-Tabelle sind
+      const recipientsWithShops = await Promise.all(
+        allRecipients.map(async (recipient) => {
+          const userWithShop = await db
+            .select({
+              shopName: businessSettings.businessName,
+              shopId: users.shopId,
+            })
+            .from(users)
+            .leftJoin(businessSettings, eq(users.shopId, businessSettings.shopId))
+            .where(eq(users.email, recipient.recipientEmail))
+            .limit(1);
+
+          return {
+            ...recipient,
+            shopName: userWithShop[0]?.shopName || null,
+            shopId: userWithShop[0]?.shopId || null,
+          };
+        })
+      );
+
+      const recipients = recipientsWithShops;
 
       res.json(recipients);
 
