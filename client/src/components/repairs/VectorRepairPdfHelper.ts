@@ -107,12 +107,44 @@ export async function createVectorRepairPdf(props: RepairPdfProps): Promise<jsPD
   // Header: Logo links + Firmendaten rechts
   const headerHeight = 25;
   
-  // Logo links (falls vorhanden)
+  // Logo links (falls vorhanden) - mit proportionaler Skalierung
   if (logoBase64) {
     try {
-      const logoWidth = 50;
-      const logoHeight = 20;
+      // Logo-Dimensionen ermitteln
+      const logoImg = new Image();
+      logoImg.src = logoBase64;
+      
+      // Warten bis Logo geladen ist
+      await new Promise<void>((resolve) => {
+        logoImg.onload = () => resolve();
+        logoImg.onerror = () => resolve();
+        if (logoImg.complete) resolve();
+      });
+      
+      // Originale Logo-Dimensionen
+      const originalWidth = logoImg.naturalWidth || logoImg.width || 50;
+      const originalHeight = logoImg.naturalHeight || logoImg.height || 20;
+      const aspectRatio = originalWidth / originalHeight;
+      
+      // Maximale Logo-Größe für Reparatur-PDF
+      const maxWidth = 50;
+      const maxHeight = 20;
+      
+      // Proportionale Skalierung
+      let logoWidth, logoHeight;
+      
+      if (aspectRatio > (maxWidth / maxHeight)) {
+        // Logo ist breiter - an maximaler Breite orientieren
+        logoWidth = maxWidth;
+        logoHeight = maxWidth / aspectRatio;
+      } else {
+        // Logo ist höher - an maximaler Höhe orientieren  
+        logoHeight = maxHeight;
+        logoWidth = maxHeight * aspectRatio;
+      }
+      
       pdf.addImage(logoBase64, 'PNG', leftMargin, currentY, logoWidth, logoHeight);
+      console.log(`Reparatur-Logo skaliert: ${originalWidth}x${originalHeight} → ${Math.round(logoWidth)}x${Math.round(logoHeight)}px (Verhältnis: ${aspectRatio.toFixed(2)})`);
     } catch (error) {
       console.warn('Logo konnte nicht hinzugefügt werden:', error);
     }
