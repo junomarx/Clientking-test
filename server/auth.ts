@@ -772,16 +772,21 @@ export function setupAuth(app: Express) {
       
       // Send email using the superadmin template system with ClientKing branding
       console.log(`🚨 CRITICAL DEBUG: About to send email with template "Passwort zurücksetzen" to ${user.email} for user ID ${user.id}`);
-      const sent = await emailService.sendEmailByTemplateName(
-        "Passwort zurücksetzen",
-        user.email,
-        {
-          benutzername: user.username || user.email,
-          resetLink: resetUrl
-        },
-        user.id  // Fix: userId-Parameter hinzufügen für korrekte Template-Auswahl
-      );
-      console.log(`🚨 CRITICAL DEBUG: Email send result: ${sent}`);
+      let sent = false;
+      try {
+        sent = await emailService.sendEmailByTemplateName(
+          "Passwort zurücksetzen",
+          user.email,
+          {
+            benutzername: user.username || user.email,
+            resetLink: resetUrl
+          },
+          user.id  // Fix: userId-Parameter hinzufügen für korrekte Template-Auswahl
+        );
+        console.log(`🚨 CRITICAL DEBUG: Email send result: ${sent}`);
+      } catch (emailError) {
+        console.error(`🚨 CRITICAL DEBUG: Email send FAILED:`, emailError);
+      }
       
       if (sent) {
         console.log(`Password reset requested for user ${user.email} from IP ${clientIp}`);
