@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { Express } from "express";
 import { isSuperadmin } from "./superadmin-middleware";
 import { db } from "./db";
-import { emailTemplates, emailHistory, type EmailTemplate, type InsertEmailTemplate, superadminEmailSettings, newsletters, newsletterSends, users, businessSettings, type Newsletter, type InsertNewsletter } from "@shared/schema";
+import { emailTemplates, emailHistory, type EmailTemplate, type InsertEmailTemplate, superadminEmailSettings, newsletters, newsletterSends, users, businessSettings, type Newsletter, type InsertNewsletter, newsletterLogos, type NewsletterLogo, type InsertNewsletterLogo } from "@shared/schema";
 import { eq, desc, isNull, or, and, sql, inArray } from "drizzle-orm";
 import nodemailer from "nodemailer";
 import { emailService } from "./email-service";
@@ -1940,6 +1940,142 @@ ${existingTemplate.body}`;
     } catch (error) {
       console.error("Fehler beim Laden des Newsletter-Logos:", error);
       return res.status(500).json({ error: "Interner Serverfehler" });
+    }
+  });
+
+  /**
+   * Newsletter Logo Management APIs
+   */
+
+  // Upload URL für neues Logo abrufen
+  app.post("/api/superadmin/newsletter-logos/upload", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const uploadURL = await objectStorageService.getNewsletterLogoUploadURL();
+      res.json({ uploadURL });
+    } catch (error: any) {
+      console.error("Fehler beim Abrufen der Logo-Upload-URL:", error);
+      res.status(500).json({ message: `Fehler beim Abrufen der Logo-Upload-URL: ${error.message}` });
+    }
+  });
+
+  // Alle Newsletter-Logos abrufen
+  app.get("/api/superadmin/newsletter-logos", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const logos = await db
+        .select()
+        .from(newsletterLogos)
+        .orderBy(desc(newsletterLogos.createdAt));
+
+      res.json(logos);
+    } catch (error: any) {
+      console.error("Fehler beim Abrufen der Newsletter-Logos:", error);
+      res.status(500).json({ message: `Fehler beim Abrufen der Newsletter-Logos: ${error.message}` });
+    }
+  });
+
+  // Logo nach Upload registrieren
+  app.post("/api/superadmin/newsletter-logos", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const { name, filename, filepath } = req.body;
+      const superadminUserId = (req as any).user?.id;
+
+      if (!name || !filename || !filepath) {
+        return res.status(400).json({ message: "Name, Dateiname und Dateipfad sind erforderlich" });
+      }
+
+      const objectStorageService = new ObjectStorageService();
+      const normalizedPath = objectStorageService.normalizeNewsletterLogoPath(filepath);
+
+      const newLogo: InsertNewsletterLogo = {
+        name,
+        filename,
+        filepath: normalizedPath,
+        isActive: false,
+        createdBy: superadminUserId,
+      };
+
+      const [createdLogo] = await db
+        .insert(newsletterLogos)
+        .values(newLogo)
+        .returning();
+
+      res.status(201).json(createdLogo);
+    } catch (error: any) {
+      console.error("Fehler beim Registrieren des Logos:", error);
+      res.status(500).json({ message: `Fehler beim Registrieren des Logos: ${error.message}` });
+    }
+  });
+
+  // Logo aktivieren (alle anderen deaktivieren)
+  app.patch("/api/superadmin/newsletter-logos/:id/activate", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const logoId = parseInt(req.params.id);
+
+      // Alle Logos deaktivieren
+      await db
+        .update(newsletterLogos)
+        .set({ isActive: false, updatedAt: new Date() });
+
+      // Gewähltes Logo aktivieren
+      const [activatedLogo] = await db
+        .update(newsletterLogos)
+        .set({ isActive: true, updatedAt: new Date() })
+        .where(eq(newsletterLogos.id, logoId))
+        .returning();
+
+      if (!activatedLogo) {
+        return res.status(404).json({ message: "Logo nicht gefunden" });
+      }
+
+      res.json(activatedLogo);
+    } catch (error: any) {
+      console.error("Fehler beim Aktivieren des Logos:", error);
+      res.status(500).json({ message: `Fehler beim Aktivieren des Logos: ${error.message}` });
+    }
+  });
+
+  // Logo löschen
+  app.delete("/api/superadmin/newsletter-logos/:id", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const logoId = parseInt(req.params.id);
+
+      // Logo aus Datenbank löschen
+      const [deletedLogo] = await db
+        .delete(newsletterLogos)
+        .where(eq(newsletterLogos.id, logoId))
+        .returning();
+
+      if (!deletedLogo) {
+        return res.status(404).json({ message: "Logo nicht gefunden" });
+      }
+
+      // TODO: Logo-Datei aus Object Storage löschen (optional)
+      
+      res.json({ message: "Logo erfolgreich gelöscht" });
+    } catch (error: any) {
+      console.error("Fehler beim Löschen des Logos:", error);
+      res.status(500).json({ message: `Fehler beim Löschen des Logos: ${error.message}` });
+    }
+  });
+
+  // Aktives Logo abrufen
+  app.get("/api/superadmin/newsletter-logos/active", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const [activeLogo] = await db
+        .select()
+        .from(newsletterLogos)
+        .where(eq(newsletterLogos.isActive, true))
+        .limit(1);
+
+      if (!activeLogo) {
+        return res.json(null);
+      }
+
+      res.json(activeLogo);
+    } catch (error: any) {
+      console.error("Fehler beim Abrufen des aktiven Logos:", error);
+      res.status(500).json({ message: `Fehler beim Abrufen des aktiven Logos: ${error.message}` });
     }
   });
 

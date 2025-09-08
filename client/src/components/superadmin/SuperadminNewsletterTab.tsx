@@ -130,7 +130,7 @@ export default function SuperadminNewsletterTab() {
     title: '',
     subject: '',
     content: '',
-    logoNewsletter: ''
+    logoNewsletter: '' as string | undefined
   });
 
   // Queries
@@ -363,8 +363,9 @@ export default function SuperadminNewsletterTab() {
       </div>
 
       <Tabs defaultValue="newsletters" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="newsletters">Newsletter verwalten</TabsTrigger>
+          <TabsTrigger value="logos">Logo Verwaltung</TabsTrigger>
           <TabsTrigger value="variables">Variablen</TabsTrigger>
           <TabsTrigger value="history">Versand-Historie</TabsTrigger>
         </TabsList>
@@ -570,6 +571,94 @@ export default function SuperadminNewsletterTab() {
                   </TableBody>
                 </Table>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="logos" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Image className="h-5 w-5" />
+                Logo Verwaltung
+              </CardTitle>
+              <CardDescription>
+                Verwalten Sie Newsletter-Logos für verschiedene Anlässe. Nur ein Logo kann gleichzeitig aktiv sein.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Logo Upload Section */}
+              <div className="flex items-center gap-4 p-4 border border-dashed border-gray-300 rounded-lg">
+                <ObjectUploader
+                  maxNumberOfFiles={1}
+                  maxFileSize={5242880} // 5MB
+                  allowedFileTypes={['image/*']}
+                  onGetUploadParameters={async () => {
+                    const response = await fetch('/api/superadmin/newsletter-logos/upload', {
+                      method: 'POST',
+                      credentials: 'include',
+                      headers: { 'Content-Type': 'application/json' },
+                    });
+                    
+                    if (!response.ok) throw new Error('Failed to get upload URL');
+                    const data = await response.json();
+                    
+                    return { method: 'PUT' as const, url: data.uploadURL };
+                  }}
+                  onComplete={async (result) => {
+                    if (result.successful && result.successful.length > 0) {
+                      const uploadedFile = result.successful[0];
+                      const filename = uploadedFile.name || 'Neues Logo';
+                      const filepath = uploadedFile.uploadURL;
+                      
+                      // Dialog für Logo-Namen
+                      const logoName = prompt('Geben Sie einen Namen für das Logo ein:', filename);
+                      if (logoName) {
+                        try {
+                          const response = await fetch('/api/superadmin/newsletter-logos', {
+                            method: 'POST',
+                            credentials: 'include',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              name: logoName,
+                              filename: filename,
+                              filepath: filepath
+                            })
+                          });
+                          
+                          if (response.ok) {
+                            // Refresh logo list
+                            window.location.reload();
+                          }
+                        } catch (error) {
+                          console.error('Fehler beim Registrieren des Logos:', error);
+                        }
+                      }
+                    }
+                  }}
+                  buttonClassName="w-auto"
+                >
+                  <div className="flex items-center gap-2">
+                    <Upload className="h-4 w-4" />
+                    <span>Neues Logo hochladen</span>
+                  </div>
+                </ObjectUploader>
+                
+                <div className="text-sm text-muted-foreground">
+                  <p>Unterstützte Formate: JPG, PNG, GIF (max. 5MB)</p>
+                  <p>Empfohlene Größe: 600x200 Pixel</p>
+                </div>
+              </div>
+
+              {/* Logo List placeholder - will be implemented with proper state management */}
+              <div className="grid gap-4">
+                <h3 className="text-lg font-semibold">Verfügbare Logos</h3>
+                <div className="text-center py-8 text-muted-foreground">
+                  <Image className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p>Noch keine Logos hochgeladen</p>
+                  <p className="text-sm">Laden Sie Ihr erstes Logo hoch, um zu beginnen</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -1008,7 +1097,7 @@ export default function SuperadminNewsletterTab() {
                     onComplete={(result) => {
                       if (result.successful && result.successful.length > 0) {
                         const logoUrl = result.successful[0].uploadURL;
-                        setSelectedNewsletter(prev => prev ? { ...prev, logoNewsletter: logoUrl } : null);
+                        setSelectedNewsletter(prev => prev ? { ...prev, logoNewsletter: logoUrl || null } : null);
                         toast({
                           title: "Logo hochgeladen",
                           description: "Das Newsletter-Logo wurde erfolgreich hochgeladen",
