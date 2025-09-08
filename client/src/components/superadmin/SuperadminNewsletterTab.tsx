@@ -64,14 +64,19 @@ import {
   Loader2,
   ChevronDown,
   ChevronRight,
-  Search
+  Search,
+  Upload,
+  Image
 } from 'lucide-react';
+import { ObjectUploader } from '@/components/ObjectUploader';
+import type { UploadResult } from '@uppy/core';
 
 interface Newsletter {
   id: number;
   title: string;
   subject: string;
   content: string;
+  logoNewsletter?: string | null;
   sentAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -124,7 +129,8 @@ export default function SuperadminNewsletterTab() {
   const [newNewsletter, setNewNewsletter] = useState({
     title: '',
     subject: '',
-    content: ''
+    content: '',
+    logoNewsletter: ''
   });
 
   // Queries
@@ -177,7 +183,7 @@ export default function SuperadminNewsletterTab() {
 
   // Mutations
   const createNewsletterMutation = useMutation({
-    mutationFn: async (data: { title: string; subject: string; content: string }) => {
+    mutationFn: async (data: { title: string; subject: string; content: string; logoNewsletter?: string }) => {
       const response = await apiRequest('POST', '/api/superadmin/newsletters', data);
       return response.json();
     },
@@ -189,7 +195,7 @@ export default function SuperadminNewsletterTab() {
       queryClient.invalidateQueries({ queryKey: ['/api/superadmin/newsletters'] });
       queryClient.invalidateQueries({ queryKey: ['/api/superadmin/newsletters/stats'] });
       setIsCreateDialogOpen(false);
-      setNewNewsletter({ title: '', subject: '', content: '' });
+      setNewNewsletter({ title: '', subject: '', content: '', logoNewsletter: '' });
     },
     onError: (error: any) => {
       toast({
@@ -201,10 +207,11 @@ export default function SuperadminNewsletterTab() {
   });
 
   const updateNewsletterMutation = useMutation({
-    mutationFn: async (data: { id: number; subject: string; content: string }) => {
+    mutationFn: async (data: { id: number; subject: string; content: string; logoNewsletter?: string }) => {
       const response = await apiRequest('PATCH', `/api/superadmin/newsletters/${data.id}`, {
         subject: data.subject,
-        content: data.content
+        content: data.content,
+        logoNewsletter: data.logoNewsletter
       });
       return response.json();
     },

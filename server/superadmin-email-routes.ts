@@ -6,6 +6,7 @@ import { emailTemplates, emailHistory, type EmailTemplate, type InsertEmailTempl
 import { eq, desc, isNull, or, and, sql, inArray } from "drizzle-orm";
 import nodemailer from "nodemailer";
 import { emailService } from "./email-service";
+import { ObjectStorageService } from "./objectStorage";
 
 // E-Mail-Vorlagen Typen
 type EmailTemplateType = 'app' | 'customer';
@@ -1910,19 +1911,41 @@ ${existingTemplate.body}`;
   /**
    * Newsletter erstellen
    */
+  /**
+   * Newsletter-Logo-Upload URL abrufen
+   */
+  app.post("/api/superadmin/newsletters/logo-upload", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const uploadURL = await objectStorageService.getNewsletterLogoUploadURL();
+      res.json({ uploadURL });
+    } catch (error: any) {
+      console.error("Fehler beim Abrufen der Logo-Upload-URL:", error);
+      res.status(500).json({ message: `Fehler beim Abrufen der Logo-Upload-URL: ${error.message}` });
+    }
+  });
+
   app.post("/api/superadmin/newsletters", isSuperadmin, async (req: Request, res: Response) => {
     try {
-      const { title, subject, content } = req.body;
+      const { title, subject, content, logoNewsletter } = req.body;
       const superadminUserId = (req as any).user?.id;
 
       if (!title || !subject || !content) {
         return res.status(400).json({ message: "Titel, Betreff und Inhalt sind erforderlich" });
       }
 
+      // Logo-Pfad normalisieren falls vorhanden
+      let normalizedLogoPath = null;
+      if (logoNewsletter) {
+        const objectStorageService = new ObjectStorageService();
+        normalizedLogoPath = objectStorageService.normalizeNewsletterLogoPath(logoNewsletter);
+      }
+
       const newNewsletter: InsertNewsletter = {
         title,
         subject,
         content,
+        logoNewsletter: normalizedLogoPath,
         createdBy: superadminUserId,
         status: 'draft'
       };
