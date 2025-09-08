@@ -1925,6 +1925,24 @@ ${existingTemplate.body}`;
     }
   });
 
+  /**
+   * Newsletter Logo abrufen
+   */
+  app.get("/newsletter-logos/:filePath(*)", async (req: Request, res: Response) => {
+    const filePath = req.params.filePath;
+    const objectStorageService = new ObjectStorageService();
+    try {
+      const file = await objectStorageService.searchPublicObject(`newsletter-logos/${filePath}`);
+      if (!file) {
+        return res.status(404).json({ error: "Logo nicht gefunden" });
+      }
+      objectStorageService.downloadObject(file, res);
+    } catch (error) {
+      console.error("Fehler beim Laden des Newsletter-Logos:", error);
+      return res.status(500).json({ error: "Interner Serverfehler" });
+    }
+  });
+
   app.post("/api/superadmin/newsletters", isSuperadmin, async (req: Request, res: Response) => {
     try {
       const { title, subject, content, logoNewsletter } = req.body;

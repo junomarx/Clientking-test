@@ -422,6 +422,59 @@ export default function SuperadminNewsletterTab() {
                           onChange={(e) => setNewNewsletter(prev => ({ ...prev, content: e.target.value }))}
                         />
                       </div>
+
+                      <div className="space-y-2">
+                        <Label>Newsletter Logo</Label>
+                        <div className="flex items-center gap-4">
+                          <ObjectUploader
+                            maxNumberOfFiles={1}
+                            maxFileSize={5242880} // 5MB
+                            allowedFileTypes={['image/*']}
+                            onGetUploadParameters={async () => {
+                              const response = await fetch('/api/superadmin/newsletters/logo-upload', {
+                                method: 'POST',
+                                credentials: 'include',
+                                headers: { 'Content-Type': 'application/json' },
+                              });
+                              
+                              if (!response.ok) throw new Error('Failed to get upload URL');
+                              const data = await response.json();
+                              
+                              return { method: 'PUT' as const, url: data.uploadURL };
+                            }}
+                            onComplete={(result) => {
+                              if (result.successful && result.successful.length > 0) {
+                                const logoUrl = result.successful[0].uploadURL;
+                                setNewNewsletter(prev => ({ ...prev, logoNewsletter: logoUrl }));
+                                toast({
+                                  title: "Logo hochgeladen",
+                                  description: "Das Newsletter-Logo wurde erfolgreich hochgeladen",
+                                });
+                              }
+                            }}
+                            buttonClassName="w-full"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Upload className="h-4 w-4" />
+                              <span>Logo hochladen</span>
+                            </div>
+                          </ObjectUploader>
+                          
+                          {newNewsletter.logoNewsletter && (
+                            <div className="flex items-center gap-2 text-sm text-green-600">
+                              <Image className="h-4 w-4" />
+                              <span>Logo hochgeladen</span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setNewNewsletter(prev => ({ ...prev, logoNewsletter: '' }))}
+                              >
+                                Entfernen
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
                     <DialogFooter>
                       <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
@@ -932,6 +985,59 @@ export default function SuperadminNewsletterTab() {
                   onChange={(e) => setSelectedNewsletter(prev => prev ? { ...prev, content: e.target.value } : null)}
                 />
               </div>
+
+              <div className="space-y-2">
+                <Label>Newsletter Logo</Label>
+                <div className="flex items-center gap-4">
+                  <ObjectUploader
+                    maxNumberOfFiles={1}
+                    maxFileSize={5242880} // 5MB
+                    allowedFileTypes={['image/*']}
+                    onGetUploadParameters={async () => {
+                      const response = await fetch('/api/superadmin/newsletters/logo-upload', {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                      });
+                      
+                      if (!response.ok) throw new Error('Failed to get upload URL');
+                      const data = await response.json();
+                      
+                      return { method: 'PUT' as const, url: data.uploadURL };
+                    }}
+                    onComplete={(result) => {
+                      if (result.successful && result.successful.length > 0) {
+                        const logoUrl = result.successful[0].uploadURL;
+                        setSelectedNewsletter(prev => prev ? { ...prev, logoNewsletter: logoUrl } : null);
+                        toast({
+                          title: "Logo hochgeladen",
+                          description: "Das Newsletter-Logo wurde erfolgreich hochgeladen",
+                        });
+                      }
+                    }}
+                    buttonClassName="w-full"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Upload className="h-4 w-4" />
+                      <span>Logo hochladen</span>
+                    </div>
+                  </ObjectUploader>
+                  
+                  {selectedNewsletter.logoNewsletter && (
+                    <div className="flex items-center gap-2 text-sm text-green-600">
+                      <Image className="h-4 w-4" />
+                      <span>Logo hochgeladen</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedNewsletter(prev => prev ? { ...prev, logoNewsletter: '' } : null)}
+                      >
+                        Entfernen
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           )}
           <DialogFooter>
@@ -944,7 +1050,8 @@ export default function SuperadminNewsletterTab() {
                   updateNewsletterMutation.mutate({
                     id: selectedNewsletter.id,
                     subject: selectedNewsletter.subject,
-                    content: selectedNewsletter.content
+                    content: selectedNewsletter.content,
+                    logoNewsletter: selectedNewsletter.logoNewsletter
                   });
                 }
               }}
