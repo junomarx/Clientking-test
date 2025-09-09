@@ -598,7 +598,9 @@ export function setupAuth(app: Express) {
       }
       
       // Erstelle den Reset-Link, den wir in der E-Mail senden
-      const resetUrl = `${req.protocol}://${req.get('host')}/reset-password/${token}`;
+      const baseUrl = process.env.FRONTEND_URL || 
+                     (process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : `${req.protocol}://${req.get('host')}`);
+      const resetUrl = `${baseUrl}/reset-password/${token}`;
       
       // Variablen für die E-Mail-Vorlage
       const variables = {
@@ -778,7 +780,9 @@ export function setupAuth(app: Express) {
       });
       
       // Create reset URL (using path parameter to match frontend routing)
-      const resetUrl = `${req.protocol}://${req.get('host')}/reset-password/${token}`;
+      const baseUrl = process.env.FRONTEND_URL || 
+                     (process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : `${req.protocol}://${req.get('host')}`);
+      const resetUrl = `${baseUrl}/reset-password/${token}`;
       
       // Send email using the superadmin template system with ClientKing branding
       console.log(`Sending password reset email to ${user.email}`);
