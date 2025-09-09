@@ -1654,10 +1654,11 @@ export class EmailService {
       for (const recipient of recipients) {
         try {
           // Personalisierte Unsubscribe-URL generieren
-          const unsubscribeUrl = `${process.env.FRONTEND_URL || 'http://localhost:5000'}/unsubscribe?email=${encodeURIComponent(recipient.email)}`;
+          const baseUrl = process.env.FRONTEND_URL || 
+                         (process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : 'http://localhost:5000');
+          const unsubscribeUrl = `${baseUrl}/unsubscribe?email=${encodeURIComponent(recipient.email)}`;
           
           // ClientKing Logo als HTML img-Tag
-          const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5000';
           const logoHtml = `<img src="${baseUrl}/clientking-logo.png" alt="ClientKing Logo" style="height: 50px;" />`;
           
           // Newsletter Logo laden (aktuell aktives Logo)
@@ -1799,7 +1800,8 @@ export class EmailService {
    */
   private createNewsletterHtmlTemplate(subject: string, content: string): string {
     // Basis-URL für Assets
-    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5000';
+    const baseUrl = process.env.FRONTEND_URL || 
+                   (process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : 'http://localhost:5000');
     const logoUrl = `${baseUrl}/clientking-logo.png`;
 
     return `

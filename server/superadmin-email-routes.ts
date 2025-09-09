@@ -2193,7 +2193,8 @@ ${existingTemplate.body}`;
           .limit(1);
         
         if (activeLogo) {
-          const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5000';
+          const baseUrl = process.env.FRONTEND_URL || 
+                         (process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : 'http://localhost:5000');
           const logoFileName = activeLogo.filepath.split('/').pop();
           const logoUrl = `${baseUrl}/public-objects/newsletter-logos/${logoFileName}`;
           const logoHtml = `<img src="${logoUrl}" alt="${activeLogo.name}" style="max-height: 200px; max-width: 100%; height: auto;" />`;
