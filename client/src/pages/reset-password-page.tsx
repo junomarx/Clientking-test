@@ -1,14 +1,14 @@
 import React from "react";
 import { ResetPasswordForm } from "@/components/auth/ResetPasswordForm";
 import { useAuth } from "@/hooks/use-auth";
-import { Redirect } from "wouter";
+import { Redirect, useParams } from "wouter";
 
 export default function ResetPasswordPage() {
   const { user, isLoading } = useAuth();
+  const params = useParams();
   
-  // Get token from URL search params
-  const urlParams = new URLSearchParams(window.location.search);
-  const token = urlParams.get('token');
+  // Get token from URL path parameter
+  const token = params.token;
 
   // Wenn bereits angemeldet, zur Startseite weiterleiten
   if (!isLoading && user) {

@@ -767,8 +767,8 @@ export function setupAuth(app: Express) {
         userAgent
       });
       
-      // Create reset URL
-      const resetUrl = `${req.protocol}://${req.get('host')}/reset-password?token=${token}`;
+      // Create reset URL (using path parameter to match frontend routing)
+      const resetUrl = `${req.protocol}://${req.get('host')}/reset-password/${token}`;
       
       // Send email using the superadmin template system with ClientKing branding
       console.log(`Sending password reset email to ${user.email}`);
