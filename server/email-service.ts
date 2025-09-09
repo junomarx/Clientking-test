@@ -656,8 +656,61 @@ export class EmailService {
     userId?: number
   ): Promise<boolean> {
     try {
+      console.log(`🔍 EMAIL-SERVICE: Searching for template "${templateName}" for user ${userId}...`);
+      
+      // KRITISCHER FIX: Spezielle Behandlung für Passwort-Reset-Templates  
+      if (templateName === "Passwort zurücksetzen") {
+        console.log(`✅ Using password reset template (ID=23)`);
+        
+        const resetTemplate = await db
+          .select()
+          .from(emailTemplates)
+          .where(eq(emailTemplates.id, 23))
+          .limit(1);
+          
+        if (resetTemplate.length > 0) {
+          const template = resetTemplate[0];
+          console.log(`✅ Password reset email template loaded: "${template.subject}"`);
+          
+          return await this.sendEmailWithTemplateInternal({
+            templateName: template.name,
+            recipientEmail,
+            data: variables,
+            subject: template.subject,
+            body: template.body,
+            isSystemEmail: false,
+            forceUserId: userId
+          });
+        }
+      }
+      
+      if (templateName === "Passwort erfolgreich geändert") {
+        console.log(`✅ Using password confirmation template (ID=79)`);
+        
+        const confirmTemplate = await db
+          .select()
+          .from(emailTemplates)
+          .where(eq(emailTemplates.id, 79))
+          .limit(1);
+          
+        if (confirmTemplate.length > 0) {
+          const template = confirmTemplate[0];
+          console.log(`✅ Password confirmation email template loaded: "${template.subject}"`);
+          
+          return await this.sendEmailWithTemplateInternal({
+            templateName: template.name,
+            recipientEmail,
+            data: variables,
+            subject: template.subject,
+            body: template.body,
+            isSystemEmail: false,
+            forceUserId: userId
+          });
+        }
+      }
+      
+      // Fallback: Original template search
       console.log(`🔍 DEBUG: Suche E-Mail-Vorlage "${templateName}" für Benutzer ${userId}...`);
-      console.log(`🚨 SUPER DEBUG: Template name exact match: "${templateName}"`);
       
       // E-Mail-Vorlage nach Namen suchen - erst globale, dann benutzer-spezifische
       let template;
@@ -786,7 +839,7 @@ export class EmailService {
           
           if (!targetUserId) {
             console.log(`⚠️ FIXING: Keine userId gefunden, kann Business-Settings nicht laden`);
-            return;
+            // WICHTIG: Hier nicht returnen, sondern weiter mit der E-Mail-Verarbeitung
           }
           
           // Hole die NEUESTEN Geschäftseinstellungen für korrekte E-Mail-Variablen

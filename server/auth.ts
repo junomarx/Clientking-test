@@ -771,7 +771,7 @@ export function setupAuth(app: Express) {
       const resetUrl = `${req.protocol}://${req.get('host')}/reset-password?token=${token}`;
       
       // Send email using the superadmin template system with ClientKing branding
-      console.log(`🚨 CRITICAL DEBUG: About to send email with template "Passwort zurücksetzen" to ${user.email} for user ID ${user.id}`);
+      console.log(`Sending password reset email to ${user.email}`);
       let sent = false;
       try {
         sent = await emailService.sendEmailByTemplateName(
@@ -783,9 +783,9 @@ export function setupAuth(app: Express) {
           },
           user.id  // Fix: userId-Parameter hinzufügen für korrekte Template-Auswahl
         );
-        console.log(`🚨 CRITICAL DEBUG: Email send result: ${sent}`);
+        console.log(`Password reset email sent successfully: ${sent}`);
       } catch (emailError) {
-        console.error(`🚨 CRITICAL DEBUG: Email send FAILED:`, emailError);
+        console.error(`Password reset email failed:`, emailError);
       }
       
       if (sent) {
@@ -898,6 +898,7 @@ export function setupAuth(app: Express) {
       console.log(`Password successfully reset for user ${user.email} from IP ${clientIp}`);
       
       // Send confirmation email using the superadmin template system
+      console.log(`Sending password confirmation email to ${user.email}`);
       await emailService.sendEmailByTemplateName(
         "Passwort erfolgreich geändert",
         user.email,
