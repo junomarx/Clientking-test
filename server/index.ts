@@ -1,24 +1,9 @@
 import express, { type Request, Response, NextFunction } from "express";
+import { db } from "./db";
+import { sql } from "drizzle-orm";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import addSecondSignatureColumns from "./add-second-signature";
-import { addPricingPlanColumn } from "./add-pricing-plan-column";
-import { addCompanySloganVatColumns } from "./add-company-slogan-vat-columns";
-import "./add-creation-month-column";
-import { addShopIdColumn } from "./add-shop-id-column";
-import { addFeatureOverridesColumn } from "./add-feature-overrides-column";
-import { addPackageTables } from "./add-package-tables";
-import { addSuperadminColumn } from "./add-superadmin";
-import { addDeviceIssuesFields } from "./add-device-issues-fields";
-import { addHiddenDeviceTypesTable } from "./add-hidden-device-types-table";
-import { addBrandIdToModels } from "./add-brand-id-to-models";
-import { addPrintTemplatesTable } from "./add-print-templates-table";
-import { addErrorCatalogEntriesTable } from "./add-error-catalog-entries-table";
-import { addGameconsoleToErrorCatalog } from "./add-gameconsole-to-error-catalog";
-import { addEmailTemplateTypeColumn } from "./add-email-template-type";
 import { syncEmailTemplates } from "./sync-email-templates";
-import { addSupportAccessTable } from "./add-support-access-table";
-import { addSupportRequestStatus } from "./add-support-request-status";
 import fileUpload from "express-fileupload";
 
 // SMTP wird individuell pro Geschäft konfiguriert
@@ -127,26 +112,23 @@ app.use((req, res, next) => {
 
 (async () => {
   try {
-    // Führe die Migrationen aus
-    await addSecondSignatureColumns();
-    await addPricingPlanColumn();
-    await addCompanySloganVatColumns();
-    await addShopIdColumn();
-    await addFeatureOverridesColumn();
-    await addPackageTables(); // Neue Migration für das Paketsystem
-    // await addSuperadminColumn(); // Migration für Superadmin-Rolle - DEAKTIVIERT wegen User-Flag Reset
-    await addDeviceIssuesFields(); // Migration für erweiterte Fehlerkatalog-Felder
-    await addHiddenDeviceTypesTable(); // Migration für ausgeblendete Standard-Gerätetypen
-    await addBrandIdToModels(); // Migration für brandId-Spalte in userModels
-    await addPrintTemplatesTable(); // Migration für Druckvorlagen-Tabelle
-    await addErrorCatalogEntriesTable(); // Migration für neue Fehlerkatalog-Tabelle
-    await addGameconsoleToErrorCatalog(); // Migration für Spielekonsole-Spalte im Fehlerkatalog
-    await addEmailTemplateTypeColumn(); // Migration für E-Mail-Vorlagentypen
-    await addSupportAccessTable(); // Migration für Support-Zugriffsprotokolle (DSGVO-Konformität)
-    await addSupportRequestStatus(); // Migration für Support-Anfrage-Status (DSGVO-Genehmigungsworkflow)
+    // Database health check
+    console.log('🔍 Checking database connection...');
+    try {
+      await db.execute(sql`SELECT 1`);
+      console.log('✅ Database connection successful');
+    } catch (error) {
+      console.log('⚠️ Database connection check skipped:', error.message);
+    }
     
-    // Synchronisiere E-Mail-Vorlagen beim Server-Start
-    await syncEmailTemplates();
+    // Synchronisiere E-Mail-Vorlagen beim Server-Start (non-blocking)
+    console.log('📧 Synchronizing email templates...');
+    try {
+      await syncEmailTemplates();
+      console.log('✅ Email templates synchronized');
+    } catch (error) {
+      console.log('⚠️ Email template sync failed (non-critical):', error.message);
+    }
     
     const server = await registerRoutes(app);
 

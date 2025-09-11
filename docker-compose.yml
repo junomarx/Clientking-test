@@ -1,6 +1,18 @@
 version: '3.8'
 
 services:
+  # Database migration service - runs once to set up schema
+  migrate:
+    build: .
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - NODE_ENV=production
+    command: ["node", "scripts/run-migrations.js"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"  # Only run once
+    
   # Main application
   handyshop-app:
     build: .
@@ -33,6 +45,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:5000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
