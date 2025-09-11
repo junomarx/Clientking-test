@@ -11,7 +11,33 @@ Detail-oriented: User requires pixel-perfect alignment and precision, especially
 Quality focus: Prefers comprehensive solutions that address all edge cases rather than quick fixes.
 Implementation Control: Only implement changes when explicitly commanded with "Ok leg los" - otherwise stay in advisory/brainstorming mode.
 
+## Documentation Requirements
+
+**CRITICAL**: Complete technical documentation is maintained in `TECHNICAL-DOCUMENTATION.md`. This file MUST be updated with every feature change, bug fix, or architectural modification. The documentation includes:
+- Exact file locations for all features
+- Implementation details and code organization
+- API endpoints and database schema changes
+- New components and their purposes
+- Architecture decisions and their reasoning
+
+When making any changes to the codebase, developers must:
+1. Update the relevant sections in `TECHNICAL-DOCUMENTATION.md`
+2. Document new files and their purposes
+3. Update API documentation for new endpoints
+4. Document any breaking changes or migration requirements
+
 ## System Architecture
+
+### Technical Documentation
+**Complete technical documentation is maintained in `TECHNICAL-DOCUMENTATION.md`** - this file contains comprehensive details about the entire system including:
+- Complete architecture overview
+- Backend and frontend file organization
+- Database schema and relationships
+- Authentication and authorization systems
+- Feature implementation details
+- API documentation
+- Deployment configurations
+- Development workflows
 
 ### Frontend Architecture
 - **Framework**: React with TypeScript, using Vite for building.

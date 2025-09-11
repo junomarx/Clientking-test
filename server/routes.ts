@@ -63,76 +63,112 @@ import { requireShopIsolation, attachShopId } from "./middleware/shop-isolation"
 import { enforceShopIsolation, validateCustomerBelongsToShop } from "./middleware/enforce-shop-isolation";
 import nodemailer from "nodemailer";
 
+// SECURITY: Strip development headers in production
+function stripDevHeadersInProd(req: Request, res: Response, next: NextFunction) {
+  if (process.env.NODE_ENV === 'production') {
+    if (req.headers['x-user-id']) {
+      console.error('🚨 SECURITY ALERT: X-User-ID header blocked in production from IP:', req.ip);
+      return res.status(400).json({ message: "Invalid header in production" });
+    }
+  }
+  next();
+}
+
+// Helper function to safely get authenticated user
+function requireUser(req: Request): { id: number; username: string; shopId: number; role: string } {
+  const user = req.user as any;
+  if (!user) {
+    throw new Error("User not authenticated");
+  }
+  return {
+    id: user.id,
+    username: user.username || user.email,
+    shopId: user.shopId,
+    role: user.role
+  };
+}
+
 // Middleware to check if user is authenticated
 async function isAuthenticated(req: Request, res: Response, next: NextFunction) {
-  // Prüfe auf benutzerdefinierte User-ID im Header (für direktes Debugging)
-  const customUserId = req.headers['x-user-id'];
-  if (customUserId) {
-    console.log(`X-User-ID Header gefunden: ${customUserId}`);
-    // Wenn wir eine Benutzer-ID im Header haben, versuchen wir, den Benutzer zu laden
-    try {
-      const userId = parseInt(customUserId.toString());
-      const user = await storage.getUser(userId);
-      if (user) {
-        console.log(`Benutzer mit ID ${userId} aus Header gefunden: ${user.username}`);
-        req.user = user;
-        return next();
+  // SECURITY WARNING: Development-only debug authentication
+  // These debug features MUST be disabled in production!
+  if (process.env.NODE_ENV !== 'production') {
+    // Prüfe auf benutzerdefinierte User-ID im Header (für direktes Debugging)
+    const customUserId = req.headers['x-user-id'];
+    if (customUserId) {
+      console.log(`X-User-ID Header gefunden: ${customUserId}`);
+      // Wenn wir eine Benutzer-ID im Header haben, versuchen wir, den Benutzer zu laden
+      try {
+        const userId = parseInt(customUserId.toString());
+        const user = await storage.getUser(userId);
+        if (user) {
+          console.log(`Benutzer mit ID ${userId} aus Header gefunden: ${user.username}`);
+          req.user = user;
+          return next();
+        }
+      } catch (error) {
+        console.error('Fehler beim Verarbeiten der X-User-ID:', error);
       }
-    } catch (error) {
-      console.error('Fehler beim Verarbeiten der X-User-ID:', error);
     }
   }
   
-  // Standardauthentifizierung über Session
+  // Standardauthentifizierung über Session (ALWAYS AVAILABLE IN PRODUCTION)
   if (req.isAuthenticated()) {
     return next();
   }
   
-  // Alternativ über Token-Authentifizierung
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.substring(7);
-    try {
-      // Dekodieren des Tokens (in Produktion würden wir JWT verwenden)
-      const decoded = Buffer.from(token, 'base64').toString();
-      const tokenParts = decoded.split(':');
-      
-      if (tokenParts.length < 2) {
-        return res.status(401).json({ message: "Ungültiges Token-Format" });
-      }
-      
-      const userId = parseInt(tokenParts[0]);
-      
-      // Benutzer aus der Datenbank abrufen
-      storage.getUser(userId).then(user => {
-        if (!user) {
-          return res.status(401).json({ message: "Benutzer nicht gefunden" });
+  // Development-only: Weak Bearer token authentication
+  // SECURITY WARNING: This should be replaced with proper JWT in production
+  if (process.env.NODE_ENV !== 'production') {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      try {
+        // Dekodieren des Tokens (in Produktion würden wir JWT verwenden)
+        const decoded = Buffer.from(token, 'base64').toString();
+        const tokenParts = decoded.split(':');
+        
+        if (tokenParts.length < 2) {
+          return res.status(401).json({ message: "Ungültiges Token-Format" });
         }
         
-        if (!user.isActive && !user.isAdmin) {
-          return res.status(401).json({ message: "Konto ist nicht aktiviert" });
-        }
+        const userId = parseInt(tokenParts[0]);
         
-        // Benutzer in Request setzen
-        req.user = user;
-        return next();
-      }).catch(err => {
-        console.error('Token authentication error:', err);
+        // Benutzer aus der Datenbank abrufen
+        storage.getUser(userId).then(user => {
+          if (!user) {
+            return res.status(401).json({ message: "Benutzer nicht gefunden" });
+          }
+          
+          if (!user.isActive && !user.isAdmin) {
+            return res.status(401).json({ message: "Konto ist nicht aktiviert" });
+          }
+          
+          // Benutzer in Request setzen
+          req.user = user;
+          return next();
+        }).catch(err => {
+          console.error('Token authentication error:', err);
+          return res.status(401).json({ message: "Fehler bei der Token-Authentifizierung" });
+        });
+        return; // Früher Return, da wir asynchron arbeiten
+      } catch (error) {
+        console.error('Token authentication error:', error);
         return res.status(401).json({ message: "Fehler bei der Token-Authentifizierung" });
-      });
-      return; // Früher Return, da wir asynchron arbeiten
-    } catch (error) {
-      console.error('Token authentication error:', error);
-      return res.status(401).json({ message: "Fehler bei der Token-Authentifizierung" });
+      }
     }
-  } else {
-    res.status(401).json({ message: "Nicht angemeldet" });
   }
+  
+  // If no authentication method succeeded
+  res.status(401).json({ message: "Nicht angemeldet" });
 }
 
 // Hilfsfunktionen entfernt (keine Modellreihen mehr)
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  
+  // SECURITY HOTFIX: Apply dev header stripping globally in production
+  app.use(stripDevHeadersInProd);
   
   // Health check endpoint for Docker
   app.get('/api/health', (req: Request, res: Response) => {
@@ -147,10 +183,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/accessories/:id/send-arrival-email", async (req: Request, res: Response) => {
     console.log("🚨🚨🚨 ALLERHÖCHSTE PRIORITÄT ZUBEHÖR E-MAIL ROUTE AUFGERUFEN! 🚨🚨🚨");
     try {
-      const userId = parseInt(req.header('X-User-ID') || '0');
-      if (!userId) {
-        return res.status(401).json({ message: "X-User-ID Header fehlt" });
-      }
+      const user = requireUser(req);
+      const userId = user.id;
       
       const accessoryId = parseInt(req.params.id);
       if (!accessoryId) {
@@ -187,8 +221,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Benutzer-Daten für Shop-Informationen abrufen
-      const user = await storage.getUser(userId);
-      if (!user) {
+      const dbUser = await storage.getUser(userId);
+      if (!dbUser) {
         return res.status(404).json({ message: "Benutzer nicht gefunden" });
       }
       
@@ -210,10 +244,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       console.log(`🔍 USER FALLBACK-DATEN:`, {
-        shopName: user.shopName,
-        phone: user.phone,
-        email: user.email,
-        shopOpeningHours: user.shopOpeningHours
+        shopName: dbUser.shopName,
+        phone: dbUser.phone,
+        email: dbUser.email,
+        shopOpeningHours: dbUser.shopOpeningHours
       });
       
       console.log(`📧 ALLERHÖCHSTE PRIORITÄT: Sende E-Mail mit korrekter Vorlage "Zubehör eingetroffen" an ${customer.email}`);
@@ -289,10 +323,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // KRITISCH: SPARE PARTS ROUTES MÜSSEN GANZ AM ANFANG STEHEN!
   app.get("/api/orders/spare-parts", async (req: Request, res: Response) => {
     try {
-      const userId = parseInt(req.header('X-User-ID') || '0');
-      if (!userId) {
-        return res.status(401).json({ message: "X-User-ID Header fehlt" });
-      }
+      const user = requireUser(req);
+      const userId = user.id;
       
       console.log(`[DIREKTE ROUTE] Abrufen aller Ersatzteile für Benutzer ${userId}`);
       
@@ -312,10 +344,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ZUBEHÖR ROUTES - MÜSSEN EBENFALLS AM ANFANG STEHEN!
   app.get("/api/orders/accessories", async (req: Request, res: Response) => {
     try {
-      const userId = parseInt(req.header('X-User-ID') || '0');
-      if (!userId) {
-        return res.status(401).json({ message: "X-User-ID Header fehlt" });
-      }
+      const user = requireUser(req);
+      const userId = user.id;
       
       console.log(`[DIREKTE ROUTE] Abrufen aller Zubehör-Bestellungen für Benutzer ${userId}`);
       
@@ -334,20 +364,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/orders/accessories", async (req: Request, res: Response) => {
     try {
-      const userId = parseInt(req.header('X-User-ID') || '0');
-      if (!userId) {
-        return res.status(401).json({ message: "X-User-ID Header fehlt" });
-      }
+      const user = requireUser(req);
+      const userId = user.id;
       
       console.log(`[DIREKTE ROUTE] Erstellen einer Zubehör-Bestellung für Benutzer ${userId}:`, req.body);
       
       // Benutzer abrufen für Shop-ID
-      const user = await storage.getUser(userId);
-      if (!user) {
+      const dbUser = await storage.getUser(userId);
+      if (!dbUser) {
         return res.status(404).json({ message: "Benutzer nicht gefunden" });
       }
       
-      const shopId = user.shopId || 1;
+      const shopId = dbUser.shopId || 1;
       
       // Zubehör-Daten mit Shop-ID und Benutzer-ID ergänzen
       const accessoryData = {
@@ -366,7 +394,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           accessory.id,
           accessory,
           userId,
-          user.username || user.email || 'Unbekannter Benutzer'
+          dbUser.username || dbUser.email || 'Unbekannter Benutzer'
         );
         console.log(`📋 Activity-Log für neue Zubehör-Bestellung ${accessory.id} erstellt`);
       } catch (activityError) {
@@ -385,10 +413,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.patch("/api/orders/spare-parts-bulk-update", async (req: Request, res: Response) => {
     try {
-      const userId = parseInt(req.header('X-User-ID') || '0');
-      if (!userId) {
-        return res.status(401).json({ message: "X-User-ID Header fehlt" });
-      }
+      const user = requireUser(req);
+      const userId = user.id;
       
       const { partIds, status } = req.body;
       
@@ -436,10 +462,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API-Routen für Zubehör-Bestellungen
   app.get("/api/orders/accessories", async (req: Request, res: Response) => {
     try {
-      const userId = parseInt(req.header('X-User-ID') || '0');
-      if (!userId) {
-        return res.status(401).json({ error: "Nicht authentifiziert" });
-      }
+      const user = requireUser(req);
+      const userId = user.id;
       
       console.log(`[DIREKTE ROUTE] Abrufen aller Zubehör-Bestellungen für Benutzer ${userId}`);
       const accessories = await storage.getAllAccessories(userId);
@@ -454,14 +478,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/orders/accessories", async (req: Request, res: Response) => {
     try {
-      const userId = parseInt(req.header('X-User-ID') || '0');
-      if (!userId) {
-        return res.status(401).json({ error: "Nicht authentifiziert" });
-      }
+      const user = requireUser(req);
+      const userId = user.id;
       
       // Benutzer abrufen für Shop-ID
-      const user = await storage.getUser(userId);
-      if (!user || !user.shopId) {
+      const dbUser = await storage.getUser(userId);
+      if (!dbUser || !dbUser.shopId) {
         return res.status(403).json({ error: "Zugriff verweigert: Keine Shop-ID vorhanden" });
       }
 
@@ -470,7 +492,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const accessoryData = {
         ...req.body,
         userId: userId,
-        shopId: user.shopId
+        shopId: dbUser.shopId
       };
       
       const accessory = await storage.createAccessory(accessoryData);
@@ -485,10 +507,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/orders/accessories/:id", async (req: Request, res: Response) => {
     try {
-      const userId = parseInt(req.header('X-User-ID') || '0');
-      if (!userId) {
-        return res.status(401).json({ message: "X-User-ID Header fehlt" });
-      }
+      const user = requireUser(req);
+      const userId = user.id;
       
       const accessoryId = parseInt(req.params.id);
       if (!accessoryId) {
@@ -533,14 +553,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Endpunkt für Order-Counts (Badge-Benachrichtigungen)
   app.get("/api/orders/counts", async (req: Request, res: Response) => {
     try {
-      const userId = parseInt(req.header('X-User-ID') || '0');
-      if (!userId) {
-        return res.status(401).json({ message: "X-User-ID Header fehlt" });
-      }
+      const user = requireUser(req);
+      const userId = user.id;
       
       // Hole die Shop-ID des Benutzers für Multi-Tenant Isolation
-      const user = await storage.getUser(userId);
-      if (!user) {
+      const dbUser = await storage.getUser(userId);
+      if (!dbUser) {
         return res.status(404).json({ message: "Benutzer nicht gefunden" });
       }
       
@@ -549,21 +567,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         `SELECT COUNT(*) as count FROM spare_parts sp 
          JOIN repairs r ON sp.repair_id = r.id 
          WHERE sp.status = 'bestellen' AND r.shop_id = $1`,
-        [user.shopId]
+        [dbUser.shopId]
       );
       
       // Anzahl der Zubehörteile mit Status "bestellen" (shop-weit)
       const accessoriesToOrder = await pool.query(
         `SELECT COUNT(*) as count FROM accessories a 
          WHERE a.status = 'bestellen' AND a.shop_id = $1`,
-        [user.shopId]
+        [dbUser.shopId]
       );
       
       const sparePartsCount = parseInt(sparePartsToOrder.rows[0].count) || 0;
       const accessoriesCount = parseInt(accessoriesToOrder.rows[0].count) || 0;
       const totalToOrder = sparePartsCount + accessoriesCount;
       
-      console.log(`📊 Order Counts für Shop ${user.shopId} (Benutzer ${userId}): ${sparePartsCount} Ersatzteile + ${accessoriesCount} Zubehör = ${totalToOrder} gesamt`);
+      console.log(`📊 Order Counts für Shop ${dbUser.shopId} (Benutzer ${userId}): ${sparePartsCount} Ersatzteile + ${accessoriesCount} Zubehör = ${totalToOrder} gesamt`);
       
       res.json({
         sparePartsToOrder: sparePartsCount,
@@ -581,10 +599,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/orders/accessories/bulk-update", async (req: Request, res: Response) => {
     try {
-      const userId = parseInt(req.header('X-User-ID') || '0');
-      if (!userId) {
-        return res.status(401).json({ message: "X-User-ID Header fehlt" });
-      }
+      const user = requireUser(req);
+      const userId = user.id;
       
       const { accessoryIds, status } = req.body;
       
@@ -646,10 +662,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.patch("/api/orders/spare-parts-bulk-update", async (req: Request, res: Response) => {
     try {
-      const userId = parseInt(req.header('X-User-ID') || '0');
-      if (!userId) {
-        return res.status(401).json({ message: "X-User-ID Header fehlt" });
-      }
+      const user = requireUser(req);
+      const userId = user.id;
       
       const { partIds, status } = req.body;
       
@@ -682,10 +696,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // DELETE individual accessory
   app.delete("/api/orders/accessories/:id", async (req: Request, res: Response) => {
     try {
-      const userId = parseInt(req.header('X-User-ID') || '0');
-      if (!userId) {
-        return res.status(401).json({ message: "X-User-ID Header fehlt" });
-      }
+      const user = requireUser(req);
+      const userId = user.id;
 
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -730,10 +742,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Etikett-PDF für Zubehör-Bestellung generieren
   app.post("/api/accessories/:id/print-label", async (req: Request, res: Response) => {
     try {
-      const userId = parseInt(req.header('X-User-ID') || '0');
-      if (!userId) {
-        return res.status(401).json({ message: "X-User-ID Header fehlt" });
-      }
+      const user = requireUser(req);
+      const userId = user.id;
       
       const accessoryId = parseInt(req.params.id);
       if (!accessoryId) {
@@ -760,7 +770,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Benutzer-Daten für Shop-Informationen abrufen
-      const user = await storage.getUser(userId);
+      const dbUser = await storage.getUser(userId);
       
       // PDF generieren
       const { generateAccessoryLabelPDF } = await import('./pdf-generator');
@@ -768,10 +778,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         accessory,
         customer,
         shopInfo: {
-          name: user?.shopName || 'Handyshop',
-          address: user?.shopAddress || '',
-          phone: user?.phone || '',
-          email: user?.email || ''
+          name: dbUser?.shopName || 'Handyshop',
+          address: dbUser?.shopAddress || '',
+          phone: dbUser?.phone || '',
+          email: dbUser?.email || ''
         }
       });
       
@@ -795,10 +805,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // DELETE individual spare part from orders
   app.delete("/api/orders/spare-parts/:id", async (req: Request, res: Response) => {
     try {
-      const userId = parseInt(req.header('X-User-ID') || '0');
-      if (!userId) {
-        return res.status(401).json({ message: "X-User-ID Header fehlt" });
-      }
+      const user = requireUser(req);
+      const userId = user.id;
 
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -980,10 +988,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Ersatzteil Bulk-Update Route (Header-basiert)
   app.put("/api/orders/spare-parts/bulk-update", async (req: Request, res: Response) => {
     try {
-      const userId = parseInt(req.header('X-User-ID') || '0');
-      if (!userId) {
-        return res.status(401).json({ message: "X-User-ID Header fehlt" });
-      }
+      const user = requireUser(req);
+      const userId = user.id;
       
       const { sparePartIds, status } = req.body;
       
@@ -1016,7 +1022,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // CRITICAL: Register the brand creation route FIRST to bypass all middleware
   app.post("/api/superadmin/create-brand", async (req: Request, res: Response) => {
     try {
-      const userId = parseInt(req.header('X-User-ID') || '0');
+      const user = requireUser(req);
+      const userId = user.id;
       if (userId !== 10) {
         res.writeHead(403, { 'Content-Type': 'application/json' });
         return res.end(JSON.stringify({ message: "Superadmin-Berechtigung erforderlich" }));
@@ -1076,7 +1083,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // CRITICAL FIX: Register models route BEFORE any other middleware
   app.get("/api/superadmin/models", async (req, res) => {
     try {
-      const userId = parseInt(req.header('X-User-ID') || '0');
+      const user = requireUser(req);
+      const userId = user.id;
       if (userId !== 10) {
         return res.status(403).json({ message: "Superadmin-Berechtigung erforderlich" });
       }
@@ -1127,7 +1135,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // CRITICAL FIX: Register bulk import route BEFORE any other middleware
   app.post("/api/superadmin/device-models/bulk", async (req, res) => {
     try {
-      const userId = parseInt(req.header('X-User-ID') || '0');
+      const user = requireUser(req);
+      const userId = user.id;
       if (userId !== 10) {
         return res.status(403).json({ message: "Superadmin-Berechtigung erforderlich" });
       }
@@ -1182,6 +1191,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Set up authentication
   setupAuth(app);
+  
+  // SECURITY HOTFIX: Global authentication for all /api routes except public ones  
+  // Applied AFTER Passport.js setup so req.isAuthenticated() is available
+  const publicEndpoints = [
+    '/api/health',
+    '/api/auth/login', 
+    '/api/auth/logout',
+    '/api/auth/password-reset/request',
+    '/api/auth/password-reset/confirm',
+    '/api/newsletter/unsubscribe'
+  ];
+  
+  app.use('/api', (req: Request, res: Response, next: NextFunction) => {
+    // Skip auth for public endpoints
+    if (publicEndpoints.some(endpoint => req.path === endpoint || req.path.startsWith(endpoint))) {
+      return next();
+    }
+    // Require authentication for all other /api routes
+    return isAuthenticated(req, res, next);
+  });
   
   // Set up multi-shop routes FIRST (before any middleware that might interfere)
   registerMultiShopRoutes(app);
