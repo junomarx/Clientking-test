@@ -31,8 +31,8 @@ export async function apiRequest(
     headers["Authorization"] = `Bearer ${authToken}`;
   }
   
-  // Füge die Benutzer-ID als X-User-ID Header hinzu, wenn verfügbar
-  if (userId) {
+  // Füge die Benutzer-ID als X-User-ID Header hinzu, wenn verfügbar (nur in Development)
+  if (userId && import.meta.env.DEV) {
     headers["X-User-ID"] = userId;
   }
   
@@ -127,8 +127,8 @@ export const getQueryFn: <T>(options: {
       headers["Authorization"] = `Bearer ${authToken}`;
     }
     
-    // Füge die Benutzer-ID als X-User-ID Header hinzu, wenn verfügbar
-    if (userId) {
+    // Füge die Benutzer-ID als X-User-ID Header hinzu, wenn verfügbar (nur in Development)
+    if (userId && import.meta.env.DEV) {
       headers["X-User-ID"] = userId;
     }
     

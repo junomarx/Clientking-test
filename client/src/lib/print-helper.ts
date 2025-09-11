@@ -116,11 +116,15 @@ export async function fetchLatestPrintTemplate(templateType: string): Promise<st
     // Benutzer-ID aus localStorage holen für zusätzliche Authentifizierung
     const userId = localStorage.getItem('userId');
     
+    const headers: Record<string, string> = {};
+    // Nur in Development: X-User-ID Header hinzufügen
+    if (userId && import.meta.env.DEV) {
+      headers['X-User-ID'] = userId;
+    }
+    
     const response = await fetch('/api/print-templates/' + templateType, {
       credentials: 'include',
-      headers: {
-        'X-User-ID': userId || '',
-      }
+      headers: headers
     });
     
     if (!response.ok) {
