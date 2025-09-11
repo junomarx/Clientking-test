@@ -5,7 +5,7 @@
  * falls diese noch nicht existiert.
  */
 import { db } from './server/db';
-import { Pool } from '@neondatabase/serverless';
+import { Pool } from 'pg';
 import dotenv from 'dotenv';
 
 dotenv.config();

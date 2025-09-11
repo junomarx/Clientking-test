@@ -2,12 +2,10 @@
  * Migrationsskript zum Hinzufügen der kiosk_pin-Spalte zur business_settings-Tabelle
  */
 
-import { Pool, neonConfig } from '@neondatabase/serverless';
+import { Pool } from 'pg';
 import { config } from 'dotenv';
-import ws from 'ws';
 
 config();
-neonConfig.webSocketConstructor = ws;
 
 async function addKioskPinColumn() {
   const pool = new Pool({ connectionString: process.env.DATABASE_URL });

@@ -4,10 +4,10 @@
  * Einfacher, direkter Datenbankexport
  */
 
-import { neon } from '@neondatabase/serverless';
+import { Pool } from 'pg';
 import fs from 'fs';
 
-const sql = neon(process.env.DATABASE_URL);
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 async function exportData() {
   console.log('🚀 Starte Datenbankexport...');
@@ -41,7 +41,8 @@ async function exportData() {
     try {
       console.log(`📦 Exportiere ${exp.name}...`);
       
-      const data = await sql.unsafe(exp.query);
+      const result = await pool.query(exp.query);
+      const data = result.rows;
       const count = data.length;
       totalRecords += count;
       

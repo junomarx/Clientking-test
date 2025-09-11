@@ -6,8 +6,10 @@
  * initial leer ist.
  */
 
-import { Pool } from '@neondatabase/serverless';
-import ws from "ws";
+import { Pool } from 'pg';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { eq, and } from 'drizzle-orm';
+import * as schema from "./shared/schema";
 
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL must be set. Did you forget to provision a database?");
@@ -16,6 +18,9 @@ if (!process.env.DATABASE_URL) {
 const pool = new Pool({ 
   connectionString: process.env.DATABASE_URL
 });
+
+const db = drizzle(pool, { schema });
+const { userDeviceTypes, userBrands, userModels } = schema;
 
 // Standard-Gerätedaten für das Deployment
 const deviceData = {

@@ -5,11 +5,11 @@
  * Exportiert alle Tabellen als SQL-Dateien
  */
 
-import { neon } from '@neondatabase/serverless';
+import { Pool } from 'pg';
 import fs from 'fs';
 import path from 'path';
 
-const sql = neon(process.env.DATABASE_URL);
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 // Alle Tabellen in der richtigen Reihenfolge (wegen Foreign Keys)
 const tables = [
@@ -67,12 +67,13 @@ async function exportDatabase() {
 
   // Schema-Information exportieren
   console.log('📋 Exportiere Schema-Information...');
-  const schema = await sql`
+  const schemaResult = await pool.query(`
     SELECT table_name, column_name, data_type, is_nullable, column_default
     FROM information_schema.columns 
     WHERE table_schema = 'public' 
     ORDER BY table_name, ordinal_position
-  `;
+  `);
+  const schema = schemaResult.rows;
   
   fs.writeFileSync(
     path.join(fullExportDir, 'schema.json'), 
@@ -85,8 +86,8 @@ async function exportDatabase() {
       console.log(`📦 Exportiere Tabelle: ${table}`);
       
       // Anzahl der Datensätze ermitteln
-      const countResult = await sql`SELECT COUNT(*) as count FROM ${sql(table)}`;
-      const count = parseInt(countResult[0].count);
+      const countResult = await pool.query(`SELECT COUNT(*) as count FROM "${table}"`);
+      const count = parseInt(countResult.rows[0].count);
       totalRecords += count;
       
       if (count === 0) {
@@ -95,7 +96,8 @@ async function exportDatabase() {
       }
       
       // Alle Daten der Tabelle abrufen
-      const data = await sql`SELECT * FROM ${sql(table)}`;
+      const dataResult = await pool.query(`SELECT * FROM "${table}"`);
+      const data = dataResult.rows;
       
       // Als JSON exportieren
       fs.writeFileSync(

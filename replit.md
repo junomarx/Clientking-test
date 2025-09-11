@@ -49,7 +49,7 @@ When making any changes to the codebase, developers must:
 ### Backend Architecture
 - **Runtime**: Node.js with TypeScript (ESM modules).
 - **Framework**: Express.js for REST API.
-- **Database**: PostgreSQL (Neon serverless) managed via Drizzle ORM.
+- **Database**: PostgreSQL managed via Drizzle ORM.
 - **Authentication**: Session-based with `express-session`, supporting role-based access for shop owners and employees. Employees authenticate via email, owners via username.
 - **Email Service**: Integrated SMTP for customizable, template-based email communications.
 - **File Uploads**: `express-fileupload` middleware.
@@ -75,7 +75,7 @@ When making any changes to the codebase, developers must:
 
 ## External Dependencies
 
-- **@neondatabase/serverless**: Serverless PostgreSQL database.
+- **pg**: Standard PostgreSQL database driver for maximum flexibility.
 - **drizzle-orm**: ORM for type-safe database interactions.
 - **@radix-ui/react-\***: Primitives for UI components.
 - **@tanstack/react-query**: Server state management library.

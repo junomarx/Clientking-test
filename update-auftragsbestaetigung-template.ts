@@ -2,16 +2,13 @@
  * Skript zum Aktualisieren der Auftragsbestätigungs-E-Mail-Vorlage mit einheitlichem HTML-Design
  */
 
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
+import { Pool } from 'pg';
+import { drizzle } from 'drizzle-orm/node-postgres';
 import { eq, and } from 'drizzle-orm';
-import ws from "ws";
 import * as schema from "./shared/schema";
 
-neonConfig.webSocketConstructor = ws;
-
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const db = drizzle({ client: pool, schema });
+const db = drizzle(pool, { schema });
 
 async function updateAuftragsbestaetigungTemplate() {
   try {

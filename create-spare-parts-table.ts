@@ -2,14 +2,10 @@
  * Migrationsskript zur Erstellung der spare_parts Tabelle für Ersatzteil-Management
  */
 
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import ws from 'ws';
+import { Pool } from 'pg';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
-
-// WebSocket-Konfiguration für serverless
-neonConfig.webSocketConstructor = ws;
 
 const pool = new Pool({ 
   connectionString: process.env.DATABASE_URL 
