@@ -513,7 +513,7 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                       className="flex items-center gap-2 w-full"
                     >
                       <TestTube className="h-4 w-4" />
-                      {isSendingTestEmail ? 'Sende Auftragsbestätigung...' : 'Test-E-Mail senden'}
+                      {isSendingTestEmail ? 'Sende Auftragsbestätigung...' : 'Auftragsbestätigung senden'}
                     </Button>
                   </div>
                 )}
