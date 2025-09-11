@@ -4293,7 +4293,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         fehler: repair.issue,
         kosten: repair.estimatedCost?.toString() || '0',
         telefon: businessSettings?.phone || '',
-        email: businessSettings?.email || ''
+        email: businessSettings?.email || '',
+        reparaturbedingungen: businessSettings?.repairTerms || 'Keine Reparaturbedingungen hinterlegt'
       };
       
       // Variablen im Subject und Content ersetzen
