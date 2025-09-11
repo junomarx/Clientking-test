@@ -4314,8 +4314,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         to: customerEmail,
         from: `"${businessSettings?.businessName || 'Handyshop'}" <${businessSettings?.email || process.env.SMTP_USER}>`,
         subject: emailSubject,
-        html: emailContent, // HTML-Content unverändert übernehmen wie bei normalen E-Mails (verwende 'html' statt 'htmlBody')
-        text: emailContent.replace(/<[^>]*>/g, ''), // HTML-Tags entfernen für Text-Version (verwende 'text' statt 'textBody')
+        htmlBody: emailContent, // HTML-Content unverändert übernehmen wie bei normalen E-Mails
+        textBody: emailContent.replace(/<[^>]*>/g, ''), // HTML-Tags entfernen für Text-Version
         attachments: [],
         userId: userId
       });
