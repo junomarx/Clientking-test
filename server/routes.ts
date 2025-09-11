@@ -4259,17 +4259,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Kunde nicht gefunden" });
       }
 
-      // Test Email Template aus der Datenbank laden (Superadmin-Template)
+      // Auftragsbestätigung Template aus der Datenbank laden (Superadmin-Template)
       const adminTemplate = await db.select()
         .from(emailTemplates)
         .where(and(
-          eq(emailTemplates.name, 'Test Email'),
+          eq(emailTemplates.name, 'Auftragsbestätigung'),
           isNull(emailTemplates.userId) // Globale Superadmin-Templates haben userId = null
         ))
         .limit(1);
 
       if (adminTemplate.length === 0) {
-        return res.status(404).json({ message: "Test Email Vorlage nicht gefunden" });
+        return res.status(404).json({ message: "Auftragsbestätigung Vorlage nicht gefunden" });
       }
 
       const template = adminTemplate[0];
