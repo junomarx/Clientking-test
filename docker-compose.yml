@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  # Main application
+  handyshop-app:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      # Database Configuration
+      - DATABASE_URL=${DATABASE_URL}
+      
+      # Application Configuration
+      - NODE_ENV=production
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5000}
+      
+      # Session Configuration
+      - SESSION_SECRET=${SESSION_SECRET}
+      
+      # SMTP Configuration (optional)
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - SMTP_SENDER_EMAIL=${SMTP_SENDER_EMAIL}
+      - SMTP_SENDER_NAME=${SMTP_SENDER_NAME}
+      
+      # Object Storage Configuration (optional)
+      - DEFAULT_OBJECT_STORAGE_BUCKET_ID=${DEFAULT_OBJECT_STORAGE_BUCKET_ID}
+      - PRIVATE_OBJECT_DIR=${PRIVATE_OBJECT_DIR}
+      - PUBLIC_OBJECT_SEARCH_PATHS=${PUBLIC_OBJECT_SEARCH_PATHS}
+      
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # PostgreSQL Database (optional - can use external database)
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-handyshop}
+      - POSTGRES_USER=${POSTGRES_USER:-handyshop}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-handyshop}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+
+networks:
+  default:
+    name: handyshop-network

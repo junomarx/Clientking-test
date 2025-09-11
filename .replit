@@ -15,6 +15,10 @@ run = ["npm", "run", "start"]
 localPort = 5000
 externalPort = 80
 
+[[ports]]
+localPort = 40127
+externalPort = 3000
+
 [workflows]
 
 [[workflows.workflow]]
@@ -43,3 +47,6 @@ waitForPort = 5000
 
 [agent]
 integrations = ["javascript_object_storage:1.0.0"]
+
+[objectStorage]
+defaultBucketID = "replit-objstore-0928461d-c7b9-4f13-82da-003aab8e5b81"

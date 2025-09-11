@@ -134,6 +134,15 @@ async function isAuthenticated(req: Request, res: Response, next: NextFunction) 
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
+  // Health check endpoint for Docker
+  app.get('/api/health', (req: Request, res: Response) => {
+    res.status(200).json({ 
+      status: 'healthy', 
+      timestamp: new Date().toISOString(),
+      version: process.env.npm_package_version || '1.0.0'
+    });
+  });
+  
   // ALLERHÖCHSTE PRIORITÄT: E-Mail für eingetroffenes Zubehör versenden - MUSS ZUERST SEIN!
   app.post("/api/accessories/:id/send-arrival-email", async (req: Request, res: Response) => {
     console.log("🚨🚨🚨 ALLERHÖCHSTE PRIORITÄT ZUBEHÖR E-MAIL ROUTE AUFGERUFEN! 🚨🚨🚨");
