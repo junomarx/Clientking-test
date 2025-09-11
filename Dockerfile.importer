@@ -1,0 +1,21 @@
+# Data Import Container - Manual execution only
+FROM node:20-alpine
+
+# Install PostgreSQL client for pg_restore and psql
+RUN apk add --no-cache postgresql-client
+
+WORKDIR /app
+
+# Create minimal package.json and install only pg client
+RUN npm init -y && npm install pg
+
+# Copy import scripts and data
+COPY scripts/import-runner.js ./scripts/
+COPY import-data/ ./import-data/
+
+# Set executable permissions
+RUN chmod +x scripts/import-runner.js
+
+# Health check and default command
+RUN node -e "console.log('Import container ready')" 
+ENTRYPOINT ["node", "scripts/import-runner.js"]

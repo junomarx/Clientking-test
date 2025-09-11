@@ -55,6 +55,23 @@ services:
       retries: 3
       start_period: 40s
 
+  # Manual Data Import Container (run with --profile manual)
+  data-importer:
+    build:
+      context: .
+      dockerfile: Dockerfile.importer
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - IMPORT_MODE=${IMPORT_MODE:-all}
+      - FORCE_IMPORT=${FORCE_IMPORT:-false}
+    volumes:
+      - ./import-data:/app/import-data
+    profiles: ["manual"]  # Only runs when explicitly called
+    restart: "no"
+
   # PostgreSQL Database (optional - can use external database)
   postgres:
     image: postgres:15-alpine
