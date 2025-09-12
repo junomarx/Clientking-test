@@ -127,6 +127,10 @@ export function OrdersTab() {
   // Alle Ersatzteile abrufen (ohne "erledigt" Status)
   const { data: allSpareParts = [], isLoading: isLoadingSpareParts, error: sparePartsError } = useQuery<SparePart[]>({
     queryKey: ['/api/orders/spare-parts'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/orders/spare-parts');
+      return response.json();
+    },
     refetchInterval: 5000, // Reduziert von 30s auf 5s für bessere Performance
   });
 
@@ -145,12 +149,20 @@ export function OrdersTab() {
   // Zubehör-Bestellungen abrufen
   const { data: accessories = [], isLoading: isLoadingAccessories, error: accessoriesError } = useQuery<Accessory[]>({
     queryKey: ['/api/orders/accessories'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/orders/accessories');
+      return response.json();
+    },
     refetchInterval: 5000,
   });
 
   // Archivierte Bestellungen abrufen (nur im Multi-Shop Admin Interface)
   const { data: archivedOrders = [], isLoading: isLoadingArchived, error: archivedError } = useQuery<any[]>({
     queryKey: ['/api/multi-shop/orders/archived'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/multi-shop/orders/archived');
+      return response.json();
+    },
     refetchInterval: 10000,
     enabled: user?.role === 'owner' && user?.username === 'multishop-admin', // Nur für Multi-Shop Admin
   });
