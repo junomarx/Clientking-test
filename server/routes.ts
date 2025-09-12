@@ -505,7 +505,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/orders/accessories/:id", async (req: Request, res: Response) => {
+  app.patch("/api/orders/accessories/:id", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const user = requireUser(req);
       const userId = user.id;
@@ -551,7 +551,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Endpunkt für Order-Counts (Badge-Benachrichtigungen)
-  app.get("/api/orders/counts", async (req: Request, res: Response) => {
+  app.get("/api/orders/counts", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const user = requireUser(req);
       const userId = user.id;
@@ -597,7 +597,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/orders/accessories/bulk-update", async (req: Request, res: Response) => {
+  app.put("/api/orders/accessories/bulk-update", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const user = requireUser(req);
       const userId = user.id;
