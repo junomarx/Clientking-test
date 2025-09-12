@@ -122,24 +122,30 @@ function TitleUpdater() {
         if (!userId) {
           console.log('Keine userId im localStorage gefunden, Sitzung wird überprüft...');
           
-          const response = await fetch('/api/user', {
-            credentials: 'include'
-          });
-          
-          if (response.ok) {
-            const user = await response.json();
+          try {
+            const response = await fetch('/api/user', {
+              credentials: 'include'
+            });
             
-            if (user && user.id) {
-              console.log('Aktive Sitzung gefunden für Benutzer:', user.username);
-              localStorage.setItem('userId', user.id.toString());
-              localStorage.setItem('username', user.username);
-              console.log('User-Daten wurden im localStorage gespeichert. userId:', user.id);
+            if (response.ok) {
+              const user = await response.json();
               
-              // QueryClient neu initialisieren, damit alle Anfragen die neue UserID verwenden
-              queryClient.invalidateQueries();
+              if (user && user.id) {
+                console.log('Aktive Sitzung gefunden für Benutzer:', user.username);
+                localStorage.setItem('userId', user.id.toString());
+                localStorage.setItem('username', user.username);
+                console.log('User-Daten wurden im localStorage gespeichert. userId:', user.id);
+                
+                // QueryClient neu initialisieren, damit alle Anfragen die neue UserID verwenden
+                queryClient.invalidateQueries();
+              }
+            } else if (response.status === 401) {
+              console.log('Keine aktive Sitzung gefunden (401), Benutzer ist nicht angemeldet');
+            } else {
+              console.log('Unbekannter Fehler beim Überprüfen der Sitzung:', response.status);
             }
-          } else {
-            console.log('Keine aktive Sitzung gefunden, Benutzer ist nicht angemeldet');
+          } catch (fetchError) {
+            console.log('Fehler beim Abrufen der Benutzersitzung (Network/Fetch Error):', fetchError);
           }
         } else {
           console.log('UserId bereits im localStorage: ' + userId);
