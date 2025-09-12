@@ -410,54 +410,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
-  
-  app.patch("/api/orders/spare-parts-bulk-update", async (req: Request, res: Response) => {
-    try {
-      const user = requireUser(req);
-      const userId = user.id;
-      
-      const { partIds, status } = req.body;
-      
-      console.log(`[DIREKTE ROUTE] Bulk-Update für Ersatzteile:`, { partIds, status, userId });
-      
-      if (!Array.isArray(partIds) || partIds.length === 0) {
-        return res.status(400).json({ message: "Ungültige Ersatzteil-IDs" });
-      }
-      
-      if (!status || typeof status !== 'string') {
-        return res.status(400).json({ message: "Ungültiger Status" });
-      }
-      
-      const success = await storage.bulkUpdateSparePartStatus(partIds, status, userId);
-      
-      if (success) {
-        // Activity-Log für Ersatzteil Bulk-Update
-        try {
-          const user = await storage.getUser(userId);
-          await storage.logOrderActivity(
-            'bulk_updated',
-            0, // Bulk-Operation hat keine einzelne ID
-            { partIds, status, count: partIds.length },
-            userId,
-            user?.username || user?.email || 'Unbekannter Benutzer'
-          );
-          console.log(`📋 Activity-Log für Ersatzteil Bulk-Update erstellt: ${partIds.length} Teile`);
-        } catch (activityError) {
-          console.error("❌ Fehler beim Erstellen des Order-Activity-Logs:", activityError);
-        }
-        
-        res.json({ message: "Ersatzteile erfolgreich aktualisiert", partIds, status });
-      } else {
-        res.status(500).json({ message: "Fehler beim Aktualisieren der Ersatzteile" });
-      }
-    } catch (error) {
-      console.error("[DIREKTE ROUTE] Fehler beim Bulk-Update der Ersatzteile:", error);
-      res.status(500).json({ 
-        message: "Fehler beim Aktualisieren der Ersatzteile",
-        error: error instanceof Error ? error.message : String(error)
-      });
-    }
-  });
 
   // API-Routen für Zubehör-Bestellungen
   app.get("/api/orders/accessories", isAuthenticated, async (req: Request, res: Response) => {
@@ -660,7 +612,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
 
   
-  app.patch("/api/orders/spare-parts-bulk-update", async (req: Request, res: Response) => {
+  app.patch("/api/orders/spare-parts-bulk-update", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const user = requireUser(req);
       const userId = user.id;
@@ -694,7 +646,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // DELETE individual accessory
-  app.delete("/api/orders/accessories/:id", async (req: Request, res: Response) => {
+  app.delete("/api/orders/accessories/:id", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const user = requireUser(req);
       const userId = user.id;
