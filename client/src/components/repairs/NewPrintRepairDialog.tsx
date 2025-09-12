@@ -73,11 +73,15 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
         const userId = localStorage.getItem('userId');
         
         // Verwende sowohl Credentials als auch den X-User-ID Header für robustere Authentifizierung
+        const headers: Record<string, string> = {};
+        // Nur in Development: X-User-ID Header hinzufügen
+        if (userId && import.meta.env.DEV) {
+          headers['X-User-ID'] = userId;
+        }
+        
         const response = await fetch(`/api/repairs/${repairId}`, {
           credentials: 'include',
-          headers: {
-            'X-User-ID': userId || '',
-          }
+          headers: headers
         });
         
         if (!response.ok) {
@@ -104,11 +108,15 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
         // Benutzer-ID aus localStorage holen für zusätzliche Authentifizierung
         const userId = localStorage.getItem('userId');
         
+        const headers: Record<string, string> = {};
+        // Nur in Development: X-User-ID Header hinzufügen
+        if (userId && import.meta.env.DEV) {
+          headers['X-User-ID'] = userId;
+        }
+        
         const response = await fetch(`/api/customers/${repair.customerId}`, {
           credentials: 'include',
-          headers: {
-            'X-User-ID': userId || '',
-          }
+          headers: headers
         });
         
         if (!response.ok) {
@@ -133,11 +141,15 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
         // Benutzer-ID aus localStorage holen für zusätzliche Authentifizierung
         const userId = localStorage.getItem('userId');
         
+        const headers: Record<string, string> = {};
+        // Nur in Development: X-User-ID Header hinzufügen
+        if (userId && import.meta.env.DEV) {
+          headers['X-User-ID'] = userId;
+        }
+        
         const response = await fetch('/api/business-settings', {
           credentials: 'include',
-          headers: {
-            'X-User-ID': userId || '',
-          }
+          headers: headers
         });
         
         if (!response.ok) {
