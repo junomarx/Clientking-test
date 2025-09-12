@@ -321,7 +321,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // KRITISCH: SPARE PARTS ROUTES MÜSSEN GANZ AM ANFANG STEHEN!
-  app.get("/api/orders/spare-parts", async (req: Request, res: Response) => {
+  app.get("/api/orders/spare-parts", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const user = requireUser(req);
       const userId = user.id;
@@ -342,7 +342,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ZUBEHÖR ROUTES - MÜSSEN EBENFALLS AM ANFANG STEHEN!
-  app.get("/api/orders/accessories", async (req: Request, res: Response) => {
+  app.get("/api/orders/accessories", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const user = requireUser(req);
       const userId = user.id;
