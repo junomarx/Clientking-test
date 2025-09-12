@@ -362,7 +362,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/orders/accessories", async (req: Request, res: Response) => {
+  app.post("/api/orders/accessories", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const user = requireUser(req);
       const userId = user.id;
@@ -460,7 +460,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // API-Routen für Zubehör-Bestellungen
-  app.get("/api/orders/accessories", async (req: Request, res: Response) => {
+  app.get("/api/orders/accessories", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const user = requireUser(req);
       const userId = user.id;
@@ -476,7 +476,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/orders/accessories", async (req: Request, res: Response) => {
+  app.post("/api/orders/accessories", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const user = requireUser(req);
       const userId = user.id;
