@@ -411,51 +411,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // API-Routen für Zubehör-Bestellungen
-  app.get("/api/orders/accessories", isAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const user = requireUser(req);
-      const userId = user.id;
-      
-      console.log(`[DIREKTE ROUTE] Abrufen aller Zubehör-Bestellungen für Benutzer ${userId}`);
-      const accessories = await storage.getAllAccessories(userId);
-      console.log(`[DIREKTE ROUTE] Gefunden: ${accessories.length} Zubehör-Bestellungen für Benutzer ${userId}`);
-      
-      res.json(accessories);
-    } catch (error) {
-      console.error("Fehler beim Abrufen der Zubehör-Bestellungen:", error);
-      res.status(500).json({ error: "Fehler beim Abrufen der Zubehör-Bestellungen" });
-    }
-  });
-
-  app.post("/api/orders/accessories", isAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const user = requireUser(req);
-      const userId = user.id;
-      
-      // Benutzer abrufen für Shop-ID
-      const dbUser = await storage.getUser(userId);
-      if (!dbUser || !dbUser.shopId) {
-        return res.status(403).json({ error: "Zugriff verweigert: Keine Shop-ID vorhanden" });
-      }
-
-      console.log(`[DIREKTE ROUTE] Erstelle Zubehör-Bestellung für Benutzer ${userId}`);
-      
-      const accessoryData = {
-        ...req.body,
-        userId: userId,
-        shopId: dbUser.shopId
-      };
-      
-      const accessory = await storage.createAccessory(accessoryData);
-      console.log(`[DIREKTE ROUTE] Zubehör-Bestellung erstellt:`, accessory);
-      
-      res.status(201).json(accessory);
-    } catch (error) {
-      console.error("Fehler beim Erstellen der Zubehör-Bestellung:", error);
-      res.status(500).json({ error: "Fehler beim Erstellen der Zubehör-Bestellung" });
-    }
-  });
 
   app.patch("/api/orders/accessories/:id", isAuthenticated, async (req: Request, res: Response) => {
     try {
@@ -755,7 +710,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
   // DELETE individual spare part from orders
-  app.delete("/api/orders/spare-parts/:id", async (req: Request, res: Response) => {
+  app.delete("/api/orders/spare-parts/:id", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const user = requireUser(req);
       const userId = user.id;
