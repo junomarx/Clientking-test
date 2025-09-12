@@ -36,37 +36,20 @@ export async function apiRequest(
     headers["X-User-ID"] = userId;
   }
   
-  // Multi-Shop Admin Modus: Nur für echte Multi-Shop Admins
-  const userDataStr = localStorage.getItem('userData');
-  const userData = userDataStr ? JSON.parse(userDataStr) : null;
-  const isMultiShopAdmin = userData?.isMultiShopAdmin || false;
-  
-  if (isMultiShopAdmin) {
-    const multiShopMode = localStorage.getItem('multiShopAdminMode');
-    const selectedShopId = localStorage.getItem('multiShopAdminSelectedShop');
-    if (multiShopMode === 'true' && selectedShopId) {
-      headers["X-Multi-Shop-Mode"] = "true";
-      headers["X-Selected-Shop-Id"] = selectedShopId;
-      console.log(`🌐 DSGVO-Multi-Shop API: Shop ${selectedShopId} Header gesetzt für ${fullUrl}`);
-    }
-  } else {
-    // SECURITY: Für normale Benutzer stale Multi-Shop Flags löschen
-    if (localStorage.getItem('multiShopAdminMode')) {
-      localStorage.removeItem('multiShopAdminMode');
-      localStorage.removeItem('multiShopAdminSelectedShop');
-      console.log('🧹 Stale Multi-Shop flags cleared für normalen Benutzer');
-    }
+  // Multi-Shop Admin Modus: Header für DSGVO-konforme Shop-Datentrennung
+  const multiShopMode = localStorage.getItem('multiShopAdminMode');
+  const selectedShopId = localStorage.getItem('multiShopAdminSelectedShop');
+  if (multiShopMode === 'true' && selectedShopId) {
+    headers["X-Multi-Shop-Mode"] = "true";
+    headers["X-Selected-Shop-Id"] = selectedShopId;
+    console.log(`🌐 DSGVO-Multi-Shop API: Shop ${selectedShopId} Header gesetzt für ${fullUrl}`);
   }
   
-  // Fallback: Query-Parameter für Kompatibilität (nur für Multi-Shop Admins)
+  // Fallback: Query-Parameter für Kompatibilität
   let finalUrl = fullUrl;
-  if (isMultiShopAdmin) {
-    const multiShopMode = localStorage.getItem('multiShopAdminMode');
-    const selectedShopId = localStorage.getItem('multiShopAdminSelectedShop');
-    if (multiShopMode === 'true' && selectedShopId && !fullUrl.includes('shopId=')) {
-      const separator = fullUrl.includes('?') ? '&' : '?';
-      finalUrl = `${fullUrl}${separator}shopId=${selectedShopId}`;
-    }
+  if (multiShopMode === 'true' && selectedShopId && !fullUrl.includes('shopId=')) {
+    const separator = fullUrl.includes('?') ? '&' : '?';
+    finalUrl = `${fullUrl}${separator}shopId=${selectedShopId}`;
   }
   
   try {
@@ -176,7 +159,7 @@ export const getQueryFn: <T>(options: {
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      queryFn: getQueryFn({ on401: "returnNull" }),
+      queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
       refetchOnWindowFocus: false,
       staleTime: Infinity,

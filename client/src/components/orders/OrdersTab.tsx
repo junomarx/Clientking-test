@@ -127,10 +127,6 @@ export function OrdersTab() {
   // Alle Ersatzteile abrufen (ohne "erledigt" Status)
   const { data: allSpareParts = [], isLoading: isLoadingSpareParts, error: sparePartsError } = useQuery<SparePart[]>({
     queryKey: ['/api/orders/spare-parts'],
-    queryFn: async () => {
-      const response = await apiRequest('GET', '/api/orders/spare-parts');
-      return response.json();
-    },
     refetchInterval: 5000, // Reduziert von 30s auf 5s für bessere Performance
   });
 
@@ -149,20 +145,12 @@ export function OrdersTab() {
   // Zubehör-Bestellungen abrufen
   const { data: accessories = [], isLoading: isLoadingAccessories, error: accessoriesError } = useQuery<Accessory[]>({
     queryKey: ['/api/orders/accessories'],
-    queryFn: async () => {
-      const response = await apiRequest('GET', '/api/orders/accessories');
-      return response.json();
-    },
     refetchInterval: 5000,
   });
 
   // Archivierte Bestellungen abrufen (nur im Multi-Shop Admin Interface)
   const { data: archivedOrders = [], isLoading: isLoadingArchived, error: archivedError } = useQuery<any[]>({
     queryKey: ['/api/multi-shop/orders/archived'],
-    queryFn: async () => {
-      const response = await apiRequest('GET', '/api/multi-shop/orders/archived');
-      return response.json();
-    },
     refetchInterval: 10000,
     enabled: user?.role === 'owner' && user?.username === 'multishop-admin', // Nur für Multi-Shop Admin
   });
@@ -577,6 +565,8 @@ export function OrdersTab() {
       const response = await apiRequest("PUT", "/api/orders/accessories/bulk-update", {
         accessoryIds,
         status,
+      }, {
+        "X-User-ID": String(user?.id || 0),
       });
       if (!response.ok) {
         throw new Error("Fehler beim Aktualisieren der Zubehör-Artikel");
@@ -699,6 +689,8 @@ export function OrdersTab() {
       const response = await apiRequest("PATCH", "/api/orders/spare-parts-bulk-update", {
         partIds,
         status,
+      }, {
+        "X-User-ID": String(user?.id || 0),
       });
       if (!response.ok) {
         throw new Error("Fehler beim Aktualisieren des Ersatzteils");
@@ -1066,6 +1058,8 @@ export function OrdersTab() {
       const response = await apiRequest("PUT", "/api/orders/accessories/bulk-update", {
         accessoryIds,
         status,
+      }, {
+        "X-User-ID": String(user?.id || 0),
       });
       if (!response.ok) {
         throw new Error("Fehler beim Aktualisieren des Zubehörs");
