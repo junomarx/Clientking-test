@@ -488,11 +488,16 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
         console.log('🔍 Status ist "fertig" - prüfe Leihgerät für Reparatur', repair.id);
         
         // Lade Leihgerät-Informationen über API mit korrekten Headern
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json'
+        };
+        // Nur in Development: X-User-ID Header hinzufügen
+        if (import.meta.env.DEV && user?.id) {
+          headers['X-User-ID'] = user.id.toString();
+        }
+        
         const response = await fetch(`/api/repairs/${repair.id}/loaner-device`, {
-          headers: {
-            'X-User-ID': user?.id?.toString() || '55',
-            'Content-Type': 'application/json'
-          }
+          headers: headers
         });
         
         console.log('🔍 API Response Status:', response.status);

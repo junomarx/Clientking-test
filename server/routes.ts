@@ -114,6 +114,14 @@ async function isAuthenticated(req: Request, res: Response, next: NextFunction) 
   
   // Standardauthentifizierung über Session (ALWAYS AVAILABLE IN PRODUCTION)
   if (req.isAuthenticated()) {
+    // KRITISCH: req.user muss aus der Session gesetzt werden
+    // Passport.js speichert User-Daten in req.user automatisch
+    // Aber wir müssen sicherstellen, dass es dem erwarteten Format entspricht
+    if (!req.user) {
+      // Fallback: Wenn req.user nicht gesetzt ist, versuche es aus der Session zu holen
+      console.error('⚠️ Session authenticated but req.user is null - this should not happen');
+      return res.status(500).json({ message: "Session Fehler: User-Daten nicht verfügbar" });
+    }
     return next();
   }
   

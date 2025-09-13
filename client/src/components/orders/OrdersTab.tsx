@@ -565,9 +565,9 @@ export function OrdersTab() {
       const response = await apiRequest("PUT", "/api/orders/accessories/bulk-update", {
         accessoryIds,
         status,
-      }, {
-        "X-User-ID": String(user?.id || 0),
-      });
+      }, import.meta.env.DEV && user?.id ? {
+        "X-User-ID": String(user.id),
+      } : {});
       if (!response.ok) {
         throw new Error("Fehler beim Aktualisieren der Zubehör-Artikel");
       }
@@ -689,9 +689,9 @@ export function OrdersTab() {
       const response = await apiRequest("PATCH", "/api/orders/spare-parts-bulk-update", {
         partIds,
         status,
-      }, {
-        "X-User-ID": String(user?.id || 0),
-      });
+      }, import.meta.env.DEV && user?.id ? {
+        "X-User-ID": String(user.id),
+      } : {});
       if (!response.ok) {
         throw new Error("Fehler beim Aktualisieren des Ersatzteils");
       }
@@ -1058,9 +1058,9 @@ export function OrdersTab() {
       const response = await apiRequest("PUT", "/api/orders/accessories/bulk-update", {
         accessoryIds,
         status,
-      }, {
-        "X-User-ID": String(user?.id || 0),
-      });
+      }, import.meta.env.DEV && user?.id ? {
+        "X-User-ID": String(user.id),
+      } : {});
       if (!response.ok) {
         throw new Error("Fehler beim Aktualisieren des Zubehörs");
       }

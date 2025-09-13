@@ -175,8 +175,17 @@ export default function SuperadminNewsletterTab() {
     queryKey: ['/api/superadmin/newsletters', selectedNewsletterForRecipients?.newsletterId, 'recipients'],
     queryFn: async () => {
       if (!selectedNewsletterForRecipients?.newsletterId) return [];
+      const headers: Record<string, string> = {};
+      // Nur in Development: X-User-ID Header hinzufügen
+      if (import.meta.env.DEV) {
+        const userId = localStorage.getItem('userId');
+        if (userId) {
+          headers['X-User-ID'] = userId;
+        }
+      }
+      
       const response = await fetch(`/api/superadmin/newsletters/${selectedNewsletterForRecipients.newsletterId}/recipients`, {
-        headers: { 'X-User-ID': localStorage.getItem('userId') || '' }
+        headers: headers
       });
       return response.json();
     },
