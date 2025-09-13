@@ -186,6 +186,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
       version: process.env.npm_package_version || '1.0.0'
     });
   });
+
+  // 🎯 ZUBEHÖR BULK-UPDATE ROUTE - GANZ OBEN WEGEN ROUTE-PRIORITÄT
+  app.put("/api/orders/accessories/bulk-update", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = requireUser(req);
+      const userId = user.id;
+      
+      const { accessoryIds, status } = req.body;
+      
+      console.log(`[🎯 ZUBEHÖR BULK-UPDATE TOP-LEVEL] PUT empfangen:`, { accessoryIds, status, userId });
+      
+      if (!Array.isArray(accessoryIds) || accessoryIds.length === 0) {
+        console.error(`[🎯 ZUBEHÖR BULK-UPDATE TOP-LEVEL] ❌ Ungültige IDs:`, accessoryIds);
+        return res.status(400).json({ message: "Ungültige Zubehör-IDs" });
+      }
+      
+      if (!status || typeof status !== 'string') {
+        console.error(`[🎯 ZUBEHÖR BULK-UPDATE TOP-LEVEL] ❌ Ungültiger Status:`, status);
+        return res.status(400).json({ message: "Ungültiger Status" });
+      }
+      
+      console.log(`[🎯 ZUBEHÖR BULK-UPDATE TOP-LEVEL] 🔄 Starte Bulk-Update...`);
+      const success = await storage.bulkUpdateAccessoryStatus(accessoryIds, status, userId);
+      
+      if (success) {
+        console.log(`[🎯 ZUBEHÖR BULK-UPDATE TOP-LEVEL] ✅ ERFOLGREICH: ${accessoryIds.length} auf "${status}"`);
+        res.json({ 
+          message: "Zubehör erfolgreich aktualisiert", 
+          accessoryIds, 
+          status,
+          count: accessoryIds.length
+        });
+      } else {
+        console.error(`[🎯 ZUBEHÖR BULK-UPDATE TOP-LEVEL] ❌ Storage fehlgeschlagen`);
+        res.status(500).json({ message: "Fehler beim Aktualisieren des Zubehörs" });
+      }
+    } catch (error) {
+      console.error("[🎯 ZUBEHÖR BULK-UPDATE TOP-LEVEL] ❌ KRITISCHER FEHLER:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Aktualisieren des Zubehörs",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
   
   // ALLERHÖCHSTE PRIORITÄT: E-Mail für eingetroffenes Zubehör versenden - MUSS ZUERST SEIN!
   app.post("/api/accessories/:id/send-arrival-email", async (req: Request, res: Response) => {
@@ -419,49 +463,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ✅ ZUBEHÖR BULK-UPDATE ROUTE - MUSS DIREKT NACH POST-ROUTE STEHEN
-  app.put("/api/orders/accessories/bulk-update", isAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const user = requireUser(req);
-      const userId = user.id;
-      
-      const { accessoryIds, status } = req.body;
-      
-      console.log(`[ZUBEHÖR BULK-UPDATE] 🎯 PUT-Request empfangen:`, { accessoryIds, status, userId });
-      
-      if (!Array.isArray(accessoryIds) || accessoryIds.length === 0) {
-        console.error(`[ZUBEHÖR BULK-UPDATE] ❌ Ungültige Zubehör-IDs:`, accessoryIds);
-        return res.status(400).json({ message: "Ungültige Zubehör-IDs" });
-      }
-      
-      if (!status || typeof status !== 'string') {
-        console.error(`[ZUBEHÖR BULK-UPDATE] ❌ Ungültiger Status:`, status);
-        return res.status(400).json({ message: "Ungültiger Status" });
-      }
-      
-      console.log(`[ZUBEHÖR BULK-UPDATE] 🔄 Starte Bulk-Update...`);
-      const success = await storage.bulkUpdateAccessoryStatus(accessoryIds, status, userId);
-      
-      if (success) {
-        console.log(`[ZUBEHÖR BULK-UPDATE] ✅ ERFOLGREICH: ${accessoryIds.length} Zubehör auf "${status}" aktualisiert`);
-        res.json({ 
-          message: "Zubehör erfolgreich aktualisiert", 
-          accessoryIds, 
-          status,
-          count: accessoryIds.length
-        });
-      } else {
-        console.error(`[ZUBEHÖR BULK-UPDATE] ❌ Storage-Operation fehlgeschlagen`);
-        res.status(500).json({ message: "Fehler beim Aktualisieren des Zubehörs" });
-      }
-    } catch (error) {
-      console.error("[ZUBEHÖR BULK-UPDATE] ❌ KRITISCHER FEHLER:", error);
-      res.status(500).json({ 
-        message: "Fehler beim Aktualisieren des Zubehörs",
-        error: error instanceof Error ? error.message : String(error)
-      });
-    }
-  });
   
   app.patch("/api/orders/spare-parts-bulk-update", isAuthenticated, async (req: Request, res: Response) => {
     try {
