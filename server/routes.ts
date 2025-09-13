@@ -856,6 +856,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // Zubehör Bulk-Update Route (Header-basiert)
+  app.put("/api/orders/accessories/bulk-update", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = requireUser(req);
+      const userId = user.id;
+      
+      const { accessoryIds, status } = req.body;
+      
+      console.log(`[DIREKTE ROUTE] Bulk-Update für Zubehör:`, { accessoryIds, status, userId });
+      
+      if (!Array.isArray(accessoryIds) || accessoryIds.length === 0) {
+        return res.status(400).json({ message: "Ungültige Zubehör-IDs" });
+      }
+      
+      if (!status || typeof status !== 'string') {
+        return res.status(400).json({ message: "Ungültiger Status" });
+      }
+      
+      const success = await storage.bulkUpdateAccessoryStatus(accessoryIds, status, userId);
+      
+      if (success) {
+        res.json({ message: "Zubehör erfolgreich aktualisiert", accessoryIds, status });
+      } else {
+        res.status(500).json({ message: "Fehler beim Aktualisieren des Zubehörs" });
+      }
+    } catch (error) {
+      console.error("[DIREKTE ROUTE] Fehler beim Bulk-Update des Zubehörs:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Aktualisieren des Zubehörs",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
   
   // CRITICAL: Register the brand creation route FIRST to bypass all middleware
   app.post("/api/superadmin/create-brand", async (req: Request, res: Response) => {
