@@ -329,7 +329,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // KRITISCH: SPARE PARTS ROUTES MÜSSEN GANZ AM ANFANG STEHEN!
-  app.get("/api/orders/spare-parts", async (req: Request, res: Response) => {
+  app.get("/api/orders/spare-parts", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const user = requireUser(req);
       const userId = user.id;
@@ -350,7 +350,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ZUBEHÖR ROUTES - MÜSSEN EBENFALLS AM ANFANG STEHEN!
-  app.get("/api/orders/accessories", async (req: Request, res: Response) => {
+  app.get("/api/orders/accessories", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const user = requireUser(req);
       const userId = user.id;
@@ -370,7 +370,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/orders/accessories", async (req: Request, res: Response) => {
+  app.post("/api/orders/accessories", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const user = requireUser(req);
       const userId = user.id;
@@ -419,7 +419,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.patch("/api/orders/spare-parts-bulk-update", async (req: Request, res: Response) => {
+  app.patch("/api/orders/spare-parts-bulk-update", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const user = requireUser(req);
       const userId = user.id;
@@ -467,176 +467,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // API-Routen für Zubehör-Bestellungen
-  app.get("/api/orders/accessories", async (req: Request, res: Response) => {
-    try {
-      const user = requireUser(req);
-      const userId = user.id;
-      
-      console.log(`[DIREKTE ROUTE] Abrufen aller Zubehör-Bestellungen für Benutzer ${userId}`);
-      const accessories = await storage.getAllAccessories(userId);
-      console.log(`[DIREKTE ROUTE] Gefunden: ${accessories.length} Zubehör-Bestellungen für Benutzer ${userId}`);
-      
-      res.json(accessories);
-    } catch (error) {
-      console.error("Fehler beim Abrufen der Zubehör-Bestellungen:", error);
-      res.status(500).json({ error: "Fehler beim Abrufen der Zubehör-Bestellungen" });
-    }
-  });
-
-  app.post("/api/orders/accessories", async (req: Request, res: Response) => {
-    try {
-      const user = requireUser(req);
-      const userId = user.id;
-      
-      // Benutzer abrufen für Shop-ID
-      const dbUser = await storage.getUser(userId);
-      if (!dbUser || !dbUser.shopId) {
-        return res.status(403).json({ error: "Zugriff verweigert: Keine Shop-ID vorhanden" });
-      }
-
-      console.log(`[DIREKTE ROUTE] Erstelle Zubehör-Bestellung für Benutzer ${userId}`);
-      
-      const accessoryData = {
-        ...req.body,
-        userId: userId,
-        shopId: dbUser.shopId
-      };
-      
-      const accessory = await storage.createAccessory(accessoryData);
-      console.log(`[DIREKTE ROUTE] Zubehör-Bestellung erstellt:`, accessory);
-      
-      res.status(201).json(accessory);
-    } catch (error) {
-      console.error("Fehler beim Erstellen der Zubehör-Bestellung:", error);
-      res.status(500).json({ error: "Fehler beim Erstellen der Zubehör-Bestellung" });
-    }
-  });
-
-  app.patch("/api/orders/accessories/:id", async (req: Request, res: Response) => {
-    try {
-      const user = requireUser(req);
-      const userId = user.id;
-      
-      const accessoryId = parseInt(req.params.id);
-      if (!accessoryId) {
-        return res.status(400).json({ message: "Ungültige Zubehör-ID" });
-      }
-      
-      console.log(`[DIREKTE ROUTE] Aktualisiere Zubehör-Status für ID ${accessoryId} (Benutzer ${userId}):`, req.body);
-      
-      const updatedAccessory = await storage.updateAccessory(accessoryId, req.body, userId);
-      
-      if (!updatedAccessory) {
-        return res.status(404).json({ message: "Zubehör nicht gefunden oder keine Berechtigung" });
-      }
-      
-      console.log(`[DIREKTE ROUTE] Zubehör-Status aktualisiert:`, updatedAccessory);
-      
-      // Activity-Log für Zubehör-Bestellung-Update
-      try {
-        const user = await storage.getUser(userId);
-        await storage.logOrderActivity(
-          'updated',
-          accessoryId,
-          updatedAccessory,
-          userId,
-          user?.username || user?.email || 'Unbekannter Benutzer'
-        );
-        console.log(`📋 Activity-Log für Zubehör-Update ${accessoryId} erstellt`);
-      } catch (activityError) {
-        console.error("❌ Fehler beim Erstellen des Order-Activity-Logs:", activityError);
-      }
-      
-      res.json(updatedAccessory);
-    } catch (error) {
-      console.error("[DIREKTE ROUTE] Fehler beim Aktualisieren des Zubehör-Status:", error);
-      res.status(500).json({ 
-        message: "Fehler beim Aktualisieren des Zubehör-Status",
-        error: error instanceof Error ? error.message : String(error)
-      });
-    }
-  });
-
-  // Endpunkt für Order-Counts (Badge-Benachrichtigungen)
-  app.get("/api/orders/counts", async (req: Request, res: Response) => {
-    try {
-      const user = requireUser(req);
-      const userId = user.id;
-      
-      // Hole die Shop-ID des Benutzers für Multi-Tenant Isolation
-      const dbUser = await storage.getUser(userId);
-      if (!dbUser) {
-        return res.status(404).json({ message: "Benutzer nicht gefunden" });
-      }
-      
-      // Anzahl der Ersatzteile mit Status "bestellen" (shop-weit) 
-      const sparePartsToOrder = await pool.query(
-        `SELECT COUNT(*) as count FROM spare_parts sp 
-         JOIN repairs r ON sp.repair_id = r.id 
-         WHERE sp.status = 'bestellen' AND r.shop_id = $1`,
-        [dbUser.shopId]
-      );
-      
-      // Anzahl der Zubehörteile mit Status "bestellen" (shop-weit)
-      const accessoriesToOrder = await pool.query(
-        `SELECT COUNT(*) as count FROM accessories a 
-         WHERE a.status = 'bestellen' AND a.shop_id = $1`,
-        [dbUser.shopId]
-      );
-      
-      const sparePartsCount = parseInt(sparePartsToOrder.rows[0].count) || 0;
-      const accessoriesCount = parseInt(accessoriesToOrder.rows[0].count) || 0;
-      const totalToOrder = sparePartsCount + accessoriesCount;
-      
-      console.log(`📊 Order Counts für Shop ${dbUser.shopId} (Benutzer ${userId}): ${sparePartsCount} Ersatzteile + ${accessoriesCount} Zubehör = ${totalToOrder} gesamt`);
-      
-      res.json({
-        sparePartsToOrder: sparePartsCount,
-        accessoriesToOrder: accessoriesCount,
-        totalToOrder: totalToOrder
-      });
-    } catch (error) {
-      console.error("Fehler beim Abrufen der Order-Counts:", error);
-      res.status(500).json({ 
-        message: "Fehler beim Abrufen der Order-Counts",
-        error: error instanceof Error ? error.message : String(error)
-      });
-    }
-  });
-
-  app.put("/api/orders/accessories/bulk-update", async (req: Request, res: Response) => {
-    try {
-      const user = requireUser(req);
-      const userId = user.id;
-      
-      const { accessoryIds, status } = req.body;
-      
-      console.log(`[DIREKTE ROUTE] Bulk-Update für Zubehör:`, { accessoryIds, status, userId });
-      
-      if (!Array.isArray(accessoryIds) || accessoryIds.length === 0) {
-        return res.status(400).json({ message: "Ungültige Zubehör-IDs" });
-      }
-      
-      if (!status || typeof status !== 'string') {
-        return res.status(400).json({ message: "Ungültiger Status" });
-      }
-      
-      const success = await storage.bulkUpdateAccessoryStatus(accessoryIds, status, userId);
-      
-      if (success) {
-        res.json({ message: "Zubehör erfolgreich aktualisiert", accessoryIds, status });
-      } else {
-        res.status(500).json({ message: "Fehler beim Aktualisieren der Zubehör-Artikel" });
-      }
-    } catch (error) {
-      console.error("[DIREKTE ROUTE] Fehler beim Bulk-Update der Zubehör-Artikel:", error);
-      res.status(500).json({ 
-        message: "Fehler beim Aktualisieren der Zubehör-Artikel",
-        error: error instanceof Error ? error.message : String(error)
-      });
-    }
-  });
 
   // PWA-ROUTES: Service Worker und Manifest mit korrekten MIME-Types bedienen
   app.get('/sw.js', (req, res) => {
@@ -668,7 +498,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
 
   
-  app.patch("/api/orders/spare-parts-bulk-update", async (req: Request, res: Response) => {
+  app.patch("/api/orders/spare-parts-bulk-update", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const user = requireUser(req);
       const userId = user.id;
@@ -994,7 +824,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Ersatzteil Bulk-Update Route (Header-basiert)
-  app.put("/api/orders/spare-parts/bulk-update", async (req: Request, res: Response) => {
+  app.put("/api/orders/spare-parts/bulk-update", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const user = requireUser(req);
       const userId = user.id;
