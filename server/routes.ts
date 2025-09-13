@@ -232,7 +232,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // ALLERHÖCHSTE PRIORITÄT: E-Mail für eingetroffenes Zubehör versenden - MUSS ZUERST SEIN!
-  app.post("/api/accessories/:id/send-arrival-email", async (req: Request, res: Response) => {
+  app.post("/api/accessories/:id/send-arrival-email", isAuthenticated, async (req: Request, res: Response) => {
     console.log("🚨🚨🚨 ALLERHÖCHSTE PRIORITÄT ZUBEHÖR E-MAIL ROUTE AUFGERUFEN! 🚨🚨🚨");
     try {
       const user = requireUser(req);
@@ -624,8 +624,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Etikett-PDF für Zubehör-Bestellung generieren
-  app.post("/api/accessories/:id/print-label", async (req: Request, res: Response) => {
+  // Etikett-PDF für Zubehör-Bestellung generieren  
+  app.post("/api/accessories/:id/print-label", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const user = requireUser(req);
       const userId = user.id;
