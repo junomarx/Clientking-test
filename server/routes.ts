@@ -90,7 +90,10 @@ function requireUser(req: Request): { id: number; username: string; shopId: numb
 
 // Middleware to check if user is authenticated
 async function isAuthenticated(req: Request, res: Response, next: NextFunction) {
-  console.log(`🔍 [AUTH-MIDDLEWARE] ${req.method} ${req.path} - Checking authentication...`);
+  console.log(`🚨🚨🚨 [CRITICAL-DEBUG] isAuthenticated CALLED: ${req.method} ${req.path} 🚨🚨🚨`);
+  
+  try {
+    console.log(`🔍 [AUTH-MIDDLEWARE] ${req.method} ${req.path} - Checking authentication...`);
   
   // SECURITY WARNING: Development-only debug authentication
   // These debug features MUST be disabled in production!
@@ -176,7 +179,14 @@ async function isAuthenticated(req: Request, res: Response, next: NextFunction) 
   }
   
   // If no authentication method succeeded
+  console.log(`🚨 [CRITICAL-DEBUG] Keine Authentifizierung erfolgreich - return 401`);
   res.status(401).json({ message: "Nicht angemeldet" });
+  
+  } catch (error) {
+    console.error(`🚨🚨🚨 [CRITICAL-DEBUG] isAuthenticated EXCEPTION: ${error} 🚨🚨🚨`);
+    console.error(`🚨🚨🚨 [CRITICAL-DEBUG] STACK:`, error.stack);
+    res.status(500).json({ message: "Authentication error" });
+  }
 }
 
 // Hilfsfunktionen entfernt (keine Modellreihen mehr)
