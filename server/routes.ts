@@ -237,16 +237,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
       console.log(`🔍 GESCHÄFTSDATEN: Für Benutzer ${userId} geladen:`, {
         businessName: businessSetting?.businessName,
-        businessPhone: businessSetting?.businessPhone,
-        businessEmail: businessSetting?.businessEmail,
+        businessPhone: businessSetting?.phone,
+        businessEmail: businessSetting?.email,
         openingHours: businessSetting?.openingHours
       });
       
       console.log(`🔍 USER FALLBACK-DATEN:`, {
-        shopName: dbUser.shopName,
-        phone: dbUser.phone,
+        shopName: dbUser.companyName || 'Handyshop',
+        phone: dbUser.companyPhone || '',
         email: dbUser.email,
-        shopOpeningHours: dbUser.shopOpeningHours
+        shopOpeningHours: 'Mo-Fr: 9:00-18:00'
       });
       
       console.log(`📧 ALLERHÖCHSTE PRIORITÄT: Sende E-Mail mit korrekter Vorlage "Zubehör eingetroffen" an ${customer.email}`);
@@ -269,11 +269,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         anzahlung: accessory.downPayment || '0,00',
         offener_betrag: openAmountNum.toFixed(2).replace('.', ','),
         // KRITISCH: Verwende Shop-Owner Geschäftsdaten statt user-Daten
-        oeffnungszeiten: businessSetting?.openingHours || user.shopOpeningHours || 'Mo-Fr: 9:00-18:00',
-        geschaeftsname: businessSetting?.businessName || user.shopName || 'Handyshop',
-        adresse: businessSetting?.businessAddress || user.shopAddress || '',
-        telefon: businessSetting?.businessPhone || user.phone || '',
-        email: businessSetting?.businessEmail || user.email || '',
+        oeffnungszeiten: businessSetting?.openingHours || 'Mo-Fr: 9:00-18:00',
+        geschaeftsname: businessSetting?.businessName || 'Handyshop',
+        adresse: businessSetting?.streetAddress || '',
+        telefon: businessSetting?.phone || '',
+        email: businessSetting?.email || '',
         // Zusätzliche Varianten, die in E-Mail-Vorlagen verwendet werden könnten
         businessName: businessSetting?.businessName || 'Mac and Phone Doc',
         business_name: businessSetting?.businessName || 'Mac and Phone Doc',
@@ -287,7 +287,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Verwende direkt die Template-ID um sicherzustellen, dass die richtige Vorlage verwendet wird
       // WICHTIG: userId in emailVariables hinzufügen, damit Shop-Owner-SMTP verwendet wird
-      emailVariables.userId = userId.toString();
+      (emailVariables as any).userId = userId.toString();
       
       const emailResult = await emailServiceInstance.sendEmailWithTemplateById(
         78,  // ID der "Zubehör eingetroffen" Vorlage
@@ -610,9 +610,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         accessory,
         customer,
         shopInfo: {
-          name: dbUser?.shopName || 'Handyshop',
-          address: dbUser?.shopAddress || '',
-          phone: dbUser?.phone || '',
+          name: dbUser?.companyName || 'Handyshop',
+          address: dbUser?.companyAddress || '',
+          phone: dbUser?.companyPhone || '',
           email: dbUser?.email || ''
         }
       });
@@ -1628,11 +1628,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           paramCounter++;
         }
         
-        if (customerData.notes !== undefined) {
-          updateFields.push(`notes = $${paramCounter}`);
-          updateValues.push(customerData.notes);
-          paramCounter++;
-        }
+        // Notes field nicht in Customer Schema vorhanden
+        // if (customerData.notes !== undefined) {
+        //   updateFields.push(`notes = $${paramCounter}`);
+        //   updateValues.push(customerData.notes);
+        //   paramCounter++;
+        // }
         
         // Keine updated_at Spalte in der Datenbank, also überspringen wir es
         
@@ -1777,7 +1778,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
         
-        // Shop-spezifische Reparaturen laden
+        // Shop-spezifische Reparaturen laden (verwende import alias um Namenskonflikt zu vermeiden)
         const shopRepairs = await db
           .select()
           .from(repairs)
@@ -1808,7 +1809,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
         
-        // Shop-spezifische Reparaturen laden
+        // Shop-spezifische Reparaturen laden (verwende import alias um Namenskonflikt zu vermeiden)
         const shopRepairs = await db
           .select()
           .from(repairs)
@@ -1819,10 +1820,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json(shopRepairs);
       }
       
-      // Multi-Shop Service nutzen für erweiterten Zugriff
-      const repairs = await multiShopService.getAllRepairsForUser(userId);
-      console.log(`🌐 Loaded ${repairs.length} repairs for user ${req.user?.username}`);
-      res.json(repairs);
+      // Multi-Shop Service nutzen für erweiterten Zugriff (rename zu repairsList um Namenskonflikt zu vermeiden)
+      const repairsList = await multiShopService.getAllRepairsForUser(userId);
+      console.log(`🌐 Loaded ${repairsList.length} repairs for user ${req.user?.username}`);
+      res.json(repairsList);
     } catch (error) {
       console.error("Fehler beim Laden der Reparaturen:", error);
       res.status(500).json({ message: "Failed to fetch repairs" });
