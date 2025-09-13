@@ -56,6 +56,7 @@ import { registerTwoFARoutes } from "./two-fa-routes";
 import { registerMultiShopAdminRoutes } from "./multi-shop-admin-routes";
 import { registerSuperadminEmailRoutes } from "./superadmin-email-routes";
 import { setupNewsletterRoutes } from "./newsletter-routes";
+import { isAuthenticated } from "./auth-middleware";
 import path from 'path';
 import fs from 'fs';
 // jsPDF will be imported dynamically
@@ -88,106 +89,7 @@ function requireUser(req: Request): { id: number; username: string; shopId: numb
   };
 }
 
-// Middleware to check if user is authenticated
-async function isAuthenticated(req: Request, res: Response, next: NextFunction) {
-  console.log(`🚨🚨🚨 [CRITICAL-DEBUG] isAuthenticated CALLED: ${req.method} ${req.path} 🚨🚨🚨`);
-  
-  try {
-    console.log(`🔍 [AUTH-MIDDLEWARE] ${req.method} ${req.path} - Checking authentication...`);
-  
-  // SECURITY WARNING: Development-only debug authentication
-  // These debug features MUST be disabled in production!
-  if (process.env.NODE_ENV !== 'production') {
-    // Prüfe auf benutzerdefinierte User-ID im Header (für direktes Debugging)
-    const customUserId = req.headers['x-user-id'];
-    console.log(`🔍 [AUTH-MIDDLEWARE] X-User-ID Header: ${customUserId}`);
-    
-    if (customUserId) {
-      console.log(`🔍 [AUTH-MIDDLEWARE] X-User-ID Header gefunden: ${customUserId}`);
-      // Wenn wir eine Benutzer-ID im Header haben, versuchen wir, den Benutzer zu laden
-      try {
-        const userId = parseInt(customUserId.toString());
-        const user = await storage.getUser(userId);
-        if (user) {
-          console.log(`🔍 [AUTH-MIDDLEWARE] ✅ Benutzer mit ID ${userId} aus Header gefunden: ${user.username}`);
-          req.user = user;
-          return next();
-        } else {
-          console.log(`🔍 [AUTH-MIDDLEWARE] ❌ Benutzer mit ID ${userId} nicht gefunden`);
-        }
-      } catch (error) {
-        console.error('🔍 [AUTH-MIDDLEWARE] ❌ Fehler beim Verarbeiten der X-User-ID:', error);
-      }
-    } else {
-      console.log(`🔍 [AUTH-MIDDLEWARE] ❌ X-User-ID Header NICHT vorhanden`);
-    }
-  }
-  
-  // Standardauthentifizierung über Session (ALWAYS AVAILABLE IN PRODUCTION)
-  if (req.isAuthenticated()) {
-    // KRITISCH: req.user muss aus der Session gesetzt werden
-    // Passport.js speichert User-Daten in req.user automatisch
-    // Aber wir müssen sicherstellen, dass es dem erwarteten Format entspricht
-    if (!req.user) {
-      // Fallback: Wenn req.user nicht gesetzt ist, versuche es aus der Session zu holen
-      console.error('⚠️ Session authenticated but req.user is null - this should not happen');
-      return res.status(500).json({ message: "Session Fehler: User-Daten nicht verfügbar" });
-    }
-    return next();
-  }
-  
-  // Development-only: Weak Bearer token authentication
-  // SECURITY WARNING: This should be replaced with proper JWT in production
-  if (process.env.NODE_ENV !== 'production') {
-    const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.substring(7);
-      try {
-        // Dekodieren des Tokens (in Produktion würden wir JWT verwenden)
-        const decoded = Buffer.from(token, 'base64').toString();
-        const tokenParts = decoded.split(':');
-        
-        if (tokenParts.length < 2) {
-          return res.status(401).json({ message: "Ungültiges Token-Format" });
-        }
-        
-        const userId = parseInt(tokenParts[0]);
-        
-        // Benutzer aus der Datenbank abrufen
-        storage.getUser(userId).then(user => {
-          if (!user) {
-            return res.status(401).json({ message: "Benutzer nicht gefunden" });
-          }
-          
-          if (!user.isActive && !user.isAdmin) {
-            return res.status(401).json({ message: "Konto ist nicht aktiviert" });
-          }
-          
-          // Benutzer in Request setzen
-          req.user = user;
-          return next();
-        }).catch(err => {
-          console.error('Token authentication error:', err);
-          return res.status(401).json({ message: "Fehler bei der Token-Authentifizierung" });
-        });
-        return; // Früher Return, da wir asynchron arbeiten
-      } catch (error) {
-        console.error('Token authentication error:', error);
-        return res.status(401).json({ message: "Fehler bei der Token-Authentifizierung" });
-      }
-    }
-  }
-  
-  // If no authentication method succeeded
-  console.log(`🚨 [CRITICAL-DEBUG] Keine Authentifizierung erfolgreich - return 401`);
-  res.status(401).json({ message: "Nicht angemeldet" });
-  
-  } catch (error) {
-    console.error(`🚨🚨🚨 [CRITICAL-DEBUG] isAuthenticated EXCEPTION: ${error} 🚨🚨🚨`);
-    console.error(`🚨🚨🚨 [CRITICAL-DEBUG] STACK:`, error.stack);
-    res.status(500).json({ message: "Authentication error" });
-  }
-}
+// NOTE: isAuthenticated middleware is now imported from ./auth-middleware.ts
 
 // Hilfsfunktionen entfernt (keine Modellreihen mehr)
 
@@ -195,6 +97,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // SECURITY HOTFIX: Apply dev header stripping globally in production
   app.use(stripDevHeadersInProd);
+
+  // 🔒 SECURITY FIX: Authentication bypass resolved by using shared middleware
+  // NOTE: The critical security issue has been fixed by importing isAuthenticated from ./auth-middleware.ts
+  // The existing individual route definitions now use the correct authentication middleware
   
   // Health check endpoint for Docker
   app.get('/api/health', (req: Request, res: Response) => {
