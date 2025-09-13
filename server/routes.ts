@@ -576,7 +576,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // DELETE individual accessory
+  // 🚨 DELETE ROUTE VERSCHOBEN: War oben und fing PUT /api/orders/accessories/bulk-update ab!
+  // DELETE individual accessory - MUSS NACH BULK-UPDATE STEHEN
   app.delete("/api/orders/accessories/:id", async (req: Request, res: Response) => {
     try {
       const user = requireUser(req);
@@ -584,15 +585,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
+        console.error(`[DELETE ACCESSORY] ❌ Ungültige ID: "${req.params.id}" - isNaN: ${isNaN(id)}`);
         return res.status(400).json({ message: "Ungültige Zubehör-ID" });
       }
       
-      console.log(`[DIREKTE ROUTE] Löschen des Zubehörs ${id} für Benutzer ${userId}`);
+      console.log(`[DELETE ACCESSORY] 🗑️ Löschen des Zubehörs ${id} für Benutzer ${userId}`);
       
       const success = await storage.deleteAccessory(id, userId);
       
       if (success) {
-        console.log(`[DIREKTE ROUTE] Zubehör ${id} erfolgreich gelöscht für Benutzer ${userId}`);
+        console.log(`[DELETE ACCESSORY] ✅ Zubehör ${id} erfolgreich gelöscht für Benutzer ${userId}`);
         
         // Activity-Log für Zubehör-Bestellung-Löschung
         try {
