@@ -90,25 +90,33 @@ function requireUser(req: Request): { id: number; username: string; shopId: numb
 
 // Middleware to check if user is authenticated
 async function isAuthenticated(req: Request, res: Response, next: NextFunction) {
+  console.log(`🔍 [AUTH-MIDDLEWARE] ${req.method} ${req.path} - Checking authentication...`);
+  
   // SECURITY WARNING: Development-only debug authentication
   // These debug features MUST be disabled in production!
   if (process.env.NODE_ENV !== 'production') {
     // Prüfe auf benutzerdefinierte User-ID im Header (für direktes Debugging)
     const customUserId = req.headers['x-user-id'];
+    console.log(`🔍 [AUTH-MIDDLEWARE] X-User-ID Header: ${customUserId}`);
+    
     if (customUserId) {
-      console.log(`X-User-ID Header gefunden: ${customUserId}`);
+      console.log(`🔍 [AUTH-MIDDLEWARE] X-User-ID Header gefunden: ${customUserId}`);
       // Wenn wir eine Benutzer-ID im Header haben, versuchen wir, den Benutzer zu laden
       try {
         const userId = parseInt(customUserId.toString());
         const user = await storage.getUser(userId);
         if (user) {
-          console.log(`Benutzer mit ID ${userId} aus Header gefunden: ${user.username}`);
+          console.log(`🔍 [AUTH-MIDDLEWARE] ✅ Benutzer mit ID ${userId} aus Header gefunden: ${user.username}`);
           req.user = user;
           return next();
+        } else {
+          console.log(`🔍 [AUTH-MIDDLEWARE] ❌ Benutzer mit ID ${userId} nicht gefunden`);
         }
       } catch (error) {
-        console.error('Fehler beim Verarbeiten der X-User-ID:', error);
+        console.error('🔍 [AUTH-MIDDLEWARE] ❌ Fehler beim Verarbeiten der X-User-ID:', error);
       }
+    } else {
+      console.log(`🔍 [AUTH-MIDDLEWARE] ❌ X-User-ID Header NICHT vorhanden`);
     }
   }
   
