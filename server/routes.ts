@@ -64,6 +64,29 @@ import { requireShopIsolation, attachShopId } from "./middleware/shop-isolation"
 import { enforceShopIsolation, validateCustomerBelongsToShop } from "./middleware/enforce-shop-isolation";
 import nodemailer from "nodemailer";
 
+// Utility-Funktion zum korrekten Parsen deutscher Komma-Währungen
+function parseGermanFloat(value: string | number | null | undefined): number {
+  if (value === null || value === undefined) {
+    return 0;
+  }
+  
+  const stringValue = value.toString();
+  if (stringValue === '') {
+    return 0;
+  }
+  
+  // Ersetze deutsche Kommas durch englische Punkte für parseFloat
+  const normalizedValue = stringValue.replace(',', '.');
+  const parsed = parseFloat(normalizedValue);
+  
+  return isNaN(parsed) ? 0 : parsed;
+}
+
+// Utility-Funktion zum Formatieren von Zahlen als deutsche Währung
+function formatGermanCurrency(value: number): string {
+  return value.toFixed(2).replace('.', ',');
+}
+
 // SECURITY: Strip development headers in production
 function stripDevHeadersInProd(req: Request, res: Response, next: NextFunction) {
   if (process.env.NODE_ENV === 'production') {
@@ -232,9 +255,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { EmailService } = await import('./email-service.js');
       const emailServiceInstance = new EmailService();
       
-      // Berechne offenen Betrag (Gesamtpreis - Anzahlung)
-      const totalPriceNum = parseFloat(accessory.totalPrice) || 0;
-      const downPaymentNum = parseFloat(accessory.downPayment || '0') || 0;
+      // Berechne offenen Betrag (Gesamtpreis - Anzahlung) mit korrekter deutscher Komma-Unterstützung
+      const totalPriceNum = parseGermanFloat(accessory.totalPrice);
+      const downPaymentNum = parseGermanFloat(accessory.downPayment || '0');
       const openAmountNum = Math.max(0, totalPriceNum - downPaymentNum);
 
       const emailVariables = {
@@ -609,7 +632,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-
+  // PATCH individual accessory - FEHLENDER ENDPOINT FÜR EINZELUPDATE
+  app.patch("/api/orders/accessories/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = requireUser(req);
+      const userId = user.id;
+      
+      const accessoryId = parseInt(req.params.id);
+      if (!accessoryId) {
+        return res.status(400).json({ message: "Ungültige Zubehör-ID" });
+      }
+      
+      console.log(`[ZUBEHÖR-UPDATE] Aktualisiere Zubehör ${accessoryId} für Benutzer ${userId}`);
+      
+      const { articleName, quantity, unitPrice, totalPrice, downPayment, notes } = req.body;
+      
+      // Validierung der Eingabedaten
+      if (!articleName || quantity === undefined || unitPrice === undefined) {
+        return res.status(400).json({ message: "Artikelname, Menge und Einzelpreis sind erforderlich" });
+      }
+      
+      // Berechne Gesamtpreis zur Sicherheit neu mit korrekter deutscher Komma-Unterstützung
+      const quantityNum = parseInt(quantity.toString());
+      const unitPriceNum = parseGermanFloat(unitPrice);
+      const calculatedTotalPrice = quantityNum * unitPriceNum;
+      
+      const updatedData = {
+        articleName,
+        quantity: quantityNum,
+        unitPrice: formatGermanCurrency(unitPriceNum),
+        totalPrice: formatGermanCurrency(calculatedTotalPrice),
+        downPayment: downPayment ? formatGermanCurrency(parseGermanFloat(downPayment)) : null,
+        notes: notes || null
+      };
+      
+      const success = await storage.updateAccessory(accessoryId, updatedData, userId);
+      
+      if (success) {
+        console.log(`[ZUBEHÖR-UPDATE] Zubehör ${accessoryId} erfolgreich aktualisiert für Benutzer ${userId}`);
+        res.json({ message: "Zubehör erfolgreich aktualisiert", accessoryId });
+      } else {
+        res.status(404).json({ message: "Zubehör nicht gefunden oder keine Berechtigung" });
+      }
+      
+    } catch (error) {
+      console.error("[ZUBEHÖR-UPDATE] Fehler beim Aktualisieren des Zubehörs:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Aktualisieren des Zubehörs",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
 
   // DELETE individual spare part from orders
   app.delete("/api/orders/spare-parts/:id", async (req: Request, res: Response) => {
@@ -4663,13 +4736,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // !!! FIX: IMMER 20% MwSt für Österreich !!!
       // MwSt korrekt berechnen - 20% im Bruttopreis enthalten
       // Bei einem Bruttopreis von 240€ sind das 40€ MwSt.
-      let total = parseFloat(data.total?.replace(',', '.') || '0');
+      let total = parseGermanFloat(data.total || '0');
       
       // Brutto-Betrag durch 1.2 teilen um Netto zu bekommen (20% MwSt)
       const subtotal = (total / 1.2).toFixed(2);
       
       // MwSt = Brutto - Netto
-      const taxAmount = (total - parseFloat(subtotal)).toFixed(2);
+      const taxAmount = (total - parseGermanFloat(subtotal)).toFixed(2);
       
       // Werte im data-Objekt explizit aktualisieren und fixieren
       data.subtotal = subtotal.replace('.', ',');
@@ -4968,8 +5041,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Summen neu berechnen
       let total = 0;
       existingItems.forEach(item => {
-        // Komma durch Punkt ersetzen, um parseFloat zu ermöglichen
-        const itemTotal = parseFloat(item.totalPrice.replace(',', '.'));
+        // Verwende parseGermanFloat für konsistente Währungsbehandlung
+        const itemTotal = parseGermanFloat(item.totalPrice);
         if (!isNaN(itemTotal)) {
           total += itemTotal;
         }
@@ -5123,7 +5196,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Summen neu berechnen
       let total = 0;
       existingItems.forEach(item => {
-        const itemPrice = parseFloat((item.totalPrice || "0").replace(',', '.'));
+        const itemPrice = parseGermanFloat(item.totalPrice || "0");
         if (!isNaN(itemPrice)) {
           total += itemPrice;
         }
