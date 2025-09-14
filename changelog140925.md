@@ -1,6 +1,6 @@
-# Changelog - 14.09.2025
+![image](image.png)# Changelog - 14.09.2025
 
-**Projekt:** ClientKing/Handyshop-Verwaltung  
+**Projekt:** ClientKing/Handyshop-Verwaltung  ![image](image_2.png)
 **Datum:** 14. September 2025  
 **Bearbeitungszeit:** Gesamter Tag (02:00 - 15:30 Uhr)  
 **Entwickler:** Replit Agent  
