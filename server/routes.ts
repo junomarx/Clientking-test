@@ -2303,12 +2303,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
               console.log(`   - Kunden-E-Mail: ${customer?.email}`);
               console.log(`   - Business-Einstellungen: ${businessSettings?.businessName}`);
               
-              const { emailService } = await import('./email-service.js');
-              console.log(`🔍 EmailService erfolgreich geladen:`, typeof emailService);
+              const { EmailService } = await import('./email-service.js');
+              const emailServiceInstance = new EmailService();
+              console.log(`🔍 EmailService erfolgreich geladen:`, typeof emailServiceInstance);
               
-              // Template-Typ basierend auf Status und Benutzerauswahl bestimmen
+              // Template-Typ basierend auf Benutzerauswahl und Status bestimmen
               let templateType = status;
-              if (status === 'fertig') {
+              
+              // ERSTE PRIORITÄT: Explizite Template-Auswahl (z.B. Auftragsbestätigung über Kuvert-Icon)
+              if (emailTemplate === 'Auftragsbestätigung') {
+                templateType = 'Auftragsbestätigung';
+                console.log(`📧 Auftragsbestätigung wird über Status-Route gesendet für Reparatur ${repair.id}`);
+              } else if (status === 'fertig') {
                 // Bei Status "fertig" verwende das vom Benutzer gewählte Template
                 templateType = emailTemplate || 'Reparatur erfolgreich abgeschlossen';
               } else if (status === 'ersatzteil_eingetroffen') {
@@ -2329,7 +2335,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               console.log(`🔍 Rufe sendRepairStatusEmail auf...`);
               
               // E-Mail über den EmailService senden
-              emailResult = await emailService.sendRepairStatusEmail(
+              emailResult = await emailServiceInstance.sendRepairStatusEmail(
                 userId,
                 repair.id,
                 templateType,

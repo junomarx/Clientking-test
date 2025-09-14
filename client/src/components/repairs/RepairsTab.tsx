@@ -478,6 +478,18 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
     sendReviewRequestMutation.mutate(repairId);
   };
 
+  // Funktion zum Senden einer Auftragsbestätigung über Status-Route
+  const handleSendOrderConfirmation = (repairId: number) => {
+    console.log(`📧 Sende Auftragsbestätigung für Reparatur ${repairId}`);
+    
+    updateStatusMutation.mutate({
+      id: repairId,
+      status: 'eingegangen', // Status bleibt gleich
+      sendEmail: true,
+      emailTemplate: 'Auftragsbestätigung' // Template-Override für konsistente E-Mail-Darstellung
+    });
+  };
+
   // QR-Code Unterschrift öffnen
   const handleOpenQRSignature = async (repair: any) => {
     console.log('🔍 QR-Code geklickt für Reparatur:', repair.id, 'Status:', repair.status);
@@ -810,6 +822,25 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
                             <p>QR-Code Unterschrift</p>
                           </TooltipContent>
                         </Tooltip>
+                        {/* Kuvert-Icon für Auftragsbestätigung (nur bei Status "eingegangen") */}
+                        {repair.status === 'eingegangen' && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button 
+                                className="text-purple-600 hover:text-purple-800 p-1 transform hover:scale-110 transition-all" 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSendOrderConfirmation(repair.id);
+                                }}
+                              >
+                                <Mail className="h-4 w-4" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Auftragsbestätigung senden</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <button 
@@ -1019,6 +1050,25 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
                       <p>QR-Code Unterschrift</p>
                     </TooltipContent>
                   </Tooltip>
+                  {/* Kuvert-Icon für Auftragsbestätigung (nur bei Status "eingegangen") */}
+                  {repair.status === 'eingegangen' && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button 
+                          className="text-purple-600 hover:text-purple-800 p-2 rounded-full hover:bg-white transition-colors" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSendOrderConfirmation(repair.id);
+                          }}
+                        >
+                          <Mail className="h-5 w-5" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Auftragsbestätigung senden</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button 
