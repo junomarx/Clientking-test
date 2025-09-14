@@ -5,7 +5,8 @@ import { storage } from "./storage";
 export async function isAuthenticated(req: Request, res: Response, next: NextFunction) {
   try {
   // Prüfe auf benutzerdefinierte User-ID im Header (nur in Development!)
-  if (process.env.NODE_ENV !== 'production') {
+  // Doppelte Absicherung: Weder Produktion noch Replit-Deployment
+  if (process.env.NODE_ENV !== 'production' && process.env.REPLIT_DEPLOYMENT !== '1') {
     const customUserId = req.headers['x-user-id'];
     if (customUserId) {
       console.log(`X-User-ID Header gefunden: ${customUserId}`);
