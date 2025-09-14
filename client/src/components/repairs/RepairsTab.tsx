@@ -717,7 +717,6 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
                 <th className="py-3 px-4 text-left">Fehler</th>
                 <th className="py-3 px-4 text-left">Status</th>
                 <th className="py-3 px-4 text-left">Preis</th>
-                <th className="py-3 px-4 text-left">Erstellt von</th>
                 <th className="py-3 px-4 text-left">Datum</th>
                 <th className="py-3 px-4 text-left">Aktionen</th>
               </tr>
@@ -725,11 +724,11 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
             <tbody>
               {repairsLoading || customersLoading ? (
                 <tr>
-                  <td colSpan={9} className="py-4 text-center text-gray-500">Lädt Daten...</td>
+                  <td colSpan={8} className="py-4 text-center text-gray-500">Lädt Daten...</td>
                 </tr>
               ) : filteredRepairs.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-4 text-center text-gray-500">Keine Reparaturen gefunden</td>
+                  <td colSpan={8} className="py-4 text-center text-gray-500">Keine Reparaturen gefunden</td>
                 </tr>
               ) : (
                 paginatedRepairs.map(repair => (
@@ -747,9 +746,6 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
                     </td>
                     <td className="py-3 px-4 text-right font-medium">
                       {repair.estimatedCost ? `${repair.estimatedCost} €` : '-'}
-                    </td>
-                    <td className="py-3 px-4 text-sm text-muted-foreground">
-                      {repair.createdBy || '-'}
                     </td>
                     <td className="py-3 px-4">
                       {new Date(repair.createdAt).toLocaleDateString('de-DE')}
@@ -993,12 +989,6 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
                     <div className="text-sm text-gray-500">Preis:</div>
                     <div className="font-medium">{repair.estimatedCost ? `${repair.estimatedCost} €` : '-'}</div>
                   </div>
-                  {repair.createdBy && (
-                    <div className="flex justify-between">
-                      <div className="text-sm text-gray-500">Erstellt von:</div>
-                      <div className="text-sm">{repair.createdBy}</div>
-                    </div>
-                  )}
                   <div className="flex justify-between">
                     <div className="text-sm text-gray-500">Datum:</div>
                     <div>{new Date(repair.createdAt).toLocaleDateString('de-DE')}</div>
