@@ -39,7 +39,12 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 // Password Reset Token Security Functions
-const TOKEN_SECRET = process.env.TOKEN_SECRET || "handyshop-token-secret-2024";
+function getTokenSecret(): string {
+  if (!process.env.TOKEN_SECRET) {
+    throw new Error('TOKEN_SECRET environment variable is required but not set. Application cannot start.');
+  }
+  return process.env.TOKEN_SECRET;
+}
 
 function generateSecureToken(): string {
   // Generate 128-bit token (32 hex characters)
@@ -48,7 +53,7 @@ function generateSecureToken(): string {
 
 function hashToken(token: string): string {
   // HMAC-SHA256 hash of the token with server secret
-  return createHmac('sha256', TOKEN_SECRET).update(token).digest('hex');
+  return createHmac('sha256', getTokenSecret()).update(token).digest('hex');
 }
 
 function isValidToken(token: string, hash: string): boolean {
@@ -87,15 +92,18 @@ function clearRateLimit(identifier: string): void {
 const emailService = new EmailService();
 
 export function setupAuth(app: Express) {
-  // Stellen Sie sicher, dass das SECRET im Produktion gesetzt ist
-  if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
-    console.warn('Warning: SESSION_SECRET is not set in production environment');
+  // KRITISCHE SICHERHEIT: Secrets müssen gesetzt sein
+  if (!process.env.SESSION_SECRET) {
+    throw new Error('SESSION_SECRET environment variable is required but not set. Application cannot start.');
+  }
+  if (!process.env.TOKEN_SECRET) {
+    throw new Error('TOKEN_SECRET environment variable is required but not set. Application cannot start.');
   }
 
   // Session-Konfiguration - unterschiedlich für Entwicklung und Produktion
   const isProduction = process.env.NODE_ENV === 'production' || process.env.REPLIT_DEPLOYMENT === '1';
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || "sehr-sicherer-handyshop-session-key-1234567890",
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     store: storage.sessionStore,
