@@ -121,6 +121,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // SECURITY HOTFIX: Apply dev header stripping globally in production
   app.use(stripDevHeadersInProd);
 
+  // ⚡ KRITISCHER FIX: setupAuth() MUSS VOR ALLEN API-ROUTES AUFGERUFEN WERDEN!
+  setupAuth(app);
+
   // 🔒 SECURITY FIX: Authentication bypass resolved by using shared middleware
   // NOTE: The critical security issue has been fixed by importing isAuthenticated from ./auth-middleware.ts
   // The existing individual route definitions now use the correct authentication middleware
@@ -1071,9 +1074,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Set up authentication
-  setupAuth(app);
-  
   // SECURITY HOTFIX: Global authentication for all /api routes except public ones  
   // Applied AFTER Passport.js setup so req.isAuthenticated() is available
   const publicEndpoints = [
