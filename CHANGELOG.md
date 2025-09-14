@@ -138,4 +138,30 @@
 
 ---
 
+## [2025-09-14] UI Cleanup - 15:40
+
+### 🗑️ Removed "Erstellt von" Column from Repairs List
+
+#### Changes Made
+- **Desktop Table**: Removed "Erstellt von" (Created By) column header and data cells
+- **Mobile View**: Removed "Erstellt von" information from repair cards  
+- **Table Structure**: Adjusted colSpan values from 9 to 8 to maintain proper layout
+- **Hot Reload**: Changes deployed automatically without system restart
+
+#### Files Modified
+- `client/src/components/repairs/RepairsTab.tsx`: Column removal and layout adjustments
+
+#### Impact
+- **Cleaner UI**: Less cluttered repair list view
+- **Better UX**: Focus on essential repair information
+- **Responsive Design**: Optimized for both desktop and mobile views
+- **No Breaking Changes**: All other functionality preserved
+
+#### Validation
+- ✅ System remains stable after changes
+- ✅ DSGVO shop isolation continues working
+- ✅ All other UI functions unaffected
+
+---
+
 *This changelog follows semantic versioning principles and documents all changes for transparency and maintainability.*
