@@ -94,6 +94,15 @@ export function setupAuth(app: Express) {
 
   // Session-Konfiguration - unterschiedlich für Entwicklung und Produktion
   const isProduction = process.env.NODE_ENV === 'production' || process.env.REPLIT_DEPLOYMENT === '1';
+  
+  // ⚡ KRITISCHES STARTUP-LOGGING für REPLIT_DEPLOYMENT Detection
+  console.log('🚀 === SESSION CONFIGURATION STARTUP ===');
+  console.log(`📊 NODE_ENV: ${process.env.NODE_ENV}`);
+  console.log(`📊 REPLIT_DEPLOYMENT: ${process.env.REPLIT_DEPLOYMENT}`);
+  console.log(`📊 isProduction detected: ${isProduction}`);
+  console.log(`📊 Cookies secure: ${isProduction}`);
+  console.log(`📊 Cookie name: ${isProduction ? 'handyshop.sid' : 'connect.sid'}`);
+  console.log('🚀 === END SESSION CONFIGURATION ===');
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "sehr-sicherer-handyshop-session-key-1234567890",
     resave: false,
