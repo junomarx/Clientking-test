@@ -93,7 +93,7 @@ export function setupAuth(app: Express) {
   }
 
   // Session-Konfiguration - unterschiedlich für Entwicklung und Produktion
-  const isProduction = process.env.NODE_ENV === 'production';
+  const isProduction = process.env.NODE_ENV === 'production' || process.env.REPLIT_DEPLOYMENT === '1';
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "sehr-sicherer-handyshop-session-key-1234567890",
     resave: false,
