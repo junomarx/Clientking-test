@@ -364,6 +364,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // API-Route für Bestellzählungen (Warnhinweise in Sidebar)
+  app.get("/api/orders/counts", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = requireUser(req);
+      const userId = user.id;
+      
+      // Ersatzteile abrufen und zählen, die bestellt werden müssen
+      const spareParts = await storage.getAllSpareParts(userId);
+      const sparePartsToOrder = spareParts.filter(part => part.status === 'bestellen').length;
+      
+      // Zubehör abrufen und zählen, das bestellt werden muss  
+      const accessories = await storage.getAllAccessories(userId);
+      const accessoriesToOrder = accessories.filter(accessory => accessory.status === 'bestellen').length;
+      
+      // Gesamtzahl berechnen
+      const totalToOrder = sparePartsToOrder + accessoriesToOrder;
+      
+      const counts = {
+        sparePartsToOrder,
+        accessoriesToOrder,
+        totalToOrder
+      };
+      
+      res.json(counts);
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Bestellzählungen:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Abrufen der Bestellzählungen",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   app.post("/api/orders/accessories", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const user = requireUser(req);
