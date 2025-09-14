@@ -396,5 +396,34 @@ export function Header({ variant = "landing", activeTab, onTabChange }: HeaderPr
 
 ---
 
+---
+
+## ✅ UI/UX Verbesserung (14.09.2025 - 15:40 Uhr)
+
+### **🗑️ Spalte "Erstellt von" entfernt aus Reparaturliste**
+
+**🎯 Betroffene Komponenten:**
+- `client/src/components/repairs/RepairsTab.tsx`
+
+**🔧 Durchgeführte Änderungen:**
+- ✅ **Desktop-Tabelle:** Spalten-Header "Erstellt von" entfernt
+- ✅ **Desktop-Tabelle:** Daten-Spalte zwischen "Preis" und "Datum" entfernt 
+- ✅ **Mobile-Ansicht:** "Erstellt von" Information aus Reparatur-Karten entfernt
+- ✅ **Tabellen-Struktur:** colSpan-Werte von 9 auf 8 angepasst
+- ✅ **Hot-Module-Replacement:** Änderungen automatisch live deployed
+
+**📊 Auswirkung auf UI:**
+- **Sauberer Look:** Weniger überladene Reparaturliste 
+- **Bessere UX:** Fokus auf wesentliche Reparatur-Informationen
+- **Responsiveness:** Beide Ansichten (Desktop + Mobile) optimiert
+- **Performance:** Keine funktionalen Beeinträchtigungen
+
+**🛡️ Validiert:**
+- ✅ System läuft stabil nach Änderungen
+- ✅ DSGVO-Shop-Isolation weiterhin funktional
+- ✅ Alle anderen UI-Funktionen unbeeinträchtigt
+
+---
+
 **🏁 Ende Changelog - Alle Änderungen der letzten 12 Stunden vollständig dokumentiert**  
-**📅 14.09.2025 - 15:30 Uhr**
+**📅 14.09.2025 - 15:40 Uhr**
