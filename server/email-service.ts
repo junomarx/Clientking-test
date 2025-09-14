@@ -1489,7 +1489,7 @@ export class EmailService {
         abholzeit: 'ab sofort',
         // NEUE VARIABLEN für Auftragsbestätigung
         kosten: repair.estimatedCost || '0',
-        reparaturbedingungen: variables.businessSettings?.repairTerms || '',
+        reparaturbedingungen: variables.businessSettings?.repairTerms?.replace(/\n/g, '<br>') || '',
         
         // Englische Variablennamen (für Kompatibilität)
         customerFirstName: customer.firstName || '',
@@ -1508,7 +1508,7 @@ export class EmailService {
         opening_hours: variables.businessSettings?.openingHours?.replace(/,\s*/g, ',<br>') || '',
         // Zusätzliche englische Varianten der neuen Variablen
         estimatedCost: repair.estimatedCost || '0',
-        repairTerms: variables.businessSettings?.repairTerms || '',
+        repairTerms: variables.businessSettings?.repairTerms?.replace(/\n/g, '<br>') || '',
         // Zusätzliche Variablen für Bewertungsvorlagen
         ...(variables.customVariables || {})
       };
