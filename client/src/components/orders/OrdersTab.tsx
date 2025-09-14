@@ -220,7 +220,7 @@ export function OrdersTab() {
     const content = document.createElement('div');
     content.className = 'bg-white rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto';
     
-    const statusColors = {
+    const statusColors: Record<string, string> = {
       'bestellen': 'bg-red-100 text-red-800',
       'bestellt': 'bg-yellow-100 text-yellow-800', 
       'eingetroffen': 'bg-blue-100 text-blue-800',
@@ -245,7 +245,7 @@ export function OrdersTab() {
             <div><span class="font-medium">Menge:</span> ${order.quantity}x</div>
             <div class="flex items-center gap-2">
               <span class="font-medium">Status:</span>
-              <span class="px-2 py-1 rounded-full text-xs ${statusColors[order.status] || 'bg-gray-100 text-gray-800'}">
+              <span class="px-2 py-1 rounded-full text-xs ${statusColors[order.status as string] || 'bg-gray-100 text-gray-800'}">
                 ${order.status.toUpperCase()}
               </span>
             </div>
@@ -380,19 +380,22 @@ export function OrdersTab() {
     document.body.appendChild(modal);
     
     // Event Listeners
-    content.querySelector('#closeModal').onclick = () => modal.remove();
+    const closeModalBtn = content.querySelector('#closeModal') as HTMLButtonElement;
+    if (closeModalBtn) {
+      closeModalBtn.onclick = () => modal.remove();
+    }
     
     // Mobiler Schließen-Button
-    const closeMobileBtn = content.querySelector('#closeMobileModal');
+    const closeMobileBtn = content.querySelector('#closeMobileModal') as HTMLButtonElement;
     if (closeMobileBtn) {
       closeMobileBtn.onclick = () => modal.remove();
     }
     
     // Bearbeiten-Toggle-Button für Zubehör
     if (isAccessory) {
-      const toggleButton = content.querySelector('#toggle-edit');
-      const editSection = content.querySelector('#edit-section');
-      const cancelButton = content.querySelector('#cancel-edit');
+      const toggleButton = content.querySelector('#toggle-edit') as HTMLButtonElement;
+      const editSection = content.querySelector('#edit-section') as HTMLDivElement;
+      const cancelButton = content.querySelector('#cancel-edit') as HTMLButtonElement;
       
       if (toggleButton && editSection) {
         toggleButton.onclick = () => {
@@ -413,14 +416,24 @@ export function OrdersTab() {
         };
       }
       
-      const saveButton = content.querySelector('#save-changes');
+      const saveButton = content.querySelector('#save-changes') as HTMLButtonElement;
       if (saveButton) {
         saveButton.onclick = async () => {
-          const articleName = content.querySelector('#edit-articleName').value;
-          const quantity = parseInt(content.querySelector('#edit-quantity').value);
-          const unitPrice = parseFloat(content.querySelector('#edit-unitPrice').value) || 0;
-          const downPayment = parseFloat(content.querySelector('#edit-downPayment').value) || 0;
-          const notes = content.querySelector('#edit-notes').value;
+          const articleNameEl = content.querySelector('#edit-articleName') as HTMLInputElement;
+          const quantityEl = content.querySelector('#edit-quantity') as HTMLInputElement;
+          const unitPriceEl = content.querySelector('#edit-unitPrice') as HTMLInputElement;
+          const downPaymentEl = content.querySelector('#edit-downPayment') as HTMLInputElement;
+          const notesEl = content.querySelector('#edit-notes') as HTMLTextAreaElement;
+          
+          if (!articleNameEl || !quantityEl || !unitPriceEl || !downPaymentEl || !notesEl) {
+            return;
+          }
+          
+          const articleName = articleNameEl.value;
+          const quantity = parseInt(quantityEl.value);
+          const unitPrice = parseFloat(unitPriceEl.value) || 0;
+          const downPayment = parseFloat(downPaymentEl.value) || 0;
+          const notes = notesEl.value;
           
           // Berechne Gesamtpreis
           const totalPrice = quantity * unitPrice;
@@ -450,15 +463,17 @@ export function OrdersTab() {
             queryClient.invalidateQueries({ queryKey: ['/api/spare-parts/with-repairs'] });
             
             // Bearbeiten-Bereich schließen
-            editSection.classList.add('hidden');
-            toggleButton.textContent = 'Bearbeiten';
+            if (editSection && toggleButton) {
+              editSection.classList.add('hidden');
+              toggleButton.textContent = 'Bearbeiten';
+            }
             
             modal.remove();
-          } catch (error) {
+          } catch (error: any) {
             console.error('Fehler beim Aktualisieren:', error);
             toast({
               title: "Fehler",
-              description: error.message || "Fehler beim Aktualisieren",
+              description: error?.message || "Fehler beim Aktualisieren",
               variant: "destructive"
             });
           }
@@ -467,10 +482,12 @@ export function OrdersTab() {
     }
     
     // Status-Update-Button
-    const updateStatusBtn = content.querySelector('#update-status-btn');
+    const updateStatusBtn = content.querySelector('#update-status-btn') as HTMLButtonElement;
     if (updateStatusBtn) {
       updateStatusBtn.onclick = async () => {
-        const statusSelect = content.querySelector('#status-select');
+        const statusSelect = content.querySelector('#status-select') as HTMLSelectElement;
+        if (!statusSelect) return;
+        
         const status = statusSelect.value;
         
         if (status === 'erledigt' && !confirm('Artikel wird unwiderruflich gelöscht. Fortfahren?')) {
