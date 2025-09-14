@@ -386,10 +386,12 @@ const userId = user.id;        // Safe access to user ID
 
 ### 5. Email System
 **Files**: `email-service.ts`, `superadmin-email-routes.ts`
-- Template-based emails
+- Template-based emails with template override capability
 - Per-shop SMTP configuration
 - Newsletter functionality
 - Email history tracking
+- **NEW**: Manual email confirmation system via envelope icon (eingegangen status)
+- **NEW**: Template priority system (emailTemplate parameter override)
 
 ### 6. Multi-Shop Management
 **Files**: `multi-shop-*.ts`, `multi-shop/` components
@@ -521,9 +523,15 @@ GET    /api/repairs               # List shop repairs
 POST   /api/repairs               # Create repair order
 PUT    /api/repairs/:id           # Update repair
 DELETE /api/repairs/:id           # Delete repair
-POST   /api/repairs/:id/status    # Update repair status
+PATCH  /api/repairs/:id/status    # Update repair status with email template override
 GET    /api/repairs/:id/pdf       # Generate repair PDF
 ```
+
+**NEW: Status Update with Template Override**
+The `PATCH /api/repairs/:id/status` endpoint now supports:
+- `newStatus`: Status to change to
+- `emailTemplate`: Optional template override (e.g., "Auftragsbestätigung")
+- Enables manual email confirmations via envelope icon in UI
 
 #### Business Settings
 ```
@@ -707,6 +715,59 @@ npm run db:push
 - Feature branches: New development
 - Migration files: Never modify existing ones
 - Documentation: Update with every feature
+
+---
+
+## Recent Changes & Enhancements (September 2025)
+
+### Manual Email Confirmation System
+
+**Date**: September 14, 2025  
+**Files Modified**: 
+- `client/src/components/repairs/RepairsTab.tsx`
+- `client/src/components/repairs/RepairDetailsDialog.tsx`
+- `server/routes.ts`
+- `server/email-service.ts`
+
+**New Features:**
+
+1. **Envelope Icon for Manual Confirmations**
+   - Appears only for repairs with "eingegangen" (incoming) status
+   - Triggers manual "Auftragsbestätigung" (order confirmation) emails
+   - Located in repair list table for quick access
+
+2. **Enhanced Status-Email Route**
+   - Extended `PATCH /api/repairs/:id/status` endpoint
+   - Added `emailTemplate` parameter for template override
+   - Supports manual template selection overriding status-based defaults
+
+3. **Template Priority System**
+   - `EmailService.sendRepairStatusEmail()` enhanced with template override logic
+   - Priority: `emailTemplate` parameter > status-based mapping > default
+   - Enables flexible email template selection for different use cases
+
+4. **Unified Email Architecture**
+   - Consolidated all email confirmations through single status-based system
+   - Removed legacy `/api/send-test-email` route and all frontend references
+   - Improved consistency and reduced code complexity
+
+**Technical Implementation:**
+- Template mapping: "eingegangen" status → "Auftragsbestätigung" template (ID: 76)
+- UI state management for envelope icon visibility
+- Comprehensive error handling and user feedback
+- TypeScript compatibility maintained throughout
+
+**Security & Performance:**
+- Authentication middleware preserved
+- Shop data isolation maintained
+- Email template security validations in place
+- Hot module reload compatibility verified
+
+**Benefits:**
+- Streamlined email confirmation workflow
+- Reduced duplicate code paths
+- Enhanced user experience with visual indicators
+- Consistent template management system
 
 ---
 
