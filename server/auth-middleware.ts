@@ -3,18 +3,6 @@ import { storage } from "./storage";
 
 // Middleware zum Prüfen der Authentifizierung
 export async function isAuthenticated(req: Request, res: Response, next: NextFunction) {
-  console.log(`🚨🚨🚨 [AUTH-MIDDLEWARE] isAuthenticated CALLED: ${req.method} ${req.path} 🚨🚨🚨`);
-  
-  // 🎯 KRITISCHES ORDERS-DEBUGGING
-  if (req.path.includes('/orders') || req.path.includes('/api/orders')) {
-    console.log(`🎯 === ORDERS ENDPOINT DEBUG ===`);
-    console.log(`🎯 Session ID: ${req.sessionID}`);
-    console.log(`🎯 isAuthenticated(): ${req.isAuthenticated ? req.isAuthenticated() : 'N/A'}`);
-    console.log(`🎯 req.user: ${req.user ? `${req.user.username} (ID: ${req.user.id})` : 'null'}`);
-    console.log(`🎯 Cookie headers: ${req.headers.cookie || 'NONE'}`);
-    console.log(`🎯 === END ORDERS DEBUG ===`);
-  }
-  
   try {
   // Prüfe auf benutzerdefinierte User-ID im Header (nur in Development!)
   if (process.env.NODE_ENV !== 'production') {
@@ -37,16 +25,13 @@ export async function isAuthenticated(req: Request, res: Response, next: NextFun
   }
 
   if (!req.isAuthenticated || !req.isAuthenticated()) {
-    console.log(`🚨 [AUTH-MIDDLEWARE] Passport authentication failed`);
     return res.status(401).json({ message: "Nicht angemeldet" });
   }
 
-  console.log(`✅ [AUTH-MIDDLEWARE] Authentication successful`);
   next();
   
   } catch (error) {
-    console.error(`🚨🚨🚨 [AUTH-MIDDLEWARE] EXCEPTION: ${error} 🚨🚨🚨`);
-    console.error(`🚨🚨🚨 [AUTH-MIDDLEWARE] STACK:`, error.stack);
+    console.error(`Authentication error: ${error}`);
     return res.status(500).json({ message: "Authentication error" });
   }
 }
