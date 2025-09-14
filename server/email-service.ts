@@ -1487,6 +1487,9 @@ export class EmailService {
         auftragsnummer: repair.orderCode || repair.id?.toString() || '',
         fehler: repair.issue || '',
         abholzeit: 'ab sofort',
+        // NEUE VARIABLEN für Auftragsbestätigung
+        kosten: repair.estimatedCost || '0',
+        reparaturbedingungen: variables.businessSettings?.repairTerms || '',
         
         // Englische Variablennamen (für Kompatibilität)
         customerFirstName: customer.firstName || '',
@@ -1503,6 +1506,9 @@ export class EmailService {
         businessEmail: variables.businessSettings?.smtpUser || variables.businessSettings?.email || '',
         businessAddress: variables.businessSettings?.streetAddress || '',
         opening_hours: variables.businessSettings?.openingHours?.replace(/,\s*/g, ',<br>') || '',
+        // Zusätzliche englische Varianten der neuen Variablen
+        estimatedCost: repair.estimatedCost || '0',
+        repairTerms: variables.businessSettings?.repairTerms || '',
         // Zusätzliche Variablen für Bewertungsvorlagen
         ...(variables.customVariables || {})
       };
