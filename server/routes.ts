@@ -124,6 +124,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ⚡ KRITISCHER FIX: setupAuth() MUSS VOR ALLEN API-ROUTES AUFGERUFEN WERDEN!
   setupAuth(app);
 
+  // 🔒 CRITICAL SECURITY FIX: Global Shop-Isolation durchsetzen für DSGVO-Compliance
+  // Diese Middleware MUSS nach der Authentifizierung aber VOR allen API-Routes platziert werden
+  app.use('/api', isAuthenticated, enforceShopIsolation);
+
   // 🔒 SECURITY FIX: Authentication bypass resolved by using shared middleware
   // NOTE: The critical security issue has been fixed by importing isAuthenticated from ./auth-middleware.ts
   // The existing individual route definitions now use the correct authentication middleware
@@ -4655,7 +4659,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const data = insertCostEstimateSchema.parse(req.body);
       
       // Zusätzliche Validierung - Prüfe, ob der Kunde zum Shop des Benutzers gehört
-      await validateCustomerBelongsToShop(data.customerId, (req.user as any).id);
+      const customerValidation = await validateCustomerBelongsToShop(data.customerId, req);
+      if (!customerValidation) {
+        return res.status(403).json({ message: "DSGVO-Schutz: Kunde gehört nicht zu Ihrem Shop" });
+      }
       
       // !!! FIX: IMMER 20% MwSt für Österreich !!!
       // MwSt korrekt berechnen - 20% im Bruttopreis enthalten
@@ -4851,7 +4858,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Wenn sich die customerId ändert, prüfen, ob der neue Kunde zum Shop gehört
       if (req.body.customerId && req.body.customerId !== existingEstimate.customerId) {
-        await validateCustomerBelongsToShop(req.body.customerId, userId);
+        const customerValidation = await validateCustomerBelongsToShop(req.body.customerId, req);
+        if (!customerValidation) {
+          return res.status(403).json({ message: "DSGVO-Schutz: Kunde gehört nicht zu Ihrem Shop" });
+        }
       }
       
       // Aktualisierung durchführen

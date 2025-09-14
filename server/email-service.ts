@@ -153,9 +153,9 @@ export class EmailService {
           connectionTimeout: 10000, // 10 Sekunden
           // Authentifizierungsmechanismen festlegen
           authMethod: 'PLAIN',
-          // Ignoriere TLS-Zertifikatsfehler (nur für Entwicklungszwecke)
+          // TLS-Sicherheit: Nur in Entwicklung deaktivieren, NIE in Produktion!
           tls: {
-            rejectUnauthorized: false
+            rejectUnauthorized: process.env.NODE_ENV !== 'development'
           },
           // Debug-Optionen
           debug: true,
@@ -383,7 +383,7 @@ export class EmailService {
           },
           connectionTimeout: 10000,
           tls: {
-            rejectUnauthorized: false
+            rejectUnauthorized: process.env.NODE_ENV !== 'development'
           }
         });
         
@@ -463,7 +463,7 @@ export class EmailService {
           },
           connectionTimeout: 10000,
           tls: {
-            rejectUnauthorized: false
+            rejectUnauthorized: process.env.NODE_ENV !== 'development'
           }
         });
         
@@ -957,7 +957,7 @@ export class EmailService {
               },
               connectionTimeout: 10000,
               tls: {
-                rejectUnauthorized: false
+                rejectUnauthorized: process.env.NODE_ENV !== 'development'
               },
               debug: true,
               logger: true
