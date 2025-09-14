@@ -9,7 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { CustomSignaturePad } from '@/components/ui/signature-pad';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Repair } from '@/lib/types';
+import { Repair } from '@shared/schema';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { useOnlineStatus } from '@/hooks/use-online-status';

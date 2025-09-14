@@ -2,8 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { usePrintManager } from './PrintOptionsManager';
 import { apiRequest } from '@/lib/queryClient';
-import { Customer, EmailHistory, Repair, RepairStatusHistory, LoanerDevice, type DeviceType } from '@shared/schema';
+import { Customer, EmailHistory, Repair, RepairStatusHistory, LoanerDevice, deviceTypes } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
+import { z } from 'zod';
+
+// Define DeviceType from the schema
+type DeviceType = z.infer<typeof deviceTypes>;
 
 // Erweiterte EmailHistory mit optionalem templateName
 export interface EmailHistoryWithTemplate extends EmailHistory {
@@ -114,8 +118,6 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
   const { showPrintOptions } = usePrintManager();
   const { toast } = useToast();
 
-  // Test-E-Mail-Funktionalität
-  const [isSendingTestEmail, setIsSendingTestEmail] = useState(false);
   
   // Leihgeräte-Zuordnung
   const [showLoanerDeviceDialog, setShowLoanerDeviceDialog] = useState(false);
@@ -171,41 +173,6 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
     }
   };
 
-  const handleSendTestEmail = async () => {
-    if (!repair || !customer?.email) {
-      toast({
-        title: "Fehler",
-        description: "Kunde hat keine E-Mail-Adresse hinterlegt",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsSendingTestEmail(true);
-    try {
-      const response = await apiRequest('POST', '/api/send-test-email', {
-        repairId: repair.id,
-        customerEmail: customer.email
-      });
-
-      if (response.ok) {
-        toast({
-          title: "Test-E-Mail gesendet",
-          description: `Auftragsbestätigung wurde an ${customer.email} gesendet`,
-        });
-      } else {
-        throw new Error('Fehler beim Senden der Test-E-Mail');
-      }
-    } catch (error) {
-      toast({
-        title: "Fehler",
-        description: "Test-E-Mail konnte nicht gesendet werden",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSendingTestEmail(false);
-    }
-  };
   
   // Dialog schließen mit Verzögerung für Animationen
   const handleClose = () => {
@@ -502,21 +469,6 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                   </div>
                 )}
                 
-                {/* Test-E-Mail Button im Kundendaten-Bereich */}
-                {customer.email && (
-                  <div className="mt-3 pt-3 border-t border-gray-200">
-                    <Button 
-                      variant="outline"
-                      size="sm"
-                      onClick={handleSendTestEmail}
-                      disabled={isSendingTestEmail}
-                      className="flex items-center gap-2 w-full"
-                    >
-                      <TestTube className="h-4 w-4" />
-                      {isSendingTestEmail ? 'Sende Auftragsbestätigung...' : 'Auftragsbestätigung senden'}
-                    </Button>
-                  </div>
-                )}
               </div>
             ) : (
               <div className="text-muted-foreground italic">Kundendaten konnten nicht geladen werden</div>
@@ -1103,8 +1055,8 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
       {/* EditCustomerDialog */}
       <EditCustomerDialog
         open={showEditCustomerDialog}
-        onClose={() => setShowEditCustomerDialog(false)}
-        customer={customer}
+        onOpenChange={setShowEditCustomerDialog}
+        customerId={customer?.id || 0}
       />
       
       {/* Add Note Dialog */}
