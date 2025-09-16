@@ -1688,12 +1688,13 @@ export class EmailService {
                 // Logo als Base64 herunterladen und einbetten
                 const response = await fetch(logoUrl);
                 if (response.ok) {
-                  const buffer = await response.buffer();
+                  const arrayBuffer = await response.arrayBuffer();
+                  const buffer = Buffer.from(arrayBuffer);
                   const base64Data = buffer.toString('base64');
                   const dataUrl = `data:image/png;base64,${base64Data}`;
                   
                   newsletterLogoHtml = `<img src="${dataUrl}" alt="${activeLogo.name}" style="max-height: 200px; max-width: 100%; height: auto; display:block; margin:0 auto;" />`;
-                  console.log(`📸 Newsletter-Logo ${activeLogo.name} als Base64 eingebettet (${base64Data.length} bytes)`);
+                  console.log(`✅ Newsletter-Logo ${activeLogo.name} als Base64 eingebettet (${base64Data.length} bytes)`);
                 } else {
                   console.error(`❌ Logo konnte nicht heruntergeladen werden: ${response.status}`);
                   // Fallback: zeige Platzhalter
