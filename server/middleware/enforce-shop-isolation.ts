@@ -47,7 +47,7 @@ export async function enforceShopIsolation(req: Request, res: Response, next: Ne
 
     // Shop-ID des Benutzers an Request-Objekt anhängen für spätere Verwendung
     (req as any).userShopId = user.shopId;
-    (req as any).isAdmin = user.isAdmin || user.isSuperadmin;
+    (req as any).isAdmin = user.isSuperadmin;
     
     console.log(`✅ DSGVO-Schutz: Benutzer ${user.username} (ID ${userId}) arbeitet mit Shop ${user.shopId}`);
     
@@ -79,8 +79,8 @@ export function validateCustomerBelongsToShop(customerId: number, req: Request):
           eq(customers.shopId, shopId)
         ));
 
-      const count = result.rows[0]?.count || 0;
-      return resolve(parseInt(count) > 0);
+      const count = result[0]?.count || 0;
+      return resolve(parseInt(count.toString()) > 0);
     } catch (error) {
       console.error('Fehler bei der Kundenvalidierung:', error);
       return resolve(false);

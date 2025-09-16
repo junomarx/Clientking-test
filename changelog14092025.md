@@ -620,7 +620,54 @@ Request:
 
 ---
 
+---
+
+## 🚨 **KRITISCHER BUGFIX: DSGVO-Shop-Isolation (16.09.2025 - 09:00 Uhr)**
+
+### **❌ Problem:**
+- Kostenvoranschläge konnten nicht erstellt werden
+- Fehlermeldung: "DSGVO-Schutz: Kunde gehört nicht zu Ihrem Shop"
+- TypeError in Middleware: `Cannot read properties of undefined (reading '0')`
+
+### **🔧 Root Cause Analysis:**
+**📁 DATEI:** `server/middleware/enforce-shop-isolation.ts` (Zeile 82)
+
+**❌ FEHLERHAFTER CODE:**
+```typescript
+      const count = result.rows[0]?.count || 0;
+      return resolve(parseInt(count) > 0);
+```
+
+**🔍 Problem:** Drizzle ORM gibt ein direktes Array zurück, nicht ein `rows` Objekt wie bei nativen PostgreSQL Queries.
+
+### **✅ Lösung implementiert:**
+
+**📁 DATEI:** `server/middleware/enforce-shop-isolation.ts` (Zeilen 82-86)
+
+**✅ KORRIGIERTER CODE:**
+```typescript
+      const count = result[0]?.count || 0;
+      return resolve(parseInt(count.toString()) > 0);
+```
+
+**🔧 Zusätzliche Fixes:**
+- **Zeile 50:** `user.isAdmin || user.isSuperadmin` → `user.isSuperadmin` (Property existiert nicht)
+- **LSP Error behoben:** TypeScript kompiliert wieder sauber
+
+### **📊 Validierung:**
+- ✅ **DSGVO-Schutz funktional:** `✅ DSGVO-Schutz: Benutzer bugi (ID 3) arbeitet mit Shop 1`
+- ✅ **Kostenvoranschläge wieder erstellbar:** Status 200 ohne Fehler
+- ✅ **Kunden-Validierung korrekt:** Shop-Zugehörigkeit wird ordnungsgemäß geprüft
+- ✅ **System-Stabilität:** Keine weiteren DSGVO-Fehlermeldungen
+
+### **🎯 Impact:**
+- **KRITISCHES SYSTEM wieder funktional:** Kostenvoranschlag-Erstellung vollständig wiederhergestellt
+- **DSGVO-Compliance beibehalten:** Sichere Shop-Isolation funktioniert korrekt
+- **Performance:** Keine Beeinträchtigung der System-Performance
+
+---
+
 **🏁 ENDE DES VOLLSTÄNDIGEN CHANGELOGS**  
-**📅 Letztes Update: 14.09.2025 - 15:50 Uhr**  
-**✅ Status: Alle Features live und funktional**  
-**🎯 Gesamte Entwicklungszeit: 13:50 Stunden**
+**📅 Letztes Update: 16.09.2025 - 09:00 Uhr**  
+**✅ Status: Alle Features live und funktional (inkl. kritischer Bugfix)**  
+**🎯 Gesamte Entwicklungszeit: 13:50 Stunden + 30 Min Bugfix**
