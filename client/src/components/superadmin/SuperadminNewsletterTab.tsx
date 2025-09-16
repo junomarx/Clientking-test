@@ -119,6 +119,16 @@ interface NewsletterLogo {
   updatedAt: string;
 }
 
+interface TestRecipient {
+  id: number;
+  email: string;
+  username: string;
+  displayName: string;
+  role: string;
+  newsletterSubscribed: boolean;
+  isActive: boolean;
+}
+
 export default function SuperadminNewsletterTab() {
   const { toast } = useToast();
   
@@ -130,6 +140,11 @@ export default function SuperadminNewsletterTab() {
   const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
   const [isRecipientsDialogOpen, setIsRecipientsDialogOpen] = useState(false);
   const [selectedNewsletterForRecipients, setSelectedNewsletterForRecipients] = useState<NewsletterHistoryItem | null>(null);
+  
+  // Test-Newsletter States
+  const [isTestSendDialogOpen, setIsTestSendDialogOpen] = useState(false);
+  const [selectedTestRecipient, setSelectedTestRecipient] = useState<TestRecipient | null>(null);
+  const [testRecipientsSearchTerm, setTestRecipientsSearchTerm] = useState('');
   
   // States für Recipients-Features
   const [isRecipientsExpanded, setIsRecipientsExpanded] = useState(false);
@@ -192,6 +207,12 @@ export default function SuperadminNewsletterTab() {
     enabled: !!selectedNewsletterForRecipients?.newsletterId,
     refetchOnMount: true,
     staleTime: 0, // Immer frische Daten laden
+  });
+
+  // Query für verfügbare Test-Empfänger
+  const { data: testRecipients, isLoading: testRecipientsLoading } = useQuery<TestRecipient[]>({
+    queryKey: ['/api/superadmin/newsletters/test-recipients'],
+    enabled: isTestSendDialogOpen, // Nur laden wenn Dialog offen
   });
   
   // Filter und Paginierung für Recipients (nach der recipients Query)
@@ -352,6 +373,32 @@ export default function SuperadminNewsletterTab() {
     },
   });
 
+  const sendTestNewsletterMutation = useMutation({
+    mutationFn: async ({ newsletterId, recipientUserId }: { newsletterId: number; recipientUserId: number }) => {
+      const response = await apiRequest('POST', `/api/superadmin/newsletters/${newsletterId}/send-test`, {
+        recipientUserId
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Test-Newsletter versendet",
+        description: `Test-Newsletter wurde erfolgreich an ${data.recipientEmail} gesendet`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/superadmin/newsletters/send-history'] });
+      setIsTestSendDialogOpen(false);
+      setSelectedTestRecipient(null);
+      setSelectedNewsletter(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Fehler beim Test-Versand",
+        description: error.message || "Fehler beim Versenden des Test-Newsletters",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleEdit = (newsletter: Newsletter) => {
     setSelectedNewsletter(newsletter);
     setIsEditDialogOpen(true);
@@ -365,6 +412,13 @@ export default function SuperadminNewsletterTab() {
   const handleSend = (newsletter: Newsletter) => {
     setSelectedNewsletter(newsletter);
     setIsSendDialogOpen(true);
+  };
+
+  const handleTestSend = (newsletter: Newsletter) => {
+    setSelectedNewsletter(newsletter);
+    setIsTestSendDialogOpen(true);
+    setSelectedTestRecipient(null);
+    setTestRecipientsSearchTerm('');
   };
 
   const getNewsletterStatus = (newsletter: Newsletter) => {
@@ -610,6 +664,15 @@ export default function SuperadminNewsletterTab() {
                             </Button>
                             <Button variant="default" size="sm" onClick={() => handleSend(newsletter)}>
                               <Send className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => handleTestSend(newsletter)}
+                              title="Test-Newsletter an ausgewählten Empfänger senden"
+                              className="border-orange-300 text-orange-600 hover:bg-orange-50"
+                            >
+                              <Search className="h-4 w-4" />
                             </Button>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
@@ -1385,6 +1448,112 @@ export default function SuperadminNewsletterTab() {
             >
               {sendNewsletterMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Newsletter versenden
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Test Newsletter Dialog */}
+      <Dialog open={isTestSendDialogOpen} onOpenChange={setIsTestSendDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Test-Newsletter versenden</DialogTitle>
+            <DialogDescription>
+              Wählen Sie einen Shop-Owner aus, um eine Test-Version des Newsletters zu versenden.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedNewsletter && (
+            <div className="space-y-4">
+              <div>
+                <p><strong>Newsletter:</strong> {selectedNewsletter.subject}</p>
+              </div>
+              
+              <Separator />
+              
+              <div className="space-y-3">
+                <Label htmlFor="test-recipient-search">Test-Empfänger auswählen</Label>
+                <Input
+                  id="test-recipient-search"
+                  placeholder="Shop oder E-Mail durchsuchen..."
+                  value={testRecipientsSearchTerm}
+                  onChange={(e) => setTestRecipientsSearchTerm(e.target.value)}
+                  data-testid="input-test-recipients-search"
+                />
+                
+                <div className="border rounded-md max-h-48 overflow-y-auto">
+                  {testRecipientsLoading ? (
+                    <div className="flex items-center justify-center p-4">
+                      <Loader2 className="h-6 w-6 animate-spin" />
+                    </div>
+                  ) : (
+                    <div className="p-2 space-y-1">
+                      {testRecipients
+                        ?.filter(recipient => {
+                          if (!testRecipientsSearchTerm) return true;
+                          const searchLower = testRecipientsSearchTerm.toLowerCase();
+                          return (
+                            recipient.email?.toLowerCase().includes(searchLower) ||
+                            recipient.businessName?.toLowerCase().includes(searchLower) ||
+                            recipient.username?.toLowerCase().includes(searchLower)
+                          );
+                        })
+                        ?.map((recipient) => (
+                          <div
+                            key={recipient.id}
+                            className={`flex items-center p-2 rounded cursor-pointer hover:bg-gray-100 ${
+                              selectedTestRecipient?.id === recipient.id ? 'bg-blue-50 border-blue-300' : ''
+                            }`}
+                            onClick={() => setSelectedTestRecipient(recipient)}
+                            data-testid={`recipient-${recipient.id}`}
+                          >
+                            <div className="flex-1">
+                              <div className="text-sm font-medium">{recipient.businessName}</div>
+                              <div className="text-xs text-gray-500">
+                                {recipient.email} ({recipient.username})
+                              </div>
+                            </div>
+                            {selectedTestRecipient?.id === recipient.id && (
+                              <CheckCircle className="h-4 w-4 text-blue-600" />
+                            )}
+                          </div>
+                        )) || []}
+                      
+                      {testRecipients && testRecipients.length === 0 && (
+                        <p className="text-sm text-gray-500 p-2">Keine Test-Empfänger verfügbar</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setIsTestSendDialogOpen(false);
+                setSelectedTestRecipient(null);
+                setTestRecipientsSearchTerm('');
+              }}
+            >
+              Abbrechen
+            </Button>
+            <Button 
+              onClick={() => {
+                if (selectedNewsletter && selectedTestRecipient) {
+                  sendTestNewsletterMutation.mutate({
+                    newsletterId: selectedNewsletter.id,
+                    recipientUserId: selectedTestRecipient.id
+                  });
+                }
+              }}
+              disabled={!selectedTestRecipient || sendTestNewsletterMutation.isPending}
+              data-testid="button-send-test"
+            >
+              {sendTestNewsletterMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Test-Newsletter senden
             </Button>
           </DialogFooter>
         </DialogContent>
