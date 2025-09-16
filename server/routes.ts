@@ -7052,15 +7052,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // LEIHGERÄTE API ROUTES
   // Verfügbare Leihgeräte abrufen (MUSS vor der :id Route stehen!)
-  app.get("/api/loaner-devices/available", async (req: Request, res: Response) => {
+  app.get("/api/loaner-devices/available", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
     try {
-      const userIdHeader = req.headers['x-user-id'] as string;
-      
-      if (!userIdHeader) {
-        return res.status(401).json({ message: "Benutzer-ID fehlt" });
-      }
-      
-      const userId = parseInt(userIdHeader);
+      const userId = (req.user as any).id;
       const devices = await storage.getAvailableLoanerDevices(userId);
       res.json(devices);
     } catch (error) {
@@ -7070,15 +7064,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Alle Leihgeräte abrufen
-  app.get("/api/loaner-devices", async (req: Request, res: Response) => {
+  app.get("/api/loaner-devices", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
     try {
-      const userIdHeader = req.headers['x-user-id'] as string;
-      
-      if (!userIdHeader) {
-        return res.status(401).json({ message: "Benutzer-ID fehlt" });
-      }
-      
-      const userId = parseInt(userIdHeader);
+      const userId = (req.user as any).id;
       const devices = await storage.getAllLoanerDevices(userId);
       res.json(devices);
     } catch (error) {
