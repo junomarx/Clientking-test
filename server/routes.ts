@@ -7702,6 +7702,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/public-objects/newsletter-logos/:filename", async (req, res) => {
     try {
       const filename = req.params.filename;
+      console.log('🖼️ Newsletter Logo Request:', { filename, userAgent: req.get('User-Agent'), referer: req.get('Referer') });
       const { ObjectStorageService } = await import('./objectStorage');
       const objectStorageService = new ObjectStorageService();
       

@@ -804,7 +804,6 @@ export default function SuperadminNewsletterTab() {
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {newsletterLogos.map((logo) => {
                       const logoUrl = `/public-objects/newsletter-logos/${logo.filepath.split('/').pop()}`;
-                      console.log('🖼️ Logo Debug:', { name: logo.name, filepath: logo.filepath, extractedFilename: logo.filepath.split('/').pop(), finalUrl: logoUrl });
                       
                       return (
                       <Card key={logo.id} className={`relative ${logo.isActive ? 'ring-2 ring-green-500' : ''}`}>
@@ -814,11 +813,8 @@ export default function SuperadminNewsletterTab() {
                               src={logoUrl}
                               alt={logo.name}
                               className="w-full h-full object-contain"
-                              onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                                const nextEl = e.currentTarget.nextElementSibling as HTMLElement;
-                                if (nextEl) nextEl.style.display = 'flex';
-                              }}
+                              onLoad={() => console.log('✅ Logo loaded successfully:', logoUrl)}
+                              onError={(e) => console.error('❌ Logo failed to load:', logoUrl, e)}
                             />
                             <div className="w-full h-full flex items-center justify-center bg-gray-100" style={{display: 'none'}}>
                               <Image className="h-8 w-8 text-gray-400" />
