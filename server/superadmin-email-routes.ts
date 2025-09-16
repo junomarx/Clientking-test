@@ -2267,6 +2267,193 @@ ${existingTemplate.body}`;
   });
 
   /**
+   * Test-Newsletter versenden an einzelnen Empfänger
+   */
+  app.post("/api/superadmin/newsletters/:id/send-test", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const newsletterId = parseInt(req.params.id);
+      const { recipientUserId } = req.body;
+      
+      if (isNaN(newsletterId)) {
+        return res.status(400).json({ message: "Ungültige Newsletter-ID" });
+      }
+
+      if (!recipientUserId) {
+        return res.status(400).json({ message: "Empfänger-ID ist erforderlich" });
+      }
+
+      // Newsletter abrufen
+      const [newsletter] = await db
+        .select()
+        .from(newsletters)
+        .where(eq(newsletters.id, newsletterId));
+
+      if (!newsletter) {
+        return res.status(404).json({ message: "Newsletter nicht gefunden" });
+      }
+
+      // Test-Empfänger validieren (muss berechtigt und aktiv sein)
+      const [recipient] = await db
+        .select({
+          id: users.id,
+          email: users.email,
+          firstName: businessSettings.ownerFirstName,
+          lastName: businessSettings.ownerLastName,
+          companyName: businessSettings.businessName,
+          role: users.role,
+          isMultiShopAdmin: users.isMultiShopAdmin,
+          isActive: users.isActive
+        })
+        .from(users)
+        .leftJoin(businessSettings, eq(users.id, businessSettings.userId))
+        .where(
+          and(
+            eq(users.id, recipientUserId),
+            eq(users.isActive, true),
+            or(
+              eq(users.role, 'owner'),
+              eq(users.isMultiShopAdmin, true)
+            )
+          )
+        );
+
+      if (!recipient) {
+        return res.status(404).json({ message: "Berechtigter Test-Empfänger nicht gefunden" });
+      }
+
+      console.log(`🧪 Test-Newsletter "${newsletter.title}" wird an ${recipient.email} gesendet`);
+
+      // Test-Empfänger vorbereiten
+      const testRecipient = {
+        email: recipient.email,
+        name: recipient.firstName && recipient.lastName 
+          ? `${recipient.firstName} ${recipient.lastName}` 
+          : recipient.companyName || 'Geschätzte/r Kunde/in'
+      };
+
+      // Logo-URL direkt in den Newsletter-Content einbauen (gleiche Logic wie normaler Versand)
+      let newsletterContent = newsletter.content;
+      try {
+        const [activeLogo] = await db
+          .select()
+          .from(newsletterLogos)
+          .where(eq(newsletterLogos.isActive, true))
+          .limit(1);
+        
+        if (activeLogo) {
+          const baseUrl = process.env.FRONTEND_URL || 
+                         (process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : 'http://localhost:5000');
+          const logoFileName = activeLogo.filepath.split('/').pop();
+          const logoUrl = `${baseUrl}/public-objects/newsletter-logos/${logoFileName}`;
+          const logoHtml = `<img src="${logoUrl}" alt="${activeLogo.name}" style="max-height: 200px; max-width: 100%; height: auto;" />`;
+          
+          // Ersetze {{logoNewsletter}} direkt
+          newsletterContent = newsletterContent.replace(/\{\{logoNewsletter\}\}/g, logoHtml);
+          console.log(`🧪 Test-Logo direkt ersetzt: ${activeLogo.name} - ${logoUrl}`);
+        }
+      } catch (error) {
+        console.warn('Fehler beim Laden des Newsletter-Logos für Test:', error);
+      }
+
+      // Test-Newsletter versenden (mit [TEST] Präfix im Betreff)
+      const testSubject = `[TEST] ${newsletter.subject}`;
+      const sendResult = await emailService.sendNewsletter(
+        {
+          subject: testSubject,
+          content: newsletterContent
+        },
+        [testRecipient]
+      );
+
+      console.log(`🧪 Test-Newsletter-Versand Ergebnis: ${sendResult.sentCount} erfolgreich, ${sendResult.failedCount} fehlgeschlagen`);
+
+      // Test-Newsletter-Send-Eintrag erstellen (markiert als Test)
+      await db.insert(newsletterSends).values({
+        newsletterId: newsletter.id,
+        recipientId: recipient.id,
+        recipientEmail: recipient.email,
+        status: sendResult.sentCount > 0 ? 'sent' : 'failed',
+        sentAt: sendResult.sentCount > 0 ? new Date() : undefined,
+        errorMessage: sendResult.failedCount > 0 ? sendResult.details[0]?.error : undefined,
+        isTest: true
+      });
+
+      if (sendResult.sentCount > 0) {
+        res.json({
+          message: `Test-Newsletter erfolgreich an ${recipient.email} gesendet`,
+          recipientEmail: recipient.email,
+          recipientName: testRecipient.name,
+          testSubject: testSubject
+        });
+      } else {
+        res.status(500).json({
+          message: `Fehler beim Versenden des Test-Newsletters`,
+          error: sendResult.details[0]?.error || "Unbekannter Fehler"
+        });
+      }
+
+    } catch (error: any) {
+      console.error("Fehler beim Versenden des Test-Newsletters:", error);
+      res.status(500).json({ message: `Fehler beim Versenden des Test-Newsletters: ${error.message}` });
+    }
+  });
+
+  /**
+   * Verfügbare Test-Empfänger für Newsletter abrufen
+   */
+  app.get("/api/superadmin/newsletters/test-recipients", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      // Alle berechtigten Benutzer abrufen (Owner und Multi-Shop-Admins)
+      const recipients = await db
+        .select({
+          id: users.id,
+          email: users.email,
+          username: users.username,
+          firstName: businessSettings.ownerFirstName,
+          lastName: businessSettings.ownerLastName,
+          companyName: businessSettings.businessName,
+          role: users.role,
+          isMultiShopAdmin: users.isMultiShopAdmin,
+          newsletterSubscribed: users.newsletterSubscribed,
+          isActive: users.isActive
+        })
+        .from(users)
+        .leftJoin(businessSettings, eq(users.id, businessSettings.userId))
+        .where(
+          and(
+            eq(users.isActive, true),
+            or(
+              eq(users.role, 'owner'),
+              eq(users.isMultiShopAdmin, true)
+            )
+          )
+        )
+        .orderBy(users.email);
+
+      // Formatiere Empfänger für Frontend
+      const formattedRecipients = recipients.map(recipient => ({
+        id: recipient.id,
+        email: recipient.email,
+        username: recipient.username,
+        displayName: recipient.firstName && recipient.lastName 
+          ? `${recipient.firstName} ${recipient.lastName}` 
+          : recipient.companyName || recipient.email,
+        role: recipient.isMultiShopAdmin ? 'Multi-Shop-Admin' : 'Shop-Owner',
+        newsletterSubscribed: recipient.newsletterSubscribed,
+        isActive: recipient.isActive
+      }));
+
+      console.log(`📧 ${formattedRecipients.length} verfügbare Test-Empfänger geladen`);
+
+      res.json(formattedRecipients);
+
+    } catch (error: any) {
+      console.error("Fehler beim Abrufen der Test-Empfänger:", error);
+      res.status(500).json({ message: `Fehler beim Abrufen der Test-Empfänger: ${error.message}` });
+    }
+  });
+
+  /**
    * Newsletter löschen
    */
   app.delete("/api/superadmin/newsletters/:id", isSuperadmin, async (req: Request, res: Response) => {

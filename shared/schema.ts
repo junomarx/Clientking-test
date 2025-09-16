@@ -1222,6 +1222,7 @@ export const newsletterSends = pgTable("newsletter_sends", {
   errorMessage: text("error_message"), // Bei Fehlern
   sentAt: timestamp("sent_at"),
   unsubscribedAt: timestamp("unsubscribed_at"),
+  isTest: boolean("is_test").default(false), // Markiert Test-Newsletter-Versände
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
