@@ -807,7 +807,7 @@ export default function SuperadminNewsletterTab() {
                         <CardContent className="p-4">
                           <div className="aspect-video bg-gray-100 rounded-lg mb-3 overflow-hidden">
                             <img
-                              src={logo.filepath}
+                              src={`/public-objects/newsletter-logos/${logo.filepath.split('/').pop()}`}
                               alt={logo.name}
                               className="w-full h-full object-contain"
                               onError={(e) => {
