@@ -802,12 +802,16 @@ export default function SuperadminNewsletterTab() {
                   </div>
                 ) : (
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {newsletterLogos.map((logo) => (
+                    {newsletterLogos.map((logo) => {
+                      const logoUrl = `/public-objects/newsletter-logos/${logo.filepath.split('/').pop()}`;
+                      console.log('🖼️ Logo Debug:', { name: logo.name, filepath: logo.filepath, extractedFilename: logo.filepath.split('/').pop(), finalUrl: logoUrl });
+                      
+                      return (
                       <Card key={logo.id} className={`relative ${logo.isActive ? 'ring-2 ring-green-500' : ''}`}>
                         <CardContent className="p-4">
                           <div className="aspect-video bg-gray-100 rounded-lg mb-3 overflow-hidden">
                             <img
-                              src={`/public-objects/newsletter-logos/${logo.filepath.split('/').pop()}`}
+                              src={logoUrl}
                               alt={logo.name}
                               className="w-full h-full object-contain"
                               onError={(e) => {
@@ -880,7 +884,8 @@ export default function SuperadminNewsletterTab() {
                           </div>
                         </CardContent>
                       </Card>
-                    ))}
+                    );
+                  })}
                   </div>
                 )}
               </div>
