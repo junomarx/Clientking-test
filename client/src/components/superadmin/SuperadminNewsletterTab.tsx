@@ -808,17 +808,14 @@ export default function SuperadminNewsletterTab() {
                       return (
                       <Card key={logo.id} className={`relative ${logo.isActive ? 'ring-2 ring-green-500' : ''}`}>
                         <CardContent className="p-4">
-                          <div className="aspect-video bg-gray-100 rounded-lg mb-3 overflow-hidden">
+                          <div className="h-48 bg-gray-100 rounded-lg mb-3 flex items-center justify-center p-2">
                             <img
                               src={logoUrl}
                               alt={logo.name}
-                              className="w-full h-full object-contain"
+                              className="max-w-full max-h-full object-contain"
                               onLoad={() => console.log('✅ Logo loaded successfully:', logoUrl)}
                               onError={(e) => console.error('❌ Logo failed to load:', logoUrl, e)}
                             />
-                            <div className="w-full h-full flex items-center justify-center bg-gray-100" style={{display: 'none'}}>
-                              <Image className="h-8 w-8 text-gray-400" />
-                            </div>
                           </div>
                           
                           <div className="space-y-2">
