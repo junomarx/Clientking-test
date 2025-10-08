@@ -1,0 +1,353 @@
+--progress is a global compose flag, better use `docker compose --progress xx build ...
+#1 [internal] load local bake definitions
+#1 reading from stdin 595B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 2.49kB done
+#2 DONE 0.0s
+
+#3 [auth] library/node:pull token for registry-1.docker.io
+#3 DONE 0.0s
+
+#4 [internal] load metadata for docker.io/library/node:20-alpine
+#4 DONE 0.9s
+
+#5 [internal] load .dockerignore
+#5 transferring context: 1.24kB done
+#5 DONE 0.0s
+
+#6 [base 1/1] FROM docker.io/library/node:20-alpine@sha256:eabac870db94f7342d6c33560d6613f188bbcf4bbe1f4eb47d5e2a08e1a37722
+#6 CACHED
+
+#7 [builder 1/6] WORKDIR /app
+#7 CACHED
+
+#8 [internal] load build context
+#8 transferring context: 613.91kB 0.1s done
+#8 DONE 0.1s
+
+#9 [runner  2/13] RUN addgroup --system --gid 1001 nodejs
+#9 DONE 0.1s
+
+#10 [builder 2/6] COPY package.json package-lock.json* ./
+#10 DONE 0.1s
+
+#11 [runner  3/13] RUN adduser --system --uid 1001 nodejs
+#11 DONE 0.2s
+
+#12 [builder 3/6] RUN npm ci
+#12 0.691 npm warn skipping integrity check for git dependency ssh://git@github.com/electron/node-gyp.git
+#12 1.989 npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+#12 2.530 npm warn deprecated npmlog@6.0.2: This package is no longer supported.
+#12 ...
+
+#13 [deps 1/4] RUN apk add --no-cache libc6-compat python3 make g++
+#13 0.193 fetch https://dl-cdn.alpinelinux.org/alpine/v3.22/main/aarch64/APKINDEX.tar.gz
+#13 0.324 fetch https://dl-cdn.alpinelinux.org/alpine/v3.22/community/aarch64/APKINDEX.tar.gz
+#13 0.498 (1/32) Installing libstdc++-dev (14.2.0-r6)
+#13 0.606 (2/32) Installing jansson (2.14.1-r0)
+#13 0.621 (3/32) Installing zstd-libs (1.5.7-r0)
+#13 0.646 (4/32) Installing binutils (2.44-r3)
+#13 0.721 (5/32) Installing libgomp (14.2.0-r6)
+#13 0.739 (6/32) Installing libatomic (14.2.0-r6)
+#13 0.754 (7/32) Installing gmp (6.3.0-r3)
+#13 0.775 (8/32) Installing isl26 (0.26-r1)
+#13 0.799 (9/32) Installing mpfr4 (4.2.1_p1-r0)
+#13 0.820 (10/32) Installing mpc1 (1.3.1-r1)
+#13 0.836 (11/32) Installing gcc (14.2.0-r6)
+#13 1.593 (12/32) Installing musl-dev (1.2.5-r10)
+#13 1.654 (13/32) Installing g++ (14.2.0-r6)
+#13 1.947 (14/32) Installing musl-obstack (1.2.3-r2)
+#13 1.967 (15/32) Installing libucontext (1.3.2-r0)
+#13 1.984 (16/32) Installing gcompat (1.1.0-r4)
+#13 2.004 (17/32) Installing make (4.4.1-r3)
+#13 2.028 (18/32) Installing libbz2 (1.0.8-r6)
+#13 2.045 (19/32) Installing libexpat (2.7.1-r0)
+#13 2.056 (20/32) Installing libffi (3.4.8-r0)
+#13 2.066 (21/32) Installing gdbm (1.24-r0)
+#13 2.082 (22/32) Installing xz-libs (5.8.1-r0)
+#13 2.103 (23/32) Installing mpdecimal (4.0.1-r0)
+#13 2.119 (24/32) Installing ncurses-terminfo-base (6.5_p20250503-r0)
+#13 2.147 (25/32) Installing libncursesw (6.5_p20250503-r0)
+#13 2.169 (26/32) Installing libpanelw (6.5_p20250503-r0)
+#13 2.180 (27/32) Installing readline (8.2.13-r1)
+#13 2.205 (28/32) Installing sqlite-libs (3.49.2-r1)
+#13 2.253 (29/32) Installing python3 (3.12.11-r0)
+#13 2.426 (30/32) Installing python3-pycache-pyc0 (3.12.11-r0)
+#13 2.521 (31/32) Installing pyc (3.12.11-r0)
+#13 2.521 (32/32) Installing python3-pyc (3.12.11-r0)
+#13 2.521 Executing busybox-1.37.0-r18.trigger
+#13 2.537 OK: 261 MiB in 50 packages
+#13 DONE 2.7s
+
+#14 [deps 2/4] WORKDIR /app
+#14 DONE 0.0s
+
+#15 [deps 3/4] COPY package.json package-lock.json* ./
+#15 DONE 0.1s
+
+#16 [deps 4/4] RUN npm ci --only=production
+#16 0.129 npm warn config only Use `--omit=dev` to omit dev dependencies from the install.
+#16 0.690 npm warn skipping integrity check for git dependency ssh://git@github.com/electron/node-gyp.git
+#16 2.084 npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+#16 2.740 npm warn deprecated npmlog@6.0.2: This package is no longer supported.
+#16 3.159 npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+#16 3.373 npm warn deprecated gauge@4.0.4: This package is no longer supported.
+#16 3.958 npm warn deprecated boolean@3.2.0: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+#16 4.042 npm warn deprecated are-we-there-yet@3.0.1: This package is no longer supported.
+#16 5.273 npm warn deprecated @npmcli/move-file@2.0.1: This functionality has been moved to @npmcli/fs
+#16 5.553 npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+#16 5.558 npm warn deprecated rimraf@2.6.3: Rimraf versions prior to v4 are no longer supported
+#16 5.645 npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+#16 5.706 npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+#16 5.735 npm warn deprecated @npmcli/move-file@1.1.2: This functionality has been moved to @npmcli/fs
+#16 5.955 npm warn deprecated glob@8.1.0: Glob versions prior to v9 are no longer supported
+#16 6.096 npm warn deprecated glob@8.1.0: Glob versions prior to v9 are no longer supported
+#16 6.101 npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+#16 ...
+
+#12 [builder 3/6] RUN npm ci
+#12 2.902 npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+#12 3.098 npm warn deprecated gauge@4.0.4: This package is no longer supported.
+#12 3.743 npm warn deprecated boolean@3.2.0: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+#12 3.759 npm warn deprecated are-we-there-yet@3.0.1: This package is no longer supported.
+#12 6.357 npm warn deprecated @npmcli/move-file@2.0.1: This functionality has been moved to @npmcli/fs
+#12 6.471 npm warn deprecated @esbuild-kit/esm-loader@2.6.5: Merged into tsx: https://tsx.is
+#12 6.530 npm warn deprecated @esbuild-kit/core-utils@3.3.2: Merged into tsx: https://tsx.is
+#12 6.809 npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+#12 6.814 npm warn deprecated rimraf@2.6.3: Rimraf versions prior to v4 are no longer supported
+#12 6.978 npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+#12 7.221 npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+#12 7.269 npm warn deprecated @npmcli/move-file@1.1.2: This functionality has been moved to @npmcli/fs
+#12 7.661 npm warn deprecated glob@8.1.0: Glob versions prior to v9 are no longer supported
+#12 7.913 npm warn deprecated glob@8.1.0: Glob versions prior to v9 are no longer supported
+#12 7.960 npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+#12 14.93 
+#12 14.93 added 1060 packages, and audited 1061 packages in 15s
+#12 14.93 
+#12 14.93 128 packages are looking for funding
+#12 14.93   run `npm fund` for details
+#12 14.95 
+#12 14.95 16 vulnerabilities (4 low, 8 moderate, 3 high, 1 critical)
+#12 14.95 
+#12 14.95 To address issues that do not require attention, run:
+#12 14.95   npm audit fix
+#12 14.95 
+#12 14.95 To address all issues possible (including breaking changes), run:
+#12 14.95   npm audit fix --force
+#12 14.95 
+#12 14.95 Some issues need review, and may require choosing
+#12 14.95 a different dependency.
+#12 14.95 
+#12 14.95 Run `npm audit` for details.
+#12 14.95 npm notice
+#12 14.95 npm notice New major version of npm available! 10.8.2 -> 11.6.0
+#12 14.95 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.6.0
+#12 14.95 npm notice To update run: npm install -g npm@11.6.0
+#12 14.95 npm notice
+#12 DONE 15.2s
+
+#16 [deps 4/4] RUN npm ci --only=production
+#16 ...
+
+#17 [builder 4/6] COPY . .
+#17 ...
+
+#16 [deps 4/4] RUN npm ci --only=production
+#16 13.50 
+#16 13.50 added 990 packages, and audited 991 packages in 13s
+#16 13.50 
+#16 13.50 120 packages are looking for funding
+#16 13.50   run `npm fund` for details
+#16 13.51 
+#16 13.51 11 vulnerabilities (4 low, 3 moderate, 3 high, 1 critical)
+#16 13.51 
+#16 13.51 To address issues that do not require attention, run:
+#16 13.51   npm audit fix
+#16 13.51 
+#16 13.51 Some issues need review, and may require choosing
+#16 13.51 a different dependency.
+#16 13.51 
+#16 13.51 Run `npm audit` for details.
+#16 13.51 npm notice
+#16 13.51 npm notice New major version of npm available! 10.8.2 -> 11.6.0
+#16 13.51 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.6.0
+#16 13.51 npm notice To update run: npm install -g npm@11.6.0
+#16 13.51 npm notice
+#16 DONE 13.8s
+
+#17 [builder 4/6] COPY . .
+#17 DONE 2.3s
+
+#18 [builder 5/6] RUN ls -lha /app/client/src/assets/
+#18 0.097 total 24K    
+#18 0.097 drwxr-xr-x    4 root     root        4.0K Sep 18 08:02 .
+#18 0.097 drwxr-xr-x   10 root     root        4.0K Sep 18 07:48 ..
+#18 0.097 -rw-r--r--    1 root     root        6.0K Sep 18 08:02 .DS_Store
+#18 0.097 drwxr-xr-x    2 root     root        4.0K Sep 17 13:58 data
+#18 0.097 drwxr-xr-x    4 root     root        4.0K Sep 18 07:56 images
+#18 DONE 0.1s
+
+#19 [builder 6/6] RUN npm run build
+#19 0.596 
+#19 0.596 > rest-express@1.0.0 build
+#19 0.596 > vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist --define:process.env.NODE_ENV="'production'"
+#19 0.596 
+#19 0.727 vite v5.4.14 building for production...
+#19 0.956 transforming...
+#19 1.062 Browserslist: browsers data (caniuse-lite) is 11 months old. Please run:
+#19 1.062   npx update-browserslist-db@latest
+#19 1.062   Why you should do it regularly: https://github.com/browserslist/update-db#readme
+#19 6.659 ✓ 4525 modules transformed.
+#19 6.941 rendering chunks...
+#19 7.226 [plugin:vite:reporter] [plugin vite:reporter] 
+#19 7.226 (!) /app/client/src/lib/queryClient.ts is dynamically imported by /app/client/src/components/cost-estimates/NewCostEstimateDialog.tsx, /app/client/src/hooks/use-online-status.tsx, /app/client/src/hooks/use-online-status.tsx but also statically imported by /app/client/src/App.tsx, /app/client/src/components/DeviceSelector.tsx, /app/client/src/components/NewOrderModal.tsx, /app/client/src/components/admin/SimpleUserDetailsDialog.tsx, /app/client/src/components/auth/ChangePasswordDialog.tsx, /app/client/src/components/auth/ForgotPasswordForm.tsx, /app/client/src/components/auth/ResetPasswordForm.tsx, /app/client/src/components/cost-estimates/CostEstimateDetailsDialog.tsx, /app/client/src/components/cost-estimates/CostEstimatesTab.tsx, /app/client/src/components/cost-estimates/NewCostEstimateDialog.tsx, /app/client/src/components/cost-estimates/PrintButtons.tsx, /app/client/src/components/customers/CustomerDetailDialog.tsx, /app/client/src/components/customers/EditCustomerDialog.tsx, /app/client/src/components/customers/NewCustomerDialog.tsx, /app/client/src/components/dashboard/DashboardTab.tsx, /app/client/src/components/kiosk/KioskActivationButton.tsx, /app/client/src/components/kiosk/KioskCustomerForm.tsx, /app/client/src/components/kiosk/KioskManagement.tsx, /app/client/src/components/kiosk/KioskSignature.tsx, /app/client/src/components/loaner-devices/LoanerDevicesTab.tsx, /app/client/src/components/multi-shop/MultiShopAdminManagement.tsx, /app/client/src/components/multi-shop/MultiShopManagement.tsx, /app/client/src/components/multi-shop/ShopManagementDialog.tsx, /app/client/src/components/orders/AddAccessoryDialog.tsx, /app/client/src/components/orders/AddSparePartDialog.tsx, /app/client/src/components/orders/OrdersTab.tsx, /app/client/src/components/orders/SparePartsManagementDialog.tsx, /app/client/src/components/permissions/PermissionDialog.tsx, /app/client/src/components/repairs/DeviceCodeDisplay.tsx, /app/client/src/components/repairs/EditDeviceCodeDialog.tsx, /app/client/src/components/repairs/EditRepairDialog.tsx, /app/client/src/components/repairs/PdfActionDialog.tsx, /app/client/src/components/repairs/PrintLabelDialog.tsx, /app/client/src/components/repairs/RepairDetailsDialog.tsx, /app/client/src/components/repairs/RepairsTab.tsx, /app/client/src/components/repairs/SignatureDialog.tsx, /app/client/src/components/settings/BusinessSettingsTab.tsx, /app/client/src/components/settings/EmailSettingsTab.tsx, /app/client/src/components/settings/PrintSettingsTab.tsx, /app/client/src/components/settings/UserSettingsTab.tsx, /app/client/src/components/settings/UserSmtpTestDialog.tsx, /app/client/src/components/signature/QRSignatureDialog.tsx, /app/client/src/components/spare-parts/SparePartsDialog.tsx, /app/client/src/components/spare-parts/SparePartsList.tsx, /app/client/src/components/superadmin/CreateTestUserDialog.tsx, /app/client/src/components/superadmin/DeploymentFixDialog.tsx, /app/client/src/components/superadmin/DeviceStatisticsTab.tsx, /app/client/src/components/superadmin/MultiShopAdminDetailsDialog.tsx, /app/client/src/components/superadmin/RepairStatisticsTab.tsx, /app/client/src/components/superadmin/ResponsiveSuperadminDevicesTab.tsx, /app/client/src/components/superadmin/SuperadminAccountTab.tsx, /app/client/src/components/superadmin/SuperadminDashboardTab.tsx, /app/client/src/components/superadmin/SuperadminEmailTab.tsx, /app/client/src/components/superadmin/SuperadminNewsletterTab.tsx, /app/client/src/components/superadmin/SuperadminPrintTemplatesTab.tsx, /app/client/src/components/superadmin/SuperadminSupportModeTab.tsx, /app/client/src/components/superadmin/SuperadminUsersTab.tsx, /app/client/src/components/superadmin/UserDetailsDialog.tsx, /app/client/src/hooks/use-auth.tsx, /app/client/src/hooks/useModelSeries.ts, /app/client/src/pages/device-finder-demo.tsx, /app/client/src/pages/employees-page.tsx, /app/client/src/pages/msa-business-page.tsx, /app/client/src/pages/msa-pricing-page.tsx, /app/client/src/pages/msa-profile-page.tsx, /app/client/src/pages/multi-shop-admin-page.tsx, /app/client/src/pages/optimized-table-demo.tsx, dynamic import will not move module into another chunk.
+#19 7.226 
+#19 7.228 [plugin:vite:reporter] [plugin vite:reporter] 
+#19 7.228 (!) /app/client/src/components/cost-estimates/VectorPdfHelper.ts is dynamically imported by /app/client/src/components/cost-estimates/PrintButtons.tsx but also statically imported by /app/client/src/components/cost-estimates/PrintHelper.ts, dynamic import will not move module into another chunk.
+#19 7.228 
+#19 7.262 computing gzip size...
+#19 7.299 ../dist/public/index.html                                     2.25 kB │ gzip:   0.87 kB
+#19 7.299 ../dist/public/assets/clientking-logo-WcYrdz5u.png          360.76 kB
+#19 7.299 ../dist/public/assets/logo_new-Be5xrq3a.png                 360.86 kB
+#19 7.299 ../dist/public/assets/logo_new2-xMAa6D3D.png              1,538.09 kB
+#19 7.299 ../dist/public/assets/index-DGmCdDkf.css                    125.94 kB │ gzip:  20.12 kB
+#19 7.299 ../dist/public/assets/StatisticsPDFGenerator-_weAA9Qg.js      4.88 kB │ gzip:   1.58 kB
+#19 7.300 ../dist/public/assets/purify.es-CF4_YkFU.js                  21.86 kB │ gzip:   8.62 kB
+#19 7.300 ../dist/public/assets/index.es-YQKbffeP.js                  149.98 kB │ gzip:  51.25 kB
+#19 7.300 ../dist/public/assets/html2canvas.esm-CBrSDip1.js           201.42 kB │ gzip:  48.03 kB
+#19 7.300 ../dist/public/assets/index-U593tm4G.js                   2,659.58 kB │ gzip: 707.37 kB
+#19 7.300 
+#19 7.300 (!) Some chunks are larger than 500 kB after minification. Consider:
+#19 7.300 - Using dynamic import() to code-split the application
+#19 7.300 - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+#19 7.300 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+#19 7.300 ✓ built in 6.56s
+#19 7.361 ▲ [WARNING] Duplicate member "forceRegisterKiosk" in class body [duplicate-class-member]
+#19 7.361 
+#19 7.361     server/websocket-server.ts:687:2:
+#19 7.361       687 │   forceRegisterKiosk(userId: number): boolean {
+#19 7.361           ╵   ~~~~~~~~~~~~~~~~~~
+#19 7.361 
+#19 7.361   The original member "forceRegisterKiosk" is here:
+#19 7.361 
+#19 7.361     server/websocket-server.ts:616:2:
+#19 7.361       616 │   forceRegisterKiosk(userId: number): void {
+#19 7.361           ╵   ~~~~~~~~~~~~~~~~~~
+#19 7.361 
+#19 7.361 ▲ [WARNING] Duplicate member "isUserOnline" in class body [duplicate-class-member]
+#19 7.361 
+#19 7.361     server/websocket-server.ts:703:2:
+#19 7.361       703 │   isUserOnline(userId: number): boolean {
+#19 7.361           ╵   ~~~~~~~~~~~~
+#19 7.361 
+#19 7.361   The original member "isUserOnline" is here:
+#19 7.361 
+#19 7.361     server/websocket-server.ts:346:2:
+#19 7.361       346 │   isUserOnline(userId: number): boolean {
+#19 7.361           ╵   ~~~~~~~~~~~~
+#19 7.361 
+#19 7.367 ▲ [WARNING] Duplicate member "getUser" in class body [duplicate-class-member]
+#19 7.367 
+#19 7.367     server/storage.ts:3537:8:
+#19 7.367       3537 │   async getUser(id: number): Promise<User | undefined> {
+#19 7.367            ╵         ~~~~~~~
+#19 7.367 
+#19 7.367   The original member "getUser" is here:
+#19 7.367 
+#19 7.367     server/storage.ts:1423:8:
+#19 7.367       1423 │   async getUser(id: number): Promise<User | undefined> {
+#19 7.367            ╵         ~~~~~~~
+#19 7.367 
+#19 7.372 ▲ [WARNING] Duplicate member "getUserByUsername" in class body [duplicate-class-member]
+#19 7.372 
+#19 7.372     server/storage.ts:3576:8:
+#19 7.372       3576 │   async getUserByUsername(username: string): Promise<User | unde...
+#19 7.372            ╵         ~~~~~~~~~~~~~~~~~
+#19 7.372 
+#19 7.372   The original member "getUserByUsername" is here:
+#19 7.372 
+#19 7.372     server/storage.ts:1437:8:
+#19 7.372       1437 │   async getUserByUsername(username: string): Promise<User | unde...
+#19 7.372            ╵         ~~~~~~~~~~~~~~~~~
+#19 7.372 
+#19 7.372 ▲ [WARNING] Duplicate member "getPackageByName" in class body [duplicate-class-member]
+#19 7.372 
+#19 7.372     server/storage.ts:3918:8:
+#19 7.372       3918 │   async getPackageByName(name: string): Promise<Package | undefi...
+#19 7.372            ╵         ~~~~~~~~~~~~~~~~
+#19 7.372 
+#19 7.372   The original member "getPackageByName" is here:
+#19 7.372 
+#19 7.372     server/storage.ts:1333:8:
+#19 7.372       1333 │   async getPackageByName(name: string): Promise<Package | undefi...
+#19 7.372            ╵         ~~~~~~~~~~~~~~~~
+#19 7.372 
+#19 7.372 ▲ [WARNING] Duplicate member "getCostEstimate" in class body [duplicate-class-member]
+#19 7.372 
+#19 7.372     server/storage.ts:4035:8:
+#19 7.372       4035 │   async getCostEstimate(id: number, userId: number): Promise<Cos...
+#19 7.372            ╵         ~~~~~~~~~~~~~~~
+#19 7.372 
+#19 7.372   The original member "getCostEstimate" is here:
+#19 7.372 
+#19 7.372     server/storage.ts:1136:8:
+#19 7.372       1136 │   async getCostEstimate(id: number, userId: number): Promise<Cos...
+#19 7.372            ╵         ~~~~~~~~~~~~~~~
+#19 7.372 
+#19 7.372 6 of 16 warnings shown (disable the message limit with --log-limit=0)
+#19 7.372 
+#19 7.372   dist/index.js  1.0mb ⚠️
+#19 7.372 
+#19 7.372 ⚡ Done in 21ms
+#19 DONE 7.4s
+
+#20 [runner  4/13] COPY --from=builder /app/dist ./dist
+#20 DONE 0.0s
+
+#21 [runner  5/13] COPY --from=builder /app/client/dist ./client/dist
+#21 DONE 0.0s
+
+#22 [runner  6/13] COPY --from=deps /app/node_modules ./node_modules
+#22 DONE 3.6s
+
+#23 [runner  7/13] COPY --from=builder /app/package.json ./package.json
+#23 DONE 0.0s
+
+#24 [runner  8/13] COPY --from=builder /app/shared ./shared
+#24 DONE 0.0s
+
+#25 [runner  9/13] COPY --from=builder /app/public ./public
+#25 DONE 0.0s
+
+#26 [runner 10/13] RUN apk add --no-cache netcat-openbsd
+#26 0.078 fetch https://dl-cdn.alpinelinux.org/alpine/v3.22/main/aarch64/APKINDEX.tar.gz
+#26 0.189 fetch https://dl-cdn.alpinelinux.org/alpine/v3.22/community/aarch64/APKINDEX.tar.gz
+#26 0.339 (1/3) Installing libmd (1.1.0-r0)
+#26 0.357 (2/3) Installing libbsd (0.12.2-r0)
+#26 0.369 (3/3) Installing netcat-openbsd (1.229.1-r0)
+#26 0.381 Executing busybox-1.37.0-r18.trigger
+#26 0.384 OK: 11 MiB in 21 packages
+#26 DONE 0.4s
+
+#27 [runner 11/13] COPY docker-entrypoint.sh /usr/local/bin/
+#27 DONE 0.0s
+
+#28 [runner 12/13] RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+#28 DONE 0.1s
+
+#29 [runner 13/13] RUN chown -R nodejs:nodejs /app
+#29 DONE 14.9s
+
+#30 exporting to image
+#30 exporting layers
+#30 exporting layers 3.0s done
+#30 writing image sha256:1b824dcca3a7100ac9b3c72b98acb16f5e1c0fc7784fce3c12c2eb73c4972292
+#30 writing image sha256:1b824dcca3a7100ac9b3c72b98acb16f5e1c0fc7784fce3c12c2eb73c4972292 done
+#30 naming to docker.io/library/clientking-last-handyshop-app done
+#30 DONE 3.0s
+
+#31 resolving provenance for metadata file
+#31 DONE 0.0s
+ clientking-last-handyshop-app  Built
