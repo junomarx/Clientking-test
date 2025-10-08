@@ -671,7 +671,7 @@ export function registerAdminRoutes(app: Express) {
   app.get("/api/admin/users", isAdmin, async (req: Request, res: Response) => {
     try {
       const users = await storage.getAllUsers();
-      
+      console.log('all users route called');
       // Entferne Passwörter aus der Antwort
       const sanitizedUsers = users.map(user => {
         const { password, ...userWithoutPassword } = user;

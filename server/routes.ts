@@ -62,6 +62,8 @@ import fs from 'fs';
 // jsPDF will be imported dynamically
 import { requireShopIsolation, attachShopId } from "./middleware/shop-isolation";
 import { enforceShopIsolation, validateCustomerBelongsToShop } from "./middleware/enforce-shop-isolation";
+import { createShopIdSanitizationMiddleware } from "./middleware/shopIdSanitization";
+
 import nodemailer from "nodemailer";
 
 // Utility-Funktion zum korrekten Parsen deutscher Komma-Währungen
@@ -124,14 +126,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ⚡ KRITISCHER FIX: setupAuth() MUSS VOR ALLEN API-ROUTES AUFGERUFEN WERDEN!
   setupAuth(app);
 
+    // 🔒 SECURITY: Apply shop_id sanitization middleware globally
+  // This prevents unauthorized shop_id manipulation in request bodies
+  app.use('/api', createShopIdSanitizationMiddleware({
+    logAttempts: true,
+    allowSuperadmin: true,
+    // Routes where shop_id might legitimately be sent (superadmin only)
+    allowedRoutes: [
+      '/api/superadmin/',
+      '/api/admin/multi-shop-permissions'
+    ]
+  }));
+
   // 🔒 CRITICAL SECURITY FIX: Global Shop-Isolation durchsetzen für DSGVO-Compliance
   // Diese Middleware MUSS nach der Authentifizierung aber VOR allen API-Routes platziert werden
-  app.use('/api', isAuthenticated, enforceShopIsolation);
-
-  // 🔒 SECURITY FIX: Authentication bypass resolved by using shared middleware
-  // NOTE: The critical security issue has been fixed by importing isAuthenticated from ./auth-middleware.ts
-  // The existing individual route definitions now use the correct authentication middleware
-  
   // Health check endpoint for Docker
   app.get('/api/health', (req: Request, res: Response) => {
     res.status(200).json({ 
@@ -140,6 +148,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       version: process.env.npm_package_version || '1.0.0'
     });
   });
+
+  app.use('/api', isAuthenticated, enforceShopIsolation);
+
+  // 🔒 SECURITY FIX: Authentication bypass resolved by using shared middleware
+  // NOTE: The critical security issue has been fixed by importing isAuthenticated from ./auth-middleware.ts
+  // The existing individual route definitions now use the correct authentication middleware
+  
 
   // 🎯 ZUBEHÖR BULK-UPDATE ROUTE - GANZ OBEN WEGEN ROUTE-PRIORITÄT
   app.put("/api/orders/accessories/bulk-update", isAuthenticated, async (req: Request, res: Response) => {
@@ -5551,7 +5566,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Für Replit Deployment
-      if (host?.includes('.replit.dev') || host?.includes('.repl.it')) {
+      if (host?.includes('.fb-c.at') || host?.includes('.clientking.at')) {
         protocol = 'https';
       }
       
@@ -5948,6 +5963,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const recentlyActiveUsers = allUsers
         .filter(user => {
           // Nur aktive Benutzer berücksichtigen
+
+          console.log('Nur aktive Benutzer berücksichtigen');
           if (!user.isActive) return false;
           
           if (!user.lastLoginAt) return false;

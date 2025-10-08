@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import ClientKingLogo from "@assets/logo_new.png";
+import ClientKingLogo from "@assets/images/logos/logo_new.png";
 import { useAuth } from "@/hooks/use-auth";
 import {
   DropdownMenu,

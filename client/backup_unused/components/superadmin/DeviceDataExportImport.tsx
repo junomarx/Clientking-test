@@ -6,7 +6,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Loader2, Download, Upload, Check, RefreshCw, Gamepad2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import ConsoleSampleData from "@/assets/console-sample-data.json";
+import ConsoleSampleData from "@/assets/data/console-sample-data.json";
 
 const DeviceDataExportImport: React.FC = () => {
   const { toast } = useToast();

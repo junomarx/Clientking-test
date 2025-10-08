@@ -8,7 +8,7 @@ console.log('🚀 Starte Handyshop Desktop Test-App...');
 
 const electronProcess = spawn('npx', ['electron', 'electron/simple-main.js'], {
   stdio: 'inherit',
-  shell: true
+  shell: false // false because security
 });
 
 electronProcess.on('close', (code) => {

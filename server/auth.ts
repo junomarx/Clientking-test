@@ -102,6 +102,15 @@ export function setupAuth(app: Express) {
 
   // Session-Konfiguration - unterschiedlich für Entwicklung und Produktion
   const isProduction = process.env.NODE_ENV === 'production' || process.env.REPLIT_DEPLOYMENT === '1';
+  const isSecureEnvironment = isProduction && (
+    process.env.FORCE_SECURE_COOKIES === 'true' ||
+    (process.env.HTTPS_ENABLED !== 'false' && isProduction)
+  );
+
+  console.log ('Debug data, is production: ' + isProduction + ' is secure environment: ' + isSecureEnvironment + "\n");
+  console.log ('Debug data, env node_env: ' + process.env.NODE_ENV + ' secure cookies: ' + process.env.FORCE_SECURE_COOKIES + ' https enabled: ' + process.env.HTTPS_ENABLED + "\n");
+
+
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET,
     resave: false,
@@ -112,7 +121,8 @@ export function setupAuth(app: Express) {
       maxAge: 1000 * 60 * 60 * 24 * 30, // 30 Tage für bessere UX
       sameSite: 'lax',
       httpOnly: true,
-      secure: isProduction, // Nur in Produktion HTTPS verwenden
+      //secure: isProduction, // Nur in Produktion HTTPS verwenden
+      secure: false,
       path: '/'
     }
   };
@@ -277,8 +287,11 @@ export function setupAuth(app: Express) {
       
       console.log(`Neuer Benutzer ${username} erhält Basic-Paket ohne Einschränkungen`);
 
-      // Erstelle einen neuen Benutzer mit ALLEN Registrierungsdaten auf einmal
-      const user = await storage.createUser({
+      // Use transactional registration for atomicity (all 3 steps succeed or all rollback)
+      // STEP 1: Atomically allocate tenant_shop_id from sequence
+      // STEP 2: Create shop (gets shops.id)
+      // STEP 3: Create user with shopId (FK) and tenantShopId (immutable sequential)
+      const { user, shop, tenantShopId, shopDatabaseId } = await storage.registerUserWithShop({
         username,
         password: await hashPassword(password),
         email,
@@ -297,7 +310,7 @@ export function setupAuth(app: Express) {
         website: website || ""
       });
 
-      console.log(`✅ Benutzer ${username} mit allen Geschäftsdaten erfolgreich erstellt (inaktiv, wartet auf Aktivierung)`);
+      console.log(`✅ Benutzer ${username} transaktional erstellt (shopId=${shopDatabaseId}, tenantShopId=${tenantShopId}, inaktiv)`);
       console.log(`📋 Gespeicherte Daten: ${companyName}, ${ownerFirstName} ${ownerLastName}, ${streetAddress}, ${zipCode} ${city}`);
 
       // Benachrichtige alle Superadmins über die neue Registrierung, damit sie den Benutzer freischalten können
@@ -659,11 +672,13 @@ export function setupAuth(app: Express) {
       
       // Jetzt senden wir die E-Mail über den zentralen EmailService
       const sent = await emailService.sendSystemEmail({
+        from: 'support@clientking.at',
         to: user.email,
         subject: `Zurücksetzen Ihres Passworts für ${businessSettings.businessName}`,
         html: emailHtml
       });
       
+      console.log('Password reset email parameters: ' + sent);
       if (sent) {
         res.status(200).json({
           message: "Wenn ein Konto mit dieser E-Mail-Adresse existiert, wurde eine Anleitung zum Zurücksetzen des Passworts gesendet."

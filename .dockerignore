@@ -11,8 +11,8 @@ replit.nix
 .upm
 
 # Build outputs (will be built inside container)
-dist
-client/dist
+#dist
+#client/dist
 .next
 out
 
@@ -94,5 +94,5 @@ create-*.ts
 cleanup-*.sql
 
 # Test and development artifacts
-attached_assets/
+#attached_assets/
 components.json

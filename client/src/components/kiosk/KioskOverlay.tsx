@@ -10,7 +10,7 @@ import { KioskSignature } from "@/components/kiosk/KioskSignature";
 import { Tablet, Shield, User } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import clientKingLogo from "@/assets/clientking-logo.png";
+import clientKingLogo from "@/assets/images/logos/clientking-logo.png";
 
 export function KioskOverlay() {
   const { isKioskMode, deactivateKioskMode, signatureRequest, clearSignatureRequest } = useKioskMode();

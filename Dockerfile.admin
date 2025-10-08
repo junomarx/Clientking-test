@@ -1,0 +1,45 @@
+# Dockerfile.admin - Admin container with PostgreSQL superuser access
+# Used for tenant database provisioning operations
+# DO NOT use for regular application deployment
+
+FROM node:20-alpine AS base
+
+# Install PostgreSQL client tools
+RUN apk add --no-cache postgresql15-client
+
+# Build stage with dev dependencies
+FROM base AS builder
+WORKDIR /app
+
+# Copy package files and install ALL dependencies (including dev for compilation)
+COPY package.json package-lock.json* ./
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Compile scripts to JavaScript (same as main Dockerfile for consistency)
+RUN npx esbuild scripts/provision-tenants.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/scripts/provision-tenants.js
+
+# Production stage
+FROM base AS runner
+WORKDIR /app
+
+# Copy package files and install production dependencies only
+COPY package.json package-lock.json* ./
+RUN npm ci --only=production
+
+# Copy compiled scripts and necessary files from builder
+COPY --from=builder /app/dist ./dist
+#COPY --from=builder /app/shared ./shared
+
+
+# Set admin mode environment variable
+ENV ADMIN_MODE=true
+ENV NODE_ENV=production
+
+# Note: This container should ONLY be used for provisioning operations
+# It requires ADMIN_DATABASE_URL with PostgreSQL superuser credentials
+# Example: postgres://postgres:password@postgres:5432/postgres
+
+CMD ["echo", "Admin container ready. Use with explicit commands"]

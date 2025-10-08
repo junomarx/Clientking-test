@@ -1,9 +1,40 @@
-import { pgTable, text, serial, integer, boolean, timestamp, doublePrecision, jsonb, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, doublePrecision, jsonb, primaryKey, uniqueIndex } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Shops Tabelle für Multi-Tenant-Unterstützung
+// =============================================================================
+// LEGACY SCHEMA - DATABASE PER TENANT MIGRATION IN PROGRESS
+// =============================================================================
+// 
+// ⚠️  MIGRATION NOTICE: This file is being migrated to a database-per-tenant architecture
+//
+// MIGRATION PLAN:
+// - Master Database (masterSchema.ts): Cross-tenant authentication, shop registry, 
+//   multi-shop management, subscription packages, global catalogs, newsletters
+// - Tenant Databases (tenantSchema.ts): Shop-specific operational data
+//   (customers, repairs, business settings, etc.) - one database per shop
+//
+// MIGRATION PHASES:
+// Phase 1: ✅ Schema classification and new schema files created
+// Phase 2: 🔄 Tenancy gateway and connection routing
+// Phase 3: 🔄 Dual-write migration system  
+// Phase 4: 🔄 Data backfill and validation
+// Phase 5: 🔄 Switch reads to tenant DBs and cleanup
+//
+// TABLE MIGRATION MAPPING:
+// 🔵 MASTER DB: users, shops, packages, userShopAccess, multiShopPermissions,
+//              msaProfiles, msaPricing, globalErrorCatalog, newsletters, etc.
+// 🟢 TENANT DB: customers, repairs, businessSettings, feedbacks, spareParts,
+//              accessories, loanerDevices, activityLogs, emailHistory, etc.
+//
+// =============================================================================
+
+// 🔵 MASTER DB: Shops Tabelle für Multi-Tenant-Unterstützung
+// MIGRATION: Will move to masterSchema.ts (enhanced with more metadata)
+// NOTE: shops.id is the database entity ID (used as FK in users.shopId)
+// Tenant isolation uses users.tenantShopId (sequential immutable ID)
+
 export const shops = pgTable("shops", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -20,7 +51,30 @@ export const insertShopSchema = createInsertSchema(shops).omit({
 export type Shop = typeof shops.$inferSelect;
 export type InsertShop = z.infer<typeof insertShopSchema>;
 
-// Customers table
+// 🔵 MASTER DB: Tenant database connection credentials (encrypted)
+// MIGRATION: Will move to masterSchema.ts
+export const tenantConnections = pgTable("tenant_connections", {
+  shopId: integer("shop_id").primaryKey().references(() => shops.id, { onDelete: 'cascade' }),
+  databaseName: text("database_name").notNull(),
+  username: text("username").notNull(),
+  encryptedPassword: text("encrypted_password").notNull(), // AES-256-GCM encrypted
+  encryptedConnectionString: text("encrypted_connection_string").notNull(), // AES-256-GCM encrypted
+  host: text("host").notNull(),
+  port: integer("port").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  lastUsed: timestamp("last_used").defaultNow().notNull(),
+});
+
+export const insertTenantConnectionSchema = createInsertSchema(tenantConnections).omit({
+  createdAt: true,
+});
+
+export type TenantConnection = typeof tenantConnections.$inferSelect;
+export type InsertTenantConnection = z.infer<typeof insertTenantConnectionSchema>;
+
+// 🟢 TENANT DB: Customers table
+// MIGRATION: Will move to tenantSchema.ts (shopId and userId removed)
 export const customers = pgTable("customers", {
   id: serial("id").primaryKey(),
   firstName: text("first_name").notNull(),
@@ -50,7 +104,8 @@ export const deviceTypes = z.enum(["smartphone", "tablet", "laptop"]);
 // Repair statuses enum
 export const repairStatuses = z.enum(["eingegangen", "in_reparatur", "ersatzteile_bestellen", "warten_auf_ersatzteile", "ersatzteil_eingetroffen", "fertig", "abgeholt", "ausser_haus"]);
 
-// Error catalog table (Fehlerkatalog) - Neue Implementierung
+// 🔵🟢 SPLIT: Error catalog table (Fehlerkatalog)
+// MIGRATION: Global catalogs → masterSchema.ts, Shop-specific → tenantSchema.ts
 export const errorCatalogEntries = pgTable("error_catalog_entries", {
   id: serial("id").primaryKey(),
   errorText: text("error_text").notNull(),
@@ -70,7 +125,8 @@ export const insertErrorCatalogEntrySchema = createInsertSchema(errorCatalogEntr
   updatedAt: true,
 });
 
-// Behalte das alte deviceIssues für Kompatibilität, wird später entfernt
+// 🟢 TENANT DB: Legacy device issues (wird später entfernt)
+// MIGRATION: Will move to tenantSchema.ts for compatibility
 export const deviceIssues = pgTable("device_issues", {
   id: serial("id").primaryKey(),
   title: text("title").notNull().default("Fehlerbeschreibung"),
@@ -140,7 +196,8 @@ export const insertActivityLogSchema = createInsertSchema(activityLogs).omit({
 export type ActivityLog = typeof activityLogs.$inferSelect;
 export type InsertActivityLog = z.infer<typeof insertActivityLogSchema>;
 
-// Repair orders table
+// 🟢 TENANT DB: Repair orders table
+// MIGRATION: Will move to tenantSchema.ts (shopId and userId removed)
 export const repairs = pgTable("repairs", {
   id: serial("id").primaryKey(),
   orderCode: text("order_code").unique(), // Neue Spalte für das spezielle Auftragsnummerformat: z.B. AS1496
@@ -250,6 +307,8 @@ export const pricingPlans = [
 
 export type PricingPlan = typeof pricingPlans[number];
 
+// 🔵 MASTER DB: Central user authentication and management
+// MIGRATION: Will move to masterSchema.ts (core authentication)
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username"), // Nullable: nur Shop-Owner haben Benutzernamen, Mitarbeiter nicht
@@ -272,7 +331,8 @@ export const users = pgTable("users", {
   featureOverrides: jsonb("feature_overrides"),            // Individuelle Feature-Freischaltungen (wird auslaufen)
   // Neu: Fremdschlüssel-Referenz zu einem Paket
   packageId: integer("package_id").references(() => packages.id),
-  shopId: integer("shop_id"),                            // Shop-ID für Mandantentrennung (NULL für Superadmin)
+  shopId: integer("shop_id").references(() => shops.id),  // FK to shops.id (database entity ID)
+  tenantShopId: integer("tenant_shop_id"),                 // Immutable sequential ID for tenant isolation (users.shop_id → users.tenant_shop_id)
   companyName: text("company_name"),                       // Firmenname
   companyAddress: text("company_address"),                 // Firmenadresse
   companyVatNumber: text("company_vat_number"),            // USt-IdNr.
@@ -302,6 +362,13 @@ export const users = pgTable("users", {
   // Newsletter-Abonnement (standardmäßig aktiviert für Owner und Multi-Shop-Admins)
   newsletterSubscribed: boolean("newsletter_subscribed").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  // GDPR-Compliant soft deletion
+  deletedAt: timestamp("deleted_at"), // When set, user is anonymized and hidden from all lists
+  createdBy: integer("created_by").references(() => users.id), // Track who created this user
+  // Tenant database provisioning status
+  tenantProvisioned: boolean("tenant_provisioned").default(false).notNull(), // Whether tenant database has been created
+  tenantProvisionedAt: timestamp("tenant_provisioned_at"), // When tenant database was provisioned
+
 });
 
 // Erweiterte Registrierungsdaten für das vollständige Geschäftsprofil
@@ -309,6 +376,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
   email: true,
+  shopId: true,  // Include shopId for registration
   companyName: true,
   companyAddress: true,
   companyVatNumber: true,
@@ -329,7 +397,8 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
-// Multi-Shop-Berechtigung Tabelle
+// 🔵 MASTER DB: Multi-Shop-Berechtigung Tabelle
+// MIGRATION: Will move to masterSchema.ts (cross-tenant access control)
 export const userShopAccess = pgTable("user_shop_access", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
@@ -434,7 +503,8 @@ export const insertMSAPricingSchema = createInsertSchema(msaPricing).omit({
 export type MSAPricing = typeof msaPricing.$inferSelect;
 export type InsertMSAPricing = z.infer<typeof insertMSAPricingSchema>;
 
-// Unternehmensdaten / Geschäftsinformationen
+// 🟢 TENANT DB: Unternehmensdaten / Geschäftsinformationen
+// MIGRATION: Will move to tenantSchema.ts (shopId and userId removed)
 export const businessSettings = pgTable("business_settings", {
   id: serial("id").primaryKey(),
   businessName: text("business_name").notNull(),
@@ -1254,4 +1324,23 @@ export const newsletterSendsRelations = relations(newsletterSends, ({ one }) => 
   }),
 }));
 
+export const migrationRuns = pgTable("migration_runs", {
+  id: integer("id").notNull(), // keep as plain integer to match existing table (no serial/identity)
+  runType: text("run_type").notNull(),
+  status: text("status").notNull(),
+  startedAt: timestamp("started_at", { withTimezone: false }).defaultNow().notNull(),
+  completedAt: timestamp("completed_at", { withTimezone: false }),
+  error: text("error"),
+  metadata: jsonb("metadata").$type<unknown>(),
+});
 
+export const migrationState = pgTable("migration_state", {
+  tenantShopId: integer("tenant_shop_id").notNull(),
+  tableName: text("table_name").notNull(),
+  lastSyncedPk: integer("last_synced_pk"),
+  lastSyncedAt: timestamp("last_synced_at", { withTimezone: false }),
+  rowsProcessed: integer("rows_processed").default(0).notNull(),
+  status: text("status").notNull(),
+  error: text("error"),
+  updatedAt: timestamp("updated_at", { withTimezone: false }).defaultNow().notNull(),
+});

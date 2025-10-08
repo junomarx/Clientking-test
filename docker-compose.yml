@@ -1,4 +1,3 @@
-version: '3.8'
 
 services:
   # Database migration service - runs once to set up schema
@@ -17,17 +16,24 @@ services:
   handyshop-app:
     build: .
     ports:
-      - "5000:5000"
+      - "5001:5000"
     environment:
       # Database Configuration
       - DATABASE_URL=${DATABASE_URL}
+      - PERSIST_CONNECTIONS=true  # Store in master DB
+      - BOOTSTRAP_FROM_SECRETS=false  # Don't look for env vars
       
       # Application Configuration
       - NODE_ENV=production
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5000}
+      - FORCE_SECURE_COOKIES=true
+      - HTTPS_ENABLED=true
       
       # Session Configuration
       - SESSION_SECRET=${SESSION_SECRET}
+
+      # Token Env
+      - TOKEN_SECRET=${TOKEN_SECRET}
       
       # SMTP Configuration (optional)
       - SMTP_HOST=${SMTP_HOST}
@@ -72,6 +78,65 @@ services:
     profiles: ["manual"]  # Only runs when explicitly called
     restart: "no"
 
+  # Tenant Database Provisioner (run with --profile manual)
+  # Creates dedicated databases for each shop with isolated credentials
+  tenant-provisioner:
+    build:
+      context: .
+      dockerfile: Dockerfile.admin
+    depends_on:
+      postgres:
+        condition: service_healthy
+      data-importer:
+        condition: service_completed_successfully
+    environment:
+      - ADMIN_MODE=true  # CRITICAL: Enables PostgreSQL superuser operations
+      - ADMIN_DATABASE_URL=${ADMIN_DATABASE_URL}
+      - DATABASE_URL=${DATABASE_URL}
+      - TENANT_ENCRYPTION_KEY=${TENANT_ENCRYPTION_KEY}
+      - PERSIST_CONNECTIONS=true
+    command: ["node", "dist/scripts/provision-tenants.js"]
+    profiles: ["manual"]
+    restart: "no"
+
+  # Tenant Data Migrator (run with --profile manual)
+  # Copies operational data from master database to tenant databases
+  tenant-migrator:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+      tenant-provisioner:
+        condition: service_completed_successfully
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - TENANT_ENCRYPTION_KEY=${TENANT_ENCRYPTION_KEY}
+      - BATCH_SIZE=${BATCH_SIZE:-1000}
+      - PERSIST_TO_DATABASE=true
+      - ADMIN_DATABASE_URL=${ADMIN_DATABASE_URL}
+      - REGISTRY_DB_SOURCE=${REGISTRY_DB_SOURCE}
+    command: ["node", "dist/scripts/migrate-tenants.js"]
+    profiles: ["manual"]
+    restart: "no"
+
+  # Tenant Data Validator (run with --profile manual)
+  # Validates data integrity after migration
+  tenant-validator:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+      tenant-migrator:
+        condition: service_completed_successfully
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - TENANT_ENCRYPTION_KEY=${TENANT_ENCRYPTION_KEY}
+      - PERSIST_TO_DATABASE=true
+      - ADMIN_DATABASE_URL=${ADMIN_DATABASE_URL}
+    command: ["node", "dist/scripts/validate-tenants.js"]
+    profiles: ["manual"]
+    restart: "no"
+
   # PostgreSQL Database (optional - can use external database)
   postgres:
     image: postgres:15-alpine
@@ -82,7 +147,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "5433:5432"
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-handyshop}"]
@@ -93,6 +158,6 @@ services:
 volumes:
   postgres_data:
 
-networks:
-  default:
-    name: handyshop-network
+#networks:
+#  default:
+#    name: handyshop-network

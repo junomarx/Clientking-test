@@ -1,18 +1,17 @@
 import express, { type Request, Response, NextFunction } from "express";
+import * as path from "node:path";
+import * as fs from "node:fs";
 import { db } from "./db";
 import { sql } from "drizzle-orm";
 import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
 import { syncEmailTemplates } from "./sync-email-templates";
 import fileUpload from "express-fileupload";
 
 // SMTP wird individuell pro Geschäft konfiguriert
-
+const isProd = process.env.NODE_ENV === "production";
 const app = express();
 
 // PWA-Dateien mit korrekten MIME-Types bedienen - VOR allen anderen Middlewares
-import path from 'path';
-import fs from 'fs';
 
 app.get('/sw.js', (req, res) => {
   const swPath = path.resolve(import.meta.dirname, '..', 'public', 'sw.js');
@@ -68,6 +67,45 @@ app.get('/icon-512.svg', (req, res) => {
   }
 });
 
+app.get('/favicon.svg', (req, res) => {
+  const faviconPath = path.resolve(import.meta.dirname, '..', 'public', 'favicon.svg');
+  res.setHeader('Content-Type', 'image/svg+xml; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  try {
+    const faviconContent = fs.readFileSync(faviconPath, 'utf8');
+    res.send(faviconContent);
+  } catch (error) {
+    console.error('Error serving favicon:', error);
+    res.status(404).send('Favicon not found');
+  }
+});
+
+app.get('/clientking-logo.svg', (req, res) => {
+  const logoPath = path.resolve(import.meta.dirname, '..', 'public', 'clientking-logo.svg');
+  res.setHeader('Content-Type', 'image/svg+xml; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  try {
+    const logoContent = fs.readFileSync(logoPath, 'utf8');
+    res.send(logoContent);
+  } catch (error) {
+    console.error('Error serving clientking-logo.svg:', error);
+    res.status(404).send('Logo not found');
+  }
+});
+
+app.get('/clientking-logo.png', (req, res) => {
+  const logoPath = path.resolve(import.meta.dirname, '..', 'public', 'clientking-logo.png');
+  res.setHeader('Content-Type', 'image/png');
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  try {
+    const logoContent = fs.readFileSync(logoPath);
+    res.send(logoContent);
+  } catch (error) {
+    console.error('Error serving clientking-logo.png:', error);
+    res.status(404).send('Logo not found');
+  }
+});
+
 // Standard Express-Middleware
 // Erhöhe die maximale Größe für JSON-Anfragen auf 50 MB (für PDF-Upload)
 app.use(express.json({ limit: '50mb' }));
@@ -103,7 +141,7 @@ app.use((req, res, next) => {
         logLine = logLine.slice(0, 79) + "…";
       }
 
-      log(logLine);
+      console.log(logLine);
     }
   });
 
@@ -143,23 +181,29 @@ app.use((req, res, next) => {
     // importantly only setup vite in development and after
     // setting up all the other routes so the catch-all route
     // doesn't interfere with the other routes
-    if (app.get("env") === "development") {
-      await setupVite(app, server);
-    } else {
-      serveStatic(app);
-    }
 
+
+    if (!isProd) {
+      const { setupVite } = await import("./vite-dev");   // dev-only, dynamic
+      await setupVite(app);
+    } else {
+      // Serve the client build Vite produced — your build log shows dist/public
+      const distDir = path.resolve(process.cwd(), "dist/public");
+      app.use(express.static(distDir));
+      app.get("*", (_req, res, next) =>
+        fs.createReadStream(path.join(distDir, "index.html"))
+          .on("error", next)
+          .pipe(res.type("html"))
+      );
+    }
     // ALWAYS serve the app on port 5000
     // this serves both the API and the client.
     // It is the only port that is not firewalled.
     const port = 5000;
-    server.listen({
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    }, () => {
-      log(`serving on port ${port}`);
+    server.listen({ port, host: "0.0.0.0", reusePort: true }, () => {
+      console.log(`serving on port ${port}`);
     });
+
   } catch (error) {
     console.error("Fehler beim Starten des Servers:", error);
     process.exit(1);

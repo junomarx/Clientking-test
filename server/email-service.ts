@@ -26,12 +26,19 @@ import SMTPTransport from 'nodemailer/lib/smtp-transport';
 export class EmailService {
   private smtpTransporter: nodemailer.Transporter | null = null;
   private superadminEmailConfig: SuperadminEmailSettings | null = null;
+  private initPromise: Promise<void> | null = null;
 
   constructor() {
     // Initialisiere nur den Superadmin-SMTP-Transporter für alle App-E-Mails
-    this.initSuperadminSmtpTransporter(); // Asynchron, aber kein await in constructor möglich
+    this.initPromise = this.initSuperadminSmtpTransporter(); // Asynchron, aber kein await in constructor möglich
   }
 
+   
+  async waitForInit(): Promise<void> {
+    if (this.initPromise) {
+      await this.initPromise;
+    }
+  }
 
 
   /**
@@ -306,6 +313,8 @@ export class EmailService {
     text?: string;
     attachments?: Array<any>;
   }): Promise<boolean> {
+
+    await this.waitForInit();
     try {
       if (!this.smtpTransporter) {
         console.error('❌ Kein SMTP-Transporter verfügbar für System-E-Mail');
@@ -313,8 +322,10 @@ export class EmailService {
       }
 
       // Verwende die Superadmin-E-Mail-Konfiguration statt hardcodierter Umgebungsvariablen
-      const senderEmail = this.superadminEmailConfig?.smtpSenderEmail || this.superadminEmailConfig?.smtpUser;
+      //const senderEmail = this.superadminEmailConfig?.smtpSenderEmail || this.superadminEmailConfig?.smtpUser;
+      const senderEmail = 'support@clientking.at';
       const senderName = this.superadminEmailConfig?.smtpSenderName || 'Handyshop System';
+      console.log('Sending reset link from: ' + senderEmail);
       
       const mailOptions = {
         from: options.from || `"${senderName}" <${senderEmail}>`,
@@ -678,7 +689,7 @@ export class EmailService {
             data: variables,
             subject: template.subject,
             body: template.body,
-            isSystemEmail: false,
+            isSystemEmail: true,
             forceUserId: userId
           });
         }
@@ -703,7 +714,7 @@ export class EmailService {
             data: variables,
             subject: template.subject,
             body: template.body,
-            isSystemEmail: false,
+            isSystemEmail: true,
             forceUserId: userId
           });
         }
@@ -824,6 +835,7 @@ export class EmailService {
       console.log(`🔍 EMAIL-SERVICE: sendEmailWithTemplateInternal aufgerufen für ${templateName}, forceUserId: ${forceUserId}`);
       console.log(`🔍 EMAIL-SERVICE: data keys:`, Object.keys(data || {}));
       console.log(`🔍 EMAIL-SERVICE: aktuelle telefon/email Werte:`, { telefon: data?.telefon, email: data?.email });
+      console.log('is system email? ' + isSystemEmail);
       
       // Ersetze Platzhalter in Betreff und Text mit den übergebenen Daten
       let processedSubject = subject;
@@ -940,63 +952,80 @@ export class EmailService {
           }
           
           // Wichtig: Die SMTP-Einstellungen müssen komplett sein, sonst keine E-Mail senden
-          if (businessSetting && businessSetting.smtpHost && businessSetting.smtpUser && businessSetting.smtpPassword) {
-            console.log(`Verwende benutzerspezifische SMTP-Einstellungen für Benutzer ${forceUserId}`);
-            
-            // Erstelle einen temporären Transporter für diesen Benutzer
-            const port = parseInt(businessSetting.smtpPort || '587');
-            
-            // Konfiguration für alle Benutzer basierend auf Datenbankeinstellungen
-            const userConfig = {
-              host: businessSetting.smtpHost,
-              port: port,
-              secure: port === 465,
-              auth: {
-                user: businessSetting.smtpUser,
-                pass: businessSetting.smtpPassword
-              },
-              connectionTimeout: 10000,
-              tls: {
-                rejectUnauthorized: process.env.NODE_ENV !== 'development'
-              },
-              debug: true,
-              logger: true
-            };
-            
-            console.log(`Benutze individuelle SMTP-Einstellungen für Benutzer ${forceUserId}`);
-            console.log(`SMTP-Benutzer: ${businessSetting.smtpUser}, Host: ${businessSetting.smtpHost}, Port: ${port}`);
-            
-            // Zeige immer die tatsächlich verwendeten Einstellungen
-            console.log("Erstelle Transporter mit folgenden Einstellungen:", {
-              host: userConfig.host,
-              port: userConfig.port,
-              secure: userConfig.secure,
-              user: userConfig.auth.user
-            });
-            
-            transporter = nodemailer.createTransport(userConfig);
-            senderName = businessSetting.businessName || businessSetting.smtpSenderName || 'Handyshop';
-            senderEmail = businessSetting.smtpUser;
-            
-            console.log(`Sende Benutzer-E-Mail mit Vorlage "${templateName}" über Benutzer-SMTP (${senderEmail})`);
+
+          //branch for system emails
+          if (isSystemEmail) {
+              console.log('system email, proceeding... ');
+              
+              if (this.smtpTransporter && this.superadminEmailConfig) {
+                transporter = this.smtpTransporter;
+                senderName = this.superadminEmailConfig.smtpSenderName || 'Handyshop Verwaltung';
+                senderEmail = 'support@clientking.at';
+              } else {
+                // Keine SMTP-Konfiguration vorhanden
+                throw new Error(`Keine SMTP-Einstellungen verfügbar für Benutzer ${forceUserId}`);
+              }
+
           } else {
-            // Fallback auf System-SMTP, wenn keine benutzer-spezifischen Einstellungen vorhanden sind
-            console.warn(`Benutzer ${forceUserId} hat keine vollständigen SMTP-Einstellungen. Verwende System-Einstellungen.`);
-            
-            if (this.smtpTransporter && this.superadminEmailConfig) {
-              transporter = this.smtpTransporter;
-              senderName = this.superadminEmailConfig.smtpSenderName || 'Handyshop Verwaltung';
-              senderEmail = this.superadminEmailConfig.smtpSenderEmail || this.superadminEmailConfig.smtpUser;
-            } else if (this.superadminEmailConfig) {
-              // Wenn kein Shop-Transporter vorhanden ist, versuche den Superadmin-Transporter
-              transporter = this.smtpTransporter!;
-              senderName = this.superadminEmailConfig.smtpSenderName || 'Handyshop System';
-              senderEmail = this.superadminEmailConfig.smtpSenderEmail || this.superadminEmailConfig.smtpUser;
+            if (businessSetting && businessSetting.smtpHost && businessSetting.smtpUser && businessSetting.smtpPassword) {
+              console.log(`Verwende benutzerspezifische SMTP-Einstellungen für Benutzer ${forceUserId}`);
+              
+              // Erstelle einen temporären Transporter für diesen Benutzer
+              const port = parseInt(businessSetting.smtpPort || '587');
+              
+              // Konfiguration für alle Benutzer basierend auf Datenbankeinstellungen
+              const userConfig = {
+                host: businessSetting.smtpHost,
+                port: port,
+                secure: port === 465,
+                auth: {
+                  user: businessSetting.smtpUser,
+                  pass: businessSetting.smtpPassword
+                },
+                connectionTimeout: 10000,
+                tls: {
+                  rejectUnauthorized: process.env.NODE_ENV !== 'development'
+                },
+                debug: true,
+                logger: true
+              };
+              
+              console.log(`Benutze individuelle SMTP-Einstellungen für Benutzer ${forceUserId}`);
+              console.log(`SMTP-Benutzer: ${businessSetting.smtpUser}, Host: ${businessSetting.smtpHost}, Port: ${port}`);
+              
+              // Zeige immer die tatsächlich verwendeten Einstellungen
+              console.log("Erstelle Transporter mit folgenden Einstellungen:", {
+                host: userConfig.host,
+                port: userConfig.port,
+                secure: userConfig.secure,
+                user: userConfig.auth.user
+              });
+              
+              transporter = nodemailer.createTransport(userConfig);
+              senderName = businessSetting.businessName || businessSetting.smtpSenderName || 'Handyshop';
+              senderEmail = businessSetting.smtpUser;
+              
+              console.log(`Sende Benutzer-E-Mail mit Vorlage "${templateName}" über Benutzer-SMTP (${senderEmail})`);
             } else {
-              // Keine SMTP-Konfiguration vorhanden
-              throw new Error(`Keine SMTP-Einstellungen verfügbar für Benutzer ${forceUserId}`);
+              // Fallback auf System-SMTP, wenn keine benutzer-spezifischen Einstellungen vorhanden sind
+              console.warn(`Benutzer ${forceUserId} hat keine vollständigen SMTP-Einstellungen. Verwende System-Einstellungen.`);
+              
+              if (this.smtpTransporter && this.superadminEmailConfig) {
+                transporter = this.smtpTransporter;
+                senderName = this.superadminEmailConfig.smtpSenderName || 'Handyshop Verwaltung';
+                senderEmail = this.superadminEmailConfig.smtpSenderEmail || this.superadminEmailConfig.smtpUser;
+              } else if (this.superadminEmailConfig) {
+                // Wenn kein Shop-Transporter vorhanden ist, versuche den Superadmin-Transporter
+                transporter = this.smtpTransporter!;
+                senderName = this.superadminEmailConfig.smtpSenderName || 'Handyshop System';
+                senderEmail = this.superadminEmailConfig.smtpSenderEmail || this.superadminEmailConfig.smtpUser;
+              } else {
+                // Keine SMTP-Konfiguration vorhanden
+                throw new Error(`Keine SMTP-Einstellungen verfügbar für Benutzer ${forceUserId}`);
+              }
             }
           }
+
         } catch (error) {
           console.error(`Fehler beim Laden oder Prüfen der SMTP-Einstellungen für Benutzer ${forceUserId}:`, error);
           // Wir versuchen trotzdem den System-SMTP zu verwenden

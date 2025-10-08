@@ -14,6 +14,7 @@ import {
   costEstimates, emailHistory, emailTemplates
 } from "@shared/schema";
 import { deleteUserCompletely } from './user-deletion-service';
+import { anonymizeUser } from './user-anonymization-service';
 import { UploadedFile } from "express-fileupload";
 import { inArray } from "drizzle-orm";
 
@@ -539,9 +540,11 @@ export function registerSuperadminRoutes(app: Express) {
           owner_first_name as "ownerFirstName",
           owner_last_name as "ownerLastName"
         FROM users 
-        WHERE (
+        WHERE deleted_at IS NULL
+          AND (
           shop_id IS NOT NULL 
           OR (shop_id IS NULL AND is_superadmin = true)
+          OR (shop_id IS NULL AND is_active = false)
         )
         ORDER BY username NULLS LAST
       `);
@@ -673,22 +676,29 @@ export function registerSuperadminRoutes(app: Express) {
 
       console.log(`Aktivierung für Benutzer ${user.username}: aktueller Status = ${user.isActive}, shopId = ${user.shopId}`);
 
-      // Für inaktive Benutzer: Aktivieren und Shop-ID zuweisen
+      // Für inaktive Benutzer: Aktivieren (shop_id bereits bei Registration zugewiesen)
       if (!user.isActive) {
-        const nextShopId = await storage.getNextShopId();
+        // Verify user already has shop_id (assigned during registration/INSERT)
+        if (!user.shopId) {
+          console.error(`❌ Benutzer ${user.username} hat keine Shop-ID! Dies sollte bei der Registrierung zugewiesen worden sein.`);
+          return res.status(400).json({ 
+            message: "Benutzer hat keine Shop-ID. Bitte kontaktieren Sie den Support." 
+          });
+        }
         
         // Demo-Paket ID abrufen
         const [demoPackage] = await db.select({
           id: packages.id
         }).from(packages).where(eq(packages.name, 'Demo'));
         
+        // IMPORTANT: Do NOT assign shop_id here - it's already set during registration
+        // Only update activation status and related fields (no shop_id UPDATE)
         const updateData = { 
           isActive: true,
-          shopId: nextShopId,
           activatedAt: new Date(),
           packageId: demoPackage?.id || null  // Automatisch Demo-Paket zuweisen
         };
-        console.log(`Benutzer ${user.username} wird aktiviert und erhält Shop-ID ${nextShopId}`);
+        console.log(`Benutzer ${user.username} wird aktiviert (Shop-ID ${user.shopId} bereits zugewiesen)`);
         console.log(`Demo-Paket gefunden:`, demoPackage ? `ID ${demoPackage.id}` : 'nicht gefunden');
         console.log(`Update-Daten für ${user.username}:`, updateData);
 
@@ -784,6 +794,49 @@ export function registerSuperadminRoutes(app: Express) {
           // Wir lassen den Endpunkt trotzdem erfolgreich zurückgeben, auch wenn die E-Mail fehlschlägt
         }
 
+        // STEP 4: Provision tenant database for newly activated shop
+        try {
+          console.log(`🗄️  Provisioning tenant database for shop ${updatedUser.shopId}...`);
+          
+          const { createTenantProvisioningService } = await import('./tenancy/tenantProvisioning');
+          const { createConnectionRegistry } = await import('./tenancy/connectionRegistry');
+          
+          const provisioningService = createTenantProvisioningService();
+          const connectionRegistry = createConnectionRegistry();
+          
+          const provisionResult = await provisioningService.provisionTenant(
+            updatedUser.shopId,
+            updatedUser.username || updatedUser.email
+          );
+          
+          if (provisionResult.success && provisionResult.credentials) {
+            // Register connection credentials in registry
+            await connectionRegistry.registerConnection(updatedUser.shopId, {
+              databaseName: provisionResult.credentials.databaseName,
+              username: provisionResult.credentials.username,
+              password: provisionResult.credentials.password,
+              host: provisionResult.credentials.host,
+              port: provisionResult.credentials.port
+            });
+            
+            // Mark tenant as provisioned in users table
+            await db.update(users).set({
+              tenantProvisioned: true,
+              tenantProvisionedAt: new Date()
+            }).where(eq(users.id, userId));
+            
+            console.log(`✅ Tenant database successfully provisioned for shop ${updatedUser.shopId}`);
+          } else {
+            console.error(`❌ Tenant provisioning failed for shop ${updatedUser.shopId}: ${provisionResult.error || 'No credentials returned'}`);
+            // Don't fail activation if provisioning fails - can be retried later
+            // tenantProvisioned remains false, allowing manual retry
+          }
+        } catch (provisionError) {
+          console.error("Fehler beim Provisioning der Tenant-Datenbank:", provisionError);
+          // Don't fail activation if provisioning fails - can be retried later
+          // tenantProvisioned remains false, allowing manual retry
+        }
+
         res.json(updatedUser);
       } else {
         // Für bereits aktive Benutzer: Deaktivieren
@@ -843,7 +896,7 @@ export function registerSuperadminRoutes(app: Express) {
     }
   });
 
-  // Benutzer löschen
+  // Benutzer anonymisieren (GDPR-compliant)
   app.delete("/api/superadmin/users/:id", isSuperadmin, async (req: Request, res: Response) => {
     try {
       const userId = parseInt(req.params.id);
@@ -857,22 +910,27 @@ export function registerSuperadminRoutes(app: Express) {
         return res.status(404).json({ message: "Benutzer nicht gefunden" });
       }
 
-      console.log(`Starte Löschvorgang für Benutzer ${existingUser.username} (ID: ${userId})...`);
+      // Prevent deleting yourself
+      if (req.user && req.user.id === userId) {
+        return res.status(400).json({ message: "Sie können Ihren eigenen Account nicht löschen" });
+      }
+
+      console.log(`Starte GDPR-konforme Anonymisierung für Benutzer ${existingUser.username} (ID: ${userId})...`);
       
       try {
-        // Benutzer über den dedizierten Löschdienst löschen
-        await deleteUserCompletely(userId);
+        // GDPR-compliant anonymization - preserves foreign keys, clears PII
+        await anonymizeUser(userId, req.user!.id);
         
-        console.log(`Benutzer ${existingUser.username} (ID: ${userId}) erfolgreich gelöscht.`);
+        console.log(`Benutzer ${existingUser.username} (ID: ${userId}) erfolgreich anonymisiert.`);
         
         res.json({ 
-          message: "Benutzer und alle zugehörigen Daten erfolgreich gelöscht",
+          message: "Benutzer wurde GDPR-konform anonymisiert. Alle persönlichen Daten wurden gelöscht.",
           username: existingUser.username
         });
       } catch (error) {
-        console.error("Fehler beim Löschen des Benutzers:", error);
+        console.error("Fehler beim Anonymisieren des Benutzers:", error);
         res.status(500).json({ 
-          message: `Fehler beim Löschen des Benutzers: ${error.message || String(error)}` 
+          message: `Fehler beim Anonymisieren des Benutzers: ${error.message || String(error)}` 
         });
       }
     } catch (error) {

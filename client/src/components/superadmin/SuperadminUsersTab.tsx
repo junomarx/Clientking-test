@@ -196,6 +196,8 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
   // Benutzer filtern und sortieren
   const filteredUsers = useMemo(() => {
     if (!users) return [];
+
+    console.log('filtered users at start of method: ' + users.length)
     
     // Filtere Mitarbeiter heraus - nur Shop-Owner und Admins anzeigen
     // Benutzer ohne Benutzername sind meist Mitarbeiter und sollen auch herausgefiltert werden

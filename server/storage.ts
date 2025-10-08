@@ -169,6 +169,7 @@ export interface IStorage {
     pendingOrders: number;
   }>;
   getShopDetails(shopId: number): Promise<any>;
+  createShop(shop: InsertShop): Promise<Shop>;
   
   // Employee Transfer between Shops
   transferEmployeeBetweenShops(employeeId: number, fromShopId: number, toShopId: number): Promise<boolean>;
@@ -221,6 +222,26 @@ export interface IStorage {
   }>;
   
   createUser(user: InsertUser & { trialExpiresAt?: Date }): Promise<User>;
+  
+    // Transactional registration flow (atomic shop_id reservation + shop creation + user creation)
+  registerUserWithShop(userData: {
+    username: string;
+    password: string;
+    email: string;
+    companyName: string;
+    companyAddress?: string;
+    companyPhone?: string;
+    companyEmail?: string;
+    companyVatNumber?: string;
+    ownerFirstName: string;
+    ownerLastName: string;
+    streetAddress: string;
+    zipCode: string;
+    city: string;
+    country?: string;
+    taxId: string;
+    website?: string;
+  }): Promise<{ user: User; shop: Shop; tenantShopId: number; shopDatabaseId: number }>;
   
   // Subscription and quota methods
   canCreateNewRepair(userId: number): Promise<{ count: number, limit: number, canCreate: boolean }>;
@@ -1425,7 +1446,7 @@ export class DatabaseStorage implements IStorage {
       const [user] = await db
         .select()
         .from(users)
-        .where(eq(users.id, id));
+        .where(and(eq(users.id, id), isNull(users.deletedAt)));
       
       return user;
     } catch (error) {
@@ -1439,7 +1460,7 @@ export class DatabaseStorage implements IStorage {
       const [user] = await db
         .select()
         .from(users)
-        .where(eq(users.username, username));
+        .where(and(eq(users.username, username), isNull(users.deletedAt)));
       
       return user;
     } catch (error) {
@@ -1453,7 +1474,7 @@ export class DatabaseStorage implements IStorage {
       const [user] = await db
         .select()
         .from(users)
-        .where(eq(users.shopId, shopId));
+        .where(and(eq(users.shopId, shopId), isNull(users.deletedAt)));
       
       return user;
     } catch (error) {
@@ -1467,7 +1488,7 @@ export class DatabaseStorage implements IStorage {
       const results = await db
         .select()
         .from(users)
-        .where(eq(users.email, email));
+        .where(and(eq(users.email, email), isNull(users.deletedAt)));
       
       return results;
     } catch (error) {
@@ -1481,6 +1502,7 @@ export class DatabaseStorage implements IStorage {
       const results = await db
         .select()
         .from(users)
+        .where(isNull(users.deletedAt))
         .orderBy(users.username);
       
       return results;
@@ -1796,43 +1818,37 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  // Generiere die nächste verfügbare Shop-ID
-  async getNextShopId(): Promise<number> {
+  // Generiere die nächste verfügbare Tenant-Shop-ID mit PostgreSQL Sequence (atomic)
+  async getNextTenantShopId(transaction?: any): Promise<number> {
     try {
-      const result = await db
-        .select({ maxShopId: sql<number>`COALESCE(MAX(shop_id), 0)` })
-        .from(users);
+      const dbConnection = transaction || db;
       
-      const maxShopId = result[0]?.maxShopId || 0;
-      const nextShopId = maxShopId + 1;
+      // Use PostgreSQL sequence for atomic, collision-proof ID generation
+      const result = await dbConnection.execute(
+        sql`SELECT nextval('tenant_shop_id_seq') as tenant_shop_id`
+      );
       
-      console.log(`Aktuelle maximale Shop-ID: ${maxShopId}, neue Shop-ID wird: ${nextShopId}`);
-      return nextShopId;
+      const tenantShopId = Number(result.rows[0]?.tenant_shop_id);
+      
+      console.log(`🔒 Atomically allocated tenant_shop_id: ${tenantShopId} from sequence`);
+      return tenantShopId;
     } catch (error) {
-      console.error("Fehler beim Generieren der nächsten Shop-ID:", error);
-      // Sicherer Fallback: Finde die höchste bestehende Shop-ID und füge 1 hinzu
-      const allUsers = await db.select({ shopId: users.shopId }).from(users).where(isNotNull(users.shopId));
-      const maxId = Math.max(...allUsers.map(u => u.shopId || 0));
-      return maxId + 1;
+      console.error("Fehler beim Generieren der Tenant-Shop-ID:", error);
+      throw new Error(`Failed to generate tenant_shop_id: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
   async createUser(user: InsertUser): Promise<User> {
     try {
-      // Entferne die Shop-ID aus den eingehenden Daten
-      // Neue Benutzer erhalten KEINE Shop-ID bei der Registrierung
-      const { shopId: _, ...userWithoutShopId } = user as any;
-      
       // Hole das Basic-Paket für neue Benutzer
       const basicPackage = await this.getPackageByName("Basic");
       
-      console.log(`Erstelle neuen Benutzer ${userWithoutShopId.username} mit Basic-Paket (keine Einschränkungen)`);
+      console.log(`Erstelle neuen Benutzer ${user.username} mit Basic-Paket${user.shopId ? ` und Shop-ID ${user.shopId}` : ' (ohne Shop-ID)'}`);
 
       const [newUser] = await db
         .insert(users)
         .values({
-          ...userWithoutShopId,
-          shopId: null,  // Explizit NULL setzen
+          ...user,
           pricingPlan: "basic",  // Basic-Plan zuweisen
           packageId: basicPackage?.id || null  // Basic-Paket-ID zuweisen
         })
@@ -1843,6 +1859,86 @@ export class DatabaseStorage implements IStorage {
       console.error("Error creating user:", error);
       throw error;
     }
+  }
+
+  // Transactional registration: atomically reserve tenant_shop_id, create shop, and create user
+  async registerUserWithShop(userData: {
+    username: string;
+    password: string;
+    email: string;
+    companyName: string;
+    companyAddress?: string;
+    companyPhone?: string;
+    companyEmail?: string;
+    companyVatNumber?: string;
+    ownerFirstName: string;
+    ownerLastName: string;
+    streetAddress: string;
+    zipCode: string;
+    city: string;
+    country?: string;
+    taxId: string;
+    website?: string;
+  }): Promise<{ user: User; shop: Shop; shopId: number }> {
+    console.log(`🔄 Starting transactional registration for user ${userData.username}`);
+    
+    return await db.transaction(async (tx) => {
+      try {
+        // STEP 1: Atomically allocate next tenant_shop_id from sequence
+        const tenantShopId = await this.getNextTenantShopId(tx);
+        console.log(`  ✓ Step 1/3: Allocated tenant_shop_id ${tenantShopId} from sequence`);
+        
+        // STEP 2: Create shop entry
+        const [shop] = await tx
+          .insert(shops)
+          .values({
+            name: userData.companyName,
+          })
+          .returning();
+        console.log(`  ✓ Step 2/3: Created shop "${shop.name}" (DB-ID: ${shop.id})`);
+        
+        // STEP 3: Create user with both shopId (FK to shops.id) and tenantShopId (immutable sequential)
+        const basicPackage = await this.getPackageByName("Basic");
+        const [user] = await tx
+          .insert(users)
+          .values({
+            username: userData.username,
+            password: userData.password,
+            email: userData.email,
+            shopId: shop.id,              // FK to shops.id for database relationships
+            tenantShopId: tenantShopId,   // Immutable sequential ID for tenant isolation
+            companyName: userData.companyName,
+            companyAddress: userData.companyAddress,
+            companyPhone: userData.companyPhone,
+            companyEmail: userData.companyEmail,
+            companyVatNumber: userData.companyVatNumber,
+            ownerFirstName: userData.ownerFirstName,
+            ownerLastName: userData.ownerLastName,
+            streetAddress: userData.streetAddress,
+            zipCode: userData.zipCode,
+            city: userData.city,
+            country: userData.country || "Österreich",
+            taxId: userData.taxId,
+            website: userData.website || "",
+            pricingPlan: "basic",
+            packageId: basicPackage?.id || null,
+          })
+          .returning();
+        console.log(`  ✓ Step 3/3: Created user ${user.username} (shopId=${shop.id}, tenantShopId=${tenantShopId})`);
+        
+        console.log(`✅ Transactional registration completed for ${user.username}`);
+        return { 
+          user, 
+          shop, 
+          tenantShopId,           // Immutable sequential ID for tenant provisioning
+          shopDatabaseId: shop.id  // Database entity ID (FK target)
+        };
+        
+      } catch (error) {
+        console.error(`❌ Transaction failed, rolling back:`, error);
+        throw error; // Transaction will automatically rollback
+      }
+    });
   }
   
   // Superadmin-Benutzer abfragen
@@ -3536,8 +3632,8 @@ export class DatabaseStorage implements IStorage {
   // User methods
   async getUser(id: number): Promise<User | undefined> {
     try {
-      // Versuche zuerst, mit dem vollen Schema zu holen
-      const [user] = await db.select().from(users).where(eq(users.id, id));
+      // Versuche zuerst, mit dem vollen Schema zu holen (exclude deleted users)
+      const [user] = await db.select().from(users).where(and(eq(users.id, id), isNull(users.deletedAt)));
       
       // Debugging-Ausgabe für den Superadmin
       if (user && user.isSuperadmin) {
@@ -3556,7 +3652,7 @@ export class DatabaseStorage implements IStorage {
                company_phone, company_email, reset_token, reset_token_expires,
                created_at, feature_overrides, package_id
         FROM users
-        WHERE id = ${id}
+        WHERE id = ${id} AND deleted_at IS NULL
       `);
 
       if (result.rows.length === 0) return undefined;
@@ -3578,7 +3674,7 @@ export class DatabaseStorage implements IStorage {
       const [user] = await db
         .select()
         .from(users)
-        .where(eq(users.username, username));
+        .where(and(eq(users.username, username), isNull(users.deletedAt)));
       return user;
     } catch (error) {
       console.log(
@@ -3593,7 +3689,7 @@ export class DatabaseStorage implements IStorage {
                company_phone, company_email, reset_token, reset_token_expires,
                created_at, feature_overrides, package_id
         FROM users
-        WHERE username = ${username}
+        WHERE username = ${username} AND deleted_at IS NULL
       `);
 
       if (result.rows.length === 0) return undefined;
@@ -3610,7 +3706,7 @@ export class DatabaseStorage implements IStorage {
       const [user] = await db
         .select()
         .from(users)
-        .where(eq(users.email, email));
+        .where(and(eq(users.email, email), isNull(users.deletedAt)));
       return user;
     } catch (error) {
       console.log(
@@ -3625,7 +3721,7 @@ export class DatabaseStorage implements IStorage {
                company_phone, company_email, reset_token, reset_token_expires,
                created_at, feature_overrides, package_id
         FROM users
-        WHERE email = ${email}
+        WHERE email = ${email} AND deleted_at IS NULL
         LIMIT 1
       `);
 
@@ -6435,6 +6531,21 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error(`Fehler beim Abrufen des Shops ${shopId}:`, error);
       return undefined;
+    }
+  }
+
+  async createShop(shop: InsertShop): Promise<Shop> {
+    try {
+      const [newShop] = await db
+        .insert(shops)
+        .values(shop)
+        .returning();
+      
+      console.log(`✅ Shop "${newShop.name}" erfolgreich erstellt (ID: ${newShop.id})`);
+      return newShop;
+    } catch (error) {
+      console.error("Fehler beim Erstellen des Shops:", error);
+      throw error;
     }
   }
 

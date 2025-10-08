@@ -9,7 +9,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Redirect, Link, useLocation } from "wouter";
 import { useEffect, useState, useRef } from "react";
 import { Loader2, ShieldAlert, CheckCircle2 } from "lucide-react";
-import logoNewPath from "@assets/logo_new2.png";
+import logoNewPath from "@assets/images/logos/logo_new2.png";
 
 import { 
   Dialog, 
